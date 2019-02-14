@@ -1,0 +1,23 @@
+# Ignore all files with these extensions
+*.txt
+*.csv
+*.png
+*.wig
+*.bigWig
+*.bed
+*.zip
+*.xlsx
+*.bed.gz
+*.gz
+*.xml
+*.2bit
+*.o
+*.e
+
+# Ignore folder named 'venv'
+venv/
+donotcopy_noneed_lib/
+extrasourcecode/
+input/
+output/
+lib/
