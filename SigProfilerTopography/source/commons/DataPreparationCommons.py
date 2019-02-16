@@ -500,7 +500,9 @@ def readSampleBasedSimulationBasedDF(sampleBasedSimulationsInputPath,sampleName,
 
 
 ################################################################
-def prepareSimulationBasedInputFilesForSigProfilerTopography(current_abs_path,jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df):
+def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df):
+
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
     #sigProfilerSimulatorSpecificDirName
     #21BreastCancer_simulations_GRCh37_INDEL_96

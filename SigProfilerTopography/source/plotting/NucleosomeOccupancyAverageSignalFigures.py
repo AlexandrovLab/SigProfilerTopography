@@ -35,6 +35,66 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 plusOrMinus = 1000
 windowSize = plusOrMinus*2+1
 
+
+
+#############################################################################
+class AnyObject1(object):
+    pass
+
+class AnyObject2(object):
+    pass
+
+class AnyObject3(object):
+    pass
+
+class AnyObject4(object):
+    pass
+
+
+class AnyObjectHandler1(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='royalblue',
+                                   edgecolor='royalblue', lw=1,
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+
+class AnyObjectHandler2(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='lightblue',
+                                   edgecolor='gray', lw=1, linestyle='--',
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+
+
+class AnyObjectHandler3(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='darkgreen',
+                                   edgecolor='darkgreen', lw=1,
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+
+
+class AnyObjectHandler4(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='lightgreen',
+                                   edgecolor='gray', lw=1, linestyle='--',
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+#############################################################################
+
+
 #############################################################################
 ##################### Read Average as Pandas Series #########################
 #############################################################################
@@ -191,11 +251,13 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
     if ((sample is not None) and (signature is not None)):
         realAverage = readAverage(sample, signature, SAMPLEBASED_SIGNATUREBASED, jobname)
         figurename = '%s_%s_%d' % (signature, sample, numberofMutations)
+        title = '%s_%s' % (signature, sample)
         if (numberofSimulations>0):
             listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SAMPLEBASED_SIGNATUREBASED, jobname,numberofSimulations)
     else:
         realAverage = readAverage(None, signature, SIGNATUREBASED, jobname)
         figurename = '%s_%d' % (signature, numberofMutations)
+        title = '%s' % (signature)
         if (numberofSimulations>0):
             listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SIGNATUREBASED, jobname,numberofSimulations)
 
@@ -252,15 +314,19 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         listofLegends = []
 
         if (realAverage is not None):
-            original = plt.plot(x, realAverage, color, label='Aggregated substitutions',linewidth=3.0)
+            original = plt.plot(x, realAverage, color='royalblue', label='Aggregated substitutions',linewidth=3)
             listofLegends.append(original[0])
 
         if (simulationsSignatureBasedMedians is not None):
-            simulations = plt.plot(x, simulationsSignatureBasedMedians, color, linestyle='--',  label='Average Simulations Aggregated substitutions', linewidth=3.0)
+            simulations = plt.plot(x, simulationsSignatureBasedMedians, color='gray', linestyle='--',  label='Average Simulations Aggregated substitutions', linewidth=3)
             listofLegends.append(simulations[0])
             plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor='lightblue')
 
-        plt.legend(handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+        plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+
+        #put the number of snps
+        text = '%d subs' %(numberofMutations)
+        plt.text(0.05,0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
 
         #Put vertical line at x=0
         # plt.axvline(x=0, ymin=0, ymax=1, color='gray', linestyle='--')
@@ -284,9 +350,9 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         plt.tick_params(axis='both', which='minor', labelsize=30,width=3,length=10)
 
         if (isFigureAugmentation):
-            plt.title(jobname + ' ' + figurename, fontsize=40,fontweight='bold')
+            plt.title(jobname + ' ' + title, fontsize=40,fontweight='bold')
         else:
-            plt.title(figurename, fontsize=40,fontweight='bold')
+            plt.title(title, fontsize=40,fontweight='bold')
 
         # plt.xlabel(xlabel,fontsize=30,fontweight='bold')
         # plt.ylabel(ylabel,fontsize=30,fontweight='bold')
@@ -381,16 +447,20 @@ def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseTy
     listofLegends = []
 
     if (realAggregatedIndels is not None):
-        original = plt.plot(x, realAggregatedIndels, 'b-', label='Aggregated indels',linewidth=1.0)
+        original = plt.plot(x, realAggregatedIndels, 'darkgreen', label='Aggregated indels',linewidth=3)
         listofLegends.append(original[0])
     if simulationsAggregatedIndelsMedians is not None:
-        simulations = plt.plot(x, simulationsAggregatedIndelsMedians, color='navy', linestyle='--',label='Average Simulations Aggregated indels', linewidth=1.0)
+        simulations = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated indels', linewidth=3)
         listofLegends.append(simulations[0])
-        plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightblue')
+        plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen')
 
     #test it
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
-    plt.legend(handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+    plt.legend(loc= 'lower left',handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+
+    # put the number of snps
+    text = '%d indels' % (numberofIndels)
+    plt.text(0.05, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -415,7 +485,7 @@ def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseTy
     plt.ylim((0.65,1.15))
 
     if (isFigureAugmentation):
-        plt.title(jobname, fontsize=36)
+        plt.title(jobname, fontsize=40)
 
     plt.xlabel(xlabel, fontsize=30)
     plt.ylabel(ylabel, fontsize=30)
@@ -514,15 +584,19 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
     listofLegends = []
 
     if (realAggregatedSubstitutions is not None):
-        original = plt.plot(x, realAggregatedSubstitutions, 'g-', label='Aggregated substitutions',linewidth=1.0)
+        original = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=43)
         listofLegends.append(original[0])
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simulations = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='darkgreen',linestyle='--', label='Average Simulations Aggregated substitutions',linewidth=1.0)
+        simulations = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='--', label='Average Simulations Aggregated substitutions',linewidth=3)
         listofLegends.append(simulations[0])
-        plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightgreen')
+        plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue')
 
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
-    plt.legend(handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+    plt.legend(loc= 'lower left',handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+
+    # put the number of snps
+    text = '%d subs' % (sampleBasedNumberofMutations)
+    plt.text(0.05, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -547,7 +621,7 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
     plt.ylim((0.65,1.15))
 
     if (isFigureAugmentation):
-        plt.title(jobname, fontsize=36)
+        plt.title(jobname, fontsize=40)
 
     plt.xlabel(xlabel, fontsize=30)
     plt.ylabel(ylabel, fontsize=30)
@@ -687,24 +761,39 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     listofLegends = []
 
     if (realAggregatedSubstitutions is not None):
-        aggSubs = plt.plot(x, realAggregatedSubstitutions, 'g-', label='Aggregated substitutions',linewidth=1.0)
+        aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=3,zorder=1)
         listofLegends.append(aggSubs[0])
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='darkgreen',linestyle='--', label='Average Simulations Aggregated substitutions',linewidth=1.0)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='--', label='Average Simulations Aggregated substitutions',linewidth=3,zorder=1)
         listofLegends.append(simsAggSubs[0])
-        plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightgreen')
+        plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=1)
 
     if (realAggregatedIndels is not None):
-        aggIndels = plt.plot(x, realAggregatedIndels, 'b-', label='Aggregated indels',linewidth=1.0)
+        aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label='Aggregated indels',linewidth=3,zorder=1)
         listofLegends.append(aggIndels[0])
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='navy', linestyle='--',label='Average Simulations Aggregated indels', linewidth=1.0)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated indels', linewidth=3,zorder=1)
         listofLegends.append(simsAggIndels[0])
-        plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightblue')
+        plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=0)
+
 
     # old code
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
-    plt.legend(handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
+    plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
+
+    # plt.legend([AnyObject1(), AnyObject2(), AnyObject3(), AnyObject4()],
+    #            ['Aggregated substitutions',
+    #             'Average simulations aggregated substitutions',
+    #             'Aggregated indels',
+    #             'Average simulations aggregated indels'],
+    #            handler_map={AnyObject1: AnyObjectHandler1(), AnyObject2: AnyObjectHandler2(),
+    #                         AnyObject3: AnyObjectHandler3(), AnyObject4: AnyObjectHandler4()},
+    #            loc='lower left', shadow=False, edgecolor='white', facecolor='white',prop={'size': 24})
+
+    # put the number of snps and indels
+    if sample is not None:
+        text = '(%d subs, %d indels)' %(numberofSPMs,numberofIndels)
+        plt.text(0.05, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -728,8 +817,14 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     # This code provides some extra space
     plt.ylim((0.65,1.15))
 
-    if (isFigureAugmentation):
-        plt.title(jobname, fontsize=36)
+    # if (isFigureAugmentation):
+    #     plt.title(jobname, fontsize=36)
+
+    if (sample is not None):
+        plt.title(sample, fontsize=40, fontweight='bold')
+    else:
+        plt.title(jobname, fontsize=40, fontweight='bold')
+
 
     plt.xlabel(xlabel, fontsize=30)
     plt.ylabel(ylabel, fontsize=30)

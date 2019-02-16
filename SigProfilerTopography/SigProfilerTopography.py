@@ -89,8 +89,6 @@ def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabi
 #Step4 make indels ready for SigProfilerTopography
 def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,numberofSimulations,probabilitiesFile):
 
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
-
     # Where are simulations?
     #/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input/21BreastCancer/output/simulations/21BreastCancer_simulations_GRCh37_INDEL_96/
 
@@ -102,7 +100,7 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 
     sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s_%s' %(jobname,genomeAssembly,mutationTypes[1], mutationTypes[0])
 
-    DataPreparationCommons.prepareSimulationBasedInputFilesForSigProfilerTopography(current_abs_path,jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
+    DataPreparationCommons.prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
 
 ################################################################
 

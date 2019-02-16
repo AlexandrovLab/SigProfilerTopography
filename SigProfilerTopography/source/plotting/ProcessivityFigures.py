@@ -341,8 +341,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(jobname,originalS
     ax.set_aspect(1.0)  # make aspect ratio square
 
     # plot the scatter plot
-    sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=vmin, vmax=vmax, facecolors='none')
-    plt.grid()
+    sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=vmin, vmax=vmax, edgecolors='black')
+    ax.set_facecolor('white')
+    plt.grid(color='black')
+
+    for edge, spine in ax.spines.items():
+        spine.set_visible(True)
+        spine.set_color('black')
 
     xlabels = sortedProcessiveGroupLengthList
     ylabels = sortedSignatureList

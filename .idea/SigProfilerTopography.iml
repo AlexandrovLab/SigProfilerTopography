@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/replicationtime" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/transcriptionstrandbias" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../sigprotopography/sigprotopography/source/datapreparation" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/commons" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
