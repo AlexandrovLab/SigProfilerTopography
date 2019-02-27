@@ -168,12 +168,14 @@ def accumulateSplitArraysWithExtraSampleBased(sample2SignaturesWithAtLeast10KEli
     ##############################################
     for split_chrBased_SignalArrayAndCountArray_DictionaryList in allSplits_chrBased_SignalArrayAndCountArray_DictionaryList:
 
-        allIndelsSplitSignalArray = split_chrBased_SignalArrayAndCountArray_DictionaryList[4]
-        allIndelsSplitCountArray = split_chrBased_SignalArrayAndCountArray_DictionaryList[5]
+        print('For Debug Feb 22, 2019 len(split_chrBased_SignalArrayAndCountArray_DictionaryList)')
+        print(len(split_chrBased_SignalArrayAndCountArray_DictionaryList))
 
-        sample2AllIndelsSplitSignalArrayDict = split_chrBased_SignalArrayAndCountArray_DictionaryList[10]
-        sample2AllIndelsSplitCountArrayDict = split_chrBased_SignalArrayAndCountArray_DictionaryList[11]
+        allIndelsSplitSignalArray = split_chrBased_SignalArrayAndCountArray_DictionaryList[0]
+        allIndelsSplitCountArray = split_chrBased_SignalArrayAndCountArray_DictionaryList[1]
 
+        sample2AllIndelsSplitSignalArrayDict = split_chrBased_SignalArrayAndCountArray_DictionaryList[2]
+        sample2AllIndelsSplitCountArrayDict = split_chrBased_SignalArrayAndCountArray_DictionaryList[3]
 
         #####################################################################################################
         ######################### Accumulate right in the left starts  ######################################

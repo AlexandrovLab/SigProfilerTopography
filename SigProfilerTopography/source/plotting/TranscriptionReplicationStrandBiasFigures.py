@@ -636,32 +636,32 @@ def fillSimulationsType2StrandCountList(
 
         simulationType2StrandCountDict = readDictionary(simulationType2StrandCountFilePath)
 
-        if (simulationType2StrandCountDict is not None):
-
+        if ((simulationType2StrandCountDict is not None) and (simulationType2StrandCountDict)):
             if (type == SIGNATURE):
                 # Since it contains mutationprobability
+                print('For debug, FEB 23, 2019 starts')
+                print('simJobName')
+                print(simJobName)
+                print('simulationType2StrandCountDict')
+                print(simulationType2StrandCountDict)
+                print('For debug, FEB 23, 2019 ends')
                 simulationType2StrandCountDict = simulationType2StrandCountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
             # Let's fill simulations w.r.t.  existingTypesList in the real data
-            if (simulationType2StrandCountDict is not None):
+            # if (simulationType2StrandCountDict is not None):
+            if (strandbias == TRANSCRIPTIONSTRANDBIAS):
+                strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,transcriptionStrands,simulationType2StrandCountDict)
+                simulation_types_strand1_list = strand2TypeStrandCountList_Dict[TRANSCRIBED_STRAND]
+                simulation_types_strand2_list = strand2TypeStrandCountList_Dict[UNTRANSCRIBED_STRAND]
 
-                if (strandbias == TRANSCRIPTIONSTRANDBIAS):
-                    strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,
-                                                                                transcriptionStrands,
-                                                                                simulationType2StrandCountDict)
+            elif (strandbias == REPLICATIONSTRANDBIAS):
+                strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,replicationStrands,simulationType2StrandCountDict)
+                simulation_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
+                simulation_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
 
-                    simulation_types_strand1_list = strand2TypeStrandCountList_Dict[TRANSCRIBED_STRAND]
-                    simulation_types_strand2_list = strand2TypeStrandCountList_Dict[UNTRANSCRIBED_STRAND]
-                elif (strandbias == REPLICATIONSTRANDBIAS):
-                    strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,
-                                                                                replicationStrands,
-                                                                                simulationType2StrandCountDict)
 
-                    simulation_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
-                    simulation_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
-
-                all_simulations_types_strand1_list.append(simulation_types_strand1_list)
-                all_simulations_types_strand2_list.append(simulation_types_strand2_list)
+            all_simulations_types_strand1_list.append(simulation_types_strand1_list)
+            all_simulations_types_strand2_list.append(simulation_types_strand2_list)
     ##############################################################
 
     ##################################################################
@@ -713,33 +713,32 @@ def fillSimulationsSample2Type2StrandCountList(
         sample2AllSimulationsTypesStrand2ListDict[sample] = []
 
         for simNum in range(1, numberofSimulations+1):
-            simulationMutationType2TranscriptionStrandCountDict = None
             simJobName = '%s_Sim%d' % (jobname, simNum)
 
             simulationbased_type2Sample2StrandBias2CountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simJobName, DATA,strandbias, type2Sample2Strand2CountDict_Filename)
             simulationBased_type2Sample2Strand2CountDict = readDictionary(simulationbased_type2Sample2StrandBias2CountFilePath)
 
-            if (simulationBased_type2Sample2Strand2CountDict is not None):
+            if ((simulationBased_type2Sample2Strand2CountDict is not None) and (simulationBased_type2Sample2Strand2CountDict)):
 
                 if (type == SIGNATURE):
                     #Since it contains mutationprobability
                     simulationBased_type2Sample2Strand2CountDict = simulationBased_type2Sample2Strand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
-                if (simulationBased_type2Sample2Strand2CountDict is not None):
-                    simulationBased_sample2Type2Strand2CountDict = {}
-                    convert(simulationBased_type2Sample2Strand2CountDict,simulationBased_sample2Type2Strand2CountDict)
+                # if (simulationBased_type2Sample2Strand2CountDict is not None):
+                simulationBased_sample2Type2Strand2CountDict = {}
+                convert(simulationBased_type2Sample2Strand2CountDict,simulationBased_sample2Type2Strand2CountDict)
 
-                    if (strandbias == TRANSCRIPTIONSTRANDBIAS):
-                        strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,transcriptionStrands,simulationBased_sample2Type2Strand2CountDict[sample])
-                        sampleBased_types_strand1_list = strand2TypeStrandCountList_Dict[TRANSCRIBED_STRAND]
-                        sampleBased_types_strand2_list = strand2TypeStrandCountList_Dict[UNTRANSCRIBED_STRAND]
-                    elif (strandbias == REPLICATIONSTRANDBIAS):
-                        strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,replicationStrands,simulationBased_sample2Type2Strand2CountDict[sample])
-                        sampleBased_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
-                        sampleBased_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
+                if (strandbias == TRANSCRIPTIONSTRANDBIAS):
+                    strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,transcriptionStrands,simulationBased_sample2Type2Strand2CountDict[sample])
+                    sampleBased_types_strand1_list = strand2TypeStrandCountList_Dict[TRANSCRIBED_STRAND]
+                    sampleBased_types_strand2_list = strand2TypeStrandCountList_Dict[UNTRANSCRIBED_STRAND]
+                elif (strandbias == REPLICATIONSTRANDBIAS):
+                    strand2TypeStrandCountList_Dict = fillDictWRTReferenceTypes(existingTypesList,replicationStrands,simulationBased_sample2Type2Strand2CountDict[sample])
+                    sampleBased_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
+                    sampleBased_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
 
-                    sample2AllSimulationsTypesStrand1ListDict[sample].append(sampleBased_types_strand1_list)
-                    sample2AllSimulationsTypesStrand2ListDict[sample].append(sampleBased_types_strand2_list)
+                sample2AllSimulationsTypesStrand1ListDict[sample].append(sampleBased_types_strand1_list)
+                sample2AllSimulationsTypesStrand2ListDict[sample].append(sampleBased_types_strand2_list)
             ##############################################################
         #################################################################################
 
@@ -920,17 +919,23 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     mutationProbability2Signature2Sample2ReplicationStrand2CountDict = readDictionary(mutationProbability2Signature2Sample2ReplicationStrand2CountFilePath)
     ##########################################################################################
 
+    #Initialize as empty lists
+    signature2Sample2TranscriptionStrand2CountDict = {}
+    signature2Sample2ReplicationStrand2CountDict = {}
+    signature2TranscriptionStrand2CountDict = {}
+    signature2ReplicationStrand2CountDict = {}
+
     #get signature based for mutation probability = 0.5
-    if (mutationProbability2Signature2Sample2TranscriptionStrand2CountDict is not None):
+    if ((mutationProbability2Signature2Sample2TranscriptionStrand2CountDict is not None) and (mutationProbability2Signature2Sample2TranscriptionStrand2CountDict)):
         signature2Sample2TranscriptionStrand2CountDict = mutationProbability2Signature2Sample2TranscriptionStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
-    if (mutationProbability2Signature2Sample2ReplicationStrand2CountDict is not None):
+    if (mutationProbability2Signature2Sample2ReplicationStrand2CountDict is not None and (mutationProbability2Signature2Sample2ReplicationStrand2CountDict)):
         signature2Sample2ReplicationStrand2CountDict = mutationProbability2Signature2Sample2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
-    if (mutationProbability2Signature2TranscriptionStrand2CountDict is not None):
+    if ((mutationProbability2Signature2TranscriptionStrand2CountDict is not None) and (mutationProbability2Signature2TranscriptionStrand2CountDict)):
         signature2TranscriptionStrand2CountDict = mutationProbability2Signature2TranscriptionStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
-    if (mutationProbability2Signature2ReplicationStrand2CountDict is not None):
+    if ((mutationProbability2Signature2ReplicationStrand2CountDict is not None) and (mutationProbability2Signature2ReplicationStrand2CountDict)):
         signature2ReplicationStrand2CountDict = mutationProbability2Signature2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
     existingTranscriptionMutationTypesList = sorted(list(mutationType2TranscriptionStrandCountDict.keys()))

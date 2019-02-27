@@ -261,8 +261,8 @@ def addNumofAttributableBasesColumn(inputList):
 def searchMutation(mutation_row,chrBasedDecileIndexArray,decileIndex2NumberofMutationsDict):
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
     # Please notice that for indels we consider the point of indel start, since there can be indels with start and end very far away from each other.
-    start= mutation_row['Start']
-    end= mutation_row['Start']+1
+    start= mutation_row[START]
+    end= mutation_row[START]+1
 
     slicedArray = chrBasedDecileIndexArray[start:end]
 
@@ -286,8 +286,8 @@ def searchMutation(mutation_row,chrBasedDecileIndexArray,decileIndex2NumberofMut
 #Works for AGGREGATEDSUBSTITUTIONS and SIGNATURES
 def searchMutationForSPMs(mutation_row,signatures,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict):
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
-    start= mutation_row['Start']
-    end= mutation_row['End']+1
+    start= mutation_row[START]
+    end= mutation_row[END]+1
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
@@ -333,13 +333,13 @@ def searchMutationForSPMsWithExtraSampleBased(
         sample2Type2DecileIndex2NumberofMutationsDict):
 
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
-    start= mutation_row['Start']
-    end= mutation_row['End']+1
+    start= mutation_row[START]
+    end= mutation_row[END]+1
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
     #get the samplename
-    sample = mutation_row['Sample']
+    sample = mutation_row[SAMPLE]
 
     # np.nonzero returns the indices of the elements that are non-zero.
     # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
@@ -397,8 +397,8 @@ def searchMutationForSPMsWithExtraSampleBased(
 ##################################################################
 def searchMutationForIndels(indel_row,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict):
     # For indels start and end are can be different from each other.
-    start= indel_row['Start']
-    end= indel_row['Start']+1
+    start= indel_row[START]
+    end= indel_row[START]+1
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
@@ -421,7 +421,7 @@ def searchMutationForIndels(indel_row,chrBasedReplicationTimeDataArrayWithDecile
             ################### AGGREGATEDSUBSTITUTIONS ends #######################
 
             ########################### Signatures start ###########################
-            if indel_row['Length'] >= 3:
+            if indel_row[LENGTH] >= 3:
                 decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
                 if decileIndexNum in  decileIndex2NumberofMutationsDict:
                     decileIndex2NumberofMutationsDict[decileIndexNum] += 1
@@ -441,13 +441,13 @@ def searchMutationForIndels(indel_row,chrBasedReplicationTimeDataArrayWithDecile
 ##################################################################
 def searchMutationForIndelsWithExtraSampleBased(indel_row,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict,sample2Type2DecileIndex2NumberofMutationsDict):
     # For indels start and end are can be different from each other.
-    start= indel_row['Start']
-    end= indel_row['Start']+1
+    start= indel_row[START]
+    end= indel_row[START]+1
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
     #get the samplename
-    sample = indel_row['Sample']
+    sample = indel_row[SAMPLE]
 
     # np.nonzero returns the indices of the elements that are non-zero.
     # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
@@ -468,7 +468,7 @@ def searchMutationForIndelsWithExtraSampleBased(indel_row,sample2SignaturesWithA
             ################### AGGREGATEDINDELS ends #######################
 
             ########################### INDELS start ###########################
-            if indel_row['Length'] >= 3:
+            if indel_row[LENGTH] >= 3:
                 decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
                 if decileIndexNum in  decileIndex2NumberofMutationsDict:
                     decileIndex2NumberofMutationsDict[decileIndexNum] += 1
@@ -497,7 +497,7 @@ def searchMutationForIndelsWithExtraSampleBased(indel_row,sample2SignaturesWithA
                 ################### AGGREGATEDINDELS ends #######################
 
                 ########################### INDELS start ###########################
-                if indel_row['Length'] >= 3:
+                if indel_row[LENGTH] >= 3:
                     decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
                     if decileIndexNum in decileIndex2NumberofMutationsDict:
                         decileIndex2NumberofMutationsDict[decileIndexNum] += 1

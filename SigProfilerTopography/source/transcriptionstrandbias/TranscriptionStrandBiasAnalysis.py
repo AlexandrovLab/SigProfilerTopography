@@ -79,11 +79,11 @@ def searchMutationOnTranscriptionArrays(
         signatureList,
         mutationProbabilityList):
 
-    mutationStart = mutation_row['Start']
-    mutationEnd = mutation_row['End']
-    mutationPyramidineStrand = mutation_row['PyramidineStrand']
-    mutationType = mutation_row['Mutation']
-    mutationSample = mutation_row['Sample']
+    mutationStart = mutation_row[START]
+    mutationEnd = mutation_row[END]
+    mutationPyramidineStrand = mutation_row[PYRAMIDINESTRAND]
+    mutationType = mutation_row[MUTATION]
+    mutationSample = mutation_row[SAMPLE]
 
     #############################################################################################################
     #if there is overlap with chrBased_transcription_plus_array

@@ -13,7 +13,7 @@ import shutil
 import twobitreader
 
 #############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
+current_abs_path = os.path.dirname(os.path.realpath(__file__))
 commonsPath = os.path.join(current_abs_path,'source','commons')
 sys.path.append(commonsPath)
 #############################################################
@@ -51,11 +51,15 @@ def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabi
     snps_df = DataPreparationCommons.readMutationsWithGenomicPositions(snpsInputFile)
 
     #Drop the unnecessary columns before the merge with probabilities
-    snps_df.drop(['locID', 'mutType','Type', 'VarID', 'Gene', 'GeneID', 'ccdsID','TranscriptID', 'GeneType'], inplace=True, axis=1)
+    snps_df.drop(['locID','mutType','Type','VarID','Gene','GeneID','ccdsID','TranscriptID','GeneType'], inplace=True, errors='ignore',axis=1)
+
     print('snps_df.columns.values')
     print(snps_df.columns.values)
 
-    snps_df['End'] = snps_df['End']-1
+    #If snps start and end are  not equal
+    #We can make them equal here.
+    if (not snps_df[START].equals(snps_df[END])):
+        snps_df[END] = snps_df[START]
     #############################################################################
 
     #############################################################################
@@ -98,7 +102,10 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
     #Read probabilities
     probabilities_df = DataPreparationCommons.readProbabilities(probabilitiesFile)
 
-    sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s_%s' %(jobname,genomeAssembly,mutationTypes[1], mutationTypes[0])
+    if (len(mutationTypes)==2):
+        sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s_%s' %(jobname,genomeAssembly,mutationTypes[1], mutationTypes[0])
+    elif (len(mutationTypes)==1):
+        sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s' %(jobname,genomeAssembly,mutationTypes[0])
 
     DataPreparationCommons.prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
 
@@ -108,9 +115,13 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 
 #######################################################
 #Run SigProfilerTopography Analyses
-def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,considerProbability):
+def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename):
+
+    #Internally Set
+    considerProbabilityInProcessivityAnalysis = True
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
+    print('current_abs_path: %s ' % current_abs_path)
 
     ##############################################
     #Partition the data (Single Point Mutations data and Indels data)
@@ -118,12 +129,16 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     jobnamePath = os.path.join(current_abs_path,TopographyCommons.OUTPUT,jobname,TopographyCommons.DATA,TopographyCommons.CHRBASED)
     print('sigProTopographyData.py jobnamePath:%s ' %jobnamePath)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    print('current_abs_path: %s ' % current_abs_path)
+    #######################################################
+    #Let's not delete the existing data
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    #######################################################
+
+
     if (indelsFilename!=TopographyCommons.NOTSET):
         PartitionIndelsData.partitionIndelsData(jobname,indelsFilename)
     if (singlePointMutationsFilename!=TopographyCommons.NOTSET):
@@ -157,12 +172,14 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
     jobnamePath = os.path.join(current_abs_path,OUTPUT, jobname,DATA, NUCLEOSOMEOCCUPANCY)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    print('current_abs_path: %s ' %current_abs_path)
+    # ################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
+
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,NUCLEOSOMEOCCUPANCY,'NucleosomeOccupancyAnalysis.py'),jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename])
     NucleosomeOccupancyAnalysis.nucleosomeOccupancyAnalysis(jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
     ###############################################
@@ -172,11 +189,13 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     # Delete the output/jobname/DATA/REPLICATIONTIME if exists
     jobnamePath = os.path.join(current_abs_path, TopographyCommons.OUTPUT, jobname, TopographyCommons.DATA, TopographyCommons.REPLICATIONTIME)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
 
     # ReplicationTime
     print('current_abs_path: %s ' %current_abs_path)
@@ -190,14 +209,15 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     # Delete the output/jobname/DATA/REPLICATIONSTRANDBIAS if exists
     jobnamePath = os.path.join(current_abs_path,TopographyCommons.OUTPUT,jobname,TopographyCommons.DATA,TopographyCommons.REPLICATIONSTRANDBIAS)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
 
     # ReplicationStrandBias
-    print('current_abs_path: %s ' %current_abs_path)
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,REPLICATIONSTRANDBIAS, 'ReplicationStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,replicationTimeFilename,replicationTimeValleyFilename, replicationTimePeakFilename,'0.5','0.5','0.01'])
 
     smoothedWaveletRepliseqDataFilename = replicationTimeFilename
@@ -208,7 +228,8 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     endMutationProbability = round(float(0.5),2)
     step = round(float(0.01),2)
 
-    ReplicationStrandBiasAnalysis.replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename, smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step)
+    if (singlePointMutationsFilename!=NOTSET):
+        ReplicationStrandBiasAnalysis.replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename, smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step)
     ###############################################
 
 
@@ -217,20 +238,22 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
     jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,DATA,TRANSCRIPTIONSTRANDBIAS)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ################################################
 
     # TranscriptionStrandBias
-    print('current_abs_path: %s ' %current_abs_path)
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,TRANSCRIPTIONSTRANDBIAS, 'TranscriptionStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,'0.5','0.5','0.01'])
     startMutationProbability = round(float(0.5),2)
     endMutationProbability = round(float(0.5),2)
     step = round(float(0.01),2)
 
-    TranscriptionStrandBiasAnalysis.transcriptionStrandBiasAnalysis(jobname, singlePointMutationsFilename, startMutationProbability,endMutationProbability,step)
+    if (singlePointMutationsFilename!=NOTSET):
+        TranscriptionStrandBiasAnalysis.transcriptionStrandBiasAnalysis(jobname, singlePointMutationsFilename, startMutationProbability,endMutationProbability,step)
     ###############################################
 
 
@@ -239,16 +262,18 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
     # Delete the output/jobname/DATA/PROCESSIVITY if exists
     jobnamePath = os.path.join(current_abs_path,TopographyCommons.OUTPUT,jobname,TopographyCommons.DATA,TopographyCommons.PROCESSIVITY)
 
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
 
     # TranscriptionStrandBias
-    print('current_abs_path: %s ' %current_abs_path)
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,PROCESSIVITY, 'ProcessivityAnalysis.py'),jobname,singlePointMutationsFilename,considerProbability])
-    ProcessivityAnalysis.processivityAnalysis(jobname,singlePointMutationsFilename,considerProbability)
+    if (singlePointMutationsFilename != NOTSET):
+        ProcessivityAnalysis.processivityAnalysis(jobname,singlePointMutationsFilename,considerProbabilityInProcessivityAnalysis)
     ###############################################
 
 #######################################################
@@ -266,40 +291,39 @@ def runAnalyses(singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFi
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
 def plotFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculation):
 
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
+    #Internally Set
+    figureAugmentation = 'noaugmentation'
 
-    ############################################################
-    # Delete the output/jobname/FIGURE if exists
-    # / oasis / tscc / scratch / burcak / developer / python / SigProfilerTopography / SigProfilerTopography / source / plotting
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
+    print('current_abs_path: %s ' % current_abs_path)
 
     jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,FIGURE)
     print('SigProfilerTopography.py jobnamePath:%s ' %jobnamePath)
     if (os.path.exists(jobnamePath)):
         print('jobnamePath exists')
 
+    ############################################################
     if (os.path.exists(jobnamePath)):
         try:
             shutil.rmtree(jobnamePath)
         except OSError as e:
             print('Error: %s - %s.' % (e.filename, e.strerror))
-    print('current_abs_path: %s ' %current_abs_path)
     ############################################################
 
-    figureAugmentation = 'noaugmentation'
+
+    ############################################################
+
 
     # Notice that subprocess expects strings in the list
     # Plotting
-
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'NucleosomeOccupancyAverageSignalFigures.py'),jobname,figureAugmentation,str(numberofSimulations)])
-    nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofSimulations)
-
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'ReplicationTimeNormalizedMutationDensityFigures.py'),jobname,figureAugmentation,str(numberofSimulations)])
-    replicationTimeNormalizedMutationDensityFigures(jobname,figureAugmentation,numberofSimulations)
-
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'TranscriptionReplicationStrandBiasFigures.py'),jobname,figureAugmentation,str(numberofSimulations)])
-    transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numberofSimulations)
-
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'ProcessivityFigures.py'),jobname,str(numberofSimulations),multipleTesting,probabilityCalculation])
+
+    nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofSimulations)
+    replicationTimeNormalizedMutationDensityFigures(jobname,figureAugmentation,numberofSimulations)
+    transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numberofSimulations)
     processivityFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculation)
 
 ##############################################################

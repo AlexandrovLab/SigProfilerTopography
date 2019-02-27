@@ -18,9 +18,8 @@ import multiprocessing
 from multiprocessing import Lock
 
 #############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
+current_abs_path = os.path.dirname(os.path.realpath(__file__))
 #############################################################
-
 
 LEADING= 'Leading'
 LAGGING = 'Lagging'
@@ -34,10 +33,16 @@ MINUS = '-'
 MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1000000000
 
-TENK = 10000
 
 #Constraints , Thresholds
 ONE_THOUSAND = 1000
+TEN_THOUSAND = 10000
+
+#TODO This will be used
+SUBSTITUTION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+DINUC_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+INDEL_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+
 MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
 
@@ -86,6 +91,9 @@ HG19 = 'hg19'
 HG38 = 'hg38'
 MM10 = 'mm10'
 
+GRCh37 = 'GRCh37'
+GRCh38 = 'GRCh38'
+
 #For each job we will write signatures, chrnames in nucleosomes, single point mutations, and indels
 SignatureFilename = 'Signatures.txt'
 SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename = 'SamplesWithAtLeast10KMutations2NumberofMutationsDict.txt'
@@ -112,10 +120,10 @@ AGGREGATEDSUBSTITUTIONS = 'aggregatedsubstitutions'
 
 SOURCE = 'source'
 COMMONS = 'commons'
-NUCLEOSOMEOCCUPANCY = 'nucleosomeoccupancy'
-REPLICATIONTIME = 'replicationtime'
+NUCLEOSOMEOCCUPANCY = 'nucleosome_occupancy'
+REPLICATIONTIME = 'replication_time'
 PROCESSIVITY = 'processivity'
-STRANDBIAS = 'strandbias'
+STRANDBIAS = 'strand_bias'
 PLOTTING = 'plotting'
 TRANSCRIPTIONSTRANDBIAS = 'transcriptionstrandbias'
 REPLICATIONSTRANDBIAS = 'replicationstrandbias'
@@ -133,7 +141,6 @@ NORMALIZED_MUTATION_DENSITY = 'normalized_mutation_density'
 MICROHOMOLOGY = 'Microhomology'
 REPEAT = 'Repeat'
 
-MMR = 'MMR'
 DEFICIENT = 'deficient'
 PROFICIENT = 'proficient'
 
@@ -150,8 +157,40 @@ sixMutationTypes = [C2A,C2G,C2T,T2A,T2C,T2G]
 SIGNATURE = 'Signature'
 MUTATION = 'Mutation'
 
-CHROMOSOME = 'Chromosome'
+CHR = 'chr'
+
+############################################
+#Column Names
+PROJECT = 'Project'
+SAMPLE = 'Sample'
+GENOME = 'Genome'
 CHROM = 'Chrom'
+CHROMOSOME = 'Chromosome' # to be depreceated
+START = 'Start'
+END = 'End'
+STRAND = 'Strand'
+REF = 'Ref'
+ALT = 'Alt'
+PYRAMIDINESTRAND = 'PyramidineStrand'
+MUTATION = 'Mutation'
+MUTATIONS = 'Mutations'
+CONTEXT = 'Context'
+
+COUNT = 'Count'
+MMR = 'MMR'
+
+TYPE = 'Type'
+LENGTH = 'Length'
+CATEGORY = 'Category'
+
+INDEL = 'INDEL'
+INDEL_GT_3BP = 'INDEL(>3bp)'
+INDEL_LTE_3BP = 'INDEL(<=3bp)'
+
+DOT= 'Dot'
+DATASOURCE = 'DataSource'
+
+############################################
 
 #For double check purposes
 OriginalPaperSignature2Sample2ReplicationStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2ReplicationStrand2CountDict.txt'
@@ -259,7 +298,7 @@ def readChrBasedMutationDF(jobname,chrLong,filename):
         only_header_chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath, sep="\t", comment='#', nrows=1)
         columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
 
-        contextIndex = columnNamesList.index('Context')
+        contextIndex = columnNamesList.index(CONTEXT)
 
         # We assume that after the column named 'Context' there are the signature columns in tab separated way.
         signatures = columnNamesList[(contextIndex + 1):]
@@ -276,13 +315,13 @@ def readChrBasedMutationDF(jobname,chrLong,filename):
         for signature in signatures:
             mydtypes[signature] = np.float16
 
-        mydtypes['Sample'] = str
-        mydtypes['Chromosome'] = str
-        mydtypes['Start'] = np.int32
-        mydtypes['End'] = np.int32
-        mydtypes['PyramidineStrand'] = np.int8
-        mydtypes['Mutation'] = str
-        mydtypes['Context'] = str
+        mydtypes[SAMPLE] = str
+        mydtypes[CHROM] = str
+        mydtypes[START] = np.int32
+        mydtypes[END] = np.int32
+        mydtypes[PYRAMIDINESTRAND] = np.int8
+        mydtypes[MUTATION] = str
+        mydtypes[CONTEXT] = str
         #################################################
     ##########################################################################################
 
@@ -328,23 +367,6 @@ def readChrBasedNuclesomeDF(chrLong,filename):
 #########################################################################################
 
 
-
-##################################################################
-#Read only header line
-def readMutationsOnlyHeader(mutationsWithSignatureBasedProbabilitiesFileName):
-
-    mutationFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,INPUT,mutationsWithSignatureBasedProbabilitiesFileName)
-    mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#',dtype={'Sample': str, 'Chromosome': str},nrows=1)
-
-    columnNamesList = list(mutation_df.columns.values)
-
-    contextIndex = columnNamesList.index('Context')
-    signatures = columnNamesList[(contextIndex + 1):]
-
-    return signatures
-##################################################################
-
-
 ##################################################################
 #mutationsWithSignatureBasedProbabilitiesFileName 'breast_cancer_mutation_probabilities_final.txt'
 def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
@@ -355,10 +377,10 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
 
     #################################################
     #First read only first row
-    mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#', dtype={'Sample': str, 'Chromosome': str},nrows=1)
+    mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
     columnNamesList = list(mutation_df.columns.values)
 
-    contextIndex = columnNamesList.index('Context')
+    contextIndex = columnNamesList.index(CONTEXT)
 
     # We assume that after the column named 'Context' there are the signature columns in tab separated way.
     signatures = columnNamesList[(contextIndex + 1):]
@@ -377,13 +399,13 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     for signature in signatures:
         mydtypes[signature] = np.float16
 
-    mydtypes['Sample'] = str
-    mydtypes['Chromosome'] = str
-    mydtypes['Start'] = np.int32
-    mydtypes['End'] = np.int32
-    mydtypes['PyramidineStrand'] = np.int8
-    mydtypes['Mutation'] = str
-    mydtypes['Context'] = str
+    mydtypes[SAMPLE] = str
+    mydtypes[CHROM] = str
+    mydtypes[START] = np.int32
+    mydtypes[END] = np.int32
+    mydtypes[PYRAMIDINESTRAND] = np.int8
+    mydtypes[MUTATION] = str
+    mydtypes[CONTEXT] = str
     #################################################
 
     #################################################
@@ -394,18 +416,18 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#',dtype=mydtypes)
     #################################################
 
-    print('mutation_df[Chromosome].unique()')
-    print(mutation_df['Chromosome'].unique())
+    print('mutation_df[Chrom].unique()')
+    print(mutation_df[CHROM].unique())
 
-    listofSamples = mutation_df['Sample'].unique()
+    listofSamples = mutation_df[SAMPLE].unique()
     print('Number of samples in single point mutations file: %d' %(len(listofSamples)))
 
     ##############################################################
     samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
 
     for sample in listofSamples:
-        numberofMutations =  len(mutation_df[mutation_df['Sample'] == sample])
-        if (numberofMutations>=TENK):
+        numberofMutations =  len(mutation_df[mutation_df[SAMPLE] == sample])
+        if (numberofMutations>=TEN_THOUSAND):
             samplesWithAtLeast10KMutations2NumberofMutationsDict[sample] = numberofMutations
 
     ########## debug starts #############
@@ -425,10 +447,10 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     for signature in signatures:
         signaturebased_df = mutation_df[mutation_df[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
         numberofMutations = len(signaturebased_df)
-        if (numberofMutations>= TENK):
+        if (numberofMutations>= TEN_THOUSAND):
             signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature] = numberofMutations
 
-        signatureBased_numberofSamples = len(signaturebased_df['Sample'].unique())
+        signatureBased_numberofSamples = len(signaturebased_df[SAMPLE].unique())
         print('%s\t%d\t%d' % (signature, signaturebased_df.shape[0], signatureBased_numberofSamples))
     ##############################################################
 
@@ -442,8 +464,8 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
         for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
             #check if there are at least 10K mutations with probability >= 0.5 for this (sample,signature) pair
-            numberofMutations = len(mutation_df[ ((mutation_df['Sample']==sample) & (mutation_df[signature]>= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
-            if (numberofMutations>= TENK):
+            numberofMutations = len(mutation_df[ ((mutation_df[SAMPLE]==sample) & (mutation_df[signature]>= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
+            if (numberofMutations>= TEN_THOUSAND):
                 if sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
                     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature] = numberofMutations
                 else:
@@ -462,7 +484,7 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
 def readMutationsAndWriteChrBased(mutationsWithSignatureBasedProbabilitiesFileName):
     signatures, samplesWithAtLeast10KMutationsList, mutation_df = readMutations(mutationsWithSignatureBasedProbabilitiesFileName)
 
-    mutation_df_grouped= mutation_df.groupby('Chromosome')
+    mutation_df_grouped= mutation_df.groupby(CHROM)
 
     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, CHRBASED),exist_ok=True)
 
@@ -485,7 +507,7 @@ def readMutationsAndWriteChrBased(mutationsWithSignatureBasedProbabilitiesFileNa
     ############### Write Unique Chrnames starts ############
     #########################################################
     # Get the unique chromsome names in mutation_df
-    uniqueChrNames = mutation_df['Chromosome'].unique()
+    uniqueChrNames = mutation_df[CHROM].unique()
     # The unique values are returned as a NumPy array
 
     # Write uniqueChrNames to a file
@@ -510,15 +532,19 @@ def readMutationsAndWriteChrBased(mutationsWithSignatureBasedProbabilitiesFileNa
 #For Parallel Writing indels and single point mutations
 def writeChrBasedMutationDF(inputList):
     chr = inputList[0]
-    current_abs_path = inputList[1]
-    mutationsFileName = inputList[2]
-    chrBased_mutation_df = inputList[3]
-    jobname =  inputList[4]
+    mutationsFileName = inputList[1]
+    chrBased_mutation_df = inputList[2]
+    jobname =  inputList[3]
+
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
     chrBasedMutationFileName = 'chr%s_%s' % (chr, mutationsFileName)
     chrBasedMutationFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA, CHRBASED,chrBasedMutationFileName)
     # lock.acquire()
-    chrBased_mutation_df.to_csv(chrBasedMutationFile, index=None, sep='\t', mode='w')
+
+    if (chrBased_mutation_df is not None):
+        chrBased_mutation_df.to_csv(chrBasedMutationFile, index=None, sep='\t', mode='w')
+
     # lock.release()
     print('write for %s ends' %(chr))
 ##################################################################
@@ -579,24 +605,24 @@ def fillSplitBasedSignalArrayAndCountArrayForSPMs(mutation_row,nucleosome_array,
     #Do this only once.
     ##########################################################
     # Case 1: start is very close to the chromosome start
-    if (mutation_row['Start']<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row['Start'],mutation_row['End']))
-        window_array = nucleosome_array[0:(mutation_row['End']+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row['Start'],0),'constant')
+    if (mutation_row[START]<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
+        window_array = nucleosome_array[0:(mutation_row[END]+plusOrMinus+1)]
+        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant')
     # Case 2: start is very close to the chromosome end
-    elif (mutation_row['End']+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row['Start'],mutation_row['End']))
-        window_array = nucleosome_array[(mutation_row['Start']-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,mutation_row['End']+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+    elif (mutation_row[END]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
+        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
+        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
+        window_array = np.pad(window_array, (0,mutation_row[END]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
     #Case 3: No problem
     else:
-        window_array = nucleosome_array[(mutation_row['Start']-plusOrMinus):(mutation_row['End']+plusOrMinus+1)]
+        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[END]+plusOrMinus+1)]
     ##########################################################
 
     #TODO: Is there a faster way than using for loop?
     ################# Signatures starts #######################
     for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        if (mutation_row[signature] >= 0.5):
+        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
             signature2SignalArrayDict[signature] += window_array
             signature2CountArrayDict[signature] += (window_array>0)
     ################# Signatures ends #########################
@@ -629,28 +655,28 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
     #Do this only once.
     ##########################################################
     # Case 1: start is very close to the chromosome start
-    if (mutation_row['Start']<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row['Start'],mutation_row['End']))
-        window_array = nucleosome_array[0:(mutation_row['End']+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row['Start'],0),'constant')
+    if (mutation_row[START]<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
+        window_array = nucleosome_array[0:(mutation_row[END]+plusOrMinus+1)]
+        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant')
     # Case 2: start is very close to the chromosome end
-    elif (mutation_row['End']+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row['Start'],mutation_row['End']))
-        window_array = nucleosome_array[(mutation_row['Start']-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,mutation_row['End']+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+    elif (mutation_row[END]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
+        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
+        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
+        window_array = np.pad(window_array, (0,mutation_row[END]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
     #Case 3: No problem
     else:
-        window_array = nucleosome_array[(mutation_row['Start']-plusOrMinus):(mutation_row['End']+plusOrMinus+1)]
+        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[END]+plusOrMinus+1)]
     ##########################################################
 
     #Get the sample at this mutation_row
-    sample = mutation_row['Sample']
+    sample = mutation_row[SAMPLE]
 
     #TODO: Is there a faster way than using for loop?
     ################# Signatures starts #######################
     #We do not want to consider signatures with eligible mutations less than 10K
     for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        if (mutation_row[signature] >= 0.5):
+        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
 
             ####################################################
             signature2SignalArrayDict[signature] += window_array
@@ -684,22 +710,22 @@ def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_ro
 
     ##########################################################
     # Case 1: start is very close to the chromosome start
-    if (indel_row['Start']<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[Start]:%d' %(indel_row['Start'],indel_row['Start']))
-        window_array = nucleosome_array[0:(indel_row['Start']+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-indel_row['Start'],0),'constant')
+    if (indel_row[START]<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[Start]:%d' %(indel_row[START],indel_row[START]))
+        window_array = nucleosome_array[0:(indel_row[START]+plusOrMinus+1)]
+        window_array = np.pad(window_array, (plusOrMinus-indel_row[START],0),'constant')
     # Case 2: start is very close to the chromosome end
-    elif (indel_row['Start']+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(indel_row['Start'],indel_row['Start']))
-        window_array = nucleosome_array[(indel_row['Start']-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,indel_row['Start']+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+    elif (indel_row[START]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
+        print('mutation[Start]:%d mutation[End]:%d' %(indel_row[START],indel_row[START]))
+        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
+        window_array = np.pad(window_array, (0,indel_row[START]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
     #Case 3: No problem
     else:
-        window_array = nucleosome_array[(indel_row['Start']-plusOrMinus):(indel_row['Start']+plusOrMinus+1)]
+        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):(indel_row[START]+plusOrMinus+1)]
     ##########################################################
 
     #Get the sample at this mutation_row
-    sample = indel_row['Sample']
+    sample = indel_row[SAMPLE]
 
 
     ################ All single mutations starts ##############
@@ -722,18 +748,18 @@ def fillSplitBasedSignalArrayAndCountArrayForIndels(indel_row,nucleosome_array,a
     #Do this only once.
     ##########################################################
     # Case 1: start is very close to the chromosome start
-    if (indel_row['Start']<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[Start]:%d' %(indel_row['Start'],indel_row['Start']))
-        window_array = nucleosome_array[0:(indel_row['Start']+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-indel_row['Start'],0),'constant')
+    if (indel_row[START]<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[Start]:%d' %(indel_row[START],indel_row[START]))
+        window_array = nucleosome_array[0:(indel_row[START]+plusOrMinus+1)]
+        window_array = np.pad(window_array, (plusOrMinus-indel_row[START],0),'constant')
     # Case 2: start is very close to the chromosome end
-    elif (indel_row['Start']+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(indel_row['Start'],indel_row['Start']))
-        window_array = nucleosome_array[(indel_row['Start']-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,indel_row['Start']+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+    elif (indel_row[START]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
+        print('mutation[Start]:%d mutation[End]:%d' %(indel_row[START],indel_row[START]))
+        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
+        window_array = np.pad(window_array, (0,indel_row[START]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
     #Case 3: No problem
     else:
-        window_array = nucleosome_array[(indel_row['Start']-plusOrMinus):(indel_row['Start']+plusOrMinus+1)]
+        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):(indel_row[START]+plusOrMinus+1)]
     ##########################################################
 
     ################ All single mutations starts ##############
@@ -881,7 +907,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     print('For debugging purposes indels_df.columns')
     print(indels_df.columns)
 
-    indels_df_grouped= indels_df.groupby('Chromosome')
+    indels_df_grouped= indels_df.groupby(CHROM)
 
     print('len(indels_df_grouped)')
     print(len(indels_df_grouped))
@@ -891,7 +917,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     #########################################################
     ############### Write Unique Chrnames starts ############
     #########################################################
-    uniqueChrNames = indels_df['Chromosome'].unique()
+    uniqueChrNames = indels_df[CHROM].unique()
     # The unique values are returned as a NumPy array
 
     # Write uniqueChrNames to a file
@@ -929,7 +955,6 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     for chr, chrBased_indels_df in indels_df_grouped:
         inputList = []
         inputList.append(chr)
-        inputList.append(current_abs_path)
         inputList.append(indelsFileName)
         inputList.append(chrBased_indels_df)
         inputList.append(jobname)
@@ -955,7 +980,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
     mutation_df = readMutations(mutationsWithSignatureBasedProbabilitiesFileName)
 
-    mutation_df_grouped= mutation_df.groupby('Chromosome')
+    mutation_df_grouped= mutation_df.groupby(CHROM)
 
     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,CHRBASED),exist_ok=True)
 
@@ -1000,7 +1025,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     #########################################################
     ############### Write Unique Chrnames starts ############
     #########################################################
-    uniqueChrNames = mutation_df['Chromosome'].unique()
+    uniqueChrNames = mutation_df[CHROM].unique()
 
     ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,ChrNamesInSPMsFilename)
     np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
@@ -1014,9 +1039,6 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     pool = multiprocessing.Pool(numofProcesses,initializer=init, initargs=(l,))
     #########################################################
 
-    print('For debugging purposes')
-    print('number of cores: %d' %(numofProcesses))
-    print('For debugging purposes')
     poolInputList =[]
 
     # Get the filename at the end of the full path
@@ -1027,7 +1049,6 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
 
         inputList = []
         inputList.append(chr)
-        inputList.append(current_abs_path)
         inputList.append(mutationsWithSignatureBasedProbabilitiesFileName)
         inputList.append(chrBased_mutation_df)
         inputList.append(jobname)
@@ -1047,93 +1068,49 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
 ##################################################################
 #Please note that we add Count and MMR colum in this method
 def readIndels(allIndelsFileName):
-    # Read the mutation file with absolute path
-    # mutationFile = os.path.join('C:', os.sep, 'Users', 'burcak', 'Documents', 'CancerBioinformatics',
-    # 'NucleosomeOccupancy', 'breast_cancer_mutation_probabilities_final.txt')
-
-    # Read the file w.r.t. the current folder
-
-    # Columns: ['Sample', 'Chrom', 'Position Start', 'Position End', 'Reference','Mutation', 'Type', 'Length', 'Category']
-    # Sample  Chromosome      Start   End     Reference       Mutation        Type    Length  Category
+    # Columns: ['Sample', 'Chrom', 'Start', 'End', 'Ref','Alt', 'Type', 'Length', 'Category']
+    # Sample  Chrom      Start   End     Ref    Alt Type    Length  Category
 
     allIndelsFilePath = os.path.join(allIndelsFileName)
     # allIndelsFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, jobname,allIndelsFileName)
 
     # indels_df = pd.read_table(allIndelsFilePath,sep="\t",dtype={'Sample': str, 'Chromosome': str}, header=0)
-    #columnNames =     Project Sample  locID   Genome  mutType Chrom   Start   End     Ref     Alt     Type    VarID   Strand  Gene    GeneID  ccdsID  TranscriptID    GeneType
-
     indels_df = pd.read_table(allIndelsFilePath,sep="\t", header=0)
 
-    indels_df.rename(columns={'Chrom':'Chromosome', 'Position Start':'Start', 'Position End':'End'},inplace=True)
-    indels_df['Sample'] = indels_df['Sample'].astype(str)
-    indels_df['Chromosome'] = indels_df['Chromosome'].astype(str)
-    indels_df['Start'] = indels_df['Start'].astype(int)
-    indels_df['End'] = indels_df['End'].astype(int)
+    indels_df[SAMPLE] = indels_df[SAMPLE].astype(str)
+    indels_df[CHROM] = indels_df[CHROM].astype(str)
+    indels_df[START] = indels_df[START].astype(int)
+    indels_df[END] = indels_df[END].astype(int)
 
     ###########################################################################
-    listofSamples = indels_df['Sample'].unique()
+    listofSamples = indels_df[SAMPLE].unique()
 
     sample2NumberofIndelsDict = {}
     for sample in listofSamples:
-        numberofMutations =  len(indels_df[indels_df['Sample'] == sample])
+        numberofMutations =  len(indels_df[indels_df[SAMPLE] == sample])
         sample2NumberofIndelsDict[sample] = numberofMutations
     ###########################################################################
 
 
-    print('Number of samples in indels file: %d' %(len(indels_df['Sample'].unique())))
+    print('Number of samples in indels file: %d' %(len(indels_df[SAMPLE].unique())))
     print('Number of indels: %d' %(indels_df.shape[0]))
     print('Indels file shape')
     print(indels_df.shape)
 
-    # print('debug starts')
-    # print(indels_df.shape)
-    # print(indels_df.head())
-    # print(indels_df.columns)
-    # print('debug ends')
-
     # drop columns 'Reference','Mutation','Type','Length','Category'
     # Do not drop Length column. If length >= 3bp indel type is Microhomology otherwise < 3bp indel type is repeat-med indel
-    indels_df.drop(['Reference','Mutation','Type','Category'], axis=1, inplace=True, errors='ignore')
-
-    # print('debug starts')
-    # print('After Drop')
-    # print(indels_df.shape)
-    # print(indels_df.head())
-    # print(indels_df.columns)
-    # print('debug ends')
-
-    # #No need to rename, they are already 'Chromosome', 'Start', 'End'
-    # # rename the  columns
-    # indels_df.rename(columns = {'Chrom':'Chromosome', 'Position Start': 'Start', 'Position End':'End'}, inplace=True)
-    # print('After Rename')
-    # print(indels_df.shape)
-    # print(indels_df.head())
-    # print(indels_df.columns)
+    indels_df.drop([REF,ALT,TYPE,CATEGORY], axis=1, inplace=True, errors='ignore')
 
     #Add a new column called Count
-    grouped_mutation_df_by_sample = indels_df.groupby('Sample')
-    indels_df['Count'] = indels_df.groupby('Sample')['Sample'].transform('count')
-
-    # print('debug starts')
-    # print('After Add Column Count')
-    # print(indels_df.shape)
-    # print(indels_df.head())
-    # print(indels_df.columns)
-    # print('debug ends')
+    grouped_mutation_df_by_sample = indels_df.groupby(SAMPLE)
+    indels_df[COUNT] = indels_df.groupby(SAMPLE)[SAMPLE].transform('count')
 
     # grouped_mutation_df.groups
     print('Number of samples in indels file:%s' % len(grouped_mutation_df_by_sample))
 
     # Add a new column called MMR (Mis Match Repair)
     if 'Count' in indels_df.columns:
-        indels_df[MMR] = np.where(indels_df['Count'] >= 10000,DEFICIENT,PROFICIENT)
-
-    # print('debug starts')
-    # print('After Addd MMR column')
-    # print(indels_df.shape)
-    # print(indels_df.head())
-    # print(indels_df.columns)
-    # print('debug ends')
+        indels_df[MMR] = np.where(indels_df[COUNT] >= TEN_THOUSAND ,DEFICIENT,PROFICIENT)
 
     return sample2NumberofIndelsDict,indels_df
 ##################################################################
@@ -1702,12 +1679,14 @@ def readSignatureList(filePath):
 
 ########################################################################
 def readDictionary(filePath):
-    if (os.path.exists(filePath)):
+    if (os.path.exists(filePath) and (os.path.getsize(filePath) > 0)):
         with open(filePath,'r') as json_data:
             dictionary = json.load(json_data)
         return dictionary
     else:
-        return None
+        # return None
+        # Provide empty dictionary for not to fail for loops on None type dictionary
+        return {}
 ########################################################################
 
 ########################################################################
@@ -1815,22 +1794,9 @@ def readChromSizes(genomeAssemby):
     elif genomeAssemby==HG38:
         chromSizesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME, HG38_CHROM_SIZES)
 
-    print('for debug chromSizesFilePath')
-    print(chromSizesFilePath)
-
     chrom2size_df = pd.read_table(chromSizesFilePath, sep='\t', header = None, names = {'chrom','size'})
 
-    # print('chrom2size_df')
-    # print(chrom2size_df)
-
-    chrom2size_dict = {}
     chrom2size_dict = dict(zip(chrom2size_df['chrom'], chrom2size_df['size']))
-    # chrom2size_dict = chrom2size_df.set_index('chrom').to_dict()['size'] #also works
-
-    # print('chrom2size_dict[chr1]')
-    # print(chrom2size_dict['chr1'])
-    # print('chrom2size_dict[chrM]')
-    # print(chrom2size_dict['chrM'])
 
     return chrom2size_dict
 ########################################################################

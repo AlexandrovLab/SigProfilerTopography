@@ -22,8 +22,6 @@ from TopographyCommons import *
 def readProbabilities(probabilitiesFile):
 
     probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0)
-    # Let's read the ';' at the dataSource column sometimes
-    # mutation_df = pd.read_table(mutationsWithGenomicPositionFilePath, sep="\t", header=None, comment=';')
 
     print('###########################################')
     print('Probabilities information starts')
@@ -52,7 +50,7 @@ def readProbabilities(probabilitiesFile):
 
 ############################################################
 #Tested works correctly.
-def get3Nucleotides(chromosomeShort,start,end,humanGenome):
+def getNucleotides(chromosomeShort,start,end,humanGenome):
     if chromosomeShort == 'MT':
         chromosomeShort = 'M'
     elif chromosomeShort == '23':
@@ -62,72 +60,89 @@ def get3Nucleotides(chromosomeShort,start,end,humanGenome):
 
     chromosomeLong = 'chr' + chromosomeShort
     chrBased_humanGenome = humanGenome[chromosomeLong]
-    seq = chrBased_humanGenome.get_slice(start-2, end + 1)
+    seq = chrBased_humanGenome.get_slice(start,end)
     seq = seq.upper()
     return seq
 ############################################################
 
+
+
+
 ############################################################
-def complement(upperNucleotides):
-    complemented = ''
-    for upperNucleotide in upperNucleotides:
-        complemented += complementDict[upperNucleotide]
-    return complemented
+revcompl = lambda x: ''.join([{'A':'T','C':'G','G':'C','T':'A','N':'N'}[B] for B in x][::-1])
 ############################################################
 
 
 # ############################################################
-# def getMutationInformationOld(row,hg19_genome):
-#     originalNucleotide = row['originalNucleotide']
-#     mutatedNucleotide = row['mutatedNucleotide']
-#
-#     pyramidineStrand = 1
-#     # print('chrNumber: %s -- start: %d -- end: %d' %(chrNumber,start,end))
-#     threeNucleotidesUpper = get3Nucleotides(row['chrNumber'], row['start'], row['end'], hg19_genome)
-#
-#     if (originalNucleotide=='G' or originalNucleotide=='A' or originalNucleotide=='g' or originalNucleotide=='a'):
-#         originalNucleotide = complement(originalNucleotide.upper())
-#         mutatedNucleotide = complement(mutatedNucleotide.upper())
-#         threeNucleotidesUpper = complement(threeNucleotidesUpper)
-#         pyramidineStrand = -1
-#
-#     mutationType = '%s>%s' %(originalNucleotide,mutatedNucleotide)
-#     mutationSubtype = threeNucleotidesUpper
-#
-#     row['PyramidineStrand'] = pyramidineStrand
-#     row['Mutation Type'] = mutationType
-#     row['Mutation Subtype'] = mutationSubtype
-#
-#     # print('------- %s %s  %d' %(row['Mutation Type'],row['Mutation Subtype'],row['PyramidineStrand']))
-#     return row
+# def complement(upperNucleotides):
+#     complemented = ''
+#     for upperNucleotide in upperNucleotides:
+#         complemented += complementDict[upperNucleotide]
+#     return complemented
 # ############################################################
 
 
-#new code starts
-
 ############################################################
-def getMutationInformation(row,hg19_genome, hg38_genome):
-    originalNucleotide = row['Ref']
-    mutatedNucleotide = row['Alt']
-    pyramidineStrand = convertStrandIntoNum(row['Strand'])
+def getMutationPyramidineStrandInformation(row,hg19_genome,hg38_genome):
+    originalNucleotide = row[REF]
+    mutatedNucleotide = row[ALT]
 
-    if row['Genome'] == 'GRCh37':
-        threeNucleotidesUpper = get3Nucleotides(row['Chrom'], row['Start'], row['Start'], hg19_genome)
-    elif row['Genome'] == 'GRCh38':
-        threeNucleotidesUpper = get3Nucleotides(row['Chrom'], row['Start'], row['Start'], hg38_genome)
+    if (row[GENOME] == GRCh37 or row[GENOME]==HG19):
+        threeNucleotidesUpper = getNucleotides(row[CHROM], row[START]-2, row[START]+1, hg19_genome)
+        oneNucleotide = getNucleotides(row[CHROM], row[START]-1, row[START], hg19_genome)
+
+    elif (row[GENOME] == GRCh38 or row[GENOME]==HG38):
+        threeNucleotidesUpper = getNucleotides(row[CHROM], row[START]-2, row[START]+1, hg38_genome)
+        oneNucleotide = getNucleotides(row[CHROM], row[START]-1, row[START], hg38_genome)
+
+    if (oneNucleotide==originalNucleotide):
+        strand = +1
+    else:
+        strand = -1
 
     if (originalNucleotide=='G' or originalNucleotide=='A' or originalNucleotide=='g' or originalNucleotide=='a'):
-        originalNucleotide = complement(originalNucleotide.upper())
-        mutatedNucleotide = complement(mutatedNucleotide.upper())
-        threeNucleotidesUpper = complement(threeNucleotidesUpper)
-        pyramidineStrand = -1*pyramidineStrand
+        originalNucleotide = revcompl(originalNucleotide.upper())
+        mutatedNucleotide = revcompl(mutatedNucleotide.upper())
+        threeNucleotidesUpper = revcompl(threeNucleotidesUpper)
+        pyramidineStrand = -1*strand
+    else:
+        pyramidineStrand = strand
 
     mutations = '%s[%s>%s]%s' %(threeNucleotidesUpper[0],originalNucleotide,mutatedNucleotide,threeNucleotidesUpper[2])
 
-    row['Mutations'] = mutations
-    row['PyramidineStrand'] = pyramidineStrand
-    row['Mutation'] = '%s>%s' %(originalNucleotide,mutatedNucleotide)
-    row['Context'] = threeNucleotidesUpper
+    row[MUTATIONS] = mutations
+    row[PYRAMIDINESTRAND] = pyramidineStrand
+    row[MUTATION] = '%s>%s' %(originalNucleotide,mutatedNucleotide)
+    row[CONTEXT] = threeNucleotidesUpper
+
+    return row
+############################################################
+
+############################################################
+def getMutationInformation(row,hg19_genome, hg38_genome):
+    originalNucleotide = row[REF]
+    mutatedNucleotide = row[ALT]
+    strand = convertStrandIntoNum(row[STRAND])
+
+    if row[GENOME] == 'GRCh37':
+        threeNucleotidesUpper = getNucleotides(row[CHROM], row[START]-2, row[START]+1, hg19_genome)
+    elif row[GENOME] == 'GRCh38':
+        threeNucleotidesUpper = getNucleotides(row[CHROM], row[START]-2, row[START]+1, hg38_genome)
+
+    if (originalNucleotide=='G' or originalNucleotide=='A' or originalNucleotide=='g' or originalNucleotide=='a'):
+        originalNucleotide = revcompl(originalNucleotide.upper())
+        mutatedNucleotide = revcompl(mutatedNucleotide.upper())
+        threeNucleotidesUpper = revcompl(threeNucleotidesUpper)
+        pyramidineStrand = -1* strand
+    else:
+        pyramidineStrand = strand
+
+    mutations = '%s[%s>%s]%s' %(threeNucleotidesUpper[0],originalNucleotide,mutatedNucleotide,threeNucleotidesUpper[2])
+
+    row[MUTATIONS] = mutations
+    row[PYRAMIDINESTRAND] = pyramidineStrand
+    row[MUTATION] = '%s>%s' %(originalNucleotide,mutatedNucleotide)
+    row[CONTEXT] = threeNucleotidesUpper
 
     return row
 ############################################################
@@ -135,11 +150,8 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
 
 ############################################################
 def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
-    # Project	Sample	locID	Genome	mutType	Chrom	Start	End	Ref	Alt	Type	VarID	Gene	GeneID	ccdsID	TranscriptID
-    # 21_BRCA_WGS	PD3851a	.	GRCh37	INDEL	6	45960535	45960538	GTA	G	SOMATIC	67936580	CLIC5	ENSG00000112782	CCDS47438.1	ENST00000185206
 
-    column_names = ['Project', 'Sample', 'locID', 'Genome', 'mutType', 'Chrom', 'Start', 'End', 'Ref', 'Alt', 'Type', 'VarID', 'Gene', 'GeneID', 'ccdsID', 'TranscriptID']
-    indels_with_genomic_positions_df = pd.read_table(indelsInputFile, sep="\t", header=0, names=column_names,dtype={'Chrom': str, 'Sample':str})
+    indels_with_genomic_positions_df = pd.read_table(indelsInputFile, sep="\t", header=0, dtype={CHROM: str, SAMPLE: str})
 
     print('###########################################')
     print('Indels information starts')
@@ -156,55 +168,55 @@ def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
 
     # How many projects (cancer type)  are there?
     print('Unique projects (cancer type) in the indelsInputFile:')
-    print(indels_with_genomic_positions_df['Project'].unique())
-    print('# of projects in the indelsInputFile: %d' % len(indels_with_genomic_positions_df['Project'].unique()))
+    print(indels_with_genomic_positions_df[PROJECT].unique())
+    print('# of projects in the indelsInputFile: %d' % len(indels_with_genomic_positions_df[PROJECT].unique()))
     print()
 
     #How many samples are there?
     print('Unique sample names in the indelsInputFile:')
-    print(indels_with_genomic_positions_df['Sample'].unique())
-    print('# of samples in the indelsInputFile: %d' %len(indels_with_genomic_positions_df['Sample'].unique()))
+    print(indels_with_genomic_positions_df[SAMPLE].unique())
+    print('# of samples in the indelsInputFile: %d' %len(indels_with_genomic_positions_df[SAMPLE].unique()))
     print()
 
     print('Unique chroms in the indelsInputFile:')
-    print(indels_with_genomic_positions_df['Chrom'].unique())
-    print('# of chroms in the indelsInputFile: %d' % len(indels_with_genomic_positions_df['Chrom'].unique()))
+    print(indels_with_genomic_positions_df[CHROM].unique())
+    print('# of chroms in the indelsInputFile: %d' % len(indels_with_genomic_positions_df[CHROM].unique()))
     print()
 
     print('Unique genomes in the indelsInputFile:')
-    print(indels_with_genomic_positions_df['Genome'].unique())
-    print('# of genomes in the indelsInputFile: %d' % len(indels_with_genomic_positions_df['Genome'].unique()))
+    print(indels_with_genomic_positions_df[GENOME].unique())
+    print('# of genomes in the indelsInputFile: %d' % len(indels_with_genomic_positions_df[GENOME].unique()))
     print()
 
     print('Unique types in the indelsInputFile:')
-    print(indels_with_genomic_positions_df['Type'].unique())
-    print('# of types in the indelsInputFile: %d' % len(indels_with_genomic_positions_df['Type'].unique()))
+    print(indels_with_genomic_positions_df[TYPE].unique())
+    print('# of types in the indelsInputFile: %d' % len(indels_with_genomic_positions_df[TYPE].unique()))
     print()
 
     print('Indels information ends')
     print('###########################################')
 
     # Drop the columns
-    indels_with_genomic_positions_df.drop(['locID', 'Genome', 'Type', 'VarID', 'Gene', 'GeneID', 'ccdsID', 'TranscriptID'],inplace=True, axis=1)
+    indels_with_genomic_positions_df.drop(['locID', 'Genome', 'Type', 'VarID', 'Gene', 'GeneID', 'ccdsID', 'TranscriptID'],inplace=True, errors='ignore', axis=1)
 
     #Add the requested columns
     # Vectorized implementation on Pandas series
-    indels_with_genomic_positions_df['Length'] = abs(indels_with_genomic_positions_df['Ref'].str.len() - indels_with_genomic_positions_df['Alt'].str.len())
-    indels_with_genomic_positions_df['Category'] = np.where(indels_with_genomic_positions_df['Length'] > 3,'INDEL(>3bp)', 'INDEL(<=3bp)')
+    indels_with_genomic_positions_df[LENGTH] = abs(indels_with_genomic_positions_df[REF].str.len() - indels_with_genomic_positions_df[ALT].str.len())
+    indels_with_genomic_positions_df[CATEGORY] = np.where(indels_with_genomic_positions_df[LENGTH] > 3,INDEL_GT_3BP, INDEL_LTE_3BP)
 
     # Rename
-    indels_with_genomic_positions_df.rename(columns={'Start' : 'Position Start', 'End' : 'Position End','Ref':'Reference','Alt':'Mutation', 'mutType' : 'Type'}, inplace=True)
 
+    indels_with_genomic_positions_df.rename(columns={'mutType' : TYPE}, inplace=True)
 
     #Order the columns
     # Column order we want to have:
-    ordered_column_names = ['Project','Sample',	'Chrom',	'Position Start',	'Position End',	'Reference',	'Mutation',	'Type',	'Length','Category']
+    ordered_column_names = [PROJECT, SAMPLE, CHROM, START, END, REF, ALT, TYPE, LENGTH, CATEGORY]
     indels_with_genomic_positions_df = indels_with_genomic_positions_df[ordered_column_names]
 
 
     #########################################################
     #Write indels_df by project
-    indels_df_groupby_project = indels_with_genomic_positions_df.groupby('Project')
+    indels_df_groupby_project = indels_with_genomic_positions_df.groupby(PROJECT)
 
     numberofGroupsBasedonProject = len(indels_df_groupby_project)
     print('numberofGroupsBasedonProject:%d' %(numberofGroupsBasedonProject))
@@ -216,7 +228,7 @@ def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
         else:
             mutations_indels_filePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,INPUT,jobname,jobname + '_' + projectType + '_indels_for_topography.txt')
         if (projectBased_indels_df is not None):
-            projectBased_indels_df.to_csv(mutations_indels_filePath, sep='\t', header=True, index=False , columns = ['Sample',	'Chrom',	'Position Start',	'Position End',	'Reference',	'Mutation',	'Type',	'Length','Category'])
+            projectBased_indels_df.to_csv(mutations_indels_filePath, sep='\t', header=True, index=False , columns = [SAMPLE, CHROM,	START, END,	REF, ALT, TYPE, LENGTH, CATEGORY])
     #########################################################
 
 ############################################################
@@ -225,8 +237,17 @@ def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
 def readMutationsWithGenomicPositions(snpsInputFile):
     mutationsWithGenomicPositionFilePath = os.path.join(snpsInputFile)
 
-    column_names = ['Project', 'Sample', 'locID', 'Genome',	'mutType', 'Chrom',	'Start', 'End',	'Ref', 'Alt', 'Type', 'VarID', 'Strand', 'Gene', 'GeneID','ccdsID', 'TranscriptID',	'GeneType']
-    snps_with_genomic_positions_df = pd.read_table(mutationsWithGenomicPositionFilePath, sep="\t", header=0, names=column_names,dtype={'Chrom': str, 'Sample':str})
+    # column_names_18 = ['Project', 'Sample', 'locID', 'Genome', 'mutType', 'Chrom', 'Start', 'End', 'Ref', 'Alt', 'Type', 'VarID', 'Strand', 'Gene', 'GeneID','ccdsID', 'TranscriptID',	'GeneType']
+    # column_names_11 = ['Project', 'Sample', 'locID', 'Genome', 'mutType', 'Chrom', 'Start', 'End', 'Ref', 'Alt', 'Type']
+
+    # Project Sample  locID   Genome  mutType Chrom Start   End     Ref     Alt     Type    VarID   Strand  Gene    GeneID  ccdsID  TranscriptID    GeneType
+    # 21_BRCA_WGS     PD3851a .       GRCh37  SNV     1       809687  809688  G       C       SOMATIC 27610826
+    #
+    # Project Sample  locID   Genome  mutType Chrom   Start   End     Ref     Alt     Type
+    #BRCA    PD10010a        CGP     GRCh37  SNP     X       4643309 4643309 G       A       SOMATIC
+
+    # snps_with_genomic_positions_df = pd.read_table(mutationsWithGenomicPositionFilePath, sep="\t", header=0, names=column_names,dtype={'Chrom': str, 'Sample':str})
+    snps_with_genomic_positions_df = pd.read_table(mutationsWithGenomicPositionFilePath, sep="\t", header=0, dtype={CHROM: str, SAMPLE: str})
 
     print('###########################################')
     print('SNPs information starts')
@@ -243,29 +264,29 @@ def readMutationsWithGenomicPositions(snpsInputFile):
 
     # How many projects (cancer type)  are there?
     print('Unique projects (cancer type) in the snpsInputFile:')
-    print(snps_with_genomic_positions_df['Project'].unique())
-    print('# of projects in the snpsInputFile: %d' % len(snps_with_genomic_positions_df['Project'].unique()))
+    print(snps_with_genomic_positions_df[PROJECT].unique())
+    print('# of projects in the snpsInputFile: %d' % len(snps_with_genomic_positions_df[PROJECT].unique()))
     print()
 
     #How many samples are there?
     print('Unique sample names in the snpsInputFile:')
-    print(snps_with_genomic_positions_df['Sample'].unique())
-    print('# of samples in the snpsInputFile: %d' %len(snps_with_genomic_positions_df['Sample'].unique()))
+    print(snps_with_genomic_positions_df[SAMPLE].unique())
+    print('# of samples in the snpsInputFile: %d' %len(snps_with_genomic_positions_df[SAMPLE].unique()))
     print()
 
     print('Unique chroms in the snpsInputFile:')
-    print(snps_with_genomic_positions_df['Chrom'].unique())
-    print('# of chroms in the snpsInputFile: %d' % len(snps_with_genomic_positions_df['Chrom'].unique()))
+    print(snps_with_genomic_positions_df[CHROM].unique())
+    print('# of chroms in the snpsInputFile: %d' % len(snps_with_genomic_positions_df[CHROM].unique()))
     print()
 
     print('Unique genomes in the snpsInputFile:')
-    print(snps_with_genomic_positions_df['Genome'].unique())
-    print('# of genomes in the snpsInputFile: %d' % len(snps_with_genomic_positions_df['Genome'].unique()))
+    print(snps_with_genomic_positions_df[GENOME].unique())
+    print('# of genomes in the snpsInputFile: %d' % len(snps_with_genomic_positions_df[GENOME].unique()))
     print()
 
     print('Unique types in the snpsInputFile:')
-    print(snps_with_genomic_positions_df['Type'].unique())
-    print('# of types in the snpsInputFile: %d' % len(snps_with_genomic_positions_df['Type'].unique()))
+    print(snps_with_genomic_positions_df[TYPE].unique())
+    print('# of types in the snpsInputFile: %d' % len(snps_with_genomic_positions_df[TYPE].unique()))
     print()
 
     print('SNPs information ends')
@@ -300,23 +321,24 @@ def combineGenomicPositionsWithSignatureProbabilitiesParallel(chrBased_cancerTyp
     # What apply method returns depend on the the return type in the apply method.
     # For example, if you return one value in apply, after your call, apply will return series.
     # If you return values in apply, after your call, apply will return dataframe.
-    chrBased_cancerTypeBased_df = chrBased_snps_df.apply(getMutationInformation,hg19_genome=hg19_genome,hg38_genome=hg38_genome,axis=1)
+    if STRAND in chrBased_snps_df.columns:
+        chrBased_cancerTypeBased_df = chrBased_snps_df.apply(getMutationInformation,hg19_genome=hg19_genome,hg38_genome=hg38_genome,axis=1)
+    else:
+        chrBased_cancerTypeBased_df = chrBased_snps_df.apply(getMutationPyramidineStrandInformation,hg19_genome=hg19_genome,hg38_genome=hg38_genome,axis=1)
+
 
     print('For chr%s ' %chrNumber)
-    result_df = pd.merge(chrBased_cancerTypeBased_df, probabilitiles_df, how='inner', left_on=['Sample','Mutations'], right_on=['Sample','Mutations'])
+    result_df = pd.merge(chrBased_cancerTypeBased_df, probabilitiles_df, how='inner', left_on=[SAMPLE,MUTATIONS], right_on=[SAMPLE,MUTATIONS])
 
     #Drop the unnecessary columns after getMutationInformation
-    result_df.drop(['Project', 'Genome', 'Ref', 'Alt', 'Strand'], inplace=True, axis=1)
-
-    # rename column names
-    result_df.rename(columns={'Chrom': 'Chromosome'},inplace=True)
+    result_df.drop([PROJECT, GENOME, REF, ALT, STRAND], inplace=True, axis=1,errors='ignore')
 
     columnNames = list(result_df.columns.values)
-    indexofContext = columnNames.index('Context')
+    indexofContext = columnNames.index(CONTEXT)
     signatureColumnNames = columnNames[indexofContext+1:]
 
     # Column order we want to have:
-    ordered_column_names = ['Sample', 'Chromosome', 'Start', 'End', 'PyramidineStrand', 'Mutation', 'Context']
+    ordered_column_names = [SAMPLE, CHROM, START, END, PYRAMIDINESTRAND, MUTATION, CONTEXT]
     ordered_column_names.extend(signatureColumnNames)
 
     result_df = result_df[ordered_column_names]
@@ -336,13 +358,13 @@ def mergeSNPsWithSignatureProbabilities(
         hg19_genome,
         hg38_genome):
 
-    current_abs_path = os.path.abspath(os.path.dirname(__file__))
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT,jobname), exist_ok=True)
 
     ################################################################
     # Get signature column names after Mutations column
     signature_probabilities_columnNames = probabilities_df.columns.values
-    mutationsIndex = list(signature_probabilities_columnNames).index('Mutations')
+    mutationsIndex = list(signature_probabilities_columnNames).index(MUTATIONS)
     signatureColumnNames = signature_probabilities_columnNames[mutationsIndex + 1:]
     print(signatureColumnNames)
 
@@ -352,7 +374,7 @@ def mergeSNPsWithSignatureProbabilities(
 
     ################################################################
     print('#################################')
-    snps_df_groupedby_project = snps_df.groupby(['Project'])
+    snps_df_groupedby_project = snps_df.groupby([PROJECT])
     print('#################################')
     ################################################################
 
@@ -393,7 +415,7 @@ def mergeSNPsWithSignatureProbabilities(
         ################################################
         # Parallel takes 3 minutes
         #group by chromosome
-        chrBased_cancerTypeBased_grouped = cancerTypeBased_snps_df.groupby('Chrom')
+        chrBased_cancerTypeBased_grouped = cancerTypeBased_snps_df.groupby(CHROM)
 
         #Print number of groups
         print('len(chrBased_cancerTypeBased_grouped)')
@@ -461,7 +483,12 @@ def mergeSNPsWithSignatureProbabilities(
 #Returns snp_df and indel_df for each read sample file
 def readSampleBasedSimulationBasedDF(sampleBasedSimulationsInputPath,sampleName,simulationNumber,mutationTypes):
     # sampleFileName =PD10010a_INDEL_96_10.txt
-    sampleFileName = '%s_%s_%s_%d.txt' %(sampleName,mutationTypes[1],mutationTypes[0],simulationNumber)
+
+    if (len(mutationTypes)==2):
+        sampleFileName = '%s_%s_%s_%d.txt' %(sampleName,mutationTypes[1],mutationTypes[0],simulationNumber)
+    elif (len(mutationTypes)==1):
+        sampleFileName = '%s_%s_%d.txt' %(sampleName,mutationTypes[0],simulationNumber)
+
     sampleBasedSimulationFilePath = os.path.join(sampleBasedSimulationsInputPath,sampleName,sampleFileName)
 
     # print('##############################################################')
@@ -500,12 +527,9 @@ def readSampleBasedSimulationBasedDF(sampleBasedSimulationsInputPath,sampleName,
 
 
 ################################################################
-def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df):
+def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genome,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df):
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
-
-    #sigProfilerSimulatorSpecificDirName
-    #21BreastCancer_simulations_GRCh37_INDEL_96
 
     # /oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input/21BreastCancer/output/simulations/21BreastCancer_simulations_GRCh37_INDEL_96/
     sampleBasedSimulationsInputPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, jobname, OUTPUT, SIMULATIONS, sigProfilerSimulatorSpecificDirName)
@@ -514,13 +538,14 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
     output_path = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,INPUT,jobname,SIMULATIONS_FOR_TOPOGRAPHY)
 
     #read hg19_genome
-    if (genomeAssembly==HG19):
-        human_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT))
-    elif (genomeAssembly==HG38):
-        human_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT))
+    if (genome==HG19 or genome==GRCh37 ):
+        human_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT))
+    elif (genome==HG38 or genome==GRCh38):
+        human_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT))
 
-    if os.path.exists(output_path):
-        os.system("rm -rf " + output_path)
+    #Let's not remove the existing prepared simulation data for SigProfilerTopography
+    # if os.path.exists(output_path):
+    #     os.system("rm -rf " + output_path)
 
     os.makedirs(output_path, exist_ok=True)
 
@@ -569,7 +594,7 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
         ##########################################################################################################
         ######################################## New way: Indels starts ##########################################
         ##########################################################################################################
-        if (simulationBased_allSamples_indel_df is not None):
+        if ((simulationBased_allSamples_indel_df is not None) and (not simulationBased_allSamples_indel_df.empty)):
 
             print('########  before all ##########')
             print('simulationBased_allSamples_indel_df.shape')
@@ -587,32 +612,35 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
 
             # left here new columns
             # column_names = ['chrNumber', 'start', 'sample', 'originalNucleotide', 'mutatedNucleotide','dot' ,'dataSource','genomeAssembly', 'type', 'strand']
-            # X       77873197        PD10010a        T       A       .       Simulations     GRCh37  TTT     +1
+            # 1       198717710       PD10010a        ATTTG   A       .       Simulations     GRCh37  4:Del:M:2       +1
 
-
+            simulationBased_allSamples_indel_df.columns = [CHROM, START, SAMPLE, REF, ALT, DOT, DATASOURCE, GENOME, MUTATION, STRAND]
 
             # Add Length column to the indels_df
-            # simulationBased_allSamples_indel_df['Length'] = simulationBased_allSamples_indel_df.apply(get_indel_length,axis=1)
-            simulationBased_allSamples_indel_df['Length'] = abs(simulationBased_allSamples_indel_df.iloc[:,3].str.len() - simulationBased_allSamples_indel_df.iloc[:,4].str.len()) +1
+            # simulationBased_allSamples_indel_df[LENGTH] = abs(simulationBased_allSamples_indel_df.iloc[:,3].str.len() - simulationBased_allSamples_indel_df.iloc[:,4].str.len()) +1
+            simulationBased_allSamples_indel_df[LENGTH] = abs(simulationBased_allSamples_indel_df[REF].str.len() - simulationBased_allSamples_indel_df[ALT].str.len()) + 1
 
             # Add columns
-            simulationBased_allSamples_indel_df['Type'] = 'INDEL'
+            simulationBased_allSamples_indel_df[TYPE] = INDEL
 
-            # simulationBased_allSamples_indel_df['End'] = simulationBased_allSamples_indel_df['Start'] + simulationBased_allSamples_indel_df['Length']
-            simulationBased_allSamples_indel_df['Position End'] = simulationBased_allSamples_indel_df.iloc[:,1] + simulationBased_allSamples_indel_df['Length'] - 1
+            #End inclusive.
+            # simulationBased_allSamples_indel_df[END] = simulationBased_allSamples_indel_df.iloc[:,1] + simulationBased_allSamples_indel_df[LENGTH] - 1
+            simulationBased_allSamples_indel_df[END] = simulationBased_allSamples_indel_df[START] + simulationBased_allSamples_indel_df[LENGTH] - 1
 
             # Add a new column Category
             # simulationBased_allSamples_indel_df['Category'] = np.where(simulationBased_allSamples_indel_df['Length'] > 3, 'INDEL(>3bp)', 'INDEL(<=3bp)')
-            simulationBased_allSamples_indel_df['Category'] = np.where(simulationBased_allSamples_indel_df['Length'] > 3, 'INDEL(>3bp)', 'INDEL(<=3bp)')
+            simulationBased_allSamples_indel_df[CATEGORY] = np.where(simulationBased_allSamples_indel_df[LENGTH] > 3, INDEL_GT_3BP, INDEL_LTE_3BP)
 
             # drop the unnecessary columns
-            simulationBased_allSamples_indel_df.drop([5,6,7,8,9], inplace=True, axis=1)
+            # simulationBased_allSamples_indel_df.drop([5,6,7,8,9], inplace=True, axis=1)
+            #TODO We may not drop MUTATION and STRAND
+            simulationBased_allSamples_indel_df.drop([DOT,DATASOURCE,GENOME,MUTATION,STRAND], inplace=True, axis=1)
 
             #Provide column names
-            simulationBased_allSamples_indel_df.columns = ['Chrom', 'Position Start', 'Sample', 'Reference', 'Mutation', 'Length', 'Type', 'Position End',  'Category']
+            simulationBased_allSamples_indel_df.columns = [CHROM, START, SAMPLE, REF, ALT, LENGTH, TYPE, END,  CATEGORY]
 
             #Reorder columns
-            simulationBased_allSamples_indel_df = simulationBased_allSamples_indel_df[['Sample', 'Chrom', 'Position Start', 'Position End', 'Reference', 'Mutation', 'Type', 'Length', 'Category']]
+            simulationBased_allSamples_indel_df = simulationBased_allSamples_indel_df[[SAMPLE, CHROM, START, END, REF, ALT, TYPE, LENGTH, CATEGORY]]
 
             print('############ after all ##########')
             print('simulationBased_allSamples_indel_df.shape')
@@ -638,7 +666,7 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
         ##########################################################################################################
         ######################################## New way: SNPs starts ############################################
         ##########################################################################################################
-        if (simulationBased_allSamples_snp_df is not None):
+        if ((simulationBased_allSamples_snp_df is not None) and (not simulationBased_allSamples_snp_df.empty)):
 
             print('############# before all ############')
             print('simulationBased_allSamples_snp_df.shape')
@@ -671,30 +699,36 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
 
             # left here new columns
             # column_names = ['chrNumber', 'start', 'sample', 'originalNucleotide', 'mutatedNucleotide','dot' ,'dataSource','genomeAssembly', 'type', 'strand']
-            #X       18050372        PD3851a C       A       .       Simulations     GRCh37  ACT     -1
-            #X       77873197        PD10010a        T       A       .       Simulations     GRCh37  TTT     +1
+            # X       25826390        PD10010a        T       A       .       Simulations     GRCh37  CTG     +1
+            simulationBased_allSamples_snp_df.columns= [CHROM, START, SAMPLE, REF, ALT, DOT, DATASOURCE, GENOME, CONTEXT, PYRAMIDINESTRAND]
 
 
             # Add columns
-            simulationBased_allSamples_snp_df['End'] = simulationBased_allSamples_snp_df.iloc[:, 1]
+            # simulationBased_allSamples_snp_df[END] = simulationBased_allSamples_snp_df.iloc[:, 1]
+            simulationBased_allSamples_snp_df[END] = simulationBased_allSamples_snp_df[START]
 
             # Add Mutations column
-            # simulationBased_allSamples_snp_df['Mutations'] = simulationBased_allSamples_snp_df.iloc[:,8] + '[' + simulationBased_allSamples_snp_df['Reference2Mutation'] + ']'+ simulationBased_allSamples_snp_df.iloc[:,8]
-            simulationBased_allSamples_snp_df['Mutations'] = simulationBased_allSamples_snp_df.iloc[:, 8].str[0] + '[' + \
-                                                             simulationBased_allSamples_snp_df.iloc[:,3] + '>' + simulationBased_allSamples_snp_df.iloc[:,4] + ']' + \
-                                                             simulationBased_allSamples_snp_df.iloc[:, 8].str[2]
+            # For merging with probabilities
+            # simulationBased_allSamples_snp_df[MUTATIONS] = simulationBased_allSamples_snp_df.iloc[:, 8].str[0] + '[' + \
+            #                                                  simulationBased_allSamples_snp_df.iloc[:,3] + '>' + simulationBased_allSamples_snp_df.iloc[:,4] + ']' + \
+            #                                                  simulationBased_allSamples_snp_df.iloc[:, 8].str[2]
+            simulationBased_allSamples_snp_df[MUTATIONS] = simulationBased_allSamples_snp_df[CONTEXT].str[0] + '[' + \
+                                                             simulationBased_allSamples_snp_df[REF] + '>' + simulationBased_allSamples_snp_df[ALT] + ']' + \
+                                                             simulationBased_allSamples_snp_df[CONTEXT].str[2]
 
-            simulationBased_allSamples_snp_df['Mutation'] = simulationBased_allSamples_snp_df.iloc[:,3] + '>' + simulationBased_allSamples_snp_df.iloc[:,4]
 
+            # simulationBased_allSamples_snp_df[MUTATION] = simulationBased_allSamples_snp_df.iloc[:,3] + '>' + simulationBased_allSamples_snp_df.iloc[:,4]
+            simulationBased_allSamples_snp_df[MUTATION] = simulationBased_allSamples_snp_df[REF] + '>' + simulationBased_allSamples_snp_df[ALT]
 
             #drop the unnecessary columns
-            simulationBased_allSamples_snp_df.drop([3,4,5,6,7], inplace=True, axis=1)
+            # simulationBased_allSamples_snp_df.drop([3,4,5,6,7], inplace=True, axis=1)
+            simulationBased_allSamples_snp_df.drop([REF, ALT, DOT, DATASOURCE, GENOME], inplace=True, axis=1)
 
             #Give column names
-            simulationBased_allSamples_snp_df.columns= ['Chromosome', 'Start', 'Sample','Context', 'PyramidineStrand', 'End', 'Mutations', 'Mutation' ]
+            simulationBased_allSamples_snp_df.columns= [CHROM, START, SAMPLE, CONTEXT, PYRAMIDINESTRAND, END, MUTATIONS, MUTATION]
 
             #Reorder columns
-            simulationBased_allSamples_snp_df = simulationBased_allSamples_snp_df[['Sample', 'Mutations', 'Chromosome', 'Start', 'End', 'PyramidineStrand', 'Mutation', 'Context']]
+            simulationBased_allSamples_snp_df = simulationBased_allSamples_snp_df[[SAMPLE, MUTATIONS, CHROM, START, END, PYRAMIDINESTRAND, MUTATION, CONTEXT]]
 
             print('################# after all ###############')
             print('simulationBased_allSamples_snp_df.shape')
@@ -718,24 +752,24 @@ def prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssem
 
             print('for debug starts')
             print('Unique samples in probabilities_df')
-            print(probabilities_df['Sample'].unique())
+            print(probabilities_df[SAMPLE].unique())
             print('Unique Mutations in probabilities_df')
-            print(probabilities_df['Mutations'].unique())
+            print(probabilities_df[MUTATIONS].unique())
 
             print('Unique samples in simulationBased_allSamples_snp_df')
-            print(simulationBased_allSamples_snp_df['Sample'].unique())
+            print(simulationBased_allSamples_snp_df[SAMPLE].unique())
             print('Unique Mutations in simulationBased_allSamples_snp_df')
-            print(simulationBased_allSamples_snp_df['Mutations'].unique())
+            print(simulationBased_allSamples_snp_df[MUTATIONS].unique())
             print('for debug ends')
 
             # Merge with signature probabilities
             # In probabilities_df there is no 'Cancer Type' or 'Project' column, there is 'Sample' and 'Mutations' columns
             result_df = pd.merge(simulationBased_allSamples_snp_df, probabilities_df, how='inner',
-                                 left_on=['Sample', 'Mutations'],
-                                 right_on=['Sample', 'Mutations'])
+                                 left_on=[SAMPLE, MUTATIONS],
+                                 right_on=[SAMPLE, MUTATIONS])
 
             #Drop Mutations column after merge
-            result_df.drop(['Mutations'], inplace=True, axis=1)
+            result_df.drop([MUTATIONS], inplace=True, axis=1)
 
             print('################# after merge ###############')
             print('result_df.shape')
