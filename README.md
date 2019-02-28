@@ -1,42 +1,33 @@
 # SigProfilerTopography
-SigProfilerTopography provides topography analyses for substitutions, dinucleotides and indels for each sample and all samples pooled. The tool seamlessly integrates with other SigProfiler tools.
+SigProfilerTopography provides topography analyses for substitutions, dinucleotides and indels for each sample and all samples pooled.
 
-**INTRODUCTION**
-The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues.
-
-**PREREQUISITES**
-
-The framework is written in PYTHON, however, it also requires the following software with the given versions (or newer):
-
-  * PYTHON          version 3.4 or newer
-  * PANDAS [MODULE]        any version
-#  * WGET                   version 1.9
-#  * SigProfilerPlotting    newest version (https://github.com/AlexandrovLab/SigProfilerPlotting)
-
-By default the installation process will save the FASTA files for all chromosomes for the default genome
-assemblies (GRCh37, GRCH38, mm10, mm9). As a result, ~3 Gb of storage must be available for the downloads for each genome.
 
 **QUICK START GUIDE**
 
-This section will guide you through the minimum steps required to create mutational matrices:
+This section will guide you through the minimum steps required to run SigProfilerTopography:
 1. Install the python package using pip:
 ```
                           pip install SigProfilerTopography
 ```
-2. Install your desired reference genome from the command line/terminal as follows (available reference genomes are: GRCh37, GRCh38, mm9, and mm10):
+2. Import SigProfilerTopography as follows:
 ```
 $ python
->> from SigProfilerTopography import install as genInstall
->> genInstall.install('GRCh37')
+>> from SigProfilerTopography import SigProfilerTopography as topography
+>> import os
 ```
-    This will install the human 37 assembly as a reference genome. You may install as many genomes as you wish.
+
 
 3. Place your vcf files in your desired output folder. It is recommended that you name this folder based on your project's name
 4. From within a python session, you can now generate the matrices as follows:
 ```
 $ python3
->>from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
->>matrices = matGen.SigProfilerMatrixGeneratorFunc("test", "GRCh37", "/Users/ebergstr/Desktop/test",plot=True)
+>>current_abs_path = os.path.abspath(os.path.dirname(__file__))
+>>jobname = '21BreastCancer'
+>>dataDir = '%s/SigProfilerTopography/input/%s' %(current_abs_path,jobname)
+>>snpsForTopography= '%s/%s_snps_for_topography.txt' %(dataDir,jobname)
+>>indelsForTopography= '%s/%s_indels_for_topography.txt' %(dataDir,jobname)
+>>topography.runAnalyses(snpsForTopography,indelsForTopography,jobname,'wgEncodeSydhNsomeGm12878Sig.wig','GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig','GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed','GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed')
+
 ```
   The layout of the parameters are as follows:
 
@@ -47,37 +38,38 @@ $ python3
 
 **INPUT FILE FORMAT**
 
-This tool currently supports maf, vcf, simple text file, and ICGC formats. The user must provide variant data adhering to one of these four formats. If the user’s files are in vcf format, each sample must be saved as a separate files.
+This tool currently supports simple text file format. The user must provide variant data with its path as in the case of snpsForTopography and indelsForTopography in the sample run.
 
+**LIBRARY**
 
-**Output File Structure**
+This tool uses ENCODE provided files for topography analysis such as nucleosome occupancy, replcation time files.
+These files have to provided under
 
-The output structure is divided into three folders: input, output, and logs. The input folder contains copies of the user-provided input files. The outputfolder contains
-a DINUC, SBS, INDEL, and TSB folder (there will also be a plots folder if this parameter is chosen). The matrices will be saved into the appropriate folders. The logs
-folder contains the error and log files for the submitted job.
+SigProfilerTopography/lib/
 
+By the way
 
-#**SUPPORTED GENOMES**
+SigProfilerTopography/lib/ and SigProfilerTopography/source/ are at the same level.
 
-#This tool currently supports the following genomes:
+**LIBRARY NUCLEOSOME OCCUPANCY**
 
-#GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 37), INSDC
-#Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. This genome was downloaded from ENSEMBL database version 93.38.
+SigProfilerTopography/lib/nucleosome/wgEncodeSydhNsomeGm12878Sig.wig
 
-#GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC
-#Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. This genome was downloaded from ENSEMBL database version 93.37.
+**LIBRARY REPLICATION TIME**
 
-#GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC
-#Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. This genome was downloaded from ENSEMBL database version 93.38.
+SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
+SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
+SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
 
-#GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18.
-#Released Jan 2011. Last updated March 2012. This genome was downloaded from ENSEMBL database version release 67.
+**LIBRARY TRANSCRIPTS**
 
+SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
 
-#**LOG FILES**
+**LIBRARY HG19 and HG38 twobit files **
 
-#All errors and progress checkpoints are saved into *sigProfilerMatrixGenerator_[project]_[genome].err* and *sigProfilerMatrixGenerator_[project]_[genome].out*, respectively.
-#For all errors, please email the error and progress log files to the primary contact under CONTACT INFORMATION.
+SigProfilerTopography/lib/ucscgenome/hg19.2bit
+SigProfilerTopography/lib/ucscgenome/hg38.2bit
+
 
 **COPYRIGHT**
 
