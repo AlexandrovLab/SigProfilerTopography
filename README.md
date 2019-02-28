@@ -17,8 +17,7 @@ $ python
 ```
 
 
-3. Place your vcf files in your desired output folder. It is recommended that you name this folder based on your project's name
-4. From within a python session, you can run the topography analyses as follows:
+3. From within a python session, you can run the topography analyses as follows:
 ```
 $ python3
 >>current_abs_path = os.path.abspath(os.path.dirname(__file__))
@@ -33,7 +32,7 @@ $ python3
 
 **INPUT FILE FORMAT**
 
-This tool currently supports simple text file format. The user must provide variant data with its path as in the case of snpsForTopography and indelsForTopography in the sample run.
+This tool currently supports simple text file format. The user must provide input files with their paths.
 
 **SAMPLE INPUT FILES**
 Download sample snps and indels input data from
@@ -48,7 +47,7 @@ These files have to provided under
 SigProfilerTopography/lib/
 
 By the way
-SigProfilerTopography/lib/ and SigProfilerTopography/source/ are at the same level.
+SigProfilerTopography/lib/ and SigProfilerTopography/source/ must be at the same level.
 
 **LIBRARY NUCLEOSOME OCCUPANCY**
 
@@ -67,9 +66,9 @@ GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed.gz from
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923442
 
 Step2: Convert .bed.gz into .bed
-Convert .bigWig file into .wig
+Step3: Convert .bigWig file into .wig
 
-Step3: Provide these files under
+Step4: Provide these files under
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
@@ -87,9 +86,8 @@ SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
 **LIBRARY HG19 and HG38 twobit files**
 
 Step1: Download hg19.2bit and hg38.2bit from
-http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit
+http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit and
 http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit
-
 
 Step2: Provide hg19.2bit and hg38.2bit under
 SigProfilerTopography/lib/ucscgenome/hg19.2bit
