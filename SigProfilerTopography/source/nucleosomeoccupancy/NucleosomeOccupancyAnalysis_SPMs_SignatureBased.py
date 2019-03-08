@@ -92,14 +92,16 @@ def fillSignalArrayAndCountArrayWithExtraSampleBased(combinedList):
     chrBased_mutation_df = combinedList[0]
     chrBased_nucleosome_df_split = combinedList[1]
     chrLong = combinedList[2]
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = combinedList[3]
-    samplesWithAtLeast10KMutations2NumberofMutationsDict = combinedList[4]
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = combinedList[5]
+    maximum_chrom_size = combinedList[3]
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = combinedList[4]
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = combinedList[5]
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = combinedList[6]
 
     ###########################################################################
     # Initialize chrBased_nucleosome_split_array with np array of zeros
     # Fill the nucleosome split array using chrBased_nucleosome_df_split
     chrBased_nucleosome_split_array = np.zeros(MAXIMUM_CHROMOSOME_LENGTH, dtype=np.float32)
+    #In fact here, we are increasing our memory usage
     chrBased_nucleosome_df_split.apply(fillNucleosomeSignalArray, nucleosome_array=chrBased_nucleosome_split_array, axis=1)
     ###########################################################################
 
@@ -160,6 +162,7 @@ def fillSignalArrayAndCountArrayWithExtraSampleBased(combinedList):
     # Fill signature2SignalArrayDict and signature2CountArrayDict using chrBased_mutation_df and chrBased_nucleosome_split_array
     chrBased_mutation_df.apply(fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased,
                                nucleosome_array=chrBased_nucleosome_split_array,
+                               maximum_chrom_size=maximum_chrom_size,
                                signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                                samplesWithAtLeast10KMutations2NumberofMutationsDict=samplesWithAtLeast10KMutations2NumberofMutationsDict,
                                sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict= sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
@@ -331,6 +334,16 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased(jobname, singlePointMutation
     withExtraSampleBasedAnalysis = True
 
     ##########################################################################################
+    GRCh37ChromSizesDict = {}
+
+    GRCh37ChromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
+
+    if (os.path.exists(GRCh37ChromSizesDictPath)):
+        GRCh37ChromSizesDict = readDictionary(GRCh37ChromSizesDictPath)
+    ##########################################################################################
+
+
+    ##########################################################################################
     #These lists are filled in py in readMutations function
     #Load Chrnames in nucleosome file
     chrNamesInNucleosomeList = []
@@ -420,6 +433,8 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased(jobname, singlePointMutation
     ###################################################################################
     for chrLong in chrNamesInNucleosomeList:
 
+        maximum_chrom_size = GRCh37ChromSizesDict[chrLong]
+
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
         #TODO read chrbased nucleosome data as a numpy array
         chrBased_nucleosome_df = readChrBasedNuclesomeDF(chrLong,nucleosomeFilename)
@@ -477,6 +492,7 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased(jobname, singlePointMutation
                     inputList.append(chrBased_mutation_df) #Same chrBased_mutation_df
                     inputList.append(chrBased_nucleosome_df_split)  #Different chrBased_nucleosome_df split
                     inputList.append(chrLong) #same chrLong
+                    inputList.append(maximum_chrom_size)
                     inputList.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same signature
                     inputList.append(samplesWithAtLeast10KMutations2NumberofMutationsDict) #Sep 18, 2018
                     inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #Sep 19, 2018

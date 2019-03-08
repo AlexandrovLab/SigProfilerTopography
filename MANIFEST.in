@@ -1,0 +1,11 @@
+include SigProfilerTopography/source/commons/*.py
+include SigProfilerTopography/source/nucleosomeoccupancy/*.py
+include SigProfilerTopography/source/plotting/*.py
+include SigProfilerTopography/source/processivity/*.py
+include SigProfilerTopography/source/replicationstrandbias/*.py
+include SigProfilerTopography/source/replicationtime/*.py
+include SigProfilerTopography/source/transcriptionstrandbias/*.py
+include SigProfilerTopography/lib/ucscgenome/hg19ChromSizesDict.txt
+include SigProfilerTopography/lib/ucscgenome/hg38ChromSizesDict.txt
+include SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
+include SigProfilerTopography/lib/nucleosome/AvailableNucleosomeOccupancyFiles.txt

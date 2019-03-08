@@ -15,29 +15,130 @@
 #   for all indels
 ###############################################################################################################
 
-
 import os
 import sys
-
 
 #############################################################
 current_abs_path = os.path.abspath(os.path.dirname(__file__))
 print('NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.py current_abs_path:%s' %(current_abs_path))
 #############################################################
 
-
 commonsPath = os.path.join(current_abs_path, '..','commons')
 sys.path.append(commonsPath)
 
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
+########################################################################################
+#March 7, 2019 starts
+def fillSignalArrayAndCountArrays(inputList):
+
+    chrbased_nucleosome_signal_array = inputList[0]
+    chrBased_spms_df = inputList[1]
+    chrBased_indels_df =  inputList[2]
+    maximum_chrom_size =  inputList[3]
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict =  inputList[4]
+    samplesWithAtLeast10KMutations2NumberofMutationsDict =  inputList[5]
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict =  inputList[6]
+
+    ##############################################################
+    signature2SignalArrayDict, \
+    signature2CountArrayDict, \
+    allSinglePointMutationsSignalArray, \
+    allSinglePointMutationsCountArray, \
+    allIndelsSignalArray, \
+    allIndelsCountArray, \
+    sample2Signature2SignalArrayDict, \
+    sample2Signature2CountArrayDict, \
+    sample2AllSinglePointMutationsSignalArrayDict, \
+    sample2AllSinglePointMutationsCountArrayDict, \
+    sample2AllIndelsSignalArrayDict, \
+    sample2AllIndelsCountArrayDict = initializationForEachChrom(
+        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
+    ##############################################################
+
+
+    ###############################################################################
+    ################### Fill signal and count array starts ########################
+    ###############################################################################
+    #Fill for single point mutations
+    if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
+        chrBased_spms_df.apply(fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased,
+                           nucleosome_array=chrbased_nucleosome_signal_array,
+                           maximum_chrom_size =maximum_chrom_size,
+                           signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                           samplesWithAtLeast10KMutations2NumberofMutationsDict=samplesWithAtLeast10KMutations2NumberofMutationsDict,
+                           sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                           signature2SignalArrayDict=signature2SignalArrayDict,
+                           signature2CountArrayDict=signature2CountArrayDict,
+                           allSinglePointMutationsSignalArray=allSinglePointMutationsSignalArray,
+                           allSinglePointMutationsCountArray=allSinglePointMutationsCountArray,
+                           sample2Signature2SignalArrayDict=sample2Signature2SignalArrayDict,
+                           sample2Signature2CountArrayDict=sample2Signature2CountArrayDict,
+                           sample2AllSinglePointMutationsSignalArrayDict=sample2AllSinglePointMutationsSignalArrayDict,
+                           sample2AllSinglePointMutationsCountArrayDict=sample2AllSinglePointMutationsCountArrayDict,
+                           axis=1)
+
+    #Fill for indels
+    if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
+        chrBased_indels_df.apply(fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased,
+                                 nucleosome_array=chrbased_nucleosome_signal_array,
+                                 maximum_chrom_size=maximum_chrom_size,
+                                 sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                                 allIndelsSignalArray=allIndelsSignalArray,
+                                 allIndelsCountArray=allIndelsCountArray,
+                                 sample2AllIndelsSignalArrayDict=sample2AllIndelsSignalArrayDict,
+                                 sample2AllIndelsCountArrayDict =sample2AllIndelsCountArrayDict,
+                                 axis=1)
+    ###############################################################################
+    ################### Fill signal and count array ends ##########################
+    ###############################################################################
+
+
+    ###############################################################################
+    ################### Return  starts ############################################
+    ###############################################################################
+    # Initialzie the list, you will return this list
+    chrBased_SignalArrayAndCountArray_List = []
+
+    # Append signature arrays
+    chrBased_SignalArrayAndCountArray_List.append(signature2SignalArrayDict)
+    chrBased_SignalArrayAndCountArray_List.append(signature2CountArrayDict)
+
+    # Append single point mutations arrays
+    chrBased_SignalArrayAndCountArray_List.append(allSinglePointMutationsSignalArray)
+    chrBased_SignalArrayAndCountArray_List.append(allSinglePointMutationsCountArray)
+
+    # Append indels arrays
+    chrBased_SignalArrayAndCountArray_List.append(allIndelsSignalArray)
+    chrBased_SignalArrayAndCountArray_List.append(allIndelsCountArray)
+
+    chrBased_SignalArrayAndCountArray_List.append(sample2Signature2SignalArrayDict)
+    chrBased_SignalArrayAndCountArray_List.append(sample2Signature2CountArrayDict)
+
+    chrBased_SignalArrayAndCountArray_List.append(sample2AllSinglePointMutationsSignalArrayDict)
+    chrBased_SignalArrayAndCountArray_List.append(sample2AllSinglePointMutationsCountArrayDict)
+
+    chrBased_SignalArrayAndCountArray_List.append(sample2AllIndelsSignalArrayDict)
+    chrBased_SignalArrayAndCountArray_List.append(sample2AllIndelsCountArrayDict)
+
+    return chrBased_SignalArrayAndCountArray_List
+    ###############################################################################
+    ################### Return  ends ##############################################
+    ###############################################################################
+
+# March 7, 2019 starts
+########################################################################################
+
 
 ########################################################################################
+#TODO we can remove this later on
+# We can use the nucleosome signal array instead of nucleosome signal df
 def fillSignalArrayAndCountArrayWithExtraSampleBased(inputList):
-    chrBased_spms_df = inputList[0]
-    chrBased_indels_df = inputList[1]
-    chrBased_nucleosome_df_split = inputList[2]
-    chrLong = inputList[3]
+    chrBased_nucleosome_df_split = inputList[0]
+    chrBased_spms_df = inputList[1]
+    chrBased_indels_df = inputList[2]
+    maximum_chrom_size = inputList[3]
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[4]
     samplesWithAtLeast10KMutations2NumberofMutationsDict = inputList[5]
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[6]
@@ -49,7 +150,6 @@ def fillSignalArrayAndCountArrayWithExtraSampleBased(inputList):
     chrBased_nucleosome_split_array = np.zeros(MAXIMUM_CHROMOSOME_LENGTH, dtype=np.float32)
     chrBased_nucleosome_df_split.apply(fillNucleosomeSignalArray, nucleosome_array=chrBased_nucleosome_split_array, axis=1)
     ###########################################################################
-
 
     ###############################################################################
     ################### Initialization2 for each Split starts #####################
@@ -114,8 +214,10 @@ def fillSignalArrayAndCountArrayWithExtraSampleBased(inputList):
     ################### Fill signal and count array starts ########################
     ###############################################################################
     #Fill for single point mutations
-    chrBased_spms_df.apply(fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased,
+    if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
+        chrBased_spms_df.apply(fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased,
                            nucleosome_array=chrBased_nucleosome_split_array,
+                           maximum_chrom_size =maximum_chrom_size,
                            signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                            samplesWithAtLeast10KMutations2NumberofMutationsDict=samplesWithAtLeast10KMutations2NumberofMutationsDict,
                            sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
@@ -130,16 +232,16 @@ def fillSignalArrayAndCountArrayWithExtraSampleBased(inputList):
                            axis=1)
 
     #Fill for indels
-    if (chrBased_indels_df is not None):
+    if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
         chrBased_indels_df.apply(fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased,
                                  nucleosome_array=chrBased_nucleosome_split_array,
+                                 maximum_chrom_size=maximum_chrom_size,
                                  sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                                  allIndelsSignalArray=allIndelsSignalArray,
                                  allIndelsCountArray=allIndelsCountArray,
                                  sample2AllIndelsSignalArrayDict=sample2AllIndelsSignalArrayDict,
                                  sample2AllIndelsCountArrayDict =sample2AllIndelsCountArrayDict,
                                  axis=1)
-
     ###############################################################################
     ################### Fill signal and count array ends ##########################
     ###############################################################################
@@ -429,29 +531,594 @@ def accumulateSplitArrays(signatures,allSplits_chrBased_SignalArrayAndCountArray
     return signature2AccumulatedSplitsChrBasedSignalArrayDict, signature2AccumulatedSplitsChrBasedCountArrayDict, allSingleMutationsAccumulatedSplitsSignalArray, allSingleMutationsAccumulatedSplitsCountArray, allIndelsAccumulatedSplitsSignalArray, allIndelsAccumulatedSplitsCountArray
 ########################################################################################
 
+########################################################################################
+#March 7, 2019 starts
+def fillNecessaryDataStructures(genome,jobname):
+
+    ##########################################################################################
+    chromSizesDict = getChromSizesDict(genome)
+    ##########################################################################################
+
+    ##########################################################################################
+    #Load Chrnames from nucleosome file
+    chrNamesInNucleosomeList = []
+
+    chrNamesInNucleosomeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
+
+    if (os.path.exists(chrNamesInNucleosomeFilePath)):
+        chrNamesInNucleosomeArray = np.loadtxt(chrNamesInNucleosomeFilePath,dtype=str, delimiter='\t')
+        chrNamesInNucleosomeList = list(chrNamesInNucleosomeArray)
+    ##########################################################################################
+
+    ##########################################################################################
+    #Load signaturesWithAtLeast10KEligibleMutations
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
+
+    SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+
+    if (os.path.exists(SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
+        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
+    ##########################################################################################
+
+    ##########################################################################################
+    #Load sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict= {}
+
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+
+    if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
+        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
+    ##########################################################################################
+
+    ##########################################################################################
+    #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
+
+    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+
+    if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
+        samplesWithAtLeast10KMutations2NumberofMutationsDict = readDictionary(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)
+    ##########################################################################################
+
+    return  chromSizesDict, \
+            chrNamesInNucleosomeList,\
+            signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
+            sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
+            samplesWithAtLeast10KMutations2NumberofMutationsDict
+
+#March 7, 2019 ends
+########################################################################################
+
+########################################################################################
+#March 7, 2019 starts
+def initializationForAllChroms(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict):
+
+    ########################################################################################
+    ########### Initialization1 All Chroms starts ##########################################
+    ########################################################################################
+
+    # Initialization for each signature
+    signature2AccumulatedAllChromsSignalArrayDict = {}
+    signature2AccumulatedAllChromsCountArrayDict = {}
+
+    for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        signature2AccumulatedAllChromsSignalArrayDict[signature] = np.zeros(windowSize)
+        signature2AccumulatedAllChromsCountArrayDict[signature] = np.zeros(windowSize, dtype=int)
+    ########################################################################################
+
+    ########################################################################################
+    # Initialization for single point mutations
+    allSinglePointMutationsAccumulatedAllChromsSignalArray = np.zeros(windowSize)
+    allSinglePointMutationsAccumulatedAllChromsCountArray = np.zeros(windowSize, dtype=int)
+    ########################################################################################
+
+    ########################################################################################
+    # Initialization for indels
+    allIndelsAccumulatedAllChromsSignalArray = np.zeros(windowSize)
+    allIndelsAccumulatedAllChromsCountArray = np.zeros(windowSize, dtype=int)
+    ########################################################################################
+
+    ########################################################################################
+    # Sample Based
+    sample2Signature2AccumulatedAllChromsSignalArrayDict = {}
+    sample2Signature2AccumulatedAllChromsCountArrayDict = {}
+
+    sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict = {}
+    sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict = {}
+
+    sample2AllIndelsAccumulatedAllChromsSignalArrayDict = {}
+    sample2AllIndelsAccumulatedAllChromsCountArrayDict = {}
+
+    for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        sample2Signature2AccumulatedAllChromsSignalArrayDict[sample] = {}
+        sample2Signature2AccumulatedAllChromsCountArrayDict[sample]= {}
+
+        sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict[sample] = np.zeros(windowSize)
+        sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict[sample] = np.zeros(windowSize, dtype=int)
+
+        sample2AllIndelsAccumulatedAllChromsSignalArrayDict[sample] = np.zeros(windowSize)
+        sample2AllIndelsAccumulatedAllChromsCountArrayDict[sample] = np.zeros(windowSize, dtype=int)
+
+        for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
+            sample2Signature2AccumulatedAllChromsSignalArrayDict[sample][signature] =  np.zeros(windowSize)
+            sample2Signature2AccumulatedAllChromsCountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+    ########################################################################################
+
+    ########################################################################################
+    ########### Initialization1 All Chroms ends ############################################
+    ########################################################################################
+
+    return  signature2AccumulatedAllChromsSignalArrayDict,\
+            signature2AccumulatedAllChromsCountArrayDict, \
+            allSinglePointMutationsAccumulatedAllChromsSignalArray,\
+            allSinglePointMutationsAccumulatedAllChromsCountArray,\
+            allIndelsAccumulatedAllChromsSignalArray,\
+            allIndelsAccumulatedAllChromsCountArray,\
+            sample2Signature2AccumulatedAllChromsSignalArrayDict,\
+            sample2Signature2AccumulatedAllChromsCountArrayDict,\
+            sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict,\
+            sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict,\
+            sample2AllIndelsAccumulatedAllChromsSignalArrayDict,\
+            sample2AllIndelsAccumulatedAllChromsCountArrayDict
+
+#March 7, 2019 ends
+########################################################################################
+
+
+
+########################################################################################
+#March 7, 2019 starts
+def initializationForEachChrom(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict):
+    ########################################################################################
+    ########### Initialization2 For each chrom starts ######################################
+    ########################################################################################
+
+    ##############################################
+    # Initialization for each signature
+    signature2SignalArrayDict = {}
+    signature2CountArrayDict = {}
+
+    for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        signature2SignalArrayDict[signature] = np.zeros(windowSize)
+        signature2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
+    ##############################################
+
+    ##############################################
+    # Initialization for all single point mutations for split
+    allSinglePointMutationsSignalArray = np.zeros(windowSize)
+    allSinglePointMutationsCountArray = np.zeros(windowSize, dtype=int)
+    ##############################################
+
+    ##############################################
+    # Initialization for all indels for split
+    allIndelsSignalArray = np.zeros(windowSize)
+    allIndelsCountArray = np.zeros(windowSize, dtype=int)
+    ##############################################
+
+    # Initialization sample based
+    sample2Signature2SignalArrayDict = {}
+    sample2Signature2CountArrayDict = {}
+
+    sample2AllSinglePointMutationsSignalArrayDict = {}
+    sample2AllSinglePointMutationsCountArrayDict = {}
+
+    sample2AllIndelsSignalArrayDict = {}
+    sample2AllIndelsCountArrayDict = {}
+
+    for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        sample2Signature2SignalArrayDict[sample] = {}
+        sample2Signature2CountArrayDict[sample] = {}
+
+        sample2AllSinglePointMutationsSignalArrayDict[sample] = np.zeros(windowSize)
+        sample2AllSinglePointMutationsCountArrayDict[sample] = np.zeros(windowSize, dtype=int)
+
+        sample2AllIndelsSignalArrayDict[sample] = np.zeros(windowSize)
+        sample2AllIndelsCountArrayDict[sample] = np.zeros(windowSize, dtype=int)
+
+        for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
+            sample2Signature2SignalArrayDict[sample][signature] = np.zeros(windowSize)
+            sample2Signature2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+    ########################################################################################
+    ########### Initialization2 For each chrom ends ########################################
+    ########################################################################################
+
+    return  signature2SignalArrayDict,\
+            signature2CountArrayDict, \
+            allSinglePointMutationsSignalArray,\
+            allSinglePointMutationsCountArray, \
+            allIndelsSignalArray, \
+            allIndelsCountArray, \
+            sample2Signature2SignalArrayDict, \
+            sample2Signature2CountArrayDict, \
+            sample2AllSinglePointMutationsSignalArrayDict, \
+            sample2AllSinglePointMutationsCountArrayDict, \
+            sample2AllIndelsSignalArrayDict, \
+            sample2AllIndelsCountArrayDict
+
+
+#March 7, 2019 ends
+########################################################################################
+
+
+########################################################################################
+#March 7, 2019 starts
+#For all chromosome parallel starts
+def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+
+    ##########################################################################
+    chromSizesDict, \
+    chrNamesInNucleosomeList, \
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,jobname)
+    ##########################################################################
+
+    ##########################################################################
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+    poolInputList = []
+    ##########################################################################
+
+    ###################################################################################
+    ##################  For all chromsomes parallel starts ############################
+    ###################################################################################
+    for chrLong in chrNamesInNucleosomeList:
+
+        inputListForSubs = []
+        inputListForIndels = []
+
+        maximum_chrom_size = chromSizesDict[chrLong]
+        print('For debug %s chromSize:%d' %(chrLong,maximum_chrom_size))
+
+        #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
+        nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
+
+        ##############################################################
+        signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
+        chrBasedSignalNucleosmeFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,NUCLEOSOME, CHRBASED, signalArrayFilename)
+
+
+        #################################################################################################################
+        # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
+        if (os.path.exists(chrBasedSignalNucleosmeFile)):
+            chrbased_nucleosome_signal_array = np.load(chrBasedSignalNucleosmeFile)
+            print('chromosome %s  -- signal_array_npy: %d in bytes %f in GB' % (chrLong,sys.getsizeof(chrbased_nucleosome_signal_array), sys.getsizeof(chrbased_nucleosome_signal_array)/GIGABYTE_IN_BYTES))
+
+            # Do we need count array? Actually no.
+            # chrbased_nucleosome_count_array = np.load(chrBasedCountNucleosmeFile)
+            # print('chromosome %s  -- count_array_npy: %d in bytes %f in GB' % (chrLong, sys.getsizeof(chrbased_nucleosome_count_array), sys.getsizeof(chrbased_nucleosome_count_array) / GIGABYTE_IN_BYTES))
+
+            #TODO: This is specific to our data right now
+            #Nucleosomes have chrM
+            #SinglePointMutations and Indels have chrMT
+            if (chrLong=='chrM'):
+                chrLong='chrMT'
+
+            #THEN READ CHRBASED SINGLE POINT MUTATIONS
+            chrBased_spms_df=readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFilename)
+            print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+
+            #THEN READ CHRBASED INDELS
+            chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
+            print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+
+            inputListForSubs.append(chrbased_nucleosome_signal_array)
+            inputListForSubs.append(chrBased_spms_df)
+            inputListForSubs.append(chrBased_indels_df)
+            inputListForSubs.append(maximum_chrom_size)
+            inputListForSubs.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
+            inputListForSubs.append(samplesWithAtLeast10KMutations2NumberofMutationsDict)
+            inputListForSubs.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
+            poolInputList.append(inputListForSubs)
+    ###################################################################################
+    ##################  For all chromsomes parallel ends ##############################
+    ###################################################################################
+
+    ########################################################################
+    allChroms_SignalArrayAndCountArrayList_List = pool.map(fillSignalArrayAndCountArrays,poolInputList)
+    ########################################################################
+
+    ################################
+    pool.close()
+    pool.join()
+    ################################
+
+    ###################################################################################
+    ##############################  Accumulation starts  ##############################
+    ###################################################################################
+    # Accumulate the results coming from each chrom
+    # allChroms_SignalArrayAndCountArrayList_List is a list of lists.
+
+    signature2AccumulatedAllChromsSignalArrayDict, \
+    signature2AccumulatedAllChromsCountArrayDict, \
+    allSinglePointMutationsAccumulatedAllChromsSignalArray, \
+    allSinglePointMutationsAccumulatedAllChromsCountArray, \
+    allIndelsAccumulatedAllChromsSignalArray, \
+    allIndelsAccumulatedAllChromsCountArray, \
+    sample2Signature2AccumulatedAllChromsSignalArrayDict, \
+    sample2Signature2AccumulatedAllChromsCountArrayDict, \
+    sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict, \
+    sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict, \
+    sample2AllIndelsAccumulatedAllChromsSignalArrayDict, \
+    sample2AllIndelsAccumulatedAllChromsCountArrayDict = accumulateSplitArraysWithExtraSampleBased(
+        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+        allChroms_SignalArrayAndCountArrayList_List)
+    ###################################################################################
+    ##############################  Accumulation ends  ################################
+    ###################################################################################
+
+
+    ####################################################################################
+    ########### Write All Single Mutations Average Nucleosome Occupancy starts #########
+    ####################################################################################
+    writeAverageNucleosomeOccupancyFiles(allSinglePointMutationsAccumulatedAllChromsSignalArray,allSinglePointMutationsAccumulatedAllChromsCountArray, jobname, AGGREGATEDSUBSTITUTIONS)
+    ####################################################################################
+    ########### Write All Single Mutations Average Nucleosome Occupancy ends ###########
+    ####################################################################################
+
+    ####################################################################################
+    ############## Write Signature Based Average Nucleosome Occupancy starts ###########
+    ####################################################################################
+    writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllChromsSignalArrayDict,signature2AccumulatedAllChromsCountArrayDict,jobname)
+    ####################################################################################
+    ############## Write Signature Based Average Nucleosome Occupancy ends #############
+    ####################################################################################
+
+    ####################################################################################
+    ################ Write All Indels Average Nucleosome Occupancy starts ##############
+    ####################################################################################
+    writeAverageNucleosomeOccupancyFiles(allIndelsAccumulatedAllChromsSignalArray,allIndelsAccumulatedAllChromsCountArray, jobname, AGGREGATEDINDELS)
+    ####################################################################################
+    ################ Write All Indels Average Nucleosome Occupancy ends ################
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signature2AccumulatedAllChromsSignalArrayDict,sample2Signature2AccumulatedAllChromsCountArrayDict,jobname)
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict,sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict,jobname,AGGREGATEDSUBSTITUTIONS)
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllIndelsAccumulatedAllChromsSignalArrayDict,sample2AllIndelsAccumulatedAllChromsCountArrayDict,jobname,AGGREGATEDINDELS)
+    ####################################################################################
+
+#For all chromosome parallel starts
+#March 7, 2019 ends
+########################################################################################
+
+
+
+
+########################################################################################
+#March 6, 2019 starts
+#For each chromosome sequential starts
+def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+
+    ##########################################################################
+    chromSizesDict, \
+    chrNamesInNucleosomeList, \
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,jobname)
+    ##########################################################################
+
+    ##########################################################################
+    signature2AccumulatedAllChromsSignalArrayDict, \
+    signature2AccumulatedAllChromsCountArrayDict, \
+    allSinglePointMutationsAccumulatedAllChromsSignalArray, \
+    allSinglePointMutationsAccumulatedAllChromsCountArray, \
+    allIndelsAccumulatedAllChromsSignalArray, \
+    allIndelsAccumulatedAllChromsCountArray, \
+    sample2Signature2AccumulatedAllChromsSignalArrayDict, \
+    sample2Signature2AccumulatedAllChromsCountArrayDict, \
+    sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict, \
+    sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict, \
+    sample2AllIndelsAccumulatedAllChromsSignalArrayDict, \
+    sample2AllIndelsAccumulatedAllChromsCountArrayDict = initializationForAllChroms(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
+    ##########################################################################
+
+
+    ###################################################################################
+    ##################  For each chromsome sequential starts ##########################
+    ###################################################################################
+    for chrLong in chrNamesInNucleosomeList:
+
+        maximum_chrom_size = chromSizesDict[chrLong]
+        print('For debug %s chromSize:%d' %(chrLong,maximum_chrom_size))
+
+        #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
+        nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
+
+        ##############################################################
+        signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
+        chrBasedSignalNucleosmeFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,NUCLEOSOME, CHRBASED, signalArrayFilename)
+
+        # countArrayFilename = '%s_count_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
+        # chrBasedCountNucleosmeFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,CHRBASED, countArrayFilename)
+
+        #################################################################################################################
+        # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
+        if (os.path.exists(chrBasedSignalNucleosmeFile)):
+            chrbased_nucleosome_signal_array = np.load(chrBasedSignalNucleosmeFile)
+            print('chromosome %s  -- signal_array_npy: %d in bytes %f in GB' % (chrLong,sys.getsizeof(chrbased_nucleosome_signal_array), sys.getsizeof(chrbased_nucleosome_signal_array)/GIGABYTE_IN_BYTES))
+
+            # Do we need count array? Actually no.
+            # chrbased_nucleosome_count_array = np.load(chrBasedCountNucleosmeFile)
+            # print('chromosome %s  -- count_array_npy: %d in bytes %f in GB' % (chrLong, sys.getsizeof(chrbased_nucleosome_count_array), sys.getsizeof(chrbased_nucleosome_count_array) / GIGABYTE_IN_BYTES))
+
+            #TODO: This is specific to our data right now
+            #Nucleosomes have chrM
+            #SinglePointMutations and Indels have chrMT
+            if (chrLong=='chrM'):
+                chrLong='chrMT'
+
+            #THEN READ CHRBASED SINGLE POINT MUTATIONS
+            chrBased_spms_df=readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFilename)
+            print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+
+            #THEN READ CHRBASED INDELS
+            chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
+            print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+
+            ##############################################################
+            signature2SignalArrayDict, \
+            signature2CountArrayDict, \
+            allSinglePointMutationsSignalArray, \
+            allSinglePointMutationsCountArray, \
+            allIndelsSignalArray, \
+            allIndelsCountArray, \
+            sample2Signature2SignalArrayDict, \
+            sample2Signature2CountArrayDict, \
+            sample2AllSinglePointMutationsSignalArrayDict, \
+            sample2AllSinglePointMutationsCountArrayDict, \
+            sample2AllIndelsSignalArrayDict, \
+            sample2AllIndelsCountArrayDict= initializationForEachChrom(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
+            ##############################################################
+
+            ###############################################################################
+            ################### Fill signal and count array starts ########################
+            ###############################################################################
+
+            if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
+                # Fill for single point mutations
+                chrBased_spms_df.apply(fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased,
+                                       nucleosome_array=chrbased_nucleosome_signal_array,
+                                       maximum_chrom_size = maximum_chrom_size,
+                                       signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                                       samplesWithAtLeast10KMutations2NumberofMutationsDict=samplesWithAtLeast10KMutations2NumberofMutationsDict,
+                                       sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                                       signature2SignalArrayDict=signature2SignalArrayDict,
+                                       signature2CountArrayDict=signature2CountArrayDict,
+                                       allSinglePointMutationsSignalArray=allSinglePointMutationsSignalArray,
+                                       allSinglePointMutationsCountArray=allSinglePointMutationsCountArray,
+                                       sample2Signature2SignalArrayDict=sample2Signature2SignalArrayDict,
+                                       sample2Signature2CountArrayDict=sample2Signature2CountArrayDict,
+                                       sample2AllSinglePointMutationsSignalArrayDict=sample2AllSinglePointMutationsSignalArrayDict,
+                                       sample2AllSinglePointMutationsCountArrayDict=sample2AllSinglePointMutationsCountArrayDict,
+                                       axis=1)
+
+            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
+                # Fill for indels
+                chrBased_indels_df.apply(fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased,
+                                         nucleosome_array=chrbased_nucleosome_signal_array,
+                                         maximum_chrom_size=maximum_chrom_size,
+                                         sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+                                         allIndelsSignalArray=allIndelsSignalArray,
+                                         allIndelsCountArray=allIndelsCountArray,
+                                         sample2AllIndelsSignalArrayDict=sample2AllIndelsSignalArrayDict,
+                                         sample2AllIndelsCountArrayDict=sample2AllIndelsCountArrayDict,
+                                         axis=1)
+            ###############################################################################
+            ################### Fill signal and count array ends ##########################
+            ###############################################################################
+
+            #Accumulate chr based dictionaries
+            ###############################################################################################################
+            ###################  Accumulate the results coming from each chromosome starts  ###############################
+            ###############################################################################################################
+
+            # Accumulate right in the left
+            #################################################
+            accumulateSignatureBasedArrays(signature2AccumulatedAllChromsSignalArrayDict,signature2SignalArrayDict)
+            accumulateSignatureBasedArrays(signature2AccumulatedAllChromsCountArrayDict,signature2CountArrayDict)
+
+            ##Accumulate the results coming from each chromosome
+            allSinglePointMutationsAccumulatedAllChromsSignalArray += allSinglePointMutationsSignalArray
+            allSinglePointMutationsAccumulatedAllChromsCountArray += allSinglePointMutationsCountArray
+
+            allIndelsAccumulatedAllChromsSignalArray += allIndelsSignalArray
+            allIndelsAccumulatedAllChromsCountArray += allIndelsCountArray
+            #################################################
+
+            ###########################Accumulate sample based starts ####################################
+            ##Accumulate the results coming from each chromosome
+            accumulateSampleBasedSignatureBasedArrays(sample2Signature2AccumulatedAllChromsSignalArrayDict,sample2Signature2SignalArrayDict)
+            accumulateSampleBasedSignatureBasedArrays(sample2Signature2AccumulatedAllChromsCountArrayDict,sample2Signature2CountArrayDict)
+
+            accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict,sample2AllSinglePointMutationsSignalArrayDict)
+            accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict,sample2AllSinglePointMutationsCountArrayDict)
+
+            accumulateSampleBasedArrays(sample2AllIndelsAccumulatedAllChromsSignalArrayDict,sample2AllIndelsSignalArrayDict)
+            accumulateSampleBasedArrays(sample2AllIndelsAccumulatedAllChromsCountArrayDict,sample2AllIndelsCountArrayDict)
+            ###########################Accumulate sample based ends ######################################
+
+            ###############################################################################################################
+            ###################  Accumulate the results coming from each chromosome ends  #################################
+            ###############################################################################################################
+
+            ######################################################################################
+            ##############   SPMs and Indels with extra sampleBased  analysis ends ###############
+            ######################################################################################
+
+    ###################################################################################
+    ##################  For each chromsome sequential ends ############################
+    ###################################################################################
+
+    ################################
+    pool.close()
+    pool.join()
+    ################################
+
+
+    ####################################################################################
+    ########### Write All Single Mutations Average Nucleosome Occupancy starts #########
+    ####################################################################################
+    writeAverageNucleosomeOccupancyFiles(allSinglePointMutationsAccumulatedAllChromsSignalArray,allSinglePointMutationsAccumulatedAllChromsCountArray, jobname, AGGREGATEDSUBSTITUTIONS)
+    ####################################################################################
+    ########### Write All Single Mutations Average Nucleosome Occupancy ends ###########
+    ####################################################################################
+
+    ####################################################################################
+    ############## Write Signature Based Average Nucleosome Occupancy starts ###########
+    ####################################################################################
+    writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllChromsSignalArrayDict,signature2AccumulatedAllChromsCountArrayDict,jobname)
+    ####################################################################################
+    ############## Write Signature Based Average Nucleosome Occupancy ends #############
+    ####################################################################################
+
+    ####################################################################################
+    ################ Write All Indels Average Nucleosome Occupancy starts ##############
+    ####################################################################################
+    writeAverageNucleosomeOccupancyFiles(allIndelsAccumulatedAllChromsSignalArray,allIndelsAccumulatedAllChromsCountArray, jobname, AGGREGATEDINDELS)
+    ####################################################################################
+    ################ Write All Indels Average Nucleosome Occupancy ends ################
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signature2AccumulatedAllChromsSignalArrayDict,sample2Signature2AccumulatedAllChromsCountArrayDict,jobname)
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllSinglePointMutationsAccumulatedAllChromsSignalArrayDict,sample2AllSinglePointMutationsAccumulatedAllChromsCountArrayDict,jobname,AGGREGATEDSUBSTITUTIONS)
+    ####################################################################################
+
+    ####################################################################################
+    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllIndelsAccumulatedAllChromsSignalArrayDict,sample2AllIndelsAccumulatedAllChromsCountArrayDict,jobname,AGGREGATEDINDELS)
+    ####################################################################################
+
+
+#For each chromosome sequential ends
+#March 6, 2019 ends
+########################################################################################
+
 
 ########################################################################################
 def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
 
     withExtraSampleBasedAnalysis = True
 
-    ################# input starts #############################
-    # print(sys.argv)
 
-    # sys.argv[0] contains the python program name
-    # jobname
-    # jobname = sys.argv[1]
+    ##########################################################################################
+    GRCh37ChromSizesDict = {}
 
-    # breast_cancer_mutation_probabilities_final.txt
-    # singlePointMutationsFilename = sys.argv[2]
-    # singlePointMutationsFilename_wo_extension = os.path.splitext(singlePointMutationsFilename)[0]
+    GRCh37ChromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
 
-    # insertions and deletions file
-    # indelsFilename = sys.argv[3]
-
-    # wgEncodeSydhNsomeK562Sig.wig
-    # nucleosomeFilename = sys.argv[4]
-    #################### input ends ############################
+    if (os.path.exists(GRCh37ChromSizesDictPath)):
+        GRCh37ChromSizesDict = readDictionary(GRCh37ChromSizesDictPath)
+    ##########################################################################################
 
     ##########################################################################################
     #Load Chrnames from nucleosome file
@@ -563,6 +1230,8 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMu
     ###################################################################################
     for chrLong in chrNamesInNucleosomeList:
 
+        maximum_chrom_size = GRCh37ChromSizesDict[chrLong]
+
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
         chrBased_nucleosome_df = readChrBasedNuclesomeDF(chrLong,nucleosomeFilename)
         print('chromosome %s  -- chrBased_nucleosome_df: %d in bytes %f in GB' % (chrLong,sys.getsizeof(chrBased_nucleosome_df), sys.getsizeof(chrBased_nucleosome_df)/GIGABYTE_IN_BYTES))
@@ -624,10 +1293,10 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMu
 
                         # Question: Does each split has header?
                         # Answer: Yes
+                        inputList.append(chrBased_nucleosome_df_split)  # Different chrBased_nucleosome_df split
                         inputList.append(chrBased_spms_df) #Same chrBased_mutation_df
                         inputList.append(chrBased_indels_df)  # Same chrBased_indels_df
-                        inputList.append(chrBased_nucleosome_df_split)  #Different chrBased_nucleosome_df split
-                        inputList.append(chrLong) #same chrLong
+                        inputList.append(maximum_chrom_size)
                         inputList.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same signature
                         inputList.append(samplesWithAtLeast10KMutations2NumberofMutationsDict) #Sep 18, 2018
                         inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #Sep 19, 2018
@@ -701,6 +1370,7 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMu
                 #########################################################################
 
                 #########################################################################
+                #Not withExtraSampleBasedAnalysis
                 else:
 
                     ###########################################################################

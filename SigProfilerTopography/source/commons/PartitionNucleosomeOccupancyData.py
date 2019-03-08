@@ -45,20 +45,7 @@ current_abs_path = os.path.abspath(os.path.dirname(__file__))
 commonsPath = os.path.join(current_abs_path, '..','commons')
 sys.path.append(commonsPath)
 
-from TopographyCommons import OUTPUT
-from TopographyCommons import NUCLEOSOMEOCCUPANCY
-from TopographyCommons import FIGURE
-
-from TopographyCommons import LIB
-from TopographyCommons import NUCLEOSOME
-from TopographyCommons import CHRBASED
-from TopographyCommons import SIGNAL
-from TopographyCommons import DISPLAY
-from TopographyCommons import NODISPLAY
-
-
-from TopographyCommons import ONE_DIRECTORY_UP
-from TopographyCommons import ChrNamesInNucleosomesFilename
+from TopographyCommons import *
 
 ######################################################################
 def  writeChrBasedNucleosome(chrNuclesomeList):
@@ -223,7 +210,7 @@ def partitionNucleosomeOccupancyData(nucleosomeFilename,quantileValue):
     ############### Write Unique Chrnames ends ##############
     #########################################################
 
-    grouped_nucleosome_df = nucleosome_df.groupby('chrom')
+    grouped_nucleosome_df = nucleosome_df.groupby(chrom)
     print('type(grouped_nucleosome_df):%s' %type(grouped_nucleosome_df))
     print(len(grouped_nucleosome_df))
 

@@ -46,8 +46,7 @@ These files have to provided under
 
 SigProfilerTopography/lib/
 
-By the way
-SigProfilerTopography/lib/ and SigProfilerTopography/source/ must be at the same level.
+Please notice that SigProfilerTopography/lib/ and SigProfilerTopography/source/ must be at the same level.
 
 **LIBRARY NUCLEOSOME OCCUPANCY**
 
@@ -66,6 +65,7 @@ GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed.gz from
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923442
 
 Step2: Convert .bed.gz into .bed
+
 Step3: Convert .bigWig file into .wig
 
 Step4: Provide these files under
@@ -83,7 +83,7 @@ https://drive.google.com/open?id=1TSyV_wA5pbPYg2g7M63m4QEp0bd7nYLB
 Step2: Provide GRCh37_transcripts.txt under
 SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
 
-**LIBRARY HG19 and HG38 twobit files**
+**LIBRARY HG19 and HG38 2bit files**
 
 Step1: Download hg19.2bit and hg38.2bit from
 http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit and
@@ -96,7 +96,8 @@ SigProfilerTopography/lib/ucscgenome/hg38.2bit
 
 **COPYRIGHT**
 
-This software and its documentation are copyright 2018 as a part of the sigProfiler project. The SigProfilerTopography framework is free software and is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+This software and its documentation are copyright 2018 as a part of the SigProfiler project.
+The SigProfilerTopography framework is free software and is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 **CONTACT INFORMATION**
 

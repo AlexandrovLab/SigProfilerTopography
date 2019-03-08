@@ -1,7 +1,7 @@
 from setuptools import setup,find_packages
 
 setup(name="SigProfilerTopography",
-    version="0.0.8",
+    version="0.0.11",
     author="Burcak Otlu",
     author_email="burcakotlu@eng.ucsd.edu",
     description="SigProfilerTopography provides topography analyses for substitutions, dinucleotides and indels for each sample and all samples pooled.",

@@ -38,12 +38,12 @@ GIGABYTE_IN_BYTES = 1000000000
 ONE_THOUSAND = 1000
 TEN_THOUSAND = 10000
 
-#TODO This will be used
-SUBSTITUTION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-DINUC_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-INDEL_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+# #TODO This will be used
+# SUBSTITUTION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+# DINUC_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+# INDEL_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 
-MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
 MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
 
 #Global Constants for Nucleosome Occupancy Analysis
@@ -104,6 +104,10 @@ Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename =
 ChrNamesInNucleosomesFilename = 'ChrNamesInNucleosomes.txt'
 ChrNamesInIndelsFilename = 'ChrNamesInIndels.txt'
 ChrNamesInSPMsFilename = 'ChrNamesInSPMs.txt'
+
+AVAILABLENUCLEOSOMEOCCUPANCYFILESNAME = 'AvailableNucleosomeOccupancyFiles.txt'
+GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
+GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
 
 ONE_DIRECTORY_UP = '..'
 
@@ -189,7 +193,14 @@ INDEL_LTE_3BP = 'INDEL(<=3bp)'
 
 DOT= 'Dot'
 DATASOURCE = 'DataSource'
+############################################
 
+############################################
+#Nucleosome Occupancy Data  Columns
+chrom= 'chrom'
+start= 'start'
+end= 'end'
+signal= 'signal'
 ############################################
 
 #For double check purposes
@@ -220,6 +231,34 @@ FDR_BH_CORRECTION = 'FDR_BH_CORRECTION'
 USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
 USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
+
+
+###################################################################
+def readAsAList(filename):
+    with open(filename) as f:
+        content = f.readlines()
+    # you may also want to remove whitespace characters like `\n` at the end of each line
+    lineList = [x.strip() for x in content]
+
+    return lineList
+###################################################################
+
+###################################################################
+def getChromSizesDict(genome):
+    chromSizesDict = {}
+
+    #TODO Do for mouse genomes
+    if (genome==GRCh37):
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
+    elif (genome==GRCh38):
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh38ChromSizesDictFilename)
+
+    if (os.path.exists(chromSizesDictPath)):
+        chromSizesDict = readDictionary(chromSizesDictPath)
+
+    return chromSizesDict
+###################################################################
+
 
 ###################################################################
 def readTrancriptsENSEMBL():
@@ -352,14 +391,15 @@ def readChrBasedNuclesomeDF(chrLong,filename):
 
 
     nucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,filename)
-    column_names = ['chrom', 'start', 'end', 'signal']
+    column_names = [chrom, start, end, signal]
 
     #np.float32 Single precision float: sign bit, 8 bits exponent, 23 bits mantissa
     #np.int32   Integer (-2147483648 to 2147483647)
 
     if os.path.exists(nucleosmeFile):
-        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float32})
-        chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float64})
+        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names,dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float16})
+        chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float32})
+        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float64})
         # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float128})
         return chr_par_nucleosome_df
     else:
@@ -640,6 +680,7 @@ def fillSplitBasedSignalArrayAndCountArrayForSPMs(mutation_row,nucleosome_array,
 #This is for single point mutations and signatures
 def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_row,
                                                   nucleosome_array,
+                                                  maximum_chrom_size,
                                                   signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                                                   samplesWithAtLeast10KMutations2NumberofMutationsDict,
                                                   sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
@@ -653,17 +694,20 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
                                                   sample2AllSinglePointMutationsCountArrayDict):
 
     #Do this only once.
+    #Subs have START and END same
     ##########################################################
+
+
     # Case 1: start is very close to the chromosome start
     if (mutation_row[START]<plusOrMinus):
         print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
-        window_array = nucleosome_array[0:(mutation_row[END]+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant')
+        window_array = nucleosome_array[0:(mutation_row[START]+plusOrMinus+1)]
+        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant',constant_values=(0,0))
     # Case 2: start is very close to the chromosome end
-    elif (mutation_row[END]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,mutation_row[END]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+    elif (mutation_row[START]+plusOrMinus > maximum_chrom_size):
+        print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
+        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
+        window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
     #Case 3: No problem
     else:
         window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[END]+plusOrMinus+1)]
@@ -685,8 +729,8 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
 
             ####################################################
             if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) and (signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]):
-                    sample2Signature2SignalArrayDict[sample][signature] += window_array
-                    sample2Signature2CountArrayDict[sample][signature] += (window_array>0)
+                sample2Signature2SignalArrayDict[sample][signature] += window_array
+                sample2Signature2CountArrayDict[sample][signature] += (window_array>0)
             ####################################################
 
     ################# Signatures ends #########################
@@ -702,11 +746,36 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
         sample2AllSinglePointMutationsSignalArrayDict[sample] += window_array
         sample2AllSinglePointMutationsCountArrayDict[sample] += (window_array > 0)
     ################ Sample Based All single mutations ends ##############
+
+    # #for each mutation
+    # #For debug starts FEB 28, 2019
+    # if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict and sample=='PD24197a'):
+    #     count_array = np.zeros(windowSize)
+    #     count_array += (window_array > 0)
+    #
+    #     signal_array_sum = np.sum(window_array)
+    #     signal_array_max = np.amax(window_array)
+    #     signal_array_min = np.amin(window_array)
+    #
+    #     count_array_sum = np.sum(count_array)
+    #     count_array_max = np.amax(count_array)
+    #     count_array_min = np.amin(count_array)
+    #
+    #     if (signal_array_sum>0):
+    #         signalFilename = '%s_chr%s_%d_signal_array_sum_%s_max_%s_min_%s.txt' % (sample, mutation_row[CHROM], mutation_row[START], str(signal_array_sum).replace('.','_point'), str(signal_array_max).replace('.','_point'),str(signal_array_min).replace('.','_point'))
+    #         signalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, '560_BRCA_WGS',DATA, NUCLEOSOMEOCCUPANCY, signalFilename)
+    #         window_array.tofile(file=signalFilePath, sep="\t", format="%s"),
+    #
+    #     if (count_array_sum>0):
+    #         countFilename = '%s_chr%s_%d_count_array_sum_%s_max_%s_min_%s.txt' % (sample, mutation_row[CHROM], mutation_row[START], str(count_array_sum).replace('.','_point'), str(count_array_max).replace('.','_point'),str(count_array_min).replace('.','_point'))
+    #         countFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, '560_BRCA_WGS',DATA, NUCLEOSOMEOCCUPANCY, countFilename)
+    #         count_array.tofile(file=countFilePath, sep="\t", format="%s")
+    # #For debug ends FEB 28, 2019
 ########################################################################################
 
 
 ########################################################################################
-def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_row,nucleosome_array,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,allIndelsSignalArray,allIndelsCountArray,sample2AllIndelsSignalArrayDict,sample2AllIndelsCountArrayDict):
+def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_row,nucleosome_array,maximum_chrom_size,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,allIndelsSignalArray,allIndelsCountArray,sample2AllIndelsSignalArrayDict,sample2AllIndelsCountArrayDict):
 
     ##########################################################
     # Case 1: start is very close to the chromosome start
@@ -715,10 +784,10 @@ def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_ro
         window_array = nucleosome_array[0:(indel_row[START]+plusOrMinus+1)]
         window_array = np.pad(window_array, (plusOrMinus-indel_row[START],0),'constant')
     # Case 2: start is very close to the chromosome end
-    elif (indel_row[START]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
+    elif (indel_row[START]+plusOrMinus > maximum_chrom_size):
         print('mutation[Start]:%d mutation[End]:%d' %(indel_row[START],indel_row[START]))
-        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,indel_row[START]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
+        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):maximum_chrom_size]
+        window_array = np.pad(window_array, (0,indel_row[START]+plusOrMinus-maximum_chrom_size+1),'constant')
     #Case 3: No problem
     else:
         window_array = nucleosome_array[(indel_row[START]-plusOrMinus):(indel_row[START]+plusOrMinus+1)]

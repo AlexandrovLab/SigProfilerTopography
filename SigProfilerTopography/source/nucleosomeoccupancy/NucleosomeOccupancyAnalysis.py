@@ -26,7 +26,7 @@ from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancy
 
 ##############################################################################################################
 #main function
-def nucleosomeOccupancyAnalysis(jobname, singlePointMutationsFilename, indelsFilename, nucleosomeFilename):
+def nucleosomeOccupancyAnalysis(genome,jobname, singlePointMutationsFilename, indelsFilename, nucleosomeFilename):
     print('########################## NucleosomeOccupancyAnalysis starts ##########################')
 
     print('#################### NucleosomeOccupancyAnalysis system arguments: #####################')
@@ -40,7 +40,9 @@ def nucleosomeOccupancyAnalysis(jobname, singlePointMutationsFilename, indelsFil
     # Case 2: SPMs and Indels
     elif (singlePointMutationsFilename!=TopographyCommons.NOTSET and indelsFilename!=TopographyCommons.NOTSET):
         # subprocess.call(['python',os.path.join(current_abs_path,'NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.py'),jobname,singlePointMutationFilename,indelsFilename,nucleosomeFilename])
-        NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
+        # NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
+        # NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,jobname, singlePointMutationsFilename, indelsFilename,nucleosomeFilename)
+        NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome, jobname, singlePointMutationsFilename, indelsFilename, nucleosomeFilename)
 
     # Case 3: Indels
     elif (singlePointMutationsFilename==TopographyCommons.NOTSET and indelsFilename!=TopographyCommons.NOTSET):

@@ -654,22 +654,28 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
 #############################################################################
 
 
+
+
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def plotSignalsandCountsForDebug(jobname,numberofSimulations):
-    filename = '%s_Signals_Counts.png' % (jobname)
+def plotSignalsandCountsForDebug(sample,jobname,numberofSimulations):
+    if sample is None:
+        filename = '%s_Signals_Counts.png' % (jobname)
+    else:
+        filename = '%s_%s_Signals_Counts.png' % (sample,jobname)
+
     listofLegends = []
 
     listofSimulationsAggregatedSubstitutions_Signal = None
     listofSimulationsAggregatedSubstitutions_Count = None
 
-    original_Signal = readSignalorCount(jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
-    original_Count = readSignalorCount(jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
+    original_Signal = readSignalorCount(sample,jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
+    original_Count = readSignalorCount(sample,jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
 
     if (numberofSimulations > 0):
-        listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
-        listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
+        listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(sample,jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
+        listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(sample,jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
 
     stackedSimulations_Signal = np.vstack(listofSimulationsAggregatedSubstitutions_Signal)
     stackedSimulations_Count = np.vstack(listofSimulationsAggregatedSubstitutions_Count)
@@ -704,7 +710,8 @@ def plotSignalsandCountsForDebug(jobname,numberofSimulations):
         for row in range(rowsCount):
             print('Simulation Count %d' %(row))
             simulation_count_array = stackedSimulations_Count[row,:]
-            simulation_count = plt.plot(x, simulation_count_array, 'green', label='Simulations Count', linestyle='--',linewidth=3,zorder=5)
+            # simulation_count = plt.plot(x, simulation_count_array, 'green', label='Simulations Count', linestyle='--',linewidth=3,zorder=5)
+            simulation_count = plt.plot(x, simulation_count_array, 'green', label='Simulations Count',linewidth=3, zorder=5)
         listofLegends.append(simulation_count[0])
 
     if (original_Signal is not None):
@@ -712,7 +719,7 @@ def plotSignalsandCountsForDebug(jobname,numberofSimulations):
         listofLegends.append(aggSubs[0])
 
     if (original_Count is not None):
-        aggSubs = plt.plot(x, original_Count, 'red', linestyle='--', label='Original Count',linewidth=5,zorder=10)
+        aggSubs = plt.plot(x, original_Count, 'red', label='Original Count',linewidth=5,zorder=10)
         listofLegends.append(aggSubs[0])
 
 
@@ -735,9 +742,14 @@ def plotSignalsandCountsForDebug(jobname,numberofSimulations):
     # This code provides some extra space
     # plt.ylim((0.65,1.15))
 
-    plt.title(jobname, fontsize=40, fontweight='bold')
+    if sample is not None:
+        title = '%s_%s' %(sample,jobname)
+    else:
+        title = jobname
 
-    plt.xlabel('Mutation', fontsize=30)
+    plt.title(title, fontsize=40, fontweight='bold')
+
+    plt.xlabel('Single Point Substitutions', fontsize=30)
     plt.ylabel('Signal & Count', fontsize=30)
 
     figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
@@ -752,8 +764,12 @@ def plotSignalsandCountsForDebug(jobname,numberofSimulations):
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def readSignalorCount(jobname,filename,analyseType):
-    filename = '%s_%s' % (jobname,filename)
+def readSignalorCount(sample,jobname,filename,analyseType):
+    if sample is not None:
+        filename = '%s_%s_%s' % (sample,jobname,filename)
+    else:
+        filename = '%s_%s' % (jobname,filename)
+
     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, NUCLEOSOMEOCCUPANCY, analyseType, filename)
     return readAsNumpyArray(filepath)
 #############################################################################
@@ -764,12 +780,16 @@ def readSignalorCount(jobname,filename,analyseType):
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def readSignalorCountSimulations(jobname,filename,analyseType,numberofSimulations):
+def readSignalorCountSimulations(sample,jobname,filename,analyseType,numberofSimulations):
     listofArrays = []
 
     for i in range(1, numberofSimulations + 1):
         simulationJobName = '%s_Sim%d' % (jobname, i)
-        newfilename = '%s_%s' % (simulationJobName,filename)
+        if sample is None:
+            newfilename = '%s_%s' % (simulationJobName,filename)
+        else:
+            newfilename = '%s_%s_%s' % (sample,simulationJobName,filename)
+
         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simulationJobName,DATA, NUCLEOSOMEOCCUPANCY, analyseType, newfilename)
         print('For Debug %s' %(filepath))
         signalorCountArray = readAsNumpyArray(filepath)
@@ -1104,61 +1124,63 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
             plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations('Interval around variant (bp)','Average nucleosome signal',
                                                                         sample,jobname, isFigureAugmentation,
                                                                         numberofEligibleSPMs, numberofIndels,numberofSimulations)
+
+            #For debug FEB 28, 2019
+            plotSignalsandCountsForDebug(sample,jobname, numberofSimulations)
         ##############################################################
 
-    ######################################################################################
-    elif (checkValidness(AGGREGATEDSUBSTITUTIONS,jobname)):
-        sampleBasedNumberofMutations = 0
-        plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
-                                                    None, None, AGGREGATEDSUBSTITUTIONS,
-                                                    jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
+    # ######################################################################################
+    # elif (checkValidness(AGGREGATEDSUBSTITUTIONS,jobname)):
+    #     sampleBasedNumberofMutations = 0
+    #     plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
+    #                                                 None, None, AGGREGATEDSUBSTITUTIONS,
+    #                                                 jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
+    #
+    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    #     # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
+    #         sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
+    #         plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
+    #                                     sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
+    #                                     jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
+    # ######################################################################################
 
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-            sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
-            plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
-                                        sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
-                                        jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
-    ######################################################################################
-
-    ######################################################################################
-    elif (checkValidness(AGGREGATEDINDELS,jobname)):
-        numberofIndels = 0
-        plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
-                                            None, None,
-                                            AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
-
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-            if sample in sample2NumberofIndelsDict:
-                numberofIndels = sample2NumberofIndelsDict[sample]
-                plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
-                                                sample, None,
-                                                SAMPLEBASED_AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
-    ######################################################################################
+    # ######################################################################################
+    # elif (checkValidness(AGGREGATEDINDELS,jobname)):
+    #     numberofIndels = 0
+    #     plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
+    #                                         None, None,
+    #                                         AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+    #
+    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    #     # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
+    #         if sample in sample2NumberofIndelsDict:
+    #             numberofIndels = sample2NumberofIndelsDict[sample]
+    #             plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
+    #                                             sample, None,
+    #                                             SAMPLEBASED_AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+    # ######################################################################################
 
 
 
-    #Plot Signature Based
-    #Plot Chromosome Based
-    #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
-    if checkValidness(SIGNATUREBASED,jobname):
-        #SignatureBased
-        for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-            signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
-            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
-                                                                                  'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                                  jobname,isFigureAugmentation,numberofSimulations)
-
-        # SampleBased SignatureBased Nucleosome Occupancy Figures
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-            for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
-                sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
-                plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
-                                                                                      'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                                      jobname, isFigureAugmentation,numberofSimulations)
+    # #Plot Signature Based
+    # #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
+    # if checkValidness(SIGNATUREBASED,jobname):
+    #     #SignatureBased
+    #     for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    #         signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
+    #         plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
+    #                                                                               'Interval around single point mutation (bp)','Average nucleosome signal',
+    #                                                                               jobname,isFigureAugmentation,numberofSimulations)
+    #
+    #     # SampleBased SignatureBased Nucleosome Occupancy Figures
+    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    #         for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
+    #             sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
+    #             plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
+    #                                                                                   'Interval around single point mutation (bp)','Average nucleosome signal',
+    #                                                                                   jobname, isFigureAugmentation,numberofSimulations)
 
     #########################################################
 
     #For debugging FEB 26, 2019
-    # plotSignalsandCountsForDebug(jobname,numberofSimulations)
+    plotSignalsandCountsForDebug(None,jobname,numberofSimulations)
