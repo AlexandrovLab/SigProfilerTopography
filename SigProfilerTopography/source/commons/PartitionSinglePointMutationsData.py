@@ -22,9 +22,9 @@ sys.path.append(commonsPath)
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ######################################################################
-def partitionMutationsData(jobname,singlePointMutationsFilename):
+def partitionMutationsData(outputDir,jobname,singlePointMutationsFilename):
     # Parallel
-    readMutationsAndWriteChrBasedParallel(jobname,singlePointMutationsFilename)
+    readMutationsAndWriteChrBasedParallel(outputDir,jobname,singlePointMutationsFilename)
 ######################################################################
 
 

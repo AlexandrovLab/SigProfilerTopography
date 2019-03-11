@@ -22,7 +22,7 @@ sys.path.append(commonsPath)
 from SigProfilerTopography.source.commons import TopographyCommons
 
 ###############################################################
-def partitionIndelsData(jobname,indelsFilename):
+def partitionIndelsData(outputDir,jobname,indelsFilename):
     # Parallel
-    TopographyCommons.readIndelsAndWriteChrBasedParallel(jobname,indelsFilename)
+    TopographyCommons.readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFilename)
 ###############################################################

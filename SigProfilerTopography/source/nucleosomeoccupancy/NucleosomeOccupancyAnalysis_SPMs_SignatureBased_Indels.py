@@ -533,7 +533,7 @@ def accumulateSplitArrays(signatures,allSplits_chrBased_SignalArrayAndCountArray
 
 ########################################################################################
 #March 7, 2019 starts
-def fillNecessaryDataStructures(genome,jobname):
+def fillNecessaryDataStructures(genome,outputDir,jobname):
 
     ##########################################################################################
     chromSizesDict = getChromSizesDict(genome)
@@ -554,7 +554,7 @@ def fillNecessaryDataStructures(genome,jobname):
     #Load signaturesWithAtLeast10KEligibleMutations
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
 
-    SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
         signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
@@ -564,7 +564,7 @@ def fillNecessaryDataStructures(genome,jobname):
     #Load sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict= {}
 
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
         sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
@@ -574,7 +574,7 @@ def fillNecessaryDataStructures(genome,jobname):
     #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
     samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
 
-    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
         samplesWithAtLeast10KMutations2NumberofMutationsDict = readDictionary(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)
@@ -743,14 +743,14 @@ def initializationForEachChrom(signaturesWithAtLeast10KEligibleMutations2Numbero
 ########################################################################################
 #March 7, 2019 starts
 #For all chromosome parallel starts
-def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome,outputDir, jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
 
     ##########################################################################
     chromSizesDict, \
     chrNamesInNucleosomeList, \
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
-    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,jobname)
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,outputDir,jobname)
     ##########################################################################
 
     ##########################################################################
@@ -771,7 +771,7 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
         print('For debug %s chromSize:%d' %(chrLong,maximum_chrom_size))
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
-        nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
+        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename)[0:-4]
 
         ##############################################################
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
@@ -795,7 +795,7 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
                 chrLong='chrMT'
 
             #THEN READ CHRBASED SINGLE POINT MUTATIONS
-            chrBased_spms_df=readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFilename)
+            chrBased_spms_df=readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFilename)
             print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
 
             #THEN READ CHRBASED INDELS
@@ -895,14 +895,14 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
 ########################################################################################
 #March 6, 2019 starts
 #For each chromosome sequential starts
-def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
 
     ##########################################################################
     chromSizesDict, \
     chrNamesInNucleosomeList, \
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, \
-    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,jobname)
+    samplesWithAtLeast10KMutations2NumberofMutationsDict = fillNecessaryDataStructures(genome,outputDir,jobname)
     ##########################################################################
 
     ##########################################################################

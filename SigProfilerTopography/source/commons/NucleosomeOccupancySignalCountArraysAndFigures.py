@@ -169,7 +169,7 @@ def  writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList
     os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED), exist_ok=True)
 
     print('writeChrBasedNucleosome:%s for %s starts' %(nucleosomeFilename,chrLong))
-    nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
+    nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename)[0:-4]
 
     #Another Way
     signalArray = np.zeros(chromSize,dtype=np.float32)
@@ -377,11 +377,10 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
-
-    nucleosmeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, nucleosomeFilename)
+    # nucleosmeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, nucleosomeFilename)
     column_names = [chrom, start, end, signal]
-    if os.path.exists(nucleosmeFilePath):
-        nucleosome_df = pd.read_table(nucleosmeFilePath, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
+    if os.path.exists(nucleosomeFilename):
+        nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
 
         if (quantileValue<1.0):
             #remove the outliers
@@ -414,47 +413,48 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
 ######################################################################
 
 
-######################################################################
-#main function
-def readChrBasedNucleosomeOccupancyDataAndWriteSignalCountArrays(genome,nucleosomeFilename):
-    chromSizesDict = getChromSizesDict(genome)
-
-    #read chromnames for this nucleosome data
-    ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
-    print('for debug ChrNamesFilepath: %s:' %(ChrNamesFilepath))
-
-    if (os.path.exists(ChrNamesFilepath)):
-        chromNames = np.loadtxt(ChrNamesFilepath,dtype=np.str)
-
-    print('for debug type(chromNames): %s' %type(chromNames))
-
-    #Start the pool
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
-
-    poolInputList = []
-    for chrLong in chromNames:
-        chromBasedNucleosomeDF = readChromBasedNucleosomeDF(chrLong,nucleosomeFilename)
-        if chromBasedNucleosomeDF is not None:
-            chromSize = chromSizesDict[chrLong]
-            # writeChrBasedNucleosomeOccupancySignalCountArrays(chrLong, chromSize, chromBasedNucleosomeDF,nucleosomeFilename)
-            # writeChrBasedNucleosomeOccupancySignalCountArraysAtOnce(chrLong, chromSize, chromBasedNucleosomeDF,nucleosomeFilename)
-            inputList = []
-            inputList.append(chrLong)
-            inputList.append(chromSize)
-            inputList.append(chromBasedNucleosomeDF)
-            inputList.append(nucleosomeFilename)
-            poolInputList.append(inputList)
-
-    #Close the pool
-    pool.map(writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel,poolInputList)
-
-    ################################
-    pool.close()
-    pool.join()
-    ################################
-
-######################################################################
+# ######################################################################
+# #main function
+# #will be depreceated
+# def readChrBasedNucleosomeOccupancyDataAndWriteSignalCountArrays(genome,nucleosomeFilename):
+#     chromSizesDict = getChromSizesDict(genome)
+#
+#     #read chromnames for this nucleosome data
+#     ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
+#     print('for debug ChrNamesFilepath: %s:' %(ChrNamesFilepath))
+#
+#     if (os.path.exists(ChrNamesFilepath)):
+#         chromNames = np.loadtxt(ChrNamesFilepath,dtype=np.str)
+#
+#     print('for debug type(chromNames): %s' %type(chromNames))
+#
+#     #Start the pool
+#     numofProcesses = multiprocessing.cpu_count()
+#     pool = multiprocessing.Pool(numofProcesses)
+#
+#     poolInputList = []
+#     for chrLong in chromNames:
+#         chromBasedNucleosomeDF = readChromBasedNucleosomeDF(chrLong,nucleosomeFilename)
+#         if chromBasedNucleosomeDF is not None:
+#             chromSize = chromSizesDict[chrLong]
+#             # writeChrBasedNucleosomeOccupancySignalCountArrays(chrLong, chromSize, chromBasedNucleosomeDF,nucleosomeFilename)
+#             # writeChrBasedNucleosomeOccupancySignalCountArraysAtOnce(chrLong, chromSize, chromBasedNucleosomeDF,nucleosomeFilename)
+#             inputList = []
+#             inputList.append(chrLong)
+#             inputList.append(chromSize)
+#             inputList.append(chromBasedNucleosomeDF)
+#             inputList.append(nucleosomeFilename)
+#             poolInputList.append(inputList)
+#
+#     #Close the pool
+#     pool.map(writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel,poolInputList)
+#
+#     ################################
+#     pool.close()
+#     pool.join()
+#     ################################
+#
+# ######################################################################
 
 # ######################################################################
 # if __name__== "__main__":

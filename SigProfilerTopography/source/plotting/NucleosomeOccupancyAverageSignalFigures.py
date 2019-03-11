@@ -1116,8 +1116,11 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
         # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
             numberofEligibleSPMs = 0
             numberofIndels = 0
-            if sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-                numberofEligibleSPMs = sum(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample].values())
+            if sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
+                # numberofEligibleSPMs = sum(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample].values())
+                # We must use the number of substitutions coming from samplesWithAtLeast10KMutations2NumberofMutationsDict
+                # Since we are using all substitutions regardless of their signature probabilities
+                numberofEligibleSPMs = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
             if sample in sample2NumberofIndelsDict:
                 numberofIndels = sample2NumberofIndelsDict[sample]
 
@@ -1129,56 +1132,56 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
             plotSignalsandCountsForDebug(sample,jobname, numberofSimulations)
         ##############################################################
 
-    # ######################################################################################
-    # elif (checkValidness(AGGREGATEDSUBSTITUTIONS,jobname)):
-    #     sampleBasedNumberofMutations = 0
-    #     plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
-    #                                                 None, None, AGGREGATEDSUBSTITUTIONS,
-    #                                                 jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
-    #
-    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-    #     # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-    #         sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
-    #         plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
-    #                                     sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
-    #                                     jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
-    # ######################################################################################
+    ######################################################################################
+    elif (checkValidness(AGGREGATEDSUBSTITUTIONS,jobname)):
+        sampleBasedNumberofMutations = 0
+        plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
+                                                    None, None, AGGREGATEDSUBSTITUTIONS,
+                                                    jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
 
-    # ######################################################################################
-    # elif (checkValidness(AGGREGATEDINDELS,jobname)):
-    #     numberofIndels = 0
-    #     plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
-    #                                         None, None,
-    #                                         AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
-    #
-    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-    #     # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-    #         if sample in sample2NumberofIndelsDict:
-    #             numberofIndels = sample2NumberofIndelsDict[sample]
-    #             plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
-    #                                             sample, None,
-    #                                             SAMPLEBASED_AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
-    # ######################################################################################
+        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
+            sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
+            plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
+                                        sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
+                                        jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
+    ######################################################################################
+
+    ######################################################################################
+    elif (checkValidness(AGGREGATEDINDELS,jobname)):
+        numberofIndels = 0
+        plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
+                                            None, None,
+                                            AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+
+        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
+            if sample in sample2NumberofIndelsDict:
+                numberofIndels = sample2NumberofIndelsDict[sample]
+                plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
+                                                sample, None,
+                                                SAMPLEBASED_AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+    ######################################################################################
 
 
 
-    # #Plot Signature Based
-    # #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
-    # if checkValidness(SIGNATUREBASED,jobname):
-    #     #SignatureBased
-    #     for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-    #         signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
-    #         plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
-    #                                                                               'Interval around single point mutation (bp)','Average nucleosome signal',
-    #                                                                               jobname,isFigureAugmentation,numberofSimulations)
-    #
-    #     # SampleBased SignatureBased Nucleosome Occupancy Figures
-    #     for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-    #         for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
-    #             sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
-    #             plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
-    #                                                                                   'Interval around single point mutation (bp)','Average nucleosome signal',
-    #                                                                                   jobname, isFigureAugmentation,numberofSimulations)
+    #Plot Signature Based
+    #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
+    if checkValidness(SIGNATUREBASED,jobname):
+        #SignatureBased
+        for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+            signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
+            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
+                                                                                  'Interval around single point mutation (bp)','Average nucleosome signal',
+                                                                                  jobname,isFigureAugmentation,numberofSimulations)
+
+        # SampleBased SignatureBased Nucleosome Occupancy Figures
+        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+            for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
+                sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
+                plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
+                                                                                      'Interval around single point mutation (bp)','Average nucleosome signal',
+                                                                                      jobname, isFigureAugmentation,numberofSimulations)
 
     #########################################################
 

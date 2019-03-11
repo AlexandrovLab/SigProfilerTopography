@@ -324,11 +324,11 @@ def readChrBasedIndelsDF(jobname,chrLong,filename):
 
 
 ##################################################################
-def readChrBasedMutationDF(jobname,chrLong,filename):
+def readChrBasedMutationDF(outputDir,jobname,chrLong,filename):
 
     filename = chrLong + '_' + filename
 
-    chrBasedMutationDFFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,CHRBASED,filename)
+    chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
 
     ##########################################################################################
     if (os.path.exists(chrBasedMutationDFFilePath)):
@@ -574,12 +574,11 @@ def writeChrBasedMutationDF(inputList):
     chr = inputList[0]
     mutationsFileName = inputList[1]
     chrBased_mutation_df = inputList[2]
-    jobname =  inputList[3]
-
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
+    outputDir = inputList[3]
+    jobname =  inputList[4]
 
     chrBasedMutationFileName = 'chr%s_%s' % (chr, mutationsFileName)
-    chrBasedMutationFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA, CHRBASED,chrBasedMutationFileName)
+    chrBasedMutationFile = os.path.join(outputDir,jobname,DATA, CHRBASED,chrBasedMutationFileName)
     # lock.acquire()
 
     if (chrBased_mutation_df is not None):
@@ -970,7 +969,7 @@ def init(l):
 ##################################################################
 
 ##################################################################
-def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
+def readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFileName):
     sample2NumberofIndelsDict,indels_df = readIndels(indelsFileName)
 
     print('For debugging purposes indels_df.columns')
@@ -981,7 +980,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     print('len(indels_df_grouped)')
     print(len(indels_df_grouped))
 
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA, CHRBASED),exist_ok=True)
+    os.makedirs(os.path.join(outputDir,jobname,DATA, CHRBASED),exist_ok=True)
 
     #########################################################
     ############### Write Unique Chrnames starts ############
@@ -992,7 +991,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     # Write uniqueChrNames to a file
     filename = ChrNamesInIndelsFilename
 
-    ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,filename)
+    ChrNamesFile = os.path.join(outputDir,jobname,DATA,filename)
 
     np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
     #########################################################
@@ -1002,7 +1001,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
     #############################################################################################################################
     ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2NumberofIndelsDict,jobname,Samples2NumberofIndelsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2NumberofIndelsDict,outputDir,jobname,Samples2NumberofIndelsDictFilename)
     #############################################################################################################################
     ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
@@ -1026,6 +1025,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
         inputList.append(chr)
         inputList.append(indelsFileName)
         inputList.append(chrBased_indels_df)
+        inputList.append(outputDir)
         inputList.append(jobname)
         poolInputList.append(inputList)
     #########################################################
@@ -1042,7 +1042,7 @@ def readIndelsAndWriteChrBasedParallel(jobname,indelsFileName):
 
 
 ##################################################################
-def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedProbabilitiesFileName):
+def readMutationsAndWriteChrBasedParallel(outputDir,jobname,mutationsWithSignatureBasedProbabilitiesFileName):
     signatures, \
     samplesWithAtLeast10KMutations2NumberofMutationsDict, \
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
@@ -1050,8 +1050,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     mutation_df = readMutations(mutationsWithSignatureBasedProbabilitiesFileName)
 
     mutation_df_grouped= mutation_df.groupby(CHROM)
-
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,CHRBASED),exist_ok=True)
+    os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
 
     #########################################################
     ############### Write signatures starts #################
@@ -1059,7 +1058,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     signatures_array = np.array(signatures)
 
     # Write signatures_array to a file
-    SignaturesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA, SignatureFilename)
+    SignaturesFile = os.path.join(outputDir,jobname,DATA, SignatureFilename)
 
     np.savetxt(SignaturesFile,signatures_array,delimiter='\t', fmt='%s')
     #########################################################
@@ -1069,7 +1068,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     #############################################################################################################################
     ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(samplesWithAtLeast10KMutations2NumberofMutationsDict,jobname,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(samplesWithAtLeast10KMutations2NumberofMutationsDict,outputDir,jobname,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
     #############################################################################################################################
     ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
@@ -1077,7 +1076,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     #############################################################################################################################
     ######################## Write signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,jobname,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,outputDir,jobname,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
     #############################################################################################################################
     ######################## Write signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts ##################################
     #############################################################################################################################
@@ -1085,7 +1084,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     #############################################################################################################################
     ############### Write sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts #########################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, jobname,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,outputDir,jobname,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
     #############################################################################################################################
     ############### Write sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict ends ###########################
     #############################################################################################################################
@@ -1096,7 +1095,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
     #########################################################
     uniqueChrNames = mutation_df[CHROM].unique()
 
-    ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,ChrNamesInSPMsFilename)
+    ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
     np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
     #########################################################
     ############### Write Unique Chrnames ends ##############
@@ -1120,6 +1119,7 @@ def readMutationsAndWriteChrBasedParallel(jobname,mutationsWithSignatureBasedPro
         inputList.append(chr)
         inputList.append(mutationsWithSignatureBasedProbabilitiesFileName)
         inputList.append(chrBased_mutation_df)
+        inputList.append(outputDir)
         inputList.append(jobname)
         poolInputList.append(inputList)
     #########################################################
@@ -1159,7 +1159,6 @@ def readIndels(allIndelsFileName):
         numberofMutations =  len(indels_df[indels_df[SAMPLE] == sample])
         sample2NumberofIndelsDict[sample] = numberofMutations
     ###########################################################################
-
 
     print('Number of samples in indels file: %d' %(len(indels_df[SAMPLE].unique())))
     print('Number of indels: %d' %(indels_df.shape[0]))
@@ -1701,10 +1700,10 @@ def writeToStandardOutputRatio(signatures, mutationProbability2Signature2RatioDi
 
 ########################################################################
 #To write samples with signatures with at least 10K eligible mutations
-def writeDictionaryUnderDataDirectory(dictionary,jobname,filename):
+def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
 
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA), exist_ok=True)
-    filePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,filename)
+    os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
+    filePath = os.path.join(outputDir,jobname,DATA,filename)
 
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary))

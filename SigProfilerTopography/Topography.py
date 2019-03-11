@@ -12,26 +12,31 @@ import os
 import shutil
 import twobitreader
 
-#############################################################
-current_abs_path = os.path.dirname(os.path.realpath(__file__))
-commonsPath = os.path.join(current_abs_path,'source','commons')
-sys.path.append(commonsPath)
-#############################################################
+# #############################################################
+# current_abs_path = os.path.dirname(os.path.realpath(__file__))
+# commonsPath = os.path.join(current_abs_path,'source','commons')
+# sys.path.append(commonsPath)
+# #############################################################
 
-from SigProfilerTopography.source.commons import TopographyCommons
-from SigProfilerTopography.source.commons import DataPreparationCommons
+# from SigProfilerTopography.source.commons.TopographyCommons import NOTSET
 
-from SigProfilerTopography.source.commons import PartitionIndelsData
-from SigProfilerTopography.source.commons import PartitionSinglePointMutationsData
-from SigProfilerTopography.source.commons import NucleosomeOccupancySignalCountArraysAndFigures
-from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancyAnalysis
-from SigProfilerTopography.source.replicationtime import ReplicationTimeAnalysis
-from SigProfilerTopography.source.replicationstrandbias import ReplicationStrandBiasAnalysis
-from SigProfilerTopography.source.transcriptionstrandbias import TranscriptionStrandBiasAnalysis
-from SigProfilerTopography.source.processivity import ProcessivityAnalysis
+from SigProfilerTopography.source.commons.DataPreparationCommons import readMutationsWithGenomicPositions
+from SigProfilerTopography.source.commons.DataPreparationCommons import readProbabilities
+from SigProfilerTopography.source.commons.DataPreparationCommons import mergeSNPsWithSignatureProbabilities
+from SigProfilerTopography.source.commons.DataPreparationCommons import readIndelsandWriteWithGenomicPositions
+from SigProfilerTopography.source.commons.DataPreparationCommons import prepareSimulationBasedInputFilesForSigProfilerTopography
 
+from SigProfilerTopography.source.commons.PartitionIndelsData import partitionIndelsData
+from SigProfilerTopography.source.commons.PartitionSinglePointMutationsData import partitionMutationsData
 
-from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import *
+from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays
+from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import nucleosomeOccupancyAnalysis
+from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import *
+from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import *
+from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import *
+from SigProfilerTopography.source.processivity.ProcessivityAnalysis import *
+
+from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import nucleosomeOccupancyAverageSignalFigures
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import *
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import *
 from SigProfilerTopography.source.plotting.ProcessivityFigures import *
@@ -48,7 +53,7 @@ def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabi
 
     #############################################################################
     #Step1 read snps with genomic positions circa 28 million rows
-    snps_df = DataPreparationCommons.readMutationsWithGenomicPositions(snpsInputFile)
+    snps_df = readMutationsWithGenomicPositions(snpsInputFile)
 
     #Drop the unnecessary columns before the merge with probabilities
     snps_df.drop(['locID','mutType','Type','VarID','Gene','GeneID','ccdsID','TranscriptID','GeneType'], inplace=True, errors='ignore',axis=1)
@@ -64,7 +69,7 @@ def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabi
 
     #############################################################################
     # Step2 read sample based mutation based signature probabilities
-    probabilities_df = DataPreparationCommons.readProbabilities(probabilitiesFile)
+    probabilities_df = readProbabilities(probabilitiesFile)
     #############################################################################
 
     ###################################################
@@ -74,12 +79,12 @@ def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabi
 
     #############################################################################
     # Step3
-    DataPreparationCommons.mergeSNPsWithSignatureProbabilities(jobname,snps_df,probabilities_df,hg19_genome,hg38_genome)
+    mergeSNPsWithSignatureProbabilities(jobname,snps_df,probabilities_df,hg19_genome,hg38_genome)
     #############################################################################
 
     #############################################################################
     # Step4
-    DataPreparationCommons.readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile)
+    readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile)
     #############################################################################
 
 ############################################################
@@ -100,14 +105,14 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
     # numberofSimulations int default=0
 
     #Read probabilities
-    probabilities_df = DataPreparationCommons.readProbabilities(probabilitiesFile)
+    probabilities_df = readProbabilities(probabilitiesFile)
 
     if (len(mutationTypes)==2):
         sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s_%s' %(jobname,genomeAssembly,mutationTypes[1], mutationTypes[0])
     elif (len(mutationTypes)==1):
         sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s' %(jobname,genomeAssembly,mutationTypes[0])
 
-    DataPreparationCommons.prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
+    prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
 
 ################################################################
 
@@ -115,7 +120,7 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 
 #######################################################
 #Run SigProfilerTopography Analyses
-def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename):
+def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename):
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True
@@ -126,7 +131,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,jobname,nucl
     ##############################################
     #Partition the data (Single Point Mutations data and Indels data)
     # Delete the output/jobname/DATA/chrbased if exists
-    jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,DATA,CHRBASED)
+    jobnamePath = os.path.join(outputDir,jobname,DATA,CHRBASED)
     print('sigProTopographyData.py jobnamePath:%s ' %jobnamePath)
 
     #######################################################
@@ -139,27 +144,29 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,jobname,nucl
     #######################################################
 
 
-    if (indelsFilename!=TopographyCommons.NOTSET):
-        PartitionIndelsData.partitionIndelsData(jobname,indelsFilename)
-    if (singlePointMutationsFilename!=TopographyCommons.NOTSET):
-        PartitionSinglePointMutationsData.partitionMutationsData(jobname,singlePointMutationsFilename)
+    if (indelsFilename!=NOTSET):
+        partitionIndelsData(outputDir,jobname,indelsFilename)
+    if (singlePointMutationsFilename!=NOTSET):
+        partitionMutationsData(outputDir,jobname,singlePointMutationsFilename)
     ##############################################
 
     #############################################
-    print('current_abs_path: %s ' % current_abs_path)
+    print('current_abs_path:%s' %current_abs_path)
     availableNucleosomeOccupancyFilesPath = os.path.join(current_abs_path,LIB,NUCLEOSOME,AVAILABLENUCLEOSOMEOCCUPANCYFILESNAME)
 
     if (os.path.exists(availableNucleosomeOccupancyFilesPath)):
         availableNucleosomeOccupancyFilesList = readAsAList(availableNucleosomeOccupancyFilesPath)
 
-    if (nucleosomeFilename not in availableNucleosomeOccupancyFilesList):
+    nucleosomeFilename_woDir = os.path.basename(nucleosomeFilename)
+    if (nucleosomeFilename_woDir not in availableNucleosomeOccupancyFilesList):
         quantileValue = round(float(0.97), 2)
         # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
-        NucleosomeOccupancySignalCountArraysAndFigures.readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+        readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
     #############################################
 
     ##############################################
     #Please note that singlePointMutationsFilename and indelsFilename are full paths.
+    # They are all read and partitioned chr based
     # Get the fienames at the end
     singlePointMutationsFilename = os.path.basename(singlePointMutationsFilename)
     indelsFilename = os.path.basename(indelsFilename)
@@ -168,7 +175,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,jobname,nucl
     ##############################################
     # NUCLEOSOMEOCCUPANCYANALYSIS
     # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
-    jobnamePath = os.path.join(current_abs_path,OUTPUT, jobname,DATA, NUCLEOSOMEOCCUPANCY)
+    jobnamePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY)
 
     ################################################
     if (os.path.exists(jobnamePath)):
@@ -178,7 +185,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,jobname,nucl
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    NucleosomeOccupancyAnalysis.nucleosomeOccupancyAnalysis(genome,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
+    nucleosomeOccupancyAnalysis(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
     ###############################################
 
     # #############################################
@@ -295,7 +302,7 @@ def plotFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculati
     print('current_abs_path: %s ' % current_abs_path)
 
     jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,FIGURE)
-    print('SigProfilerTopography.py jobnamePath:%s ' %jobnamePath)
+    print('Topography.py jobnamePath:%s ' %jobnamePath)
     if (os.path.exists(jobnamePath)):
         print('jobnamePath exists')
 
