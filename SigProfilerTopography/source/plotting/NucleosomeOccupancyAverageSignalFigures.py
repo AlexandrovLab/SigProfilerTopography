@@ -102,19 +102,19 @@ windowSize = plusOrMinus*2+1
 ##################### Read Average as Pandas Series #########################
 #############################################################################
 #Jobname has to be only jobname given in the argument
-def readAverage(sample,signatureName,analyseType,jobname):
+def readAverage(sample,signatureName,analyseType,outputDir,jobname):
     # Read the file w.r.t. the current folder
 
     if (analyseType == SIGNATUREBASED):
         # for signature based name may contain empty spaces
         #new way
         filename = '%s_AverageNucleosomeSignalArray.txt' %(signatureName)
-        averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+        averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
 
     elif (analyseType== AGGREGATEDSUBSTITUTIONS or analyseType == AGGREGATEDINDELS):
         # new way
         filename = '%s_AverageNucleosomeSignalArray.txt' %(jobname)
-        averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+        averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
 
     #####################################################
     if (analyseType == SAMPLEBASED_SIGNATUREBASED):
@@ -122,17 +122,17 @@ def readAverage(sample,signatureName,analyseType,jobname):
         # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (signatureName, sample)
 
-        averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
+        averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
 
     elif (analyseType == SAMPLEBASED_AGGREGATEDSUBSTITUTIONS):
         # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample, jobname)
-        averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDSUBSTITUTIONS, filename)
+        averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDSUBSTITUTIONS, filename)
 
     elif (analyseType == SAMPLEBASED_AGGREGATEDINDELS):
         # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample, jobname)
-        averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDINDELS, filename)
+        averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDINDELS, filename)
 
     #####################################################
 
@@ -179,7 +179,7 @@ def readAsNumpyArray(averageFilePath):
 #############################################################################
 ##################### Read Average for Simulations start ####################
 #############################################################################
-def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimulations):
+def readAverageForSimulations(sample,signature,analyseType,outputDir,jobname,numberofSimulations):
 
     listofAverages = []
 
@@ -191,7 +191,7 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
         for i in range(1,numberofSimulations+1):
             simulationJobName = '%s_Sim%d' %(jobname,i)
             filename = '%s_AverageNucleosomeSignalArray.txt' %(signature)
-            averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
@@ -204,7 +204,7 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
         for i in range(1,numberofSimulations+1):
             simulationJobName = '%s_Sim%d' %(jobname,i)
             filename = '%s_AverageNucleosomeSignalArray.txt' %(simulationJobName)
-            averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
@@ -214,7 +214,7 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
         for i in range(1,numberofSimulations+1):
             simulationJobName = '%s_Sim%d' %(jobname,i)
             filename = '%s_%s_AverageNucleosomeSignalArray.txt' %(signature,sample)
-            averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
+            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
@@ -223,7 +223,7 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
         for i in range(1, numberofSimulations + 1):
             simulationJobName = '%s_Sim%d' % (jobname, i)
             filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample,simulationJobName)
-            averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDSUBSTITUTIONS, filename)
+            averageFilePath = os.path.join(outputDir,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDSUBSTITUTIONS, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
@@ -232,7 +232,7 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
         for i in range(1, numberofSimulations + 1):
             simulationJobName = '%s_Sim%d' % (jobname, i)
             filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample,simulationJobName)
-            averageFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDINDELS, filename)
+            averageFilePath = os.path.join(outputDir,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDINDELS, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
@@ -248,23 +248,23 @@ def readAverageForSimulations(sample,signature,analyseType,jobname,numberofSimul
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,jobname, isFigureAugmentation,numberofSimulations):
+def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,outputDir,jobname, isFigureAugmentation,numberofSimulations):
 
     simulationsSignatureBasedMedians = None
     listofSimulationsSignatureBased = None
 
     if ((sample is not None) and (signature is not None)):
-        realAverage = readAverage(sample, signature, SAMPLEBASED_SIGNATUREBASED, jobname)
+        realAverage = readAverage(sample, signature, SAMPLEBASED_SIGNATUREBASED, outputDir, jobname)
         figurename = '%s_%s_%d' % (signature, sample, numberofMutations)
         title = '%s_%s' % (signature, sample)
         if (numberofSimulations>0):
-            listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SAMPLEBASED_SIGNATUREBASED, jobname,numberofSimulations)
+            listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SAMPLEBASED_SIGNATUREBASED, outputDir, jobname,numberofSimulations)
     else:
-        realAverage = readAverage(None, signature, SIGNATUREBASED, jobname)
+        realAverage = readAverage(None, signature, SIGNATUREBASED, outputDir, jobname)
         figurename = '%s_%d' % (signature, numberofMutations)
         title = '%s' % (signature)
         if (numberofSimulations>0):
-            listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SIGNATUREBASED, jobname,numberofSimulations)
+            listofSimulationsSignatureBased = readAverageForSimulations(sample, signature, SIGNATUREBASED, outputDir, jobname,numberofSimulations)
 
     if ((realAverage is not None) and (pd.notna(realAverage).any(axis=0)) and (np.any(realAverage))):
 
@@ -371,10 +371,10 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         #######################################################################
         # new code
         if (sample is None):
-            figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY, filename)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY, filename)
         else:
-            os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY), exist_ok=True)
-            figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY, filename)
+            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY), exist_ok=True)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY, filename)
         #######################################################################
 
         fig.savefig(figureFile)
@@ -387,20 +387,20 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 #############################################################################
 ############## Plot AggregatedIndels For Simulations starts #################
 #############################################################################
-def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseType,jobname,isFigureAugmentation,numberofIndels,numberofSimulations):
+def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseType,outputDir,jobname,isFigureAugmentation,numberofIndels,numberofSimulations):
 
-    realAggregatedIndels = readAverage(sample, signature, analyseType, jobname)
+    realAggregatedIndels = readAverage(sample, signature, analyseType, outputDir, jobname)
     simulationsAggregatedIndelsMedians = None
     listofSimulationsAggregatedIndels = None
 
     if (sample is None):
         figurename = '%s_AggregatedIndels.png' % (jobname)
         if (numberofSimulations>0):
-            listofSimulationsAggregatedIndels =  readAverageForSimulations(sample,None, AGGREGATEDINDELS, jobname,numberofSimulations)
+            listofSimulationsAggregatedIndels =  readAverageForSimulations(sample,None, AGGREGATEDINDELS, outputDir, jobname,numberofSimulations)
     else:
         figurename = '%s_%d_AggregatedIndels_%s.png' % (sample,numberofIndels,jobname)
         if (numberofSimulations>0):
-            listofSimulationsAggregatedIndels = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDINDELS,jobname, numberofSimulations)
+            listofSimulationsAggregatedIndels = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDINDELS, outputDir, jobname, numberofSimulations)
 
     #####################################################################
     #####################################################################
@@ -500,10 +500,10 @@ def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseTy
     ######################################################################
     #new code
     if (sample is None):
-        figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname, FIGURE,ALL,NUCLEOSOMEOCCUPANCY, figurename)
+        figureFile = os.path.join(outputDir,jobname, FIGURE,ALL,NUCLEOSOMEOCCUPANCY, figurename)
     else:
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE,SAMPLES, sample,NUCLEOSOMEOCCUPANCY, figurename)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE,SAMPLES, sample,NUCLEOSOMEOCCUPANCY, figurename)
     ######################################################################
 
     fig.savefig(figureFile)
@@ -522,22 +522,22 @@ def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseTy
 #############################################################################
 ########### Plot AggregatedSubstitutions For Simulations starts #############
 #############################################################################
-def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,analyseType,jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations):
+def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,analyseType,outputDir,jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations):
 
     simulationsAggregatedSubstitutionsMedians = None
     listofSimulationsAggregatedSubstitutions = None
 
-    realAggregatedSubstitutions = readAverage(sample, signature, analyseType, jobname)
+    realAggregatedSubstitutions = readAverage(sample, signature, analyseType, outputDir, jobname)
 
     if (sample is None):
         filename = '%s_Aggregated_Substitutions.png' %(jobname)
         if (numberofSimulations>0):
-            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(None, None, AGGREGATEDSUBSTITUTIONS,jobname, numberofSimulations)
+            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(None, None, AGGREGATEDSUBSTITUTIONS,outputDir,jobname, numberofSimulations)
 
     else:
-        filename = '%s_%d_Aggregated_Substitutions_%s.png' %(sample,sampleBasedNumberofMutations,jobname)
+        filename = '%s_%d_Aggregated_Substitutions_%s.png' %(sample,sampleBasedNumberofMutations,outputDir,jobname)
         if (numberofSimulations>0):
-            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, jobname,numberofSimulations)
+            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir,jobname,numberofSimulations)
 
     #####################################################################
     #####################################################################
@@ -637,10 +637,10 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
     #######################################################################
     # new code
     if (sample is None):
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY, filename)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY, filename)
     else:
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY, filename)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, NUCLEOSOMEOCCUPANCY, filename)
     #######################################################################
 
     fig.savefig(figureFile)
@@ -659,7 +659,7 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def plotSignalsandCountsForDebug(sample,jobname,numberofSimulations):
+def plotSignalsandCountsForDebug(sample,outputDir,jobname,numberofSimulations):
     if sample is None:
         filename = '%s_Signals_Counts.png' % (jobname)
     else:
@@ -670,12 +670,12 @@ def plotSignalsandCountsForDebug(sample,jobname,numberofSimulations):
     listofSimulationsAggregatedSubstitutions_Signal = None
     listofSimulationsAggregatedSubstitutions_Count = None
 
-    original_Signal = readSignalorCount(sample,jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
-    original_Count = readSignalorCount(sample,jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
+    original_Signal = readSignalorCount(sample,outputDir,jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
+    original_Count = readSignalorCount(sample,outputDir,jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
 
     if (numberofSimulations > 0):
-        listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(sample,jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
-        listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(sample,jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
+        listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
+        listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
 
     stackedSimulations_Signal = np.vstack(listofSimulationsAggregatedSubstitutions_Signal)
     stackedSimulations_Count = np.vstack(listofSimulationsAggregatedSubstitutions_Count)
@@ -752,7 +752,7 @@ def plotSignalsandCountsForDebug(sample,jobname,numberofSimulations):
     plt.xlabel('Single Point Substitutions', fontsize=30)
     plt.ylabel('Signal & Count', fontsize=30)
 
-    figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
+    figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
 
     fig.savefig(figureFile)
     plt.close(fig)
@@ -764,13 +764,13 @@ def plotSignalsandCountsForDebug(sample,jobname,numberofSimulations):
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def readSignalorCount(sample,jobname,filename,analyseType):
+def readSignalorCount(sample,outputDir,jobname,filename,analyseType):
     if sample is not None:
         filename = '%s_%s_%s' % (sample,jobname,filename)
     else:
         filename = '%s_%s' % (jobname,filename)
 
-    filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, NUCLEOSOMEOCCUPANCY, analyseType, filename)
+    filepath = os.path.join(outputDir, jobname, DATA, NUCLEOSOMEOCCUPANCY, analyseType, filename)
     return readAsNumpyArray(filepath)
 #############################################################################
 #For Debugging ends FEB 26, 2019
@@ -780,7 +780,7 @@ def readSignalorCount(sample,jobname,filename,analyseType):
 #############################################################################
 #For Debugging starts FEB 26, 2019
 #############################################################################
-def readSignalorCountSimulations(sample,jobname,filename,analyseType,numberofSimulations):
+def readSignalorCountSimulations(sample,outputDir,jobname,filename,analyseType,numberofSimulations):
     listofArrays = []
 
     for i in range(1, numberofSimulations + 1):
@@ -790,7 +790,7 @@ def readSignalorCountSimulations(sample,jobname,filename,analyseType,numberofSim
         else:
             newfilename = '%s_%s_%s' % (sample,simulationJobName,filename)
 
-        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simulationJobName,DATA, NUCLEOSOMEOCCUPANCY, analyseType, newfilename)
+        filepath = os.path.join(outputDir, simulationJobName,DATA, NUCLEOSOMEOCCUPANCY, analyseType, newfilename)
         print('For Debug %s' %(filepath))
         signalorCountArray = readAsNumpyArray(filepath)
         if (signalorCountArray is not None):
@@ -806,7 +806,7 @@ def readSignalorCountSimulations(sample,jobname,filename,analyseType,numberofSim
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,sample,jobname,isFigureAugmentation,numberofSPMs,numberofIndels,numberofSimulations):
+def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,sample,outputDir,jobname,isFigureAugmentation,numberofSPMs,numberofIndels,numberofSimulations):
 
     simulationsAggregatedSubstitutionsMedians = None
     simulationsAggregatedIndelsMedians = None
@@ -818,24 +818,24 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     #######################################################################################################################
     if (sample is None):
         filename = '%s_Aggregated_Substitutions_Indels.png' % (jobname)
-        realAggregatedIndels = readAverage(None,None, AGGREGATEDINDELS, jobname)
-        realAggregatedSubstitutions = readAverage(None,None,AGGREGATEDSUBSTITUTIONS,jobname)
+        realAggregatedIndels = readAverage(None,None, AGGREGATEDINDELS, outputDir,jobname)
+        realAggregatedSubstitutions = readAverage(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname)
 
         if (numberofSimulations>0):
-            listofSimulationsAggregatedIndels = readAverageForSimulations(None, None, AGGREGATEDINDELS, jobname,numberofSimulations)
-            listofSimulationsAggregatedSubstitutions =  readAverageForSimulations(None,None,AGGREGATEDSUBSTITUTIONS,jobname,numberofSimulations)
+            listofSimulationsAggregatedIndels = readAverageForSimulations(None, None, AGGREGATEDINDELS, outputDir, jobname,numberofSimulations)
+            listofSimulationsAggregatedSubstitutions =  readAverageForSimulations(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,numberofSimulations)
     #######################################################################################################################
 
 
     #######################################################################################################################
     else:
         filename = '%s_%s_Aggregated_Substitutions_%d_Indels_%d.png' % (sample, jobname, numberofSPMs, numberofIndels)
-        realAggregatedIndels = readAverage(sample,None, SAMPLEBASED_AGGREGATEDINDELS, jobname)
-        realAggregatedSubstitutions = readAverage(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,jobname)
+        realAggregatedIndels = readAverage(sample,None, SAMPLEBASED_AGGREGATEDINDELS, outputDir, jobname)
+        realAggregatedSubstitutions = readAverage(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir, jobname)
 
         if (numberofSimulations>0):
-            listofSimulationsAggregatedIndels = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDINDELS,jobname, numberofSimulations)
-            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, jobname,numberofSimulations)
+            listofSimulationsAggregatedIndels = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDINDELS, outputDir, jobname, numberofSimulations)
+            listofSimulationsAggregatedSubstitutions = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir, jobname,numberofSimulations)
     #######################################################################################################################
 
 
@@ -993,10 +993,10 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     ######################################################################################
     #new code
     if (sample is None):
-        figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
     else:
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
-        figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,SAMPLES,sample,NUCLEOSOMEOCCUPANCY,filename)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample,NUCLEOSOMEOCCUPANCY), exist_ok=True)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,SAMPLES,sample,NUCLEOSOMEOCCUPANCY,filename)
     ######################################################################################
 
     fig.savefig(figureFile)
@@ -1013,10 +1013,10 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
 
 
 #########################################################
-def checkValidness(analsesType,jobname):
+def checkValidness(analsesType,outputDir,jobname):
     #Check whether directory exists and there are files under it.
 
-    data_file_path = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,analsesType)
+    data_file_path = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,analsesType)
 
     #If directory exists and if there are files under it.
     if (os.path.exists(data_file_path)):
@@ -1031,13 +1031,13 @@ def checkValidness(analsesType,jobname):
 
 
 #########################################################
-def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofSimulations):
+def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations):
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
     #######################################################################################################################
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY), exist_ok=True)
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
     #######################################################################################################################
 
     isFigureAugmentation = False
@@ -1054,7 +1054,7 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
 
     ##########################################################################################
     sample2NumberofIndelsDict = {}
-    sample2NumberofIndelsDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,Samples2NumberofIndelsDictFilename)
+    sample2NumberofIndelsDictFilePath = os.path.join(outputDir,jobname,DATA,Samples2NumberofIndelsDictFilename)
 
     if (os.path.exists(sample2NumberofIndelsDictFilePath)):
         sample2NumberofIndelsDict = readDictionary(sample2NumberofIndelsDictFilePath)
@@ -1062,10 +1062,7 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
 
     ##########################################################################################
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  OUTPUT, jobname, DATA,
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
                                                                                                   Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -1074,8 +1071,7 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
 
     ##########################################################################################
     samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
-    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,
-                                                                                ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,
+    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
                                                                                 SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
@@ -1084,10 +1080,7 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
 
     ##########################################################################################
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                           ONE_DIRECTORY_UP,
-                                                                                           ONE_DIRECTORY_UP, OUTPUT,
-                                                                                           jobname, DATA,
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
                                                                                            SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -1101,7 +1094,7 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
 
     # Plot All Together : Aggregated Substitutions and Aggregated Indels
     # Or plot one of them:  Aggregated Substitutions or Aggregated Indels
-    if checkValidness(AGGREGATEDSUBSTITUTIONS,jobname) and checkValidness(AGGREGATEDINDELS,jobname):
+    if checkValidness(AGGREGATEDSUBSTITUTIONS,outputDir,jobname) and checkValidness(AGGREGATEDINDELS,outputDir,jobname):
 
         ##############################################################
         plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations('Interval around variant (bp)','Average nucleosome signal',
@@ -1129,30 +1122,30 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
                                                                         numberofEligibleSPMs, numberofIndels,numberofSimulations)
 
             #For debug FEB 28, 2019
-            plotSignalsandCountsForDebug(sample,jobname, numberofSimulations)
+            plotSignalsandCountsForDebug(sample,outputDir,jobname, numberofSimulations)
         ##############################################################
 
     ######################################################################################
-    elif (checkValidness(AGGREGATEDSUBSTITUTIONS,jobname)):
+    elif (checkValidness(AGGREGATEDSUBSTITUTIONS,outputDir,jobname)):
         sampleBasedNumberofMutations = 0
         plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
                                                     None, None, AGGREGATEDSUBSTITUTIONS,
-                                                    jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
+                                                    outputDir,jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
 
         for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
         # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
             sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
             plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
-                                        sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
-                                        jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
+                                                        sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
+                                                       outputDir,jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
     ######################################################################################
 
     ######################################################################################
-    elif (checkValidness(AGGREGATEDINDELS,jobname)):
+    elif (checkValidness(AGGREGATEDINDELS,outputDir,jobname)):
         numberofIndels = 0
         plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
                                             None, None,
-                                            AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+                                            AGGREGATEDINDELS, outputDir, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
 
         for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
         # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
@@ -1160,20 +1153,20 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
                 numberofIndels = sample2NumberofIndelsDict[sample]
                 plotAggregatedIndelsWithSimulations('Interval around variant (bp)', 'Average nucleosome signal',
                                                 sample, None,
-                                                SAMPLEBASED_AGGREGATEDINDELS, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
+                                                SAMPLEBASED_AGGREGATEDINDELS, outputDir, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
     ######################################################################################
 
 
 
     #Plot Signature Based
     #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
-    if checkValidness(SIGNATUREBASED,jobname):
+    if checkValidness(SIGNATUREBASED,outputDir,jobname):
         #SignatureBased
         for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
             signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
             plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
                                                                                   'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                                  jobname,isFigureAugmentation,numberofSimulations)
+                                                                              outputDir, jobname,isFigureAugmentation,numberofSimulations)
 
         # SampleBased SignatureBased Nucleosome Occupancy Figures
         for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
@@ -1181,9 +1174,9 @@ def nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofS
                 sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
                 plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
                                                                                       'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                                      jobname, isFigureAugmentation,numberofSimulations)
+                                                                                  outputDir, jobname, isFigureAugmentation,numberofSimulations)
 
     #########################################################
 
     #For debugging FEB 26, 2019
-    plotSignalsandCountsForDebug(None,jobname,numberofSimulations)
+    plotSignalsandCountsForDebug(None,outputDir,jobname,numberofSimulations)

@@ -1562,15 +1562,14 @@ def augment(pool,wavelet_processed_df):
 
 ##################################################################
 #Case 3: INDELs (AGGREGATEDINDELS and Indels Types)
-def writeReplicationTimeDataForIndels(jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
+def writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
 
     ######################### AGGREGATEDINDELS starts #########################
     decileBasedAllChrAccumulatedCountDict= type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[AGGREGATEDINDELS]
 
     normalizedMutationDensityFilename = AGGREGATEDINDELS + '_NormalizedMutationDensity.txt'
-    normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                     jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+    normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                      normalizedMutationDensityFilename)
 
     numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
@@ -1590,8 +1589,7 @@ def writeReplicationTimeDataForIndels(jobname,deciles,type2DecileBasedAllChrAccu
             decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[indelType]
 
             normalizedMutationDensityFilename = indelType + '_NormalizedMutationDensity.txt'
-            normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                             jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                              normalizedMutationDensityFilename)
 
 
@@ -1612,9 +1610,8 @@ def writeReplicationTimeDataForIndels(jobname,deciles,type2DecileBasedAllChrAccu
 
 ##################################################################
 #Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
-def writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
-
+def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
 
     #One of the type is AGGREGATEDSUBSTITUTIONS
 
@@ -1623,8 +1620,7 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2Dec
         decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountDict[type]
 
         normalizedMutationDensityFilename = type + '_NormalizedMutationDensity.txt'
-        normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                         jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                          normalizedMutationDensityFilename)
 
         # If decileBasedAllChrAccumulatedCountDict is not empty
@@ -1644,8 +1640,7 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2Dec
             decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
 
             normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
-            normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                             jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                              normalizedMutationDensityFilename)
 
             #If decileBasedAllChrAccumulatedCountDict is not empty
@@ -1666,15 +1661,14 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2Dec
 
 ##################################################################
 #Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
-def writeReplicationTimeDataForSPMs(signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
+def writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
 
     ######################### SPMS starts #########################
     decileBasedAllChrAccumulatedCountDict= type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[AGGREGATEDSUBSTITUTIONS]
 
     normalizedMutationDensityFilename = AGGREGATEDSUBSTITUTIONS + '_NormalizedMutationDensity.txt'
-    normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                     jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+    normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                      normalizedMutationDensityFilename)
 
     numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
@@ -1693,8 +1687,7 @@ def writeReplicationTimeDataForSPMs(signatures,jobname,deciles,type2DecileBasedA
             decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[signature]
 
             normalizedMutationDensityFilename = signature + '_NormalizedMutationDensity.txt'
-            normalizedMutationDensityFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,
-                                                             jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
                                                              normalizedMutationDensityFilename)
 
             #If decileBasedAllChrAccumulatedCountDict is not empty
@@ -1714,7 +1707,7 @@ def writeReplicationTimeDataForSPMs(signatures,jobname,deciles,type2DecileBasedA
 
 
 ##################################################################
-def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
+def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
 # if __name__ == '__main__':
 
     withExtraSampleBasedAnalysis = True
@@ -1726,26 +1719,11 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
     print('########################## ReplicationTimeAnalysis starts #########################')
 
     #########################################################################
-    # print(sys.argv)
-
     # Analysis Type can be
     # AggregatedSubstitutions: All in one
     # AggregatedIndels : All in one
     # IndelsBased : Microhomology, Repeat
     # SignatureBased: Sig1, Sig2, ...
-
-    #sys.argv[0] is the python program filename
-
-    # jobname e.g.: KidneyCancer
-    # jobname = sys.argv[1]
-
-    # singlePointMutationsFileName = sys.argv[2]
-
-    # indelsFilename = sys.argv[3]
-
-    # Make RepliSeq data parametric
-    # repliseqDataFilename = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-    # repliseqDataFilename =  sys.argv[4]
 
     # We know the indels type we are interested in.
     # Microhomology indels --- len(indels) >= 3
@@ -1769,10 +1747,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
 
     ##########################################################################################
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                           ONE_DIRECTORY_UP,
-                                                                                           ONE_DIRECTORY_UP, OUTPUT,
-                                                                                           jobname, DATA,
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname, DATA,
                                                                                            SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -1784,10 +1759,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
 
     ##########################################################################################
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  OUTPUT, jobname, DATA,
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
                                                                                                   Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -1814,11 +1786,10 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
             #######################################################################################################
             type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsWithExtraSampleBased(jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
 
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
             #######################################################################################################
             ################ AggregatedSubstitutions and  Signatures ends #########################################
             #######################################################################################################
-
 
 
         elif (singlePointMutationsFileName != NOTSET and indelsFilename != NOTSET):
@@ -1832,7 +1803,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
                                                                                                                                     singlePointMutationsFileName,
                                                                                                                                     indelsFilename)
 
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
             ########################################################################################################################################
             ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels ends #########################################
             ########################################################################################################################################
@@ -1844,7 +1815,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
             ########################################################################################################################################
             type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsIndelsWithExtraSampleBased(jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
 
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
             ########################################################################################################################################
             ############################################ AggregatedIndels --- Indels ends ##########################################################
             ########################################################################################################################################
@@ -1869,7 +1840,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
             ################ AggregatedSubstitutions and  Signatures starts #######################################
             #######################################################################################################
             type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsSPMs(signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
-            writeReplicationTimeDataForSPMs(signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
+            writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
             #######################################################################################################
             ################ AggregatedSubstitutions and  Signatures ends #########################################
             #######################################################################################################
@@ -1881,8 +1852,8 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
             ########################################################################################################################################
             type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsSPMsandIndels(jobname,numofProcesses,pool,signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename)
 
-            writeReplicationTimeDataForSPMs(signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
-            writeReplicationTimeDataForIndels(jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
+            writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
+            writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
             ########################################################################################################################################
             ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels ends #########################################
             ########################################################################################################################################
@@ -1893,7 +1864,7 @@ def replicationTimeAnalysis(jobname,singlePointMutationsFileName,indelsFilename,
             ############################################ AggregatedIndels --- Indels starts ########################################################
             ########################################################################################################################################
             type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsIndels(jobname,numofProcesses,pool,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
-            writeReplicationTimeDataForIndels(jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
+            writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
             ########################################################################################################################################
             ############################################ AggregatedIndels --- Indels ends ##########################################################
             ########################################################################################################################################

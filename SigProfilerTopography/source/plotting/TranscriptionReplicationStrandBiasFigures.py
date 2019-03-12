@@ -37,7 +37,7 @@ replicationStrands = [LAGGING, LEADING]
 
 ########################################################################
 #For Mutation Types
-def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,mutationType2TranscriptionStrand2CountDict, mutationType2ReplicationStrand2CountDict,jobname,isFigureAugmentation):
+def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,mutationType2TranscriptionStrand2CountDict, mutationType2ReplicationStrand2CountDict,outputDir,jobname,isFigureAugmentation):
 
     fig = plt.figure(figsize=(8,8), facecolor=None)
     plt.style.use('ggplot')
@@ -119,12 +119,12 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
 
     if sample is None:
         figureName = 'allmutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
 
     else:
         figureName = 'allmutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
 
     fig.savefig(figureFile)
     plt.close(fig)
@@ -139,6 +139,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
         signature2TranscriptionStrand2CountDict,
         signature2ReplicationStrand2CountDict,
         signatures,
+        outputDir,
         jobname,
         isFigureAugmentation):
 
@@ -229,12 +230,12 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
 
     if sample is None:
         figureName = 'allsignatures_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
 
     else:
         figureName = 'allsignatures_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
 
     fig.savefig(figureFile)
     plt.close(fig)
@@ -245,6 +246,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
 def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
         mutationType2Sample2TranscriptionStrand2CountDict,
         mutationType2Sample2ReplicationStrand2CountDict,
+        outputDir,
         jobname,
         isFigureAugmentation):
 
@@ -328,7 +330,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         newMutationType = mutationType.replace('>', '2')
 
         figureName = newMutationType + '_' + STRANDBIAS + '_MutationTypeBased_SampleBased.png'
-        figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,ALL,STRANDBIAS,figureName)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,figureName)
         fig.savefig(figureFile)
         plt.close(fig)
 ########################################################################
@@ -337,7 +339,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
 ########################################################################
 #SignatureBased SampleBased Figures
 #Sig26 is very different
-def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,mutationProbability2Signature2Sample2ReplicationStrand2CountDict,signatures,jobname,isFigureAugmentation):
+def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,mutationProbability2Signature2Sample2ReplicationStrand2CountDict,signatures,outputDir,jobname,isFigureAugmentation):
 
     signature2Sample2TranscriptionStrand2CountDict= mutationProbability2Signature2Sample2TranscriptionStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
     signature2Sample2ReplicationStrand2CountDict = mutationProbability2Signature2Sample2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
@@ -422,7 +424,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
                 plt.title(jobname + ' ' + signature)
 
             figureName = signature.replace(' ','') + '_' + STRANDBIAS + '_SignatureBased_SampleBased.png'
-            figureFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,FIGURE,ALL,STRANDBIAS,figureName)
+            figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,figureName)
             fig.savefig(figureFile)
             plt.close(fig)
 ########################################################################
@@ -431,7 +433,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
 ##################################################################
 #Only this method supports simulations
 #Only this method supports simulations
-def plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,strand1_values,strand2_values,strand1_simulations_median_values ,strand2_simulations_median_values , fdr_bh_adjusted_pvalues, strand1Name, strand2Name, mutationsOrSignatures, color1, color2, figureName, width):
+def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,strand1_values,strand2_values,strand1_simulations_median_values ,strand2_simulations_median_values , fdr_bh_adjusted_pvalues, strand1Name, strand2Name, mutationsOrSignatures, color1, color2, figureName, width):
     # print('############# for debug starts Nov 12, 2018 ################')
     # print('Sample:%s --- Strand1:%s --- Strand2:%s --- mutationsOrSignatures:%s' %(sample,strand1Name,strand2Name,mutationsOrSignatures))
     # print('strand1_values: %s' %(strand1_values))
@@ -582,11 +584,11 @@ def plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberof
 
     if sample is None:
         figureName = '%s.png' %(figureName)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
     else:
         figureName = '%s_%s_%d.png' %(figureName,sample,numberofMutations)
-        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
-        figureFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
 
     fig.savefig(figureFile)
     plt.close(fig)
@@ -615,6 +617,7 @@ def fillDictWRTReferenceTypes(referenceTypes,strands,type2Strand2CountDict):
 
 ##################################################################
 def fillSimulationsType2StrandCountList(
+        outputDir,
         jobname,
         existingTypesList,
         numberofSimulations,
@@ -631,8 +634,7 @@ def fillSimulationsType2StrandCountList(
     ##############################################################
     for simNum in range(1, numberofSimulations + 1):
         simJobName = '%s_Sim%d' % (jobname, simNum)
-        simulationType2StrandCountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, OUTPUT,
-                                                        simJobName,DATA,strandbias,type2Strand2CountDict_Filename)
+        simulationType2StrandCountFilePath = os.path.join(outputDir,simJobName,DATA,strandbias,type2Strand2CountDict_Filename)
 
         simulationType2StrandCountDict = readDictionary(simulationType2StrandCountFilePath)
 
@@ -691,6 +693,7 @@ def fillSimulationsType2StrandCountList(
 
 ##################################################################
 def fillSimulationsSample2Type2StrandCountList(
+        outputDir,
         jobname,
         existingTypesList,
         numberofSimulations,
@@ -715,7 +718,7 @@ def fillSimulationsSample2Type2StrandCountList(
         for simNum in range(1, numberofSimulations+1):
             simJobName = '%s_Sim%d' % (jobname, simNum)
 
-            simulationbased_type2Sample2StrandBias2CountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, simJobName, DATA,strandbias, type2Sample2Strand2CountDict_Filename)
+            simulationbased_type2Sample2StrandBias2CountFilePath = os.path.join(outputDir, simJobName, DATA,strandbias, type2Sample2Strand2CountDict_Filename)
             simulationBased_type2Sample2Strand2CountDict = readDictionary(simulationbased_type2Sample2StrandBias2CountFilePath)
 
             if ((simulationBased_type2Sample2Strand2CountDict is not None) and (simulationBased_type2Sample2Strand2CountDict)):
@@ -823,7 +826,7 @@ def convert(firstType2SecondType2Strand2CountDict, secondType2FirstType2Strand2C
 ##################################################################
 
 # ##################################################################
-def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numberofSimulations):
+def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations):
 
     isFigureAugmentation = False
     if (figureAugmentation == 'augmentation'):
@@ -831,8 +834,8 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
     #######################################################################################################################
     # new code
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, STRANDBIAS), exist_ok=True)
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, SAMPLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
     #######################################################################################################################
 
 
@@ -841,16 +844,13 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     #########################  signatures and samples starts  ################################
     ##########################################################################################
     # Get signatures
-    signaturesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA, SignatureFilename)
+    signaturesFilePath = os.path.join(outputDir, jobname, DATA, SignatureFilename)
     signatures = readSignatureList(signaturesFilePath)
 
     ##########################################################################################
     #Please note that this data structure is being used
     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                           ONE_DIRECTORY_UP,
-                                                                                           ONE_DIRECTORY_UP, OUTPUT,
-                                                                                           jobname, DATA,
+    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname, DATA,
                                                                                            SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -861,10 +861,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     ##########################################################################################
     #Please note that this data structure is being used
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  ONE_DIRECTORY_UP,
-                                                                                                  OUTPUT, jobname, DATA,
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
                                                                                                   Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
@@ -876,7 +873,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     ##########################################################################################
     #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
     samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
-    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
 
     if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
         samplesWithAtLeast10KMutations2NumberofMutationsDict = readDictionary(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)
@@ -892,30 +889,30 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     ##########################################################################################
 
     ##########################################################################################
-    mutationType2TranscriptionStrandCountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,MutationType2TranscriptionStrand2CountDict_Filename)
+    mutationType2TranscriptionStrandCountFilePath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,MutationType2TranscriptionStrand2CountDict_Filename)
     mutationType2TranscriptionStrandCountDict = readDictionary(mutationType2TranscriptionStrandCountFilePath)
 
-    mutationType2ReplicationStrandCountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,REPLICATIONSTRANDBIAS,MutationType2ReplicationStrand2CountDict_Filename)
+    mutationType2ReplicationStrandCountFilePath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,MutationType2ReplicationStrand2CountDict_Filename)
     mutationType2ReplicationStrandCountDict = readDictionary(mutationType2ReplicationStrandCountFilePath)
 
-    mutationType2Sample2TranscriptionStrand2CountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,TRANSCRIPTIONSTRANDBIAS,MutationType2Sample2TranscriptionStrand2CountDict_Filename)
+    mutationType2Sample2TranscriptionStrand2CountFilePath = os.path.join(outputDir, jobname, DATA,TRANSCRIPTIONSTRANDBIAS,MutationType2Sample2TranscriptionStrand2CountDict_Filename)
     mutationType2Sample2TranscriptionStrand2CountDict = readDictionary(mutationType2Sample2TranscriptionStrand2CountFilePath)
 
-    mutationType2Sample2ReplicationStrand2CountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,REPLICATIONSTRANDBIAS,MutationType2Sample2ReplicationStrand2CountDict_Filename)
+    mutationType2Sample2ReplicationStrand2CountFilePath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,MutationType2Sample2ReplicationStrand2CountDict_Filename)
     mutationType2Sample2ReplicationStrand2CountDict = readDictionary(mutationType2Sample2ReplicationStrand2CountFilePath)
     ##########################################################################################
 
     ##########################################################################################
-    mutationProbability2Signature2TranscriptionStrand2CountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,MutationProbability2Signature2TranscriptionStrand2CountDict_Filename)
+    mutationProbability2Signature2TranscriptionStrand2CountFilePath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,MutationProbability2Signature2TranscriptionStrand2CountDict_Filename)
     mutationProbability2Signature2TranscriptionStrand2CountDict = readDictionary(mutationProbability2Signature2TranscriptionStrand2CountFilePath)
 
-    mutationProbability2Signature2ReplicationStrand2CountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, OUTPUT, jobname,DATA, REPLICATIONSTRANDBIAS,MutationProbability2Signature2ReplicationStrand2CountDict_Filename)
+    mutationProbability2Signature2ReplicationStrand2CountFilePath = os.path.join(outputDir, jobname,DATA, REPLICATIONSTRANDBIAS,MutationProbability2Signature2ReplicationStrand2CountDict_Filename)
     mutationProbability2Signature2ReplicationStrand2CountDict = readDictionary(mutationProbability2Signature2ReplicationStrand2CountFilePath)
 
-    mutationProbability2Signature2Sample2TranscriptionStrand2CountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, OUTPUT,jobname, DATA,TRANSCRIPTIONSTRANDBIAS,MutationProbability2Signature2Sample2TranscriptionStrand2CountDict_Filename)
+    mutationProbability2Signature2Sample2TranscriptionStrand2CountFilePath = os.path.join(outputDir,jobname, DATA,TRANSCRIPTIONSTRANDBIAS,MutationProbability2Signature2Sample2TranscriptionStrand2CountDict_Filename)
     mutationProbability2Signature2Sample2TranscriptionStrand2CountDict = readDictionary(mutationProbability2Signature2Sample2TranscriptionStrand2CountFilePath)
 
-    mutationProbability2Signature2Sample2ReplicationStrand2CountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,REPLICATIONSTRANDBIAS,MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename)
+    mutationProbability2Signature2Sample2ReplicationStrand2CountFilePath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename)
     mutationProbability2Signature2Sample2ReplicationStrand2CountDict = readDictionary(mutationProbability2Signature2Sample2ReplicationStrand2CountFilePath)
     ##########################################################################################
 
@@ -955,11 +952,11 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     # Note: Since these are already in sample based no extra work is required.
     #MutationType SampleBased Figures --- No numberofMutations
     if ((mutationType2Sample2TranscriptionStrand2CountDict is not None) and (mutationType2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationType2Sample2TranscriptionStrand2CountDict,mutationType2Sample2ReplicationStrand2CountDict,jobname,isFigureAugmentation)
+        plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationType2Sample2TranscriptionStrand2CountDict,mutationType2Sample2ReplicationStrand2CountDict,outputDir,jobname,isFigureAugmentation)
 
     #SignatureType Sample Based Figures --- No numberofMutations
     if ((mutationProbability2Signature2Sample2TranscriptionStrand2CountDict is not None) and (mutationProbability2Signature2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,mutationProbability2Signature2Sample2ReplicationStrand2CountDict,signatures,jobname,isFigureAugmentation)
+        plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,mutationProbability2Signature2Sample2ReplicationStrand2CountDict,signatures,outputDir,jobname,isFigureAugmentation)
     ########################################################################
     ################## MutationType All Samples Figures ends ###############
     ############### SignatureType All Samples Figures ends #################
@@ -973,12 +970,12 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     ############## Signature Based Scatter Plots starts ####################
     ########################################################################
     if ((mutationType2TranscriptionStrandCountDict is not None) and (mutationType2ReplicationStrandCountDict is not None)):
-        plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,mutationType2TranscriptionStrandCountDict, mutationType2ReplicationStrandCountDict,jobname,isFigureAugmentation)
+        plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,mutationType2TranscriptionStrandCountDict, mutationType2ReplicationStrandCountDict,outputDir,jobname,isFigureAugmentation)
 
     if ((mutationProbability2Signature2TranscriptionStrand2CountDict is not None) and (mutationProbability2Signature2ReplicationStrand2CountDict is not None) and (signatures)):
         signature2TranscriptionStrand2CountDict = mutationProbability2Signature2TranscriptionStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
         signature2ReplicationStrand2CountDict = mutationProbability2Signature2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
-        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,signature2TranscriptionStrand2CountDict,signature2ReplicationStrand2CountDict,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,jobname,isFigureAugmentation)
+        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,signature2TranscriptionStrand2CountDict,signature2ReplicationStrand2CountDict,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation)
     ########################################################################
     ############## MutationType Scatter Plots ends #########################
     ############## Signature Based Scatter Plots ends ######################
@@ -1003,7 +1000,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
         if ((sample in sample2MutationType2TranscriptionStrand2CountDict) and (sample in sample2MutationType2ReplicationStrand2CountDict)):
             numberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
-            plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2MutationType2TranscriptionStrand2CountDict[sample], sample2MutationType2ReplicationStrand2CountDict[sample],jobname,isFigureAugmentation)
+            plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2MutationType2TranscriptionStrand2CountDict[sample], sample2MutationType2ReplicationStrand2CountDict[sample],outputDir,jobname,isFigureAugmentation)
     ###############################################################
 
     ###############################################################
@@ -1016,7 +1013,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
         if ((sample in sample2Signature2TranscriptionStrand2CountDict) and (sample in sample2Signature2ReplicationStrand2CountDict)):
             numberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
-            plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2Signature2TranscriptionStrand2CountDict[sample], sample2Signature2ReplicationStrand2CountDict[sample], signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, jobname,isFigureAugmentation)
+            plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2Signature2TranscriptionStrand2CountDict[sample], sample2Signature2ReplicationStrand2CountDict[sample], signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, outputDir,jobname,isFigureAugmentation)
     ###############################################################
 
     ########################################################################
@@ -1083,7 +1080,8 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     if (numberofSimulations > 0):
         # simulations --- mutation type --- transcription
         simulations_mutationtypes_transcribed_medians_list, simulations_mutationtypes_untranscribed_medians_list =\
-            fillSimulationsType2StrandCountList(jobname,
+            fillSimulationsType2StrandCountList(outputDir,
+                                                jobname,
                                                 existingTranscriptionMutationTypesList,
                                                 numberofSimulations,
                                                 TRANSCRIPTIONSTRANDBIAS,
@@ -1092,7 +1090,8 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
         # simulations --- mutation type --- replication
         simulations_mutationtypes_lagging_medians_list, simulations_mutationtypes_leading_medians_list =\
-            fillSimulationsType2StrandCountList(jobname,
+            fillSimulationsType2StrandCountList(outputDir,
+                                                jobname,
                                                 existingReplicationMutationTypesList,
                                                 numberofSimulations,
                                                 REPLICATIONSTRANDBIAS,
@@ -1100,7 +1099,8 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
                                                 MUTATION)
         # simulations --- signatures --- transcription
         simulations_signatures_transcribed_medians_list, simulations_signatures_untranscribed_medians_list =\
-            fillSimulationsType2StrandCountList(jobname,
+            fillSimulationsType2StrandCountList(outputDir,
+                                                jobname,
                                                 existingTranscriptionSignatureTypesList,
                                                 numberofSimulations,
                                                 TRANSCRIPTIONSTRANDBIAS,
@@ -1109,7 +1109,8 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
         # simulations --- signatures --- replication
         simulations_signatures_lagging_medians_list, simulations_signatures_leading_medians_list = \
-            fillSimulationsType2StrandCountList(jobname,
+            fillSimulationsType2StrandCountList(outputDir,
+                                                jobname,
                                                 existingReplicationSignatureTypesList,
                                                 numberofSimulations,
                                                 REPLICATIONSTRANDBIAS,
@@ -1120,7 +1121,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
         #sample based starts
         # samplebased --- simulations --- mutation type --- transcription
         sample2SimulationsMutationTypesTranscribedMediansListDict, sample2SimulationsMutationTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(jobname,
+            fillSimulationsSample2Type2StrandCountList(outputDir,jobname,
                 existingTranscriptionMutationTypesList,
                 numberofSimulations,
                 samplesWithAtLeast10KMutations2NumberofMutationsDict,
@@ -1130,7 +1131,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
         # samplebased --- simulations --- mutation type --- replication
         sample2SimulationsMutationTypesLaggingMediansListDict, sample2SimulationsMutationTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(jobname,
+            fillSimulationsSample2Type2StrandCountList(outputDir,jobname,
                 existingReplicationMutationTypesList,
                 numberofSimulations,
                 samplesWithAtLeast10KMutations2NumberofMutationsDict,
@@ -1140,7 +1141,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
         # samplebased --- simulations --- signature --- transcription
         sample2SimulationsSignatureTypesTranscribedMediansListDict, sample2SimulationsSignatureTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(jobname,
+            fillSimulationsSample2Type2StrandCountList(outputDir,jobname,
                 existingTranscriptionSignatureTypesList,
                 numberofSimulations,
                 samplesWithAtLeast10KMutations2NumberofMutationsDict,
@@ -1150,7 +1151,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
 
         # samplebased --- simulations --- signature --- replication
         sample2SimulationsSignatureTypesLaggingMediansListDict, sample2SimulationsSignatureTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(jobname,
+            fillSimulationsSample2Type2StrandCountList(outputDir,jobname,
                 existingReplicationSignatureTypesList,
                 numberofSimulations,
                 samplesWithAtLeast10KMutations2NumberofMutationsDict,
@@ -1500,13 +1501,13 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     N = len(x_axis_labels)
 
     width = 0.20
-    plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,None,None,N, x_axis_labels, mutationtypes_transcribed_list, mutationtypes_untranscribed_list,simulations_mutationtypes_transcribed_medians_list, simulations_mutationtypes_untranscribed_medians_list,mutationtype_transcription_FDR_BH_adjusted_pvalues, 'Transcribed','Untranscribed', 'All Mutations', 'royalblue', 'yellowgreen','mutationtypes_transcription_strand_bias', width)
+    plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,None,N, x_axis_labels, mutationtypes_transcribed_list, mutationtypes_untranscribed_list,simulations_mutationtypes_transcribed_medians_list, simulations_mutationtypes_untranscribed_medians_list,mutationtype_transcription_FDR_BH_adjusted_pvalues, 'Transcribed','Untranscribed', 'All Mutations', 'royalblue', 'yellowgreen','mutationtypes_transcription_strand_bias', width)
 
     # Replication
     x_axis_labels = existingReplicationMutationTypesList
     N = len(x_axis_labels)
 
-    plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,None,None,N, x_axis_labels, mutationtypes_lagging_list, mutationtypes_leading_list,simulations_mutationtypes_lagging_medians_list, simulations_mutationtypes_leading_medians_list,mutationtype_replication_FDR_BH_adjusted_pvalues, 'Lagging', 'Leading','All Mutations', 'indianred', 'goldenrod', 'mutationtypes_replication_strand_bias',width)
+    plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,None,N, x_axis_labels, mutationtypes_lagging_list, mutationtypes_leading_list,simulations_mutationtypes_lagging_medians_list, simulations_mutationtypes_leading_medians_list,mutationtype_replication_FDR_BH_adjusted_pvalues, 'Lagging', 'Leading','All Mutations', 'indianred', 'goldenrod', 'mutationtypes_replication_strand_bias',width)
     #######################################################
     ################# Plot mutations ends #################
     #######################################################
@@ -1529,7 +1530,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
             numberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
             samplebased_simulations_mutationtypes_transcribed_medians_list = sample2SimulationsMutationTypesTranscribedMediansListDict[sample]
             samplebased_simulations_mutationtypes_untranscribed_medians_list = sample2SimulationsMutationTypesUntranscribedMediansListDict[sample]
-            plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,mutationtype_2_transcribed_list,mutationtype_2_untranscribed_list,samplebased_simulations_mutationtypes_transcribed_medians_list,samplebased_simulations_mutationtypes_untranscribed_medians_list,sample_mutationtypes_transcription_FDR_BH_adjusted_pvalues,'Transcribed','Untranscribed','All Mutations','royalblue','yellowgreen','mutationtypes_transcription_strand_bias',width)
+            plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,mutationtype_2_transcribed_list,mutationtype_2_untranscribed_list,samplebased_simulations_mutationtypes_transcribed_medians_list,samplebased_simulations_mutationtypes_untranscribed_medians_list,sample_mutationtypes_transcription_FDR_BH_adjusted_pvalues,'Transcribed','Untranscribed','All Mutations','royalblue','yellowgreen','mutationtypes_transcription_strand_bias',width)
     #######################################################
 
     #######################################################
@@ -1546,7 +1547,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
             numberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
             samplebased_simulations_mutationtypes_lagging_medians_list = sample2SimulationsMutationTypesLaggingMediansListDict[sample]
             samplebased_simulations_mutationtypes_leading_medians_list = sample2SimulationsMutationTypesLeadingMediansListDict[sample]
-            plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,mutationtype_2_lagging_list,mutationtype_2_leading_list,samplebased_simulations_mutationtypes_lagging_medians_list,samplebased_simulations_mutationtypes_leading_medians_list,sample_mutationtypes_replication_FDR_BH_adjusted_pvalues,'Lagging', 'Leading','All Mutations', 'indianred', 'goldenrod', 'mutationtypes_replication_strand_bias',width)
+            plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,sample,numberofMutations,N,x_axis_labels,mutationtype_2_lagging_list,mutationtype_2_leading_list,samplebased_simulations_mutationtypes_lagging_medians_list,samplebased_simulations_mutationtypes_leading_medians_list,sample_mutationtypes_replication_FDR_BH_adjusted_pvalues,'Lagging', 'Leading','All Mutations', 'indianred', 'goldenrod', 'mutationtypes_replication_strand_bias',width)
     #######################################################
 
     #######################################################
@@ -1565,10 +1566,10 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
     N_signatures_replication = len(x_axis_replication_labels)
 
     # Transcription
-    plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,None,None,N_signatures_transcription,x_axis_transcription_labels, signatures_transcribedStrandCount_list,signatures_untranscribedStrandCount_list,simulations_signatures_transcribed_medians_list, simulations_signatures_untranscribed_medians_list,signaturetype_transcription_FDR_BH_adjusted_pvalues, 'Transcribed','Untranscribed', 'All Signatures', 'royalblue', 'yellowgreen','signatures_transcription_strand_bias', width)
+    plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,None,N_signatures_transcription,x_axis_transcription_labels, signatures_transcribedStrandCount_list,signatures_untranscribedStrandCount_list,simulations_signatures_transcribed_medians_list, simulations_signatures_untranscribed_medians_list,signaturetype_transcription_FDR_BH_adjusted_pvalues, 'Transcribed','Untranscribed', 'All Signatures', 'royalblue', 'yellowgreen','signatures_transcription_strand_bias', width)
 
     # Replication
-    plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,None,None,N_signatures_replication,x_axis_replication_labels,signatures_laggingStrandCount_list,signatures_leadingStrandCount_list, simulations_signatures_lagging_medians_list, simulations_signatures_leading_medians_list,signaturetype_replication_FDR_BH_adjusted_pvalues, 'Lagging','Leading', 'All Signatures', 'indianred', 'goldenrod','signatures_replication_strand_bias', width)
+    plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,None,N_signatures_replication,x_axis_replication_labels,signatures_laggingStrandCount_list,signatures_leadingStrandCount_list, simulations_signatures_lagging_medians_list, simulations_signatures_leading_medians_list,signaturetype_replication_FDR_BH_adjusted_pvalues, 'Lagging','Leading', 'All Signatures', 'indianred', 'goldenrod','signatures_replication_strand_bias', width)
     #######################################################
     ################ Plot signatures ends #################
     #######################################################
@@ -1592,7 +1593,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
                 samplebased_simulations_signaturetypes_transcribed_medians_list = sample2SimulationsSignatureTypesTranscribedMediansListDict[sample]
                 samplebased_simulations_signaturetypes_untranscribed_medians_list = sample2SimulationsSignatureTypesUntranscribedMediansListDict[sample]
 
-                plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberofMutations, N_signatures_transcription, x_axis_transcription_labels,
+                plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,sample,numberofMutations, N_signatures_transcription, x_axis_transcription_labels,
                                              signature_2_transcribedStrandCount_list,signature_2_untranscribedStrandCount_list,
                                             samplebased_simulations_signaturetypes_transcribed_medians_list, samplebased_simulations_signaturetypes_untranscribed_medians_list,
                                              sample_signaturetypes_transcription_FDR_BH_adjusted_pvalues,
@@ -1614,7 +1615,7 @@ def transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numbero
                 samplebased_simulations_signaturetypes_lagging_medians_list = sample2SimulationsSignatureTypesLaggingMediansListDict[sample]
                 samplebased_simulations_signaturetypes_leading_medians_list = sample2SimulationsSignatureTypesLeadingMediansListDict[sample]
 
-                plotStrandBiasFigureWithBarPlots(jobname,numberofSimulations,sample,numberofMutations,N_signatures_replication,x_axis_replication_labels,
+                plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,sample,numberofMutations,N_signatures_replication,x_axis_replication_labels,
                                                  signature_2_laggingStrandCount_list,signature_2_leadingStrandCount_list,samplebased_simulations_signaturetypes_lagging_medians_list,samplebased_simulations_signaturetypes_leading_medians_list,
                                                  sample_signaturetypes_replication_FDR_BH_adjusted_pvalues,
                                                  'Lagging','Leading', 'All Signatures', 'indianred', 'goldenrod',

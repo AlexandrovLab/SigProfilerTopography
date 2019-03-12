@@ -44,14 +44,12 @@ sys.path.append(commonsPath)
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ###################################################################
-def readSimulationBasedDictionaries(jobname,numberofSimulations):
+def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = {}
 
     for simNum in range(1,numberofSimulations+1):
         simJobName = '%s_Sim%d' % (jobname, simNum)
-        simulationFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,
-                                                          OUTPUT,simJobName,DATA,PROCESSIVITY,
-                                                          'Signature2ProcessiveGroupLength2PropertiesDict.txt')
+        simulationFilePath = os.path.join(outputDir,simJobName,DATA,PROCESSIVITY,'Signature2ProcessiveGroupLength2PropertiesDict.txt')
 
         signature2ProcessiveGroupLength2PropertiesDict =  readDictionary(simulationFilePath)
 
@@ -66,7 +64,7 @@ def readSimulationBasedDictionaries(jobname,numberofSimulations):
 #consider p values seems ro change nothing? can it be? Check this out.
 
 ###################################################################
-def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,
+def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,
                                                                 simulation2Signature2ProcessiveGroupLength2PropertiesDict,
                                                                 multipleTestingCorrection,
                                                                 pValueCalculation):
@@ -409,10 +407,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(jobname,originalS
 
     ##################################################################################
     #create the directory if it does not exists
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, PROCESSIVITY), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY), exist_ok=True)
     filename = 'Processivity_Using_%s_%s.png' %(pValueCalculation,multipleTestingCorrection)
 
-    figFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, FIGURE, ALL, PROCESSIVITY, filename)
+    figFile = os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY, filename)
     fig.savefig(figFile)
     plt.close(fig)
     ##################################################################################
@@ -422,7 +420,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(jobname,originalS
 
 
 ###################################################################
-def processivityFigures(jobname,numberofSimulations,multipleTestingCorrection,probabilityCalculation):
+def processivityFigures(outputDir,jobname,numberofSimulations,multipleTestingCorrection,probabilityCalculation):
 
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
@@ -430,13 +428,11 @@ def processivityFigures(jobname,numberofSimulations,multipleTestingCorrection,pr
 
     ############################################################
     if (numberofSimulations > 0):
-        simulation2Signature2ProcessiveGroupLength2PropertiesDict = readSimulationBasedDictionaries(jobname,numberofSimulations)
+        simulation2Signature2ProcessiveGroupLength2PropertiesDict = readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations)
     ############################################################
 
     ############################################################
-    originalSignature2ProcessiveGroupLength2PropertiesDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,
-                                                                                  ONE_DIRECTORY_UP,OUTPUT,
-                                                                                  jobname,DATA,PROCESSIVITY,
+    originalSignature2ProcessiveGroupLength2PropertiesDictFilePath = os.path.join(outputDir,jobname,DATA,PROCESSIVITY,
                                                                                   'Signature2ProcessiveGroupLength2PropertiesDict.txt')
     originalSignature2ProcessiveGroupLength2PropertiesDict = readDictionary(originalSignature2ProcessiveGroupLength2PropertiesDictFilePath)
     ############################################################
@@ -461,7 +457,7 @@ def processivityFigures(jobname,numberofSimulations,multipleTestingCorrection,pr
     # USING_GAUSSIAN_KDE
     # USING_NULL_DISTRIBUTION
 
-    plotRelationshipBetweenSignaturesandProcessiveGroupLengths(jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict, multipleTestingCorrection,probabilityCalculation)
+    plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict, multipleTestingCorrection,probabilityCalculation)
     ############################################################
 
 ###################################################################

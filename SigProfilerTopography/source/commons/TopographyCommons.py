@@ -309,10 +309,10 @@ def readTranscriptsNCBI():
 
 
 ##################################################################
-def readChrBasedIndelsDF(jobname,chrLong,filename):
+def readChrBasedIndelsDF(outputDir,jobname,chrLong,filename):
     filename = '%s_%s' %(chrLong,filename)
 
-    chrBasedMutationDFFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,CHRBASED,filename)
+    chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
 
     #############################################
     if os.path.exists(chrBasedMutationDFFilePath):
@@ -372,39 +372,6 @@ def readChrBasedMutationDF(outputDir,jobname,chrLong,filename):
         return None
 ##################################################################
 
-#########################################################################################
-def readChrBasedNuclesomeDF(chrLong,filename):
-    # Read the file w.r.t. the current folder
-
-    #Real File: 595 million row file
-    #wgEncodeSydhNsomeK562Sig.wig
-
-    #For testing purposes
-    #21 million rows
-    #wgEncodeCrgMapabilityAlign100mer.wig
-
-    #For testing purposes
-    #411 rows file
-    #wgEncodeDacMapabilityConsensusExcludable.bed
-
-    filename = chrLong + '_' + filename
-
-
-    nucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,filename)
-    column_names = [chrom, start, end, signal]
-
-    #np.float32 Single precision float: sign bit, 8 bits exponent, 23 bits mantissa
-    #np.int32   Integer (-2147483648 to 2147483647)
-
-    if os.path.exists(nucleosmeFile):
-        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names,dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float16})
-        chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float32})
-        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float64})
-        # chr_par_nucleosome_df = pd.read_table(nucleosmeFile, sep="\t", header=None, comment='#', names=column_names, dtype = {'chrom': str, 'start': np.int32, 'end': np.int32, 'signal' : np.float128})
-        return chr_par_nucleosome_df
-    else:
-        return None
-#########################################################################################
 
 
 ##################################################################
@@ -746,8 +713,8 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
         sample2AllSinglePointMutationsCountArrayDict[sample] += (window_array > 0)
     ################ Sample Based All single mutations ends ##############
 
-    # #for each mutation
     # #For debug starts FEB 28, 2019
+    # #for each mutation
     # if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict and sample=='PD24197a'):
     #     count_array = np.zeros(windowSize)
     #     count_array += (window_array > 0)
@@ -852,8 +819,8 @@ def computeAverageNucleosomeOccupancyArray(signalArray,countArray):
 
 ########################################################################################
 #Both "all single point mutations" and "all indels" use this function
-def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,jobname,nucleosomeOccupancyAnalysisType):
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
+def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,outputDir,jobname,nucleosomeOccupancyAnalysisType):
+    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
 
     averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(allMutationsAccumulatedAllChromsSignalArray, allMutationsAccumulatedAllChromsCountArray)
 
@@ -861,9 +828,9 @@ def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalA
     accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(jobname)
     averageNucleosomeSignalFilename = '%s_AverageNucleosomeSignalArray.txt' %(jobname)
 
-    accumulatedSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
-    accumulatedCountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
-    averageNucleosomeSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
+    accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
+    accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
+    averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
 
     allMutationsAccumulatedAllChromsSignalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
     allMutationsAccumulatedAllChromsCountArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -871,8 +838,8 @@ def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalA
 ########################################################################################
 
 ########################################################################################
-def writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllChromsSignalArrayDict,signature2AccumulatedAllChromsCountArrayDict,jobname):
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
+def writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllChromsSignalArrayDict,signature2AccumulatedAllChromsCountArrayDict,outputDir,jobname):
+    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
 
     for signature in signature2AccumulatedAllChromsSignalArrayDict.keys():
         signalArray = signature2AccumulatedAllChromsSignalArrayDict[signature]
@@ -886,9 +853,9 @@ def writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllC
         accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(signature)
         averageNucleosomeSignalFilename = '%s_AverageNucleosomeSignalArray.txt' %(signature)
 
-        accumulatedSignalFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedSignalFilename)
-        accumulatedCountFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedCountFilename)
-        averageNucleosomeSignalFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,averageNucleosomeSignalFilename)
+        accumulatedSignalFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedSignalFilename)
+        accumulatedCountFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedCountFilename)
+        averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,averageNucleosomeSignalFilename)
 
         signalArray.tofile(file=accumulatedSignalFilePath, sep="\t",format="%s")
         countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -898,11 +865,10 @@ def writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllC
 
 ########################################################################################
 def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signature2AccumulatedAllChromsSignalArrayDict,
-                                                                sample2Signature2AccumulatedAllChromsCountArrayDict,
-                                                                jobname):
+                                                                sample2Signature2AccumulatedAllChromsCountArrayDict,outputDir,jobname):
 
 
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
+    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
 
     for sample in sample2Signature2AccumulatedAllChromsSignalArrayDict:
         for signature in sample2Signature2AccumulatedAllChromsSignalArrayDict[sample]:
@@ -917,9 +883,9 @@ def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signatu
             accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' %(signature,sample)
             averageNucleosomeSignalFilename = '%s_%s_AverageNucleosomeSignalArray.txt' %(signature,sample)
 
-            accumulatedSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedSignalFilename)
-            accumulatedCountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedCountFilename)
-            averageNucleosomeSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,averageNucleosomeSignalFilename)
+            accumulatedSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedSignalFilename)
+            accumulatedCountFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedCountFilename)
+            averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,averageNucleosomeSignalFilename)
 
             signalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -931,10 +897,11 @@ def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signatu
 #All Mutations can be single point mutations or indels
 def writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllMutationsAccumulatedAllChromsSignalArrayDict,
                                                     sample2AllMutationsAccumulatedAllChromsCountArrayDict,
+                                                    outputDir,
                                                     jobname,
                                                     nucleosomeOccupancyAnalysisType):
 
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
+    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
 
 
     for sample in sample2AllMutationsAccumulatedAllChromsSignalArrayDict:
@@ -947,9 +914,9 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(sample2AllMutationsAccumulat
         accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' %(sample,jobname)
         averageNucleosomeSignalFilename = '%s_%s_AverageNucleosomeSignalArray.txt' %(sample,jobname)
 
-        accumulatedSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
-        accumulatedCountFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
-        averageNucleosomeSignalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
+        accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
+        accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
+        averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
 
         allMutationsAccumulatedAllChromsSignalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
         allMutationsAccumulatedAllChromsCountArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -1141,7 +1108,6 @@ def readIndels(allIndelsFileName):
     # Sample  Chrom      Start   End     Ref    Alt Type    Length  Category
 
     allIndelsFilePath = os.path.join(allIndelsFileName)
-    # allIndelsFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, jobname,allIndelsFileName)
 
     # indels_df = pd.read_table(allIndelsFilePath,sep="\t",dtype={'Sample': str, 'Chromosome': str}, header=0)
     indels_df = pd.read_table(allIndelsFilePath,sep="\t", header=0)
@@ -1640,62 +1606,6 @@ def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
 
 
 
-########################################################################
-def writeToStandardOutputStrandCounts(signatures,strands,mutationProbability2Signature2LeadingLaggingStrandCountDict):
-    mutationProbabilities = mutationProbability2Signature2LeadingLaggingStrandCountDict.keys()
-
-    # Write the 1st header starts
-    print('MutationProbability\t', end='')
-    for signature in sorted(signatures):
-        print('%s\t%s\t' %(signature,signature), end='')
-    print()
-    # Write the 1st header ends
-
-    # Write the 2nd header starts
-    print(' \t', end='')
-    for signature in sorted(signatures):
-        print('%s\t%s\t' % (strands[0], strands[1]), end='')
-    print()
-    # Write the 2nd header ends
-
-
-    for mutationProbability in sorted(mutationProbabilities):
-        print('%s\t' %mutationProbability, end='')
-        for signature in sorted(signatures):
-            if signature in mutationProbability2Signature2LeadingLaggingStrandCountDict[mutationProbability]:
-                for strand in strands:
-                    if strand in mutationProbability2Signature2LeadingLaggingStrandCountDict[mutationProbability][signature]:
-                        print('%d\t' %(mutationProbability2Signature2LeadingLaggingStrandCountDict[mutationProbability][signature][strand]), end='')
-                    else:
-                        print(' \t', end='')
-            else:
-                print(' \t', end='')
-        print()
-########################################################################
-
-########################################################################
-def writeToStandardOutputRatio(signatures, mutationProbability2Signature2RatioDict):
-    mutationProbabilities = mutationProbability2Signature2RatioDict.keys()
-
-    #Write the header starts
-    print('MutationProbability\t', end='')
-    for signature in sorted(signatures):
-        print('%s\t' %signature, end='')
-    print()
-    #Write the header ends
-
-    # Write data starts
-    for mutationProbability in sorted(mutationProbabilities):
-        print('%s\t' % mutationProbability, end='')
-
-        for signature in sorted(signatures):
-            if signature in mutationProbability2Signature2RatioDict[mutationProbability]:
-                print('%s\t' % (mutationProbability2Signature2RatioDict[mutationProbability][signature]), end='')
-            else:
-                print(' \t',end='')
-        print()
-    # Write data ends
-########################################################################
 
 
 ########################################################################
@@ -1711,25 +1621,22 @@ def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
 
 
 ########################################################################
-def writeDictionary(dictionary,jobname,filename,subDirectory,customJSONEncoder):
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,subDirectory), exist_ok=True)
+def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSONEncoder):
+    os.makedirs(os.path.join(outputDir,jobname,DATA,subDirectory), exist_ok=True)
 
-    filePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,subDirectory,filename)
+    filePath = os.path.join(outputDir,jobname,DATA,subDirectory,filename)
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
 ########################################################################
 
-########################################################################
-#Will be depreceated
-def writeSignatureList(jobname, signaturesList):
-    #output/data/Signatures.txt
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA), exist_ok=True)
 
-    filePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,OUTPUT,jobname,DATA,SignatureFilename)
+########################################################################
+def writeList2File(list,filePath):
+    os.makedirs(os.path.join(filePath),exist_ok=True)
 
     with open(filePath, "w") as f:
-        for signature in signaturesList:
-            f.write(str(signature) + "\n")
+        for item in list:
+            f.write("%s\n" % item)
 ########################################################################
 
 ########################################################################
@@ -1755,43 +1662,6 @@ def readDictionary(filePath):
         # return None
         # Provide empty dictionary for not to fail for loops on None type dictionary
         return {}
-########################################################################
-
-########################################################################
-def writeToStandardOutputSignature2WeightedAverageRatio(signatures, signature2WeightedAverageRatioDict):
-    # Write the header starts
-    for signature in sorted(signatures):
-        print('%s\t' %signature, end='')
-    print()
-    # Write the header ends
-
-    # Write the data starts
-    for signature in sorted(signatures):
-        if signature in signature2WeightedAverageRatioDict:
-            print('%s\t' %signature2WeightedAverageRatioDict[signature], end='')
-        else:
-            print(' \t', end='')
-    print()
-    # Write the data ends
-########################################################################
-
-
-########################################################################
-def writeToStandardOutputSignature2StdError(signatures,signature2StdErrorDict):
-    # Write the header starts
-    for signature in sorted(signatures):
-        print('%s\t' %signature, end='')
-    print()
-    # Write the header ends
-
-    # Write the data starts
-    for signature in sorted(signatures):
-        if signature in signature2StdErrorDict:
-            print('%s\t' %signature2StdErrorDict[signature], end='')
-        else:
-            print(' \t', end='')
-    print()
-    # Write the data ends
 ########################################################################
 
 

@@ -364,15 +364,6 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
 
     chromSizesDict = getChromSizesDict(genome)
 
-    # read chromnames for this nucleosome data
-    ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ChrNamesInNucleosomesFilename)
-    print('for debug ChrNamesFilepath: %s:' % (ChrNamesFilepath))
-
-    if (os.path.exists(ChrNamesFilepath)):
-        chromNames = np.loadtxt(ChrNamesFilepath, dtype=np.str)
-
-    print('for debug type(chromNames): %s' % type(chromNames))
-
     # Start the pool
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)

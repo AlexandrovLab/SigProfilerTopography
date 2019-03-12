@@ -26,20 +26,22 @@ from SigProfilerTopography.source.commons.DataPreparationCommons import mergeSNP
 from SigProfilerTopography.source.commons.DataPreparationCommons import readIndelsandWriteWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import prepareSimulationBasedInputFilesForSigProfilerTopography
 
+from SigProfilerTopography.source.commons.TopographyCommons import *
+
 from SigProfilerTopography.source.commons.PartitionIndelsData import partitionIndelsData
 from SigProfilerTopography.source.commons.PartitionSinglePointMutationsData import partitionMutationsData
 
 from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import nucleosomeOccupancyAnalysis
-from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import *
-from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import *
-from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import *
-from SigProfilerTopography.source.processivity.ProcessivityAnalysis import *
+from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
+from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
+from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
+from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
 from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import nucleosomeOccupancyAverageSignalFigures
-from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import *
-from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import *
-from SigProfilerTopography.source.plotting.ProcessivityFigures import *
+from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
+from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
+from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 
 
 ############################################################
@@ -113,17 +115,23 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
         sigProfilerSimulatorSpecificDirName = '%s_simulations_%s_%s' %(jobname,genomeAssembly,mutationTypes[0])
 
     prepareSimulationBasedInputFilesForSigProfilerTopography(jobname,genomeAssembly,mutationTypes,sigProfilerSimulatorSpecificDirName,numberofSimulations,probabilities_df)
-
 ################################################################
+
+
+# #######################################################
+# def downloadNuclesomeChrBasedSignalArrays(nucleosomeFilename):
+#     left here
+#     use wget
+#     upload to a ftp site
+#     download from that ftp site
+#     https://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive/39225039#39225039
+# #######################################################
 
 
 
 #######################################################
 #Run SigProfilerTopography Analyses
 def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename):
-
-    #Internally Set
-    considerProbabilityInProcessivityAnalysis = True
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
     print('current_abs_path: %s ' % current_abs_path)
@@ -134,14 +142,14 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     jobnamePath = os.path.join(outputDir,jobname,DATA,CHRBASED)
     print('sigProTopographyData.py jobnamePath:%s ' %jobnamePath)
 
-    #######################################################
-    #Let's not delete the existing data
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    #######################################################
+    ######################################################
+    # Let's not delete the existing data
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ######################################################
 
 
     if (indelsFilename!=NOTSET):
@@ -151,17 +159,24 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     ##############################################
 
     #############################################
-    print('current_abs_path:%s' %current_abs_path)
     availableNucleosomeOccupancyFilesPath = os.path.join(current_abs_path,LIB,NUCLEOSOME,AVAILABLENUCLEOSOMEOCCUPANCYFILESNAME)
 
     if (os.path.exists(availableNucleosomeOccupancyFilesPath)):
         availableNucleosomeOccupancyFilesList = readAsAList(availableNucleosomeOccupancyFilesPath)
 
     nucleosomeFilename_woDir = os.path.basename(nucleosomeFilename)
+
+
     if (nucleosomeFilename_woDir not in availableNucleosomeOccupancyFilesList):
         quantileValue = round(float(0.97), 2)
         # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
         readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+
+        #update the list
+        availableNucleosomeOccupancyFilesList.append(nucleosomeFilename_woDir)
+
+        #write to the file  availableNucleosomeOccupancyFilesPath
+        writeList2File(availableNucleosomeOccupancyFilesList,availableNucleosomeOccupancyFilesPath)
     #############################################
 
     ##############################################
@@ -188,97 +203,96 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     nucleosomeOccupancyAnalysis(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
     ###############################################
 
-    # #############################################
-    # # REPLICATIONTIME
-    # # Delete the output/jobname/DATA/REPLICATIONTIME if exists
-    # jobnamePath = os.path.join(current_abs_path, TopographyCommons.OUTPUT, jobname, TopographyCommons.DATA, TopographyCommons.REPLICATIONTIME)
-    #
-    # # ################################################
-    # # if (os.path.exists(jobnamePath)):
-    # #     try:
-    # #         shutil.rmtree(jobnamePath)
-    # #     except OSError as e:
-    # #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # # ################################################
-    #
-    # # ReplicationTime
-    # print('current_abs_path: %s ' %current_abs_path)
-    # # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,REPLICATIONTIME, 'ReplicationTimeAnalysis.py'),jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename])
-    # ReplicationTimeAnalysis.replicationTimeAnalysis(jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
-    # ###############################################
+    #############################################
+    # REPLICATIONTIME
+    # Delete the output/jobname/DATA/REPLICATIONTIME if exists
+    jobnamePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME)
+
+    ################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
+
+    # ReplicationTime
+    print('current_abs_path: %s ' %current_abs_path)
+    # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,REPLICATIONTIME, 'ReplicationTimeAnalysis.py'),jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename])
+    replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
+    ###############################################
 
 
-    # ###############################################
-    # # REPLICATIONSTRANDBIAS
-    # # Delete the output/jobname/DATA/REPLICATIONSTRANDBIAS if exists
-    # jobnamePath = os.path.join(current_abs_path,TopographyCommons.OUTPUT,jobname,TopographyCommons.DATA,TopographyCommons.REPLICATIONSTRANDBIAS)
-    #
-    # # ################################################
-    # # if (os.path.exists(jobnamePath)):
-    # #     try:
-    # #         shutil.rmtree(jobnamePath)
-    # #     except OSError as e:
-    # #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # # ################################################
-    #
-    # # ReplicationStrandBias
-    # # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,REPLICATIONSTRANDBIAS, 'ReplicationStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,replicationTimeFilename,replicationTimeValleyFilename, replicationTimePeakFilename,'0.5','0.5','0.01'])
-    #
-    # smoothedWaveletRepliseqDataFilename = replicationTimeFilename
-    # valleysBEDFilename = replicationTimeValleyFilename
-    # peaksBEDFilename = replicationTimePeakFilename
-    #
-    # startMutationProbability = round(float(0.5),2)
-    # endMutationProbability = round(float(0.5),2)
-    # step = round(float(0.01),2)
-    #
-    # if (singlePointMutationsFilename!=NOTSET):
-    #     ReplicationStrandBiasAnalysis.replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename, smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step)
-    # ###############################################
+    ###############################################
+    # REPLICATIONSTRANDBIAS
+    # Delete the output/jobname/DATA/REPLICATIONSTRANDBIAS if exists
+    jobnamePath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS)
+
+    ################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
+
+    smoothedWaveletRepliseqDataFilename = replicationTimeFilename
+    valleysBEDFilename = replicationTimeValleyFilename
+    peaksBEDFilename = replicationTimePeakFilename
+
+    startMutationProbability = round(float(0.5),2)
+    endMutationProbability = round(float(0.5),2)
+    step = round(float(0.01),2)
+
+    if (singlePointMutationsFilename!=NOTSET):
+        replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename, smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step)
+    ###############################################
 
 
-    # ###############################################
-    # # TRANSCRIPTIONSTRANDBIAS
-    # # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
-    # jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,DATA,TRANSCRIPTIONSTRANDBIAS)
-    #
-    # # ################################################
-    # # if (os.path.exists(jobnamePath)):
-    # #     try:
-    # #         shutil.rmtree(jobnamePath)
-    # #     except OSError as e:
-    # #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # # ################################################
-    #
-    # # TranscriptionStrandBias
-    # # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,TRANSCRIPTIONSTRANDBIAS, 'TranscriptionStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,'0.5','0.5','0.01'])
-    # startMutationProbability = round(float(0.5),2)
-    # endMutationProbability = round(float(0.5),2)
-    # step = round(float(0.01),2)
-    #
-    # if (singlePointMutationsFilename!=NOTSET):
-    #     TranscriptionStrandBiasAnalysis.transcriptionStrandBiasAnalysis(jobname, singlePointMutationsFilename, startMutationProbability,endMutationProbability,step)
-    # ###############################################
+    ###############################################
+    # TRANSCRIPTIONSTRANDBIAS
+    # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
+    jobnamePath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS)
+
+    ################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
+
+    # TranscriptionStrandBias
+    # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,TRANSCRIPTIONSTRANDBIAS, 'TranscriptionStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,'0.5','0.5','0.01'])
+    startMutationProbability = round(float(0.5),2)
+    endMutationProbability = round(float(0.5),2)
+    step = round(float(0.01),2)
+
+    if (singlePointMutationsFilename!=NOTSET):
+        transcriptionStrandBiasAnalysis(outputDir,jobname, singlePointMutationsFilename, startMutationProbability,endMutationProbability,step)
+    ###############################################
 
 
-    # ###############################################
-    # # PROCESSIVITY
-    # # Delete the output/jobname/DATA/PROCESSIVITY if exists
-    # jobnamePath = os.path.join(current_abs_path,TopographyCommons.OUTPUT,jobname,TopographyCommons.DATA,TopographyCommons.PROCESSIVITY)
-    #
-    # ################################################
-    # # if (os.path.exists(jobnamePath)):
-    # #     try:
-    # #         shutil.rmtree(jobnamePath)
-    # #     except OSError as e:
-    # #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ################################################
-    #
-    # # TranscriptionStrandBias
-    # # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,PROCESSIVITY, 'ProcessivityAnalysis.py'),jobname,singlePointMutationsFilename,considerProbability])
-    # if (singlePointMutationsFilename != NOTSET):
-    #     ProcessivityAnalysis.processivityAnalysis(jobname,singlePointMutationsFilename,considerProbabilityInProcessivityAnalysis)
-    # ###############################################
+    ###############################################
+    # PROCESSIVITY
+    # Delete the output/jobname/DATA/PROCESSIVITY if exists
+    jobnamePath = os.path.join(outputDir,jobname,DATA,PROCESSIVITY)
+
+    ###############################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ###############################################
+
+    #Internally Set
+    considerProbabilityInProcessivityAnalysis = True
+
+    # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,PROCESSIVITY, 'ProcessivityAnalysis.py'),jobname,singlePointMutationsFilename,considerProbability])
+    if (singlePointMutationsFilename != NOTSET):
+        processivityAnalysis(outputDir,jobname,singlePointMutationsFilename,considerProbabilityInProcessivityAnalysis)
+    ###############################################
 
 #######################################################
 
@@ -293,7 +307,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 # USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculation):
+def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation):
 
     #Internally Set
     figureAugmentation = 'noaugmentation'
@@ -325,9 +339,9 @@ def plotFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculati
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'TranscriptionReplicationStrandBiasFigures.py'),jobname,figureAugmentation,str(numberofSimulations)])
     # subprocess.call(['python', os.path.join(current_abs_path, SOURCE, PLOTTING, 'ProcessivityFigures.py'),jobname,str(numberofSimulations),multipleTesting,probabilityCalculation])
 
-    nucleosomeOccupancyAverageSignalFigures(jobname,figureAugmentation,numberofSimulations)
-    # replicationTimeNormalizedMutationDensityFigures(jobname,figureAugmentation,numberofSimulations)
-    # transcriptionReplicationStrandBiasFigures(jobname,figureAugmentation,numberofSimulations)
-    # processivityFigures(jobname,numberofSimulations,multipleTesting,probabilityCalculation)
+    nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
+    replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
+    transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
+    processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
 
 ##############################################################

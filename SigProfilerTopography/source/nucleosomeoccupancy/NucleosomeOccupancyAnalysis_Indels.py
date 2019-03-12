@@ -233,7 +233,7 @@ def accumulateSplitArrays(allSplits_chrBased_SignalArrayAndCountArray_Dictionary
 
 ########################################################################################
 #main funcyion
-def nucleosomeOccupancyAnalysis_Indels(jobname,indelsFilename,nucleosomeFilename):
+def nucleosomeOccupancyAnalysis_Indels(outputDir,jobname,indelsFilename,nucleosomeFilename):
 
     withExtraSampleBasedAnalysis = True
 
@@ -286,7 +286,9 @@ def nucleosomeOccupancyAnalysis_Indels(jobname,indelsFilename,nucleosomeFilename
     for chrLong in chrNamesInNucleosomeList:
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
+        #TODO
         chrBased_nucleosome_df = readChrBasedNuclesomeDF(chrLong,nucleosomeFilename)
+        chrbased_nucleosome_signal_array = np.load(chrBasedSignalNucleosmeFile)
 
         #TODO: This is specific to out data right now
         #Nucleosome has chrM
@@ -295,7 +297,7 @@ def nucleosomeOccupancyAnalysis_Indels(jobname,indelsFilename,nucleosomeFilename
             chrLong='chrMT'
 
         #THEN READ CHRBASED INDELS
-        chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
+        chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
 
         print('chromosome %s  -- chrBased_nucleosome_df: %d in bytes %f in GB' % (chrLong,sys.getsizeof(chrBased_nucleosome_df), sys.getsizeof(chrBased_nucleosome_df)/GIGABYTE_IN_BYTES))
 

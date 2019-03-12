@@ -21,3 +21,6 @@ extrasourcecode/
 input/
 output/
 lib/
+build/
+dist/
+SigProfilerTopography.egg-info/

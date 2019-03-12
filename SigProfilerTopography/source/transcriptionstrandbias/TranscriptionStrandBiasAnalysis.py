@@ -241,8 +241,7 @@ def fillTranscriptionNPArrayAndSearchMutationsOnThisArray(inputList):
 
 
 ########################################################################
-def transcriptionStrandBiasAnalysis(jobname,singlePointMutationsFilename,mutationProbabilityStart,mutationProbabilityEnd,mutationProbabilityStep):
-# if __name__ == '__main__':
+def transcriptionStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename,mutationProbabilityStart,mutationProbabilityEnd,mutationProbabilityStep):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     print('#################### TranscriptionStrandBias Analysis system arguments: #####################')
@@ -267,21 +266,7 @@ def transcriptionStrandBiasAnalysis(jobname,singlePointMutationsFilename,mutatio
     transcriptsSource = ENSEMBL
     GRCh37_hg19_Transcripts_df = readTrancriptsENSEMBL()
 
-    # print('GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df[chrom].unique()')
-    # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df['chrom'].unique())
-    # GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df[chrom].unique()
-    # ['chr1' 'chr2' 'chr3' 'chr4' 'chr5' 'chr6' 'chr7' 'chr8' 'chr9' 'chrX'
-    #  'chrY' 'chr10' 'chr11' 'chr12' 'chr13' 'chr14' 'chr15' 'chr16' 'chr17'
-    #  'chr18' 'chr19' 'chr20' 'chr21' 'chr22' 'chr6_apd_hap1' 'chr6_cox_hap2'
-    #  'chr6_dbb_hap3' 'chr6_mcf_hap5' 'chr6_qbl_hap6' 'chr4_ctg9_hap1'
-    #  'chr6_mann_hap4' 'chr6_ssto_hap7' 'chrUn_gl000211' 'chrUn_gl000212'
-    #  'chrUn_gl000213' 'chrUn_gl000218' 'chrUn_gl000219' 'chrUn_gl000220'
-    #  'chrUn_gl000224' 'chrUn_gl000228' 'chrUn_gl000241' 'chr17_ctg5_hap1'
-    #  'chr1_gl000192_random' 'chr4_gl000193_random' 'chr4_gl000194_random'
-    #  'chr7_gl000195_random' 'chr17_gl000205_random']
 
-    # chrNamesInGRCh37 = GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df['chrom'].unique()
-    ##################### Read GRCh37 HG19 NCBI RefSeq Curated Transcripts ends ########################
 
 
     #################### Prepare mutation Probability List starts ######################################
@@ -293,14 +278,14 @@ def transcriptionStrandBiasAnalysis(jobname,singlePointMutationsFilename,mutatio
 
     #Load the signatures
     signatures = []
-    SignaturesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SignatureFilename)
+    SignaturesFilePath = os.path.join(outputDir,jobname,DATA,SignatureFilename)
     if (os.path.exists(SignaturesFilePath)):
         signaturesArray = np.loadtxt(SignaturesFilePath,dtype=str, delimiter='\t')
         signatures = list(signaturesArray)
 
     #Load the chrnames in single point mutations
     filename = ChrNamesInSPMsFilename
-    ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname,DATA,filename)
+    ChrNamesFile = os.path.join(outputDir, jobname,DATA,filename)
     if (os.path.exists(ChrNamesFile)):
         chrNamesArray = np.loadtxt(ChrNamesFile,dtype=str, delimiter='\t')
         chrNamesInSPMs = chrNamesArray.tolist()
@@ -361,7 +346,7 @@ def transcriptionStrandBiasAnalysis(jobname,singlePointMutationsFilename,mutatio
         chrLong = 'chr%s' %chrName
 
         #Read chrBased Single Point Mutations
-        chrBased_spms_df = readChrBasedMutationDF(jobname, chrLong, singlePointMutationsFilename)
+        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname, chrLong, singlePointMutationsFilename)
 
         #Get chrBased ncbi refeq genes
         if (transcriptsSource==NCBI):
@@ -474,14 +459,14 @@ def transcriptionStrandBiasAnalysis(jobname,singlePointMutationsFilename,mutatio
     signature2WeightedAverageRatioDict, signature2StdErrorDict, signature2SumofMutationProbabilitiesDict = convert(accumulatedAllChromosomesMutationProbability2Signature2TranscriptStrand2CountDict,transcriptionStrands)
 
     #To be used for plotting starts
-    writeDictionary(accumulatedAllChromosomesMutationType2TranscriptStrand2CountDict,jobname,MutationType2TranscriptionStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationType2Sample2TranscriptStrand2CountDict,jobname,MutationType2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2TranscriptStrand2CountDict,jobname,MutationProbability2Signature2TranscriptionStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2Sample2TranscriptStrand2CountDict,jobname,MutationProbability2Signature2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationType2TranscriptStrand2CountDict,outputDir,jobname,MutationType2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationType2Sample2TranscriptStrand2CountDict,outputDir,jobname,MutationType2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2Signature2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2Sample2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2Signature2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
 
-    writeDictionary(signature2WeightedAverageRatioDict,jobname,Signature2TranscriptionWeightedAverageRatioDict_Filename,strandBias,None)
-    writeDictionary(signature2StdErrorDict, jobname,Signature2TranscriptionStdErrorDict_Filename,strandBias,None)
-    writeDictionary(signature2SumofMutationProbabilitiesDict,jobname,Signature2TranscriptionSumofMutationProbabilitiesDict_Filename,strandBias,None)
+    writeDictionary(signature2WeightedAverageRatioDict,outputDir,jobname,Signature2TranscriptionWeightedAverageRatioDict_Filename,strandBias,None)
+    writeDictionary(signature2StdErrorDict, outputDir,jobname,Signature2TranscriptionStdErrorDict_Filename,strandBias,None)
+    writeDictionary(signature2SumofMutationProbabilitiesDict,outputDir,jobname,Signature2TranscriptionSumofMutationProbabilitiesDict_Filename,strandBias,None)
     #To be used for plotting ends
 
     #################################################################################################################

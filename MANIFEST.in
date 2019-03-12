@@ -1,3 +1,4 @@
+include SigProfilerTopography/source/commons/TopographyCommons.py
 include SigProfilerTopography/source/commons/*
 include SigProfilerTopography/source/nucleosomeoccupancy/*
 include SigProfilerTopography/source/plotting/*

@@ -347,8 +347,7 @@ def checkforValidness(chrBased_valleys_peaks_df):
 
 
 ########################################################################
-def replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step):
-# if __name__ == '__main__':
+def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step):
 
     print('########################## ReplicationStrandBias Analysis starts ##########################')
     print('#################### ReplicationStrandBias Analysis system arguments: #####################')
@@ -372,13 +371,13 @@ def replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename,smoothedW
 
     #Load signatureList
     signatureList = []
-    SignaturesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,SignatureFilename)
+    SignaturesFilePath = os.path.join(outputDir,jobname,DATA,SignatureFilename)
     if (os.path.exists(SignaturesFilePath)):
         signaturesArray = np.loadtxt(SignaturesFilePath,dtype=str, delimiter='\t')
         signatureList = list(signaturesArray)
 
     #Load the chrnames in single point mutations data
-    ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT,jobname,DATA,ChrNamesInSPMsFilename)
+    ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
     if (os.path.exists(ChrNamesFile)):
         chrNamesArray = np.loadtxt(ChrNamesFile, dtype=str, delimiter='\t')
         chrNamesInSPMs = chrNamesArray.tolist()
@@ -517,7 +516,7 @@ def replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename,smoothedW
         chrLong = 'chr' + chrShort
 
         # Read chrBased spms dataframe
-        chrBased_spms_df = readChrBasedMutationDF(jobname, chrLong, singlePointMutationsFilename)
+        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname, chrLong, singlePointMutationsFilename)
 
         #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
         chrBasedSmoothedWaveletReplicationTimeSignalDF = processed_df[processed_df['chr'] == chrLong]
@@ -634,14 +633,14 @@ def replicationStrandBiasAnalysis(jobname,singlePointMutationsFilename,smoothedW
 
     ##############################################################################
     #To be used for plotting starts
-    writeDictionary(accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,jobname,MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,jobname,MutationType2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,jobname,MutationProbability2Signature2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict,jobname,MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2Signature2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
 
-    writeDictionary(signature2WeightedAverageRatioDict,jobname,Signature2ReplicationWeightedAverageRatioDict_Filename,strandBias,None)
-    writeDictionary(signature2StdErrorDict,jobname,Signature2ReplicationStdErrorDict_Filename,strandBias,None)
-    writeDictionary(signature2SumofMutationProbabilitiesDict,jobname, Signature2ReplicationSumofMutationProbabilitiesDict_Filename,strandBias,None)
+    writeDictionary(signature2WeightedAverageRatioDict,outputDir,jobname,Signature2ReplicationWeightedAverageRatioDict_Filename,strandBias,None)
+    writeDictionary(signature2StdErrorDict,outputDir,jobname,Signature2ReplicationStdErrorDict_Filename,strandBias,None)
+    writeDictionary(signature2SumofMutationProbabilitiesDict,outputDir,jobname, Signature2ReplicationSumofMutationProbabilitiesDict_Filename,strandBias,None)
     #To be used for plotting ends
     ##############################################################################
 

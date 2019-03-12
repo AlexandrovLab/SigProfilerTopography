@@ -249,14 +249,14 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
     if (singlePointMutationsFileName != NOTSET):
         # Load the chrnames in single point mutations data
-        ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,ChrNamesInSPMsFilename)
+        ChrNamesFile = os.path.join(outputDir, jobname, DATA,ChrNamesInSPMsFilename)
         if (os.path.exists(ChrNamesFile)):
             chrNamesArray = np.loadtxt(ChrNamesFile, dtype=str, delimiter='\t')
             chrNamesInSPMs = chrNamesArray.tolist()
@@ -267,7 +267,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(jobname, s
         for chrShort in chrNamesInSPMs:
             chrLong = 'chr%s'%(chrShort)
             # print('%s %s' %(chrLong,chrShort))
-            chrBased_spms_df = readChrBasedMutationDF(jobname, chrLong, singlePointMutationsFileName)
+            chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname, chrLong, singlePointMutationsFileName)
 
             if (chrBased_spms_df is not None):
 
@@ -318,7 +318,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(jobname, s
                 accumulateDict(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict,signature2ProcessiveGroupLength2DistanceListDict)
 
         signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-        writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, jobname, 'Signature2ProcessiveGroupLength2PropertiesDict.txt', PROCESSIVITY, ProcessiveGroupStructEncoder)
+        writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir,jobname, 'Signature2ProcessiveGroupLength2PropertiesDict.txt', PROCESSIVITY, ProcessiveGroupStructEncoder)
 ####################################################################################
 
 
@@ -335,9 +335,9 @@ def convertStr2Bool(mystr):
 
 
 ##################################################################################
-def processivityAnalysis(jobname,singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def processivityAnalysis(outputDir,jobname,singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
     print('########################## ProcessivityAnalysis starts ###########################')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis)
     print('########################## ProcessivityAnalysis ends #############################')
 ##################################################################################
 
