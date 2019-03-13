@@ -156,6 +156,10 @@ def updateSignalCountArrays(nucleosome_row,signalArray,countArray):
     countArray[nucleosome_row[start]:nucleosome_row[end]] += 1
 ######################################################################
 
+######################################################################
+def updateSignalArrays(nucleosome_row,signalArray):
+    signalArray[nucleosome_row[start]:nucleosome_row[end]] += nucleosome_row[signal]
+######################################################################
 
 ######################################################################
 # This is used right now.
@@ -173,32 +177,21 @@ def  writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList
 
     #Another Way
     signalArray = np.zeros(chromSize,dtype=np.float32)
-    countArray = np.zeros(chromSize,dtype=np.int32)
+    # countArray = np.zeros(chromSize,dtype=np.int32)
 
-    chrBasedNuclesomeDF.apply(updateSignalCountArrays,signalArray=signalArray,countArray=countArray,axis=1)
+    # chrBasedNuclesomeDF.apply(updateSignalCountArrays,signalArray=signalArray,countArray=countArray,axis=1)
+    chrBasedNuclesomeDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
 
     #############################  Save as npy starts ################################
     signalArrayFilename = '%s_signal_%s' %(chrLong,nucleosomeFilenameWoExtension)
-    countArrayFilename = '%s_count_%s' % (chrLong, nucleosomeFilenameWoExtension)
+    # countArrayFilename = '%s_count_%s' % (chrLong, nucleosomeFilenameWoExtension)
 
     chrBasedSignalNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
-    chrBasedCountNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,countArrayFilename)
+    # chrBasedCountNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,countArrayFilename)
 
     np.save(chrBasedSignalNucleosmeFile, signalArray)
-    np.save(chrBasedCountNucleosmeFile, countArray)
+    # np.save(chrBasedCountNucleosmeFile, countArray)
     #############################  Save as npy ends ##################################
-
-    # Saving in txt takes long time and requires more space.
-    # ############################# Save as txt starts #################################
-    # signalArrayFilename = '%s_signal_%s.txt' %(chrLong,nucleosomeFilenameWoExtension)
-    # countArrayFilename = '%s_count_%s.txt' % (chrLong, nucleosomeFilenameWoExtension)
-    #
-    # chrBasedSignalNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
-    # chrBasedCountNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,countArrayFilename)
-    #
-    # np.savetxt(chrBasedSignalNucleosmeFile, signalArray)
-    # np.savetxt(chrBasedCountNucleosmeFile, countArray)
-    # ############################# Save as txt ends ###################################
 
     print('writeChrBasedNucleosome:%s for %s ends' % (nucleosomeFilename, chrLong))
 ######################################################################

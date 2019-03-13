@@ -1640,6 +1640,16 @@ def writeList2File(list,filePath):
 ########################################################################
 
 ########################################################################
+def append2File(item,filePath):
+    os.makedirs(os.path.join(filePath),exist_ok=True)
+
+    with open(filePath, "a+") as f:
+        f.write("%s\n" % item)
+########################################################################
+
+
+
+########################################################################
 #Will be depreceated
 def readSignatureList(filePath):
     list = []

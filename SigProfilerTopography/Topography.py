@@ -172,11 +172,8 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
         # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
         readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
 
-        #update the list
-        availableNucleosomeOccupancyFilesList.append(nucleosomeFilename_woDir)
-
-        #write to the file  availableNucleosomeOccupancyFilesPath
-        writeList2File(availableNucleosomeOccupancyFilesList,availableNucleosomeOccupancyFilesPath)
+        #append
+        append2File(nucleosomeFilename_woDir,availableNucleosomeOccupancyFilesPath)
     #############################################
 
     ##############################################
