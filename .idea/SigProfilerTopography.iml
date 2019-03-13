@@ -16,5 +16,6 @@
     <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Debugging" />
+    <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
   </component>
 </module>

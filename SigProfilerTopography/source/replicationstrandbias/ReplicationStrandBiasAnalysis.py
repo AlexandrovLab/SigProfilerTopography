@@ -617,6 +617,10 @@ def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename
     print('For mutation probability threshold: %f' %MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
     print('Signature\t%s\t%s' % (LAGGING,LEADING))
 
+    print('For debug March 13, 2019')
+    print('accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict')
+    print(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict)
+
     signature2ReplicationStrand2CountDict = accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
 
     for signature in signatureList:

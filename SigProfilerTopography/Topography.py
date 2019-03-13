@@ -166,7 +166,6 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 
     nucleosomeFilename_woDir = os.path.basename(nucleosomeFilename)
 
-
     if (nucleosomeFilename_woDir not in availableNucleosomeOccupancyFilesList):
         quantileValue = round(float(0.97), 2)
         # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
@@ -216,7 +215,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     # ReplicationTime
     print('current_abs_path: %s ' %current_abs_path)
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,REPLICATIONTIME, 'ReplicationTimeAnalysis.py'),jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename])
-    replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
+    replicationTimeAnalysis(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
     ###############################################
 
 
@@ -237,8 +236,8 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     valleysBEDFilename = replicationTimeValleyFilename
     peaksBEDFilename = replicationTimePeakFilename
 
-    startMutationProbability = round(float(0.5),2)
-    endMutationProbability = round(float(0.5),2)
+    startMutationProbability = MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
+    endMutationProbability = MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
     step = round(float(0.01),2)
 
     if (singlePointMutationsFilename!=NOTSET):
@@ -261,8 +260,8 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 
     # TranscriptionStrandBias
     # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,TRANSCRIPTIONSTRANDBIAS, 'TranscriptionStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,'0.5','0.5','0.01'])
-    startMutationProbability = round(float(0.5),2)
-    endMutationProbability = round(float(0.5),2)
+    startMutationProbability = MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
+    endMutationProbability = MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
     step = round(float(0.01),2)
 
     if (singlePointMutationsFilename!=NOTSET):

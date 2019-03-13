@@ -20,7 +20,7 @@ sys.path.append(commonsPath)
 
 from SigProfilerTopography.source.commons import TopographyCommons
 from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancyAnalysis_SPMs_SignatureBased
-from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels
+from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancyAnalysis_Subs_Indels
 from SigProfilerTopography.source.nucleosomeoccupancy import NucleosomeOccupancyAnalysis_Indels
 
 
@@ -39,10 +39,7 @@ def nucleosomeOccupancyAnalysis(genome,outputDir,jobname,singlePointMutationsFil
 
     # Case 2: SPMs and Indels
     elif (singlePointMutationsFilename!=TopographyCommons.NOTSET and indelsFilename!=TopographyCommons.NOTSET):
-        # subprocess.call(['python',os.path.join(current_abs_path,'NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.py'),jobname,singlePointMutationFilename,indelsFilename,nucleosomeFilename])
-        # NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels(jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
-        # NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,jobname, singlePointMutationsFilename, indelsFilename,nucleosomeFilename)
-        NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome, outputDir,jobname, singlePointMutationsFilename, indelsFilename, nucleosomeFilename)
+        NucleosomeOccupancyAnalysis_Subs_Indels.nucleosome_occupancy_analysis_subs_indels_all_chroms_parallel(genome, outputDir, jobname, singlePointMutationsFilename, indelsFilename, nucleosomeFilename)
 
     # Case 3: Indels
     elif (singlePointMutationsFilename==TopographyCommons.NOTSET and indelsFilename!=TopographyCommons.NOTSET):

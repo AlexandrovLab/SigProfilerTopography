@@ -140,7 +140,7 @@ def process(wavelet_unprocessed_df):
 
 
 ##################################################################
-def readRepliSeqTimeData(pool,repliseqDataFilename):
+def readRepliSeqTimeData(pool,repliseqDataFilename,genome):
     ###################################################################
     ############### Read MCF-7 RepliSeq Time data starts ##############
     ###################################################################
@@ -157,7 +157,7 @@ def readRepliSeqTimeData(pool,repliseqDataFilename):
 
 
     #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(pool,wavelet_processed_df)
+    wavelet_processed_augmented_df = augment(pool,wavelet_processed_df,genome)
 
     #Sort the wavelet processed df in descending order w.r.t. signal column
     # print('############ before sort wavelet_processed_augmented_df ###################')
@@ -204,12 +204,12 @@ def readRepliSeqTimeData(pool,repliseqDataFilename):
 
 
 ##################################################################
-def getNumberofAttributableBases(wavelet_row, hg19):
+def getNumberofAttributableBases(wavelet_row, genome):
     start =wavelet_row[1]
     end = wavelet_row[2]
     #In my code ends are inclusive
     #twobitreader uses ends exlusive
-    seq = hg19.get_slice(start, end+1)
+    seq = genome.get_slice(start, end+1)
     numofAttributableBases = seq.count('A') + seq.count('T') + seq.count('G') + seq.count('C') + seq.count('a') + seq.count('t') + seq.count('g') + seq.count('c')
     # print('######### debug starts ##############')
     # print(wavelet_row)
@@ -223,8 +223,8 @@ def getNumberofAttributableBases(wavelet_row, hg19):
 def addNumofAttributableBasesColumn(inputList):
     chrLong = inputList[0]
     chrBased_wavelet_processed_df_group =inputList[1]
-    hg19_genome = inputList[2]
-    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, hg19 = hg19_genome[chrLong], axis= 1)
+    genome = inputList[2]
+    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, genome = genome[chrLong], axis= 1)
 
     # print('######## debug numberofAttributableBases starts ########')
     # print('for %s starts' %chrLong)
@@ -751,18 +751,6 @@ def generateNPArrayAndSearchMutationsOnNPArrayForSPMsWithExtraSampleBased(inputL
 
     type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
 
-    # if (chrLong=='chr1'):
-    #     print('#################################################################################')
-    #     print('Oct 1, 2018 debug starts')
-    #     print('chrLong coming from split. Are different samples full?')
-    #     print(chrLong)
-    #     print('type2DecileIndex2NumberofMutationsDict')
-    #     print(type2DecileIndex2NumberofMutationsDict)
-    #     print('sample2Type2DecileIndex2NumberofMutationsDict')
-    #     print(sample2Type2DecileIndex2NumberofMutationsDict)
-    #     print('Oct 1, 2018 debug ends')
-    #     print('#################################################################################')
-
     return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
 
@@ -971,7 +959,7 @@ def getMutationDensityDict(deciles,decileBasedAllChrAccumulatedCountDict):
 ##################################################################
 # Case1: singlePointMutationsFileName is set only
 #   SPMs analysis provides aggregatedSPMs and signatures
-def calculateCountsSPMsWithExtraSampleBased(jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName):
+def calculateCountsSPMsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName):
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
 
@@ -993,7 +981,7 @@ def calculateCountsSPMsWithExtraSampleBased(jobname,numofProcesses,pool,signatur
         # chrLong = 'chr%s' %(chr)
 
         #read chrBased spms_df
-        chrBased_spms_df = readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFileName)
+        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
 
         ###################################################################################################################################################
         if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
@@ -1110,7 +1098,7 @@ def calculateCountsSPMs(jobname,numofProcesses,pool,signatures,deciles,chrNamesI
 
 
 ##################################################################
-def calculateCountsSPMsandIndelsWithExtraSampleBased(jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename):
+def calculateCountsSPMsandIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename):
 
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
@@ -1133,10 +1121,10 @@ def calculateCountsSPMsandIndelsWithExtraSampleBased(jobname,numofProcesses,pool
         # chrLong = 'chr%s' %(chr)
 
         #read chrBased spms_df
-        chrBased_spms_df = readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFileName)
+        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
 
         # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
+        chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
 
         ###################################################################################################################################################
         if (((chrBased_spms_df is not None) and  (not chrBased_spms_df.empty))  and ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)) ):
@@ -1408,7 +1396,7 @@ def calculateCountsIndels(jobname,numofProcesses,pool,deciles,chrNamesInReplicat
 
 
 ##################################################################
-def calculateCountsIndelsWithExtraSampleBased(jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename):
+def calculateCountsIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename):
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
 
@@ -1430,7 +1418,7 @@ def calculateCountsIndelsWithExtraSampleBased(jobname,numofProcesses,pool,sample
         # chrLong = 'chr%s' %(chr)
 
         # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
+        chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
 
         ###################################################################################################################################################
         if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
@@ -1518,8 +1506,11 @@ def calculateCountsIndelsWithExtraSampleBased(jobname,numofProcesses,pool,sample
 
 
 ##################################################################
-def augment(pool,wavelet_processed_df):
-    hg19_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,'hg19.2bit'))
+def augment(pool,wavelet_processed_df,genome):
+    if (genome==GRCh37):
+        genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
+    elif (genome==GRCh38):
+        genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
 
     #Augment in parallel for each chromosome
     poolInputList = []
@@ -1529,7 +1520,7 @@ def augment(pool,wavelet_processed_df):
         inputList.append(chr)
         inputList.append(chrBased_wavelet_processed_df_group)
         #Please note that when you provide the chr based hg19_genome it gives error
-        inputList.append(hg19_genome)
+        inputList.append(genome)
         poolInputList.append(inputList)
 
     # print('Augmentation starts')
@@ -1707,7 +1698,7 @@ def writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2De
 
 
 ##################################################################
-def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
+def replicationTimeAnalysis(genome,outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
 # if __name__ == '__main__':
 
     withExtraSampleBasedAnalysis = True
@@ -1737,7 +1728,7 @@ def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indel
     ###################################################################
     ############### Read MCF-7 RepliSeq Time data starts ##############
     ###################################################################
-    chrNamesInReplicationTimeDataArray, deciles = readRepliSeqTimeData(pool,repliseqDataFilename)
+    chrNamesInReplicationTimeDataArray, deciles = readRepliSeqTimeData(pool,repliseqDataFilename,genome)
     chrNamesInReplicationTimeDataList = chrNamesInReplicationTimeDataArray.tolist()
     #What is the type of deciles? Deciles is a list of dataframes.
     ###################################################################
@@ -1784,7 +1775,7 @@ def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indel
             #######################################################################################################
             ################ AggregatedSubstitutions and  Signatures starts #######################################
             #######################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsWithExtraSampleBased(jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
+            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsWithExtraSampleBased(outputDir, jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
 
             writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
             #######################################################################################################
@@ -1796,7 +1787,7 @@ def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indel
             ########################################################################################################################################
             ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels starts #######################################
             ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsandIndelsWithExtraSampleBased(jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+            type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsandIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                                                                                                                                     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
                                                                                                                                     deciles,
                                                                                                                                     chrNamesInReplicationTimeDataList,
@@ -1813,7 +1804,7 @@ def replicationTimeAnalysis(outputDir,jobname,singlePointMutationsFileName,indel
             ########################################################################################################################################
             ############################################ AggregatedIndels --- Indels starts ########################################################
             ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsIndelsWithExtraSampleBased(jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
+            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
 
             writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
             ########################################################################################################################################

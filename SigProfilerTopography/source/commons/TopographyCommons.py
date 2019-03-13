@@ -1632,8 +1632,6 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
 
 ########################################################################
 def writeList2File(list,filePath):
-    os.makedirs(os.path.join(filePath),exist_ok=True)
-
     with open(filePath, "w") as f:
         for item in list:
             f.write("%s\n" % item)
@@ -1641,10 +1639,9 @@ def writeList2File(list,filePath):
 
 ########################################################################
 def append2File(item,filePath):
-    os.makedirs(os.path.join(filePath),exist_ok=True)
-
-    with open(filePath, "a+") as f:
-        f.write("%s\n" % item)
+    if (os.path.exists(filePath)):
+        with open(filePath, "a+") as f:
+            f.write("%s\n" % item)
 ########################################################################
 
 

@@ -11,8 +11,10 @@
 ###############################################################################################################
 # In this python code, nucleosome occupancy analysis is carried out
 #   for all single point mutations
-#   for all signatures with all single point mutations having probability >= 0.5 for that signature
+#   for all signatures with all single point mutations with a certain probability for that signature
 #   for all indels
+#   TODO for all signatures with all indels with a certain probability
+#   TODO for all dinucs
 ###############################################################################################################
 
 import os
@@ -20,13 +22,27 @@ import sys
 
 #############################################################
 current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('NucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels.py current_abs_path:%s' %(current_abs_path))
+print('NucleosomeOccupancyAnalysis_Subs_Indels.py current_abs_path:%s' %(current_abs_path))
 #############################################################
 
 commonsPath = os.path.join(current_abs_path, '..','commons')
 sys.path.append(commonsPath)
 
 from SigProfilerTopography.source.commons.TopographyCommons import *
+
+
+########################################################################################
+#March 12, 2019 starts
+def fillSignalArrayAndCountArraysIndelsSignatureBasedAdded(inputList):
+    pass
+#Tomorrow fill signature also for indels
+# subsSignature
+# indelsSignature
+# when done we can use this function
+# left here
+#March 12, 2019 ends
+########################################################################################
+
 
 ########################################################################################
 #March 7, 2019 starts
@@ -468,7 +484,7 @@ def initializationForEachChrom(signaturesWithAtLeast10KEligibleMutations2Numbero
 ########################################################################################
 #March 7, 2019 starts
 #For all chromosome parallel starts
-def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_AllChrParallel(genome,outputDir, jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosome_occupancy_analysis_subs_indels_all_chroms_parallel(genome,outputDir, jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
 
     ##########################################################################
     chromSizesDict, \
@@ -502,16 +518,11 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
         chrBasedSignalNucleosmeFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,NUCLEOSOME, CHRBASED, signalArrayFilename)
 
-
         #################################################################################################################
         # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
         if (os.path.exists(chrBasedSignalNucleosmeFile)):
             chrbased_nucleosome_signal_array = np.load(chrBasedSignalNucleosmeFile)
             print('chromosome %s  -- signal_array_npy: %d in bytes %f in GB' % (chrLong,sys.getsizeof(chrbased_nucleosome_signal_array), sys.getsizeof(chrbased_nucleosome_signal_array)/GIGABYTE_IN_BYTES))
-
-            # Do we need count array? Actually no.
-            # chrbased_nucleosome_count_array = np.load(chrBasedCountNucleosmeFile)
-            # print('chromosome %s  -- count_array_npy: %d in bytes %f in GB' % (chrLong, sys.getsizeof(chrbased_nucleosome_count_array), sys.getsizeof(chrbased_nucleosome_count_array) / GIGABYTE_IN_BYTES))
 
             #TODO: This is specific to our data right now
             #Nucleosomes have chrM
@@ -520,12 +531,19 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
                 chrLong='chrMT'
 
             #THEN READ CHRBASED SINGLE POINT MUTATIONS
-            chrBased_spms_df=readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFilename)
-            print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+            if  (singlePointMutationsFilename!= NOTSET):
+                chrBased_spms_df=readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFilename)
+                print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+            else:
+                chrBased_spms_df = None
+
 
             #THEN READ CHRBASED INDELS
-            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
-            print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+            if (indelsFilename!=NOTSET):
+                chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+                print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+            else:
+                chrBased_indels_df= None
 
             inputListForSubs.append(chrbased_nucleosome_signal_array)
             inputListForSubs.append(chrBased_spms_df)
@@ -618,9 +636,10 @@ def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepare
 
 
 ########################################################################################
+#If chr based subs or indels dataframes are too big we can use this version
 #March 6, 2019 starts
 #For each chromosome sequential starts
-def nucleosomeOccupancyAnalysis_SPMs_SignatureBased_Indels_using_offline_prepared_nucleosome_arrays_ChrBasedSequential(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosome_occupancy_analysis_subs_indels_each_chrom_sequential(genome,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
 
     ##########################################################################
     chromSizesDict, \
