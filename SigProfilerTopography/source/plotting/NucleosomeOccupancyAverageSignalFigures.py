@@ -670,6 +670,9 @@ def plotSignalsandCountsForDebug(sample,outputDir,jobname,numberofSimulations):
     listofSimulationsAggregatedSubstitutions_Signal = None
     listofSimulationsAggregatedSubstitutions_Count = None
 
+    stackedSimulations_Signal = None
+    stackedSimulations_Count = None
+
     original_Signal = readSignalorCount(sample,outputDir,jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
     original_Count = readSignalorCount(sample,outputDir,jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
 
@@ -677,13 +680,11 @@ def plotSignalsandCountsForDebug(sample,outputDir,jobname,numberofSimulations):
         listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
         listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
 
-    stackedSimulations_Signal = np.vstack(listofSimulationsAggregatedSubstitutions_Signal)
-    stackedSimulations_Count = np.vstack(listofSimulationsAggregatedSubstitutions_Count)
+        stackedSimulations_Signal = np.vstack(listofSimulationsAggregatedSubstitutions_Signal)
+        stackedSimulations_Count = np.vstack(listofSimulationsAggregatedSubstitutions_Count)
 
-    (rowsSignal, colsSignal) = stackedSimulations_Signal.shape
-    print('For Debug FEB26, 2019 rowsSignal:%d colsSignal:%d' %(rowsSignal,colsSignal))
-    (rowsCount, colsCount) = stackedSimulations_Count.shape
-    print('For Debug FEB26, 2019 rowsCount:%d colsCount:%d' % (rowsCount,colsCount))
+        (rowsSignal, colsSignal) = stackedSimulations_Signal.shape
+        (rowsCount, colsCount) = stackedSimulations_Count.shape
 
     fig = plt.figure(figsize=(30, 10), facecolor=None)
     plt.style.use('ggplot')
@@ -1098,7 +1099,7 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
 
         ##############################################################
         plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations('Interval around variant (bp)','Average nucleosome signal',
-                                                                          None,jobname,isFigureAugmentation,
+                                                                          None,outputDir,jobname,isFigureAugmentation,
                                                                           0,0,numberofSimulations)
         ##############################################################
 
@@ -1118,7 +1119,7 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
                 numberofIndels = sample2NumberofIndelsDict[sample]
 
             plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations('Interval around variant (bp)','Average nucleosome signal',
-                                                                        sample,jobname, isFigureAugmentation,
+                                                                        sample,outputDir,jobname, isFigureAugmentation,
                                                                         numberofEligibleSPMs, numberofIndels,numberofSimulations)
 
             #For debug FEB 28, 2019
