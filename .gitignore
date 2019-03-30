@@ -23,4 +23,5 @@ output/
 lib/
 build/
 dist/
+__pycache__/
 SigProfilerTopography.egg-info/

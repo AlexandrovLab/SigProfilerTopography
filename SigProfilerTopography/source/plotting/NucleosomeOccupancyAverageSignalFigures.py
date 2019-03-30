@@ -17,85 +17,10 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
     matplotlib.use(BACKEND)
 
 from matplotlib import pyplot as plt
-
-import matplotlib.patches as mpatches
-
-
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('NucleosomeOccupancyAverageSignalFigures.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 plusOrMinus = 1000
 windowSize = plusOrMinus*2+1
-
-
-
-# #############################################################################
-# Not used
-# class AnyObject1(object):
-#     pass
-#
-# class AnyObject2(object):
-#     pass
-#
-# class AnyObject3(object):
-#     pass
-#
-# class AnyObject4(object):
-#     pass
-#
-#
-# class AnyObjectHandler1(object):
-#     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-#         x0, y0 = handlebox.xdescent, handlebox.ydescent
-#         width, height = handlebox.width, handlebox.height
-#         patch = mpatches.Rectangle([x0, y0], width, height, facecolor='royalblue',
-#                                    edgecolor='royalblue', lw=1,
-#                                    transform=handlebox.get_transform())
-#         handlebox.add_artist(patch)
-#         return patch
-#
-# class AnyObjectHandler2(object):
-#     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-#         x0, y0 = handlebox.xdescent, handlebox.ydescent
-#         width, height = handlebox.width, handlebox.height
-#         patch = mpatches.Rectangle([x0, y0], width, height, facecolor='lightblue',
-#                                    edgecolor='gray', lw=1, linestyle='--',
-#                                    transform=handlebox.get_transform())
-#         handlebox.add_artist(patch)
-#         return patch
-#
-#
-# class AnyObjectHandler3(object):
-#     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-#         x0, y0 = handlebox.xdescent, handlebox.ydescent
-#         width, height = handlebox.width, handlebox.height
-#         patch = mpatches.Rectangle([x0, y0], width, height, facecolor='darkgreen',
-#                                    edgecolor='darkgreen', lw=1,
-#                                    transform=handlebox.get_transform())
-#         handlebox.add_artist(patch)
-#         return patch
-#
-#
-# class AnyObjectHandler4(object):
-#     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-#         x0, y0 = handlebox.xdescent, handlebox.ydescent
-#         width, height = handlebox.width, handlebox.height
-#         patch = mpatches.Rectangle([x0, y0], width, height, facecolor='lightgreen',
-#                                    edgecolor='gray', lw=1, linestyle='--',
-#                                    transform=handlebox.get_transform())
-#         handlebox.add_artist(patch)
-#         return patch
-# #############################################################################
-
-
 
 
 #############################################################################
@@ -103,37 +28,30 @@ windowSize = plusOrMinus*2+1
 #############################################################################
 #Jobname has to be only jobname given in the argument
 def readAverage(sample,signatureName,analyseType,outputDir,jobname):
-    # Read the file w.r.t. the current folder
 
+    #####################################################
     if (analyseType == SIGNATUREBASED):
-        # for signature based name may contain empty spaces
-        #new way
         filename = '%s_AverageNucleosomeSignalArray.txt' %(signatureName)
         averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
-
     elif (analyseType== AGGREGATEDSUBSTITUTIONS or analyseType == AGGREGATEDINDELS):
         # new way
         filename = '%s_AverageNucleosomeSignalArray.txt' %(jobname)
         averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+    #####################################################
 
     #####################################################
     if (analyseType == SAMPLEBASED_SIGNATUREBASED):
-        # for signature based name may contain empty spaces
-        # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (signatureName, sample)
-
         averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
 
     elif (analyseType == SAMPLEBASED_AGGREGATEDSUBSTITUTIONS):
-        # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample, jobname)
         averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDSUBSTITUTIONS, filename)
 
+
     elif (analyseType == SAMPLEBASED_AGGREGATEDINDELS):
-        # new way
         filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample, jobname)
         averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, AGGREGATEDINDELS, filename)
-
     #####################################################
 
     return readAsNumpyArray(averageFilePath)
@@ -142,27 +60,6 @@ def readAverage(sample,signatureName,analyseType,outputDir,jobname):
 #############################################################################
 
 
-#############################################################################
-def readAsPandasSeries(averageFilePath):
-    if os.path.exists(averageFilePath):
-        average = pd.read_table(averageFilePath, sep="\t", header=None, comment='#', dtype=float)
-        print(average.shape)
-        print('number of rows:%s' % average.shape[0])
-        print('number of columns:%s' % average.shape[1])
-        print(average.head())
-
-        #former
-        #average = average.loc[0,0:(windowSize-1)]
-
-        #In the analyses, I provide data for 0:4000 for windowSize of 2000
-        #However in the plots we are interested in [1000:3000]
-        average = average.loc[0, plusOrMinus:(plusOrMinus*3)]
-        # print('Read average.shape')
-        # print(average.shape)
-        return average
-    else:
-        return None
-#############################################################################
 
 
 #############################################################################
@@ -248,7 +145,7 @@ def readAverageForSimulations(sample,signature,analyseType,outputDir,jobname,num
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,outputDir,jobname, isFigureAugmentation,numberofSimulations):
+def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,outputDir,jobname, isFigureAugmentation,numberofSimulations,color):
 
     simulationsSignatureBasedMedians = None
     listofSimulationsSignatureBased = None
@@ -313,14 +210,11 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         # print('x.shape:%s' %x.shape)
         # plt.plot(x, average,'b-',label='test')
 
-        # color = signatureBasedColors[name]
-        # color = 'navy'
-        color = 'royalblue'
 
         listofLegends = []
 
         if (realAverage is not None):
-            original = plt.plot(x, realAverage, color='royalblue', label='Aggregated substitutions',linewidth=3)
+            original = plt.plot(x, realAverage, color=color, label='Aggregated substitutions',linewidth=3)
             listofLegends.append(original[0])
 
         if (simulationsSignatureBasedMedians is not None):
@@ -332,7 +226,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
         #put the number of snps
         text = '%d subs' %(numberofMutations)
-        plt.text(0.85,0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
+        plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
         #Put vertical line at x=0
         # plt.axvline(x=0, ymin=0, ymax=1, color='gray', linestyle='--')
@@ -366,7 +260,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         plt.xlabel(xlabel,fontsize=32,fontweight='semibold')
         plt.ylabel(ylabel,fontsize=32,fontweight='semibold')
 
-        filename = figurename.replace(' ', '') + '_AverageNucleosomeOccupancySignal.png'
+        filename = figurename.replace(' ', '') + '_NucleosomeOccupancy.png'
 
         #######################################################################
         # new code
@@ -467,7 +361,7 @@ def plotAggregatedIndelsWithSimulations(xlabel,ylabel,sample,signature,analyseTy
 
     # put the number of snps
     text = '%d indels' % (numberofIndels)
-    plt.text(0.85, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
+    plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -604,7 +498,7 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
 
     # put the number of snps
     text = '%d subs' % (sampleBasedNumberofMutations)
-    plt.text(0.85, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
+    plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -651,156 +545,6 @@ def plotAggregatedSubstitutionsWithSimulations(xlabel,ylabel,sample,signature,an
 
 #############################################################################
 ########### Plot AggregatedSubstitutions For Simulations ends ###############
-#############################################################################
-
-
-
-
-#############################################################################
-#For Debugging starts FEB 26, 2019
-#############################################################################
-def plotSignalsandCountsForDebug(sample,outputDir,jobname,numberofSimulations):
-    if sample is None:
-        filename = '%s_Signals_Counts.png' % (jobname)
-    else:
-        filename = '%s_%s_Signals_Counts.png' % (sample,jobname)
-
-    listofLegends = []
-
-    listofSimulationsAggregatedSubstitutions_Signal = None
-    listofSimulationsAggregatedSubstitutions_Count = None
-
-    stackedSimulations_Signal = None
-    stackedSimulations_Count = None
-
-    original_Signal = readSignalorCount(sample,outputDir,jobname,'AccumulatedSignalArray.txt',AGGREGATEDSUBSTITUTIONS)
-    original_Count = readSignalorCount(sample,outputDir,jobname, 'AccumulatedCountArray.txt',AGGREGATEDSUBSTITUTIONS)
-
-    if (numberofSimulations > 0):
-        listofSimulationsAggregatedSubstitutions_Signal = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedSignalArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
-        listofSimulationsAggregatedSubstitutions_Count = readSignalorCountSimulations(sample,outputDir,jobname,'AccumulatedCountArray.txt', AGGREGATEDSUBSTITUTIONS, numberofSimulations)
-
-        stackedSimulations_Signal = np.vstack(listofSimulationsAggregatedSubstitutions_Signal)
-        stackedSimulations_Count = np.vstack(listofSimulationsAggregatedSubstitutions_Count)
-
-        (rowsSignal, colsSignal) = stackedSimulations_Signal.shape
-        (rowsCount, colsCount) = stackedSimulations_Count.shape
-
-    fig = plt.figure(figsize=(30, 10), facecolor=None)
-    plt.style.use('ggplot')
-
-    # This code makes the background white.
-    ax = plt.gca()
-    ax.set_facecolor('white')
-
-    # This code puts the edge line
-    for edge_i in ['left', 'bottom','right', 'top']:
-        ax.spines[edge_i].set_edgecolor("black")
-        ax.spines[edge_i].set_linewidth(3)
-
-    x = np.arange(-plusOrMinus, plusOrMinus + 1, 1)
-
-    if (stackedSimulations_Signal  is not None):
-        for row in range(rowsSignal):
-            print('Simulation Signal %d' %(row))
-            simulation_signal_array = stackedSimulations_Signal[row,:]
-            simulation_signal = plt.plot(x, simulation_signal_array, 'blue', label='Simulations Signal',linewidth=3,zorder=5)
-        listofLegends.append(simulation_signal[0])
-
-    if (stackedSimulations_Count  is not None):
-        for row in range(rowsCount):
-            print('Simulation Count %d' %(row))
-            simulation_count_array = stackedSimulations_Count[row,:]
-            # simulation_count = plt.plot(x, simulation_count_array, 'green', label='Simulations Count', linestyle='--',linewidth=3,zorder=5)
-            simulation_count = plt.plot(x, simulation_count_array, 'green', label='Simulations Count',linewidth=3, zorder=5)
-        listofLegends.append(simulation_count[0])
-
-    if (original_Signal is not None):
-        aggSubs = plt.plot(x, original_Signal, 'black', label='Original Signal',linewidth=5,zorder=10)
-        listofLegends.append(aggSubs[0])
-
-    if (original_Count is not None):
-        aggSubs = plt.plot(x, original_Count, 'red', label='Original Count',linewidth=5,zorder=10)
-        listofLegends.append(aggSubs[0])
-
-
-    plt.legend(loc= 'upper left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
-
-    #Put vertical line at x=0
-    plt.axvline(x=0, color='gray', linestyle='--')
-
-    plt.tick_params(axis='both', which='major', labelsize=24)
-    plt.tick_params(axis='both', which='minor', labelsize=24)
-
-    # This code puts the tick marks
-    plt.tick_params(axis='both', which='major', labelsize=24,width=3,length=10)
-    plt.tick_params(axis='both', which='minor', labelsize=24,width=3,length=10)
-
-    # This code provides the x and y tick marks and labels
-    plt.xticks(np.arange(-1000, +1001, step=500), fontsize=30)
-
-    plt.xlim((-1000, 1000))
-    # This code provides some extra space
-    # plt.ylim((0.65,1.15))
-
-    if sample is not None:
-        title = '%s_%s' %(sample,jobname)
-    else:
-        title = jobname
-
-    plt.title(title, fontsize=40, fontweight='bold')
-
-    plt.xlabel('Single Point Substitutions', fontsize=30)
-    plt.ylabel('Signal & Count', fontsize=30)
-
-    figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
-
-    fig.savefig(figureFile)
-    plt.close(fig)
-#############################################################################
-#For Debugging ends FEB 26, 2019
-#############################################################################
-
-
-#############################################################################
-#For Debugging starts FEB 26, 2019
-#############################################################################
-def readSignalorCount(sample,outputDir,jobname,filename,analyseType):
-    if sample is not None:
-        filename = '%s_%s_%s' % (sample,jobname,filename)
-    else:
-        filename = '%s_%s' % (jobname,filename)
-
-    filepath = os.path.join(outputDir, jobname, DATA, NUCLEOSOMEOCCUPANCY, analyseType, filename)
-    return readAsNumpyArray(filepath)
-#############################################################################
-#For Debugging ends FEB 26, 2019
-#############################################################################
-
-
-#############################################################################
-#For Debugging starts FEB 26, 2019
-#############################################################################
-def readSignalorCountSimulations(sample,outputDir,jobname,filename,analyseType,numberofSimulations):
-    listofArrays = []
-
-    for i in range(1, numberofSimulations + 1):
-        simulationJobName = '%s_Sim%d' % (jobname, i)
-        if sample is None:
-            newfilename = '%s_%s' % (simulationJobName,filename)
-        else:
-            newfilename = '%s_%s_%s' % (sample,simulationJobName,filename)
-
-        filepath = os.path.join(outputDir, simulationJobName,DATA, NUCLEOSOMEOCCUPANCY, analyseType, newfilename)
-        print('For Debug %s' %(filepath))
-        signalorCountArray = readAsNumpyArray(filepath)
-        if (signalorCountArray is not None):
-            listofArrays.append(signalorCountArray)
-
-    print('len(listofArrays): %d' %len(listofArrays))
-    return listofArrays
-#############################################################################
-#For Debugging ends FEB 26, 2019
 #############################################################################
 
 
@@ -921,7 +665,6 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
 
     listofLegends = []
 
-
     if (realAggregatedSubstitutions is not None):
         aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=3,zorder=10)
         listofLegends.append(aggSubs[0])
@@ -943,19 +686,10 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
     plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
 
-    # plt.legend([AnyObject1(), AnyObject2(), AnyObject3(), AnyObject4()],
-    #            ['Aggregated substitutions',
-    #             'Average simulations aggregated substitutions',
-    #             'Aggregated indels',
-    #             'Average simulations aggregated indels'],
-    #            handler_map={AnyObject1: AnyObjectHandler1(), AnyObject2: AnyObjectHandler2(),
-    #                         AnyObject3: AnyObjectHandler3(), AnyObject4: AnyObjectHandler4()},
-    #            loc='lower left', shadow=False, edgecolor='white', facecolor='white',prop={'size': 24})
-
     # put the number of snps and indels
     if sample is not None:
         text = '%d subs, %d indels' %(numberofSPMs,numberofIndels)
-        plt.text(0.85, 0.95, text, ha='center', va='center', transform=ax.transAxes, fontsize=24)
+        plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -979,9 +713,6 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     # This code provides some extra space
     plt.ylim((0.65,1.15))
 
-    # if (isFigureAugmentation):
-    #     plt.title(jobname, fontsize=36)
-
     if (sample is not None):
         plt.title(sample, fontsize=40, fontweight='bold')
     else:
@@ -992,7 +723,6 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     plt.ylabel(ylabel, fontsize=30)
 
     ######################################################################################
-    #new code
     if (sample is None):
         figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,NUCLEOSOMEOCCUPANCY,filename)
     else:
@@ -1009,8 +739,6 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-
-
 
 
 #########################################################
@@ -1034,8 +762,6 @@ def checkValidness(analsesType,outputDir,jobname):
 #########################################################
 def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations):
 
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
-
     #######################################################################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, NUCLEOSOMEOCCUPANCY), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
@@ -1045,52 +771,16 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
     if (figureAugmentation=='augmentation'):
         isFigureAugmentation = True
 
-    #Signature Based starts
-    analyseType = SIGNATUREBASED
-    #get the signatures, they may have spaces before, after or in between
-
-    ##########################################################################################
     ############## Read necessary dictionaries starts ########################################
-    ##########################################################################################
+    sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
+    sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
 
-    ##########################################################################################
-    sample2NumberofIndelsDict = {}
-    sample2NumberofIndelsDictFilePath = os.path.join(outputDir,jobname,DATA,Samples2NumberofIndelsDictFilename)
+    sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
+    sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir, jobname)
 
-    if (os.path.exists(sample2NumberofIndelsDictFilePath)):
-        sample2NumberofIndelsDict = readDictionary(sample2NumberofIndelsDictFilePath)
-    ##########################################################################################
-
-    ##########################################################################################
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
-                                                                                                  Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
-
-    if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
-        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
-    ##########################################################################################
-
-    ##########################################################################################
-    samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
-    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
-                                                                                SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
-
-    if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
-        samplesWithAtLeast10KMutations2NumberofMutationsDict = readDictionary(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)
-    ##########################################################################################
-
-    ##########################################################################################
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
-                                                                                           SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
-
-    if (os.path.exists(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
-        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
-    ##########################################################################################
-
-    ##########################################################################################
+    subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
+    indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
     ############## Read necessary dictionaries ends ##########################################
-    ##########################################################################################
 
 
     # Plot All Together : Aggregated Substitutions and Aggregated Indels
@@ -1106,24 +796,20 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
 
         ##############################################################
         #Arrays are filled w.r.t. sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-            numberofEligibleSPMs = 0
+        samplesfromSubs  = sample2NumberofSubsDict.keys()
+        samplesfromIndels = sample2NumberofIndelsDict.keys()
+
+        for sample in (samplesfromSubs | samplesfromIndels):
+            numberofSubs = 0
             numberofIndels = 0
-            if sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-                # numberofEligibleSPMs = sum(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample].values())
-                # We must use the number of substitutions coming from samplesWithAtLeast10KMutations2NumberofMutationsDict
-                # Since we are using all substitutions regardless of their signature probabilities
-                numberofEligibleSPMs = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
+            if sample in sample2NumberofSubsDict:
+                numberofSubs = sample2NumberofSubsDict[sample]
             if sample in sample2NumberofIndelsDict:
                 numberofIndels = sample2NumberofIndelsDict[sample]
 
             plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations('Interval around variant (bp)','Average nucleosome signal',
-                                                                        sample,outputDir,jobname, isFigureAugmentation,
-                                                                        numberofEligibleSPMs, numberofIndels,numberofSimulations)
+                                                                        sample,outputDir,jobname, isFigureAugmentation,numberofSubs, numberofIndels,numberofSimulations)
 
-            #For debug FEB 28, 2019
-            plotSignalsandCountsForDebug(sample,outputDir,jobname, numberofSimulations)
         ##############################################################
 
     ######################################################################################
@@ -1133,13 +819,15 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
                                                     None, None, AGGREGATEDSUBSTITUTIONS,
                                                     outputDir,jobname,isFigureAugmentation,sampleBasedNumberofMutations,numberofSimulations)
 
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        for sample in sample2SubsSignature2NumberofMutationsDict:
         # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-            sampleBasedNumberofMutations = samplesWithAtLeast10KMutations2NumberofMutationsDict[sample]
+            sampleBasedNumberofMutations = sample2NumberofSubsDict[sample]
             plotAggregatedSubstitutionsWithSimulations('Interval around single point mutation (bp)', 'Average nucleosome signal',
                                                         sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,
                                                        outputDir,jobname, isFigureAugmentation, sampleBasedNumberofMutations,numberofSimulations)
     ######################################################################################
+
+
 
     ######################################################################################
     elif (checkValidness(AGGREGATEDINDELS,outputDir,jobname)):
@@ -1148,7 +836,7 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
                                             None, None,
                                             AGGREGATEDINDELS, outputDir, jobname, isFigureAugmentation,numberofIndels,numberofSimulations)
 
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+        for sample in sample2SubsSignature2NumberofMutationsDict:
         # for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
             if sample in sample2NumberofIndelsDict:
                 numberofIndels = sample2NumberofIndelsDict[sample]
@@ -1158,26 +846,39 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
     ######################################################################################
 
 
-
+    #############################################################################################################################################
     #Plot Signature Based
-    #Plot ncomms11383 Fig3b signature based average nucleosome occupancy figures
+    #ncomms11383 Fig3b signature based average nucleosome occupancy figures
     if checkValidness(SIGNATUREBASED,outputDir,jobname):
-        #SignatureBased
-        for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-            signatureBasedNumberofMutations = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature]
-            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,signature,signatureBasedNumberofMutations,
+        #Subs Signatures
+        for subsSignature in subsSignature2NumberofMutationsDict:
+            subsSignatureBasedNumberofMutations = subsSignature2NumberofMutationsDict[subsSignature]
+            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,subsSignature,subsSignatureBasedNumberofMutations,
                                                                                   'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                              outputDir, jobname,isFigureAugmentation,numberofSimulations)
+                                                                              outputDir, jobname,isFigureAugmentation,numberofSimulations,'royalblue')
 
-        # SampleBased SignatureBased Nucleosome Occupancy Figures
-        for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-            for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
-                sampleBasedSignatureBasedNumberofMutations = sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature]
-                plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,sampleBasedSignatureBasedNumberofMutations,
+
+        #Indels Signatures
+        for indelSignature in indelsSignature2NumberofMutationsDict:
+            indelsSignatureBasedNumberofMutations = indelsSignature2NumberofMutationsDict[indelSignature]
+            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None,indelSignature,indelsSignatureBasedNumberofMutations,'Interval around variant (bp)','Average nucleosome signal',
+                                                                              outputDir, jobname,isFigureAugmentation,numberofSimulations,'darkgreen')
+
+
+        # SampleBased Subs SignatureBased Nucleosome Occupancy Figures
+        for sample in sample2SubsSignature2NumberofMutationsDict:
+            for subsSignature in sample2SubsSignature2NumberofMutationsDict[sample]:
+                sampleBasedSignatureBasedNumberofMutations = sample2SubsSignature2NumberofMutationsDict[sample][subsSignature]
+                plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,subsSignature,sampleBasedSignatureBasedNumberofMutations,
                                                                                       'Interval around single point mutation (bp)','Average nucleosome signal',
-                                                                                  outputDir, jobname, isFigureAugmentation,numberofSimulations)
+                                                                                  outputDir, jobname, isFigureAugmentation,numberofSimulations,'royalblue')
 
-    #########################################################
 
-    #For debugging FEB 26, 2019
-    plotSignalsandCountsForDebug(None,outputDir,jobname,numberofSimulations)
+        # SampleBased Indels SignatureBased Nucleosome Occupancy Figures
+        for sample in sample2IndelsSignature2NumberofMutationsDict:
+            for indelsSignature in sample2IndelsSignature2NumberofMutationsDict[sample]:
+                sampleBasedSignatureBasedNumberofMutations = sample2IndelsSignature2NumberofMutationsDict[sample][indelsSignature]
+                plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,indelsSignature,sampleBasedSignatureBasedNumberofMutations,
+                                                                                      'Interval around variant (bp)','Average nucleosome signal',
+                                                                                  outputDir, jobname, isFigureAugmentation,numberofSimulations,'darkgreen')
+    #############################################################################################################################################

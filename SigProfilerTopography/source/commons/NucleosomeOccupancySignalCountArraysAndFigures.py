@@ -184,13 +184,8 @@ def  writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList
 
     #############################  Save as npy starts ################################
     signalArrayFilename = '%s_signal_%s' %(chrLong,nucleosomeFilenameWoExtension)
-    # countArrayFilename = '%s_count_%s' % (chrLong, nucleosomeFilenameWoExtension)
-
     chrBasedSignalNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
-    # chrBasedCountNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,countArrayFilename)
-
     np.save(chrBasedSignalNucleosmeFile, signalArray)
-    # np.save(chrBasedCountNucleosmeFile, countArray)
     #############################  Save as npy ends ##################################
 
     print('writeChrBasedNucleosome:%s for %s ends' % (nucleosomeFilename, chrLong))

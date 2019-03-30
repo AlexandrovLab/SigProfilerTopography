@@ -7,8 +7,6 @@
 # nucleosome occupancy, replication time, strand bias and processivity.
 # Copyright (C) 2018 Burcak Otlu
 
-
-
 #############################################################
 # This python code generates normalized mutation density data for different analyses types which are
 # Using all mutations (all chromosomes, all samples, signatures) which leads to Aggregated Substitutions
@@ -43,42 +41,92 @@
 # We consider samples with at least 3000 mutations at total in all deciles.
 #############################################################
 
-import os
-import sys
 import twobitreader
-
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('ReplicationTimeAnalysis.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 
-#Global variables
-THRESHOLD_NUMBER_OF_MUTATIONS = 3000
+##################################################################
+def fillReplicationTimeNPArrays(inputList):
+    chrLong = inputList[0]
+    chromSize = inputList[1]
+    decile_df_list = inputList[2]
+    replicationTimeFilename_wo_extension = inputList[3]
+
+    chrBasedReplicationTimeDataNPArray = fillChrBasedReplicationTimeNPArrayNewVersion(chrLong, chromSize,decile_df_list)
+    replicationTimeArrayFilename = '%s_%s' % (chrLong, replicationTimeFilename_wo_extension)
+    chrBasedReplicationTimeFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,replicationTimeFilename_wo_extension, replicationTimeArrayFilename)
+    np.save(chrBasedReplicationTimeFile, chrBasedReplicationTimeDataNPArray)
+##################################################################
 
 
 ##################################################################
-def process(wavelet_unprocessed_df):
-    #Read the file and generate chr start end signal wavelet_smoothed_signal
-    #Then sort the data w.r.t. signal in descending order
-    #Divide the data into 10 equal deciles
-    #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
+def writeNumberofAttributableBases(decile_df_list,replicationTimeFilename_wo_extension):
+    decileIndex2NumberofAttributableBasesDict = {}
+    for i,decile_df in enumerate(decile_df_list,1):
+        numofAttBases = decile_df[NUMOFBASES].sum()
+        decileIndex2NumberofAttributableBasesDict[i] = numofAttBases
 
-    columns = ['chr', 'start', 'end','signal']
+    filepath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,replicationTimeFilename_wo_extension,DecileIndex2NumfAttributableBasesDictFilename)
+
+    print('March 22, 2019 starts')
+    print('decileIndex2NumberofAttributableBasesDict')
+    print(decileIndex2NumberofAttributableBasesDict)
+    print('filepath')
+    print(filepath)
+    print('March 22, 2019 ends')
+
+    writeDictionaryUsingPickle(decileIndex2NumberofAttributableBasesDict,filepath)
+##################################################################
+
+##################################################################
+#March 21, 2019 starts
+def readReplicationTimeDataAndWriteChrBasedReplicationTimeNPArrays(genome,chromNamesList,chromSizesDict,replicationTimeFilename):
+
+    replicationTimeFilename_wo_extension = os.path.basename(replicationTimeFilename)[0:-4]
+    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, replicationTimeFilename_wo_extension),exist_ok=True)
+
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+
+    #Fist decile_df in decile_df_list contains the intervals that are replicated the earliest.
+    #Last decile_df in decile_df_list contains the intervals that are replicated the latest.
+    #Please note that each decile_df contains intervasl from all chroms (mixed chroms)
+    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,pool,replicationTimeFilename)
+    writeNumberofAttributableBases(decile_df_list,replicationTimeFilename_wo_extension)
+
+    #Get this chrLong of each decile
+    #The first decile is the earliest one with index 1
+    #The last decile is the latest one with index 10
+    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
+
+    poolInputList = []
+
+    for chrLong in chromNamesList:
+        inputList = []
+        chromSize = chromSizesDict[chrLong]
+        inputList.append(chrLong)
+        inputList.append(chromSize)
+        inputList.append(decile_df_list)
+        inputList.append(replicationTimeFilename_wo_extension)
+        poolInputList.append(inputList)
+
+    pool.map(fillReplicationTimeNPArrays,poolInputList)
+
+    ################################
+    pool.close()
+    pool.join()
+    ################################
+
+#March 21, 2019 ends
+##################################################################
+
+##################################################################
+def generateIntervalVersion(replication_time_wavelet_signal_unprocessed_df):
+    #Read the file and generate chr start end signal wavelet_smoothed_signal
+    columns = [CHROM, START, END,SIGNAL]
 
     #Create an empty dataframe
-    wavelet_processed_df = pd.DataFrame(columns=columns)
-
-    # print('############### empty wavelet_processed_df starts #################')
-    # print(wavelet_processed_df.shape)
-    # print(wavelet_processed_df.head())
-    # print('############### empty wavelet_processed_df ends #################')
+    replication_time_wavelet_signal_interval_version_df = pd.DataFrame(columns=columns)
 
     #dummy initialization
     i = 0
@@ -102,8 +150,7 @@ def process(wavelet_unprocessed_df):
     # 57.4266
     # 57.4176
 
-
-    for row in wavelet_unprocessed_df.itertuples(index=True, name='Pandas'):
+    for row in replication_time_wavelet_signal_unprocessed_df.itertuples(index=True, name='Pandas'):
         # row's type is <class 'pandas.core.frame.Pandas'>
         # row[0] is the index
         # row[1] is fixedStep chrom=chr1 start=24500 step=1000 span=1000 or 57.4679
@@ -117,86 +164,82 @@ def process(wavelet_unprocessed_df):
             chr = chrom
             start = start
             end = start + step-1
-            dict = {'chr':chr, 'start':start, 'end':end, 'signal':signal}
+            dict = {CHROM:chr, START:start, END:end, SIGNAL:signal}
             rows_list.append(dict)
             start += step
 
     # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
-
     #rows_list contain the list of row where each row is a dictionary
-    wavelet_processed_df = pd.DataFrame(rows_list, columns=['chr','start','end','signal'])
 
-    # print('debug starts')
-    # print('############### wavelet_processed_df is filled starts #################')
-    # print(wavelet_processed_df.shape)
-    # print(wavelet_processed_df.head())
-    # print('############### wavelet_processed_df is filled ends #################')
-    # print('debug ends')
+    replication_time_wavelet_signal_interval_version_df = pd.DataFrame(rows_list, columns=[CHROM,START,END,SIGNAL])
 
-    return wavelet_processed_df
+    # print('replication_time_wavelet_signal_interval_version_df.dtypes')
+    # print(replication_time_wavelet_signal_interval_version_df.dtypes)
+
+    replication_time_wavelet_signal_interval_version_df[CHROM] = replication_time_wavelet_signal_interval_version_df[CHROM].astype(str)
+    replication_time_wavelet_signal_interval_version_df[START] = replication_time_wavelet_signal_interval_version_df[START].astype(np.int32)
+    replication_time_wavelet_signal_interval_version_df[END] = replication_time_wavelet_signal_interval_version_df[END].astype(np.int32)
+    replication_time_wavelet_signal_interval_version_df[SIGNAL] = replication_time_wavelet_signal_interval_version_df[SIGNAL].astype(np.float32)
+
+    # print('replication_time_wavelet_signal_interval_version_df.dtypes')
+    # print(replication_time_wavelet_signal_interval_version_df.dtypes)
+
+    return replication_time_wavelet_signal_interval_version_df
 ##################################################################
 
 
-
-
 ##################################################################
-def readRepliSeqTimeData(pool,repliseqDataFilename,genome):
+def readRepliSeqTimeData(genome,pool,repliseqDataFilename):
     ###################################################################
-    ############### Read MCF-7 RepliSeq Time data starts ##############
+    ############### Read RepliSeq Time data starts ####################
     ###################################################################
     #Read the wavelet signal
-    wavelet_unprocessed_df = readWaveletSmoothedRepliSeqSignal(repliseqDataFilename)
+    replication_time_wavelet_signal_unprocessed_df = readWaveletSmoothedSignalReplicationTime(repliseqDataFilename)
 
     #Process the wavelet signal, convert into interval version
-    # here column names are added columns = ['chr', 'start', 'end','signal']
-    wavelet_processed_df = process(wavelet_unprocessed_df)
-    # print('wavelet_processed_df.shape processed interval version')
-    # print(wavelet_processed_df.shape)
+    # here column names are added
+    replication_time_interval_version_df = generateIntervalVersion(replication_time_wavelet_signal_unprocessed_df)
 
-    chrNamesInReplicationTimeDataArray = wavelet_processed_df['chr'].unique()
-
+    chrNamesInReplicationTimeDataArray = replication_time_interval_version_df[CHROM].unique()
+    print('Chromosome names in replication time signal data: %s' %(chrNamesInReplicationTimeDataArray))
 
     #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(pool,wavelet_processed_df,genome)
+    wavelet_processed_augmented_df = augment(genome,pool,replication_time_interval_version_df)
 
-    #Sort the wavelet processed df in descending order w.r.t. signal column
-    # print('############ before sort wavelet_processed_augmented_df ###################')
-    # print(wavelet_processed_augmented_df.head())
-    # print('############ before sort wavelet_processed_augmented_df ###################')
+    #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
 
     #Sort in descending order
     #Higher the replication time signal earlier the replication is
-    wavelet_processed_augmented_df.sort_values('signal', ascending=False, inplace=True)
+    wavelet_processed_augmented_df.sort_values(SIGNAL, ascending=False, inplace=True)
 
     # print('############ after sort wavelet_processed_augmented_df ###################')
     # print(wavelet_processed_augmented_df.head())
     # print('############ after sort wavelet_processed_augmented_df ###################')
 
     #Split wavelet_processed_augmented_df into 10 deciles
-    deciles = np.array_split(wavelet_processed_augmented_df,10)
+    deciles_df_list = np.array_split(wavelet_processed_augmented_df,10)
     # print('Number of decile:%d' %len(deciles))
     #deciles is a list and each decile is a dataframe <class 'pandas.core.frame.DataFrame'>
     #The first decile is the earliest one
     #The last decile is the latest one
-    # print('type(deciles):%s' %type(deciles))
-    totalNumberofIntervals = 0
-    for decile in deciles:
-        # print('######################')
-        # print('type(decile)"%s' %type(decile))
-        # print('Number of elements in each decile: %d' %len(decile))
-        totalNumberofIntervals += len(decile)
-        # print(decile.head())
-        #print(decile.iloc[0])
-        #print(decile.iloc[len(decile) - 300000])
-        #print(decile.iloc[len(decile) - 200000])
-        #print(decile.iloc[len(decile) - 100000])
-        #print(decile.iloc[len(decile)-1])
-        # print('######################')
+    # print('type(deciles_df_list):%s' %type(deciles_df_list))
+    # type(deciles_df_list) --> <class 'list'>
 
-    print('totalNumberofIntervals in all deciles : %d' %totalNumberofIntervals)
-    return chrNamesInReplicationTimeDataArray, deciles
+    # ############################################################
+    # #For information
+    # totalNumberofIntervals = 0
+    # for decileIndex, decile_df in enumerate(deciles_df_list,1):
+    #     # print('decileIndex: %d' %decileIndex)
+    #     # print('type(decile_df)')
+    #     # print(type(decile_df))
+    #     # type(decile_df) --> <class 'pandas.core.frame.DataFrame'>
+    #     totalNumberofIntervals += len(decile_df)
+    # print('totalNumberofIntervals in all deciles : %d' %totalNumberofIntervals)
+    # ############################################################
+
+    return chrNamesInReplicationTimeDataArray, deciles_df_list
     ###################################################################
-    ############### Read MCF-7 RepliSeq Time data ends ################
+    ############### Read RepliSeq Time data ends ######################
     ###################################################################
 
 ##################################################################
@@ -204,12 +247,12 @@ def readRepliSeqTimeData(pool,repliseqDataFilename,genome):
 
 
 ##################################################################
-def getNumberofAttributableBases(wavelet_row, genome):
+def getNumberofAttributableBases(wavelet_row, chrBasedGenome):
     start =wavelet_row[1]
     end = wavelet_row[2]
     #In my code ends are inclusive
     #twobitreader uses ends exlusive
-    seq = genome.get_slice(start, end+1)
+    seq = chrBasedGenome.get_slice(start, end+1)
     numofAttributableBases = seq.count('A') + seq.count('T') + seq.count('G') + seq.count('C') + seq.count('a') + seq.count('t') + seq.count('g') + seq.count('c')
     # print('######### debug starts ##############')
     # print(wavelet_row)
@@ -223,8 +266,8 @@ def getNumberofAttributableBases(wavelet_row, genome):
 def addNumofAttributableBasesColumn(inputList):
     chrLong = inputList[0]
     chrBased_wavelet_processed_df_group =inputList[1]
-    genome = inputList[2]
-    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, genome = genome[chrLong], axis= 1)
+    wholeGenome = inputList[2]
+    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, chrBasedGenome = wholeGenome[chrLong], axis= 1)
 
     # print('######## debug numberofAttributableBases starts ########')
     # print('for %s starts' %chrLong)
@@ -242,7 +285,7 @@ def addNumofAttributableBasesColumn(inputList):
     # print('debug ends')
 
     #Add the resulting_df as a new column to chrBased_wavelet_processed_df_group
-    chrBased_wavelet_processed_df_group['numofBases'] = resulting_df
+    chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
 
     # print('debug starts')
     # print(chrBased_wavelet_processed_df_group.columns.values.tolist())
@@ -256,83 +299,17 @@ def addNumofAttributableBasesColumn(inputList):
 
 
 ##################################################################
-#Works only for AGGREGATEDSUBSTITUTIONS
-#This can also work for AGGREGATEDINDELS
-def searchMutation(mutation_row,chrBasedDecileIndexArray,decileIndex2NumberofMutationsDict):
-    # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
-    # Please notice that for indels we consider the point of indel start, since there can be indels with start and end very far away from each other.
-    start= mutation_row[START]
-    end= mutation_row[START]+1
-
-    slicedArray = chrBasedDecileIndexArray[start:end]
-
-    # np.nonzero returns the indices of the elements that are non-zero.
-    # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
-    # np.nditer efficient multi-dimensional iterator object to iterate over arrays.
-    uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-    if (uniqueIndexesArray.size>0):
-        for decileIndex in np.nditer(uniqueIndexesArray):
-            # type(decileIndex) is numpy.ndarray
-            decileIndexNum = int(decileIndex)
-            if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                decileIndex2NumberofMutationsDict[decileIndexNum] +=1
-            else:
-                decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-##################################################################
-
-
-##################################################################
-#Works for AGGREGATEDSUBSTITUTIONS and SIGNATURES
-def searchMutationForSPMs(mutation_row,signatures,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict):
-    # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
-    start= mutation_row[START]
-    end= mutation_row[END]+1
-
-    slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
-
-    # np.nonzero returns the indices of the elements that are non-zero.
-    # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
-    # np.nditer efficient multi-dimensional iterator object to iterate over arrays.
-    uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-    if (uniqueIndexesArray.size>0):
-        for decileIndex in np.nditer(uniqueIndexesArray):
-            # type(decileIndex) is numpy.ndarray
-            decileIndexNum = int(decileIndex)
-
-            ################### AGGREGATEDSUBSTITUTIONS starts #####################
-            decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS]
-            if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                decileIndex2NumberofMutationsDict[decileIndexNum] +=1
-            else:
-                decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-            ################### AGGREGATEDSUBSTITUTIONS ends #######################
-
-            ########################### Signatures start ###########################
-            for signature in signatures:
-                if mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
-                    decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[signature]
-                    if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                        decileIndex2NumberofMutationsDict[decileIndexNum] += 1
-                    else:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-            ########################### Signatures end #############################
-##################################################################
-
-
-
-##################################################################
-#Works for AGGREGATEDSUBSTITUTIONS and SIGNATURES
-def searchMutationForSPMsWithExtraSampleBased(
+#Search one substitutuion for AGGREGATEDSUBSTITUTIONS and SUBS SIGNATURES
+def searchSub(
         mutation_row,
-        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+        sample2NumberofSubsDict,
+        subsSignature2NumberofMutationsDict,
+        sample2SubsSignature2NumberofMutationsDict,
         chrBasedReplicationTimeDataArrayWithDecileIndex,
         type2DecileIndex2NumberofMutationsDict,
         sample2Type2DecileIndex2NumberofMutationsDict):
 
-    # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row['End']
+    # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
     start= mutation_row[START]
     end= mutation_row[END]+1
 
@@ -352,41 +329,39 @@ def searchMutationForSPMsWithExtraSampleBased(
             decileIndexNum = int(decileIndex)
 
             ################### AGGREGATEDSUBSTITUTIONS starts #####################
-            decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS]
-            if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                decileIndex2NumberofMutationsDict[decileIndexNum] +=1
+            if decileIndexNum in type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS]:
+                type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS][decileIndexNum] +=1
             else:
-                decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS][decileIndexNum] = 1
             ################### AGGREGATEDSUBSTITUTIONS ends #######################
 
             ########################### Signatures start ###########################
-            for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-                if mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
-                    decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[signature]
-                    if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                        decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+            for signature in subsSignature2NumberofMutationsDict:
+                if mutation_row[signature] >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+                    if decileIndexNum in type2DecileIndex2NumberofMutationsDict[signature]:
+                        type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] += 1
                     else:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                        type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] = 1
             ########################### Signatures end #############################
 
             ############################# Sample Based starts ###########################
-            if sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-
-                ############## Sample Based Aggregated Substitutions starts ############
-                for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
-                    if mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
-                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
-                        else:
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] = 1
-                ############## Sample Based Signatures ends ############################
-
+            for sample in sample2NumberofSubsDict:
                 ############## Sample Based Aggregated Substitutions starts ############
                 if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDSUBSTITUTIONS]:
                     sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDSUBSTITUTIONS][decileIndexNum] += 1
                 else:
                     sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDSUBSTITUTIONS][decileIndexNum] = 1
                 ############## Sample Based Aggregated Substitutions ends ##############
+
+            for sample in sample2SubsSignature2NumberofMutationsDict:
+                for signature in sample2SubsSignature2NumberofMutationsDict[sample]:
+                    if mutation_row[signature] >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
+                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
+                        else:
+                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] = 1
+                ############## Sample Based Signatures ends ############################
+
             ############################# Sample Based ends ############################
 
 
@@ -395,51 +370,14 @@ def searchMutationForSPMsWithExtraSampleBased(
 
 
 ##################################################################
-def searchMutationForIndels(indel_row,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict):
-    # For indels start and end are can be different from each other.
-    start= indel_row[START]
-    end= indel_row[START]+1
-
-    slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
-
-    # np.nonzero returns the indices of the elements that are non-zero.
-    # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
-    # np.nditer efficient multi-dimensional iterator object to iterate over arrays.
-    uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-    if (uniqueIndexesArray.size>0):
-        for decileIndex in np.nditer(uniqueIndexesArray):
-            # type(decileIndex) is numpy.ndarray
-            decileIndexNum = int(decileIndex)
-
-            ################### AGGREGATEDSUBSTITUTIONS starts #####################
-            decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS]
-            if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                decileIndex2NumberofMutationsDict[decileIndexNum] +=1
-            else:
-                decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-            ################### AGGREGATEDSUBSTITUTIONS ends #######################
-
-            ########################### Signatures start ###########################
-            if indel_row[LENGTH] >= 3:
-                decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
-                if decileIndexNum in  decileIndex2NumberofMutationsDict:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] += 1
-                else:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-
-            else:
-                decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[REPEAT]
-                if decileIndexNum in  decileIndex2NumberofMutationsDict:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] += 1
-                else:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] = 1
-            ########################### Signatures end #############################
-##################################################################
-
-
-##################################################################
-def searchMutationForIndelsWithExtraSampleBased(indel_row,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBasedReplicationTimeDataArrayWithDecileIndex,type2DecileIndex2NumberofMutationsDict,sample2Type2DecileIndex2NumberofMutationsDict):
+def searchIndel(
+        indel_row,
+        sample2NumberofIndelsDict,
+        indelsSignature2NumberofMutationsDict,
+        sample2IndelsSignature2NumberofMutationsDict,
+        chrBasedReplicationTimeDataArrayWithDecileIndex,
+        type2DecileIndex2NumberofMutationsDict,
+        sample2Type2DecileIndex2NumberofMutationsDict):
     # For indels start and end are can be different from each other.
     start= indel_row[START]
     end= indel_row[START]+1
@@ -460,102 +398,90 @@ def searchMutationForIndelsWithExtraSampleBased(indel_row,sample2SignaturesWithA
             decileIndexNum = int(decileIndex)
 
             ################### AGGREGATEDINDELS starts #####################
-            decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS]
-            if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                decileIndex2NumberofMutationsDict[decileIndexNum] +=1
+            if decileIndexNum in type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS]:
+                type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS][decileIndexNum] +=1
             else:
-                decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS][decileIndexNum] = 1
             ################### AGGREGATEDINDELS ends #######################
+
+
+            ########################### Signatures start ###########################
+            for indelsSignature in indelsSignature2NumberofMutationsDict:
+                if indel_row[indelsSignature] >= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+                    if decileIndexNum in type2DecileIndex2NumberofMutationsDict[indelsSignature]:
+                        type2DecileIndex2NumberofMutationsDict[indelsSignature][decileIndexNum] += 1
+                    else:
+                        type2DecileIndex2NumberofMutationsDict[indelsSignature][decileIndexNum] = 1
+            ########################### Signatures end #############################
+
 
             ########################### INDELS start ###########################
             if indel_row[LENGTH] >= 3:
-                decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
-                if decileIndexNum in  decileIndex2NumberofMutationsDict:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+                if decileIndexNum in  type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]:
+                    type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY][decileIndexNum] += 1
                 else:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                    type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY][decileIndexNum] = 1
 
             else:
-                decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[REPEAT]
-                if decileIndexNum in  decileIndex2NumberofMutationsDict:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+                if decileIndexNum in  type2DecileIndex2NumberofMutationsDict[REPEAT]:
+                    type2DecileIndex2NumberofMutationsDict[REPEAT][decileIndexNum] += 1
                 else:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                    type2DecileIndex2NumberofMutationsDict[REPEAT][decileIndexNum] = 1
             ########################### INDELS end #############################
 
             ################################ Sample based starts #################################
-            if sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-
-                type2DecileIndex2NumberofMutationsDict = sample2Type2DecileIndex2NumberofMutationsDict[sample]
+            for sample in sample2NumberofIndelsDict:
 
                 ################### AGGREGATEDINDELS starts #####################
-                decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS]
-                if decileIndexNum in decileIndex2NumberofMutationsDict.keys():
-                    decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+                if decileIndexNum in  sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDINDELS]:
+                    sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDINDELS][decileIndexNum] += 1
                 else:
-                    decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                    sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDINDELS][decileIndexNum] = 1
                 ################### AGGREGATEDINDELS ends #######################
 
                 ########################### INDELS start ###########################
                 if indel_row[LENGTH] >= 3:
-                    decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]
-                    if decileIndexNum in decileIndex2NumberofMutationsDict:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+                    if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY]:
+                        sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] += 1
                     else:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                        sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] = 1
 
                 else:
-                    decileIndex2NumberofMutationsDict = type2DecileIndex2NumberofMutationsDict[REPEAT]
-                    if decileIndexNum in decileIndex2NumberofMutationsDict:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] += 1
+                    if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT]:
+                        sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] += 1
                     else:
-                        decileIndex2NumberofMutationsDict[decileIndexNum] = 1
+                        sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] = 1
                 ########################### INDELS end #############################
+
+            for sample in sample2IndelsSignature2NumberofMutationsDict:
+                for indelsSignature in sample2IndelsSignature2NumberofMutationsDict[sample]:
+                    if indel_row[indelsSignature] >= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][indelsSignature]:
+                            sample2Type2DecileIndex2NumberofMutationsDict[sample][indelsSignature][decileIndexNum] += 1
+                        else:
+                            sample2Type2DecileIndex2NumberofMutationsDict[sample][indelsSignature][decileIndexNum] = 1
             ################################ Sample based ends ###################################
 
 ##################################################################
 
 
-##################################################################
-# Works only for AGGREGATEDSUBSTITUTIONS
-# Also can work for AGGREGATEDINDELS
-def searchMutations(chrBased_mutation_df_split,chrBased_decileindex_array):
-    # We will fill decileIndex2NumberofMutationsDict and return it
-    decileIndex2NumberofMutationsDict= {}
-    chrBased_mutation_df_split.apply(searchMutation,chrBasedDecileIndexArray= chrBased_decileindex_array, decileIndex2NumberofMutationsDict=decileIndex2NumberofMutationsDict,axis=1)
-    return decileIndex2NumberofMutationsDict
-##################################################################
 
 ##################################################################
-#Case1 SPMs (AggregatedSubstitutions and Signatures)
-def searchMutationsForSPMs(signatures,chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
+#Case1 SPMs (AggregatedSubstitutions and Subs Signatures)
+#Here Type stands for AggregatedSubstitutions or SubsSignature
+def searchForSubs(
+        sample2NumberofSubsDict,
+        subsSignature2NumberofMutationsDict,
+        sample2SubsSignature2NumberofMutationsDict,
+        chrBased_subs_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
 
     ############################################################
     # We will fill type2DecileIndex2NumberofMutationsDict for AGGREGATEDSUBSTITUTIONS and for each signature and return it
     type2DecileIndex2NumberofMutationsDict= {}
 
-    # Initialize for AGGREGATEDSUBSTITUTIONS and signatures
+    # Initialize for AGGREGATEDSUBSTITUTIONS and subs signatures
     type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS] = {}
-    for signature in signatures:
-        type2DecileIndex2NumberofMutationsDict[signature] = {}
-    ############################################################
-
-    chrBased_mutation_df_split.apply(searchMutationForSPMs,signatures=signatures,chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex, type2DecileIndex2NumberofMutationsDict=type2DecileIndex2NumberofMutationsDict,axis=1)
-    return type2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-#Case1 SPMs (AggregatedSubstitutions and Signatures)
-def searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
-
-    ############################################################
-    # We will fill type2DecileIndex2NumberofMutationsDict for AGGREGATEDSUBSTITUTIONS and for each signature and return it
-    type2DecileIndex2NumberofMutationsDict= {}
-
-    # Initialize for AGGREGATEDSUBSTITUTIONS and signatures
-    type2DecileIndex2NumberofMutationsDict[AGGREGATEDSUBSTITUTIONS] = {}
-    for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    for signature in subsSignature2NumberofMutationsDict:
         type2DecileIndex2NumberofMutationsDict[signature] = {}
     ############################################################
 
@@ -563,21 +489,23 @@ def searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleM
     #Initialize sample2Type2DecileIndex2NumberofMutationsDict
     sample2Type2DecileIndex2NumberofMutationsDict = {}
 
-    for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    for sample in  sample2NumberofSubsDict:
         sample2Type2DecileIndex2NumberofMutationsDict[sample] = {}
-
         sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDSUBSTITUTIONS] = {}
-        for signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]:
+
+    for sample in sample2SubsSignature2NumberofMutationsDict:
+        for signature in sample2SubsSignature2NumberofMutationsDict[sample]:
             sample2Type2DecileIndex2NumberofMutationsDict[sample][signature] = {}
     ############################################################
 
-    chrBased_mutation_df_split.apply(searchMutationForSPMsWithExtraSampleBased,
-                                     signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict= sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                     chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                     type2DecileIndex2NumberofMutationsDict=type2DecileIndex2NumberofMutationsDict,
-                                     sample2Type2DecileIndex2NumberofMutationsDict=sample2Type2DecileIndex2NumberofMutationsDict,
-                                     axis=1)
+    chrBased_subs_df_split.apply(searchSub,
+                                 sample2NumberofSubsDict = sample2NumberofSubsDict,
+                                 subsSignature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
+                                 sample2SubsSignature2NumberofMutationsDict= sample2SubsSignature2NumberofMutationsDict,
+                                 chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                 type2DecileIndex2NumberofMutationsDict=type2DecileIndex2NumberofMutationsDict,
+                                 sample2Type2DecileIndex2NumberofMutationsDict=sample2Type2DecileIndex2NumberofMutationsDict,
+                                 axis=1)
 
     return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
@@ -588,55 +516,47 @@ def searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleM
 ##################################################################
 
 
-##################################################################
-#Case3 Indels (AggregatedIndels and Indel Types)
-def searchMutationsForIndels(chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
 
-    ############################################################
-    # We will fill type2DecileIndex2NumberofMutationsDict for AGGREGATEDSUBSTITUTIONS and for each signature and return it
-    type2DecileIndex2NumberofMutationsDict= {}
-
-    # Initialize for AGGREGATEDINDELS and indels tpes
-    type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS] = {}
-    type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
-    type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
-    ############################################################
-
-    chrBased_indels_df_split.apply(searchMutationForIndels,chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex, type2DecileIndex2NumberofMutationsDict=type2DecileIndex2NumberofMutationsDict,axis=1)
-    return type2DecileIndex2NumberofMutationsDict
-##################################################################
 
 
 
 ##################################################################
 #Case3 Indels (AggregatedIndels and Indel Types)
-def searchMutationsForIndelsWithExtraSampleBased(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
+def searchForIndels(sample2NumberofIndelsDict,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex):
 
-    ############################################################
-    # We will fill type2DecileIndex2NumberofMutationsDict for AGGREGATEDSUBSTITUTIONS and for each signature and return it
-    type2DecileIndex2NumberofMutationsDict= {}
-
-    # Initialize for AGGREGATEDINDELS and indels tpes
-    type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS] = {}
-    type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
-    type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
-    ############################################################
-
-
-    ############################################################
-    #TODO initialize sample2Type2DecileIndex2NumberofMutationsDict
+    type2DecileIndex2NumberofMutationsDict = {}
     sample2Type2DecileIndex2NumberofMutationsDict = {}
-    for sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        sample2Type2DecileIndex2NumberofMutationsDict[sample] = {}
 
+    ############################################################
+    # Initialize for AGGREGATEDINDELS and indels types
+    type2DecileIndex2NumberofMutationsDict[AGGREGATEDINDELS] = {}
+    type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
+    type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
+    ############################################################
+
+    ############################################################
+    for indelsSignature in indelsSignature2NumberofMutationsDict:
+        type2DecileIndex2NumberofMutationsDict[indelsSignature] = {}
+    ############################################################
+
+    ############################################################
+    for sample in sample2NumberofIndelsDict:
+        sample2Type2DecileIndex2NumberofMutationsDict[sample] = {}
         sample2Type2DecileIndex2NumberofMutationsDict[sample][AGGREGATEDINDELS] = {}
         sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY] = {}
         sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT] = {}
     ############################################################
 
+    ############################################################
+    for sample in sample2IndelsSignature2NumberofMutationsDict:
+        for indelsSignature in sample2IndelsSignature2NumberofMutationsDict[sample]:
+            sample2Type2DecileIndex2NumberofMutationsDict[sample][indelsSignature] = {}
+    ############################################################
 
-    chrBased_indels_df_split.apply(searchMutationForIndelsWithExtraSampleBased,
-                                   sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict=sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
+    chrBased_indels_df_split.apply(searchIndel,
+                                   sample2NumberofIndelsDict = sample2NumberofIndelsDict,
+                                   indelsSignature2NumberofMutationsDict = indelsSignature2NumberofMutationsDict,
+                                   sample2IndelsSignature2NumberofMutationsDict = sample2IndelsSignature2NumberofMutationsDict,
                                    chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex,
                                    type2DecileIndex2NumberofMutationsDict=type2DecileIndex2NumberofMutationsDict,
                                    sample2Type2DecileIndex2NumberofMutationsDict= sample2Type2DecileIndex2NumberofMutationsDict,
@@ -647,31 +567,29 @@ def searchMutationsForIndelsWithExtraSampleBased(sample2SignaturesWithAtLeast10K
 
 
 ##################################################################
-#Please notice that replication time data are not overlappig data therefore only setting one decileOndex will be correct.
+#Please notice that replication time data are not overlappig data therefore only setting one decileIndex will be correct.
 # e.g.:
 # start end
 #   10 1009
 # 1010 2009
 def fillArray(chrBased_replicationtimedata_row,chrBasedDecileIndexArray,decileIndex):
-    start= chrBased_replicationtimedata_row['start']
-    end = chrBased_replicationtimedata_row['end'] + 1
+    start= chrBased_replicationtimedata_row[START]
+    end = chrBased_replicationtimedata_row[END] + 1
     chrBasedDecileIndexArray[start:end] = decileIndex
 ##################################################################
 
 
 ##################################################################
-def  fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list):
-    #We can set the starring index as 1 in builtin function enumerate
-    #First chrBased_grouped_decile has index of 1
-    #Last chrBased_grouped_decile has index of 10
-
+def  fillChrBasedReplicationTimeNPArrayNewVersion(chrLong,chromSize,decile_df_list):
     # int8	Byte (-128 to 127)
-    chrBasedReplicationTimeDataArrayWithDecileIndex = np.zeros(MAXIMUM_CHROMOSOME_LENGTH, dtype=np.int8)
+    chrBasedReplicationTimeDataArrayWithDecileIndex = np.zeros(chromSize, dtype=np.int8)
 
     #First decileIndex is 1, last decile index is 10.
-    for decileIndex, chrBased_grouped_decile in enumerate(chrBased_grouped_decile_list,1):
-        if chrLong in chrBased_grouped_decile.groups.keys():
-            chrBased_replicationtimedata_df = chrBased_grouped_decile.get_group(chrLong)
+    for decileIndex, decile_df in enumerate(decile_df_list,1):
+        chrBased_grouped_decile_df = decile_df.groupby(CHROM)
+        # print('debug: len(chrBased_grouped_decile_df): %d' %len(chrBased_grouped_decile_df))
+        if chrLong in chrBased_grouped_decile_df.groups.keys():
+            chrBased_replicationtimedata_df = chrBased_grouped_decile_df.get_group(chrLong)
             #what is chrBased_decile's type? DataFrame
             if ((chrBased_replicationtimedata_df is not None) and (not chrBased_replicationtimedata_df.empty)):
                 chrBased_replicationtimedata_df.apply(fillArray,chrBasedDecileIndexArray=chrBasedReplicationTimeDataArrayWithDecileIndex,decileIndex=decileIndex, axis=1)
@@ -681,204 +599,153 @@ def  fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list):
 
 
 ##################################################################
-# After generateNPArrayAndSearchMutationsOnNPArrayForSPMsAndSignatures work properly we can delete generateNPArrayAndSearchMutationsOnNPArray
-# Works for AGGREGATEDSUBSTITUTIONS
-# Also can work for AGGREGSTEDINDELS
-def generateNPArrayAndSearchMutationsOnNPArray(inputList):
-    chrLong = inputList[0]
-    chrBased_mutation_df_split = inputList[1]
-    chrBased_grouped_decile_list = inputList[2]
+def  fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list):
+    #We can set the starring index as 1 in builtin function enumerate
+    #First chrBased_grouped_decile has index of 1
+    #Last chrBased_grouped_decile has index of 10
 
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
+    # int8	Byte (-128 to 127)
+    chrBasedReplicationTimeDataArrayWithDecileIndex = np.zeros(chromSize, dtype=np.int8)
 
-    decileIndex2NumberofMutationsDict = searchMutations(chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
+    #First decileIndex is 1, last decile index is 10.
+    for decileIndex, chrBased_grouped_decile_df in enumerate(chrBased_grouped_decile_df_list,1):
+        if chrLong in chrBased_grouped_decile_df.groups.keys():
+            chrBased_replicationtimedata_df = chrBased_grouped_decile_df.get_group(chrLong)
+            #what is chrBased_decile's type? DataFrame
+            if ((chrBased_replicationtimedata_df is not None) and (not chrBased_replicationtimedata_df.empty)):
+                chrBased_replicationtimedata_df.apply(fillArray,chrBasedDecileIndexArray=chrBasedReplicationTimeDataArrayWithDecileIndex,decileIndex=decileIndex, axis=1)
 
-    return decileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-# Case1: SPMS (AGGREGATEDSUBSTITUTIONS and Signatures)
-def generateNPArrayAndSearchMutationsOnNPArrayForSPMs(inputList):
-    chrLong = inputList[0]
-    signatures = inputList[1]
-    chrBased_mutation_df_split = inputList[2]
-    chrBased_grouped_decile_list = inputList[3]
-
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
-
-    type2DecileIndex2NumberofMutationsDict = searchMutationsForSPMs(signatures,chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    return type2DecileIndex2NumberofMutationsDict
+    return chrBasedReplicationTimeDataArrayWithDecileIndex
 ##################################################################
 
 ##################################################################
-#Case2: SPMs and Indels
-def generateNPArrayAndSearchMutationsOnNPArrayForSPMsAndIndels(inputList):
-    chrLong = inputList[0]
-    signatures = inputList[1]
-    chrBased_spms_df_split = inputList[2]
-    chrBased_indels_df_split = inputList[3]
-    chrBased_grouped_decile_list = inputList[4]
+def searchMutationsOnReplicationTimeNPArray(inputList):
+    sample2NumberofSubsDict = inputList[0]
+    sample2NumberofIndelsDict = inputList[1]
+    subsSignature2NumberofMutationsDict = inputList[2]
+    indelsSignature2NumberofMutationsDict = inputList[3]
+    sample2SubsSignature2NumberofMutationsDict = inputList[4]
+    sample2IndelsSignature2NumberofMutationsDict = inputList[5]
+    chrBased_subs_df_split = inputList[6]
+    chrBased_indels_df_split = inputList[7]
+    chrBased_replication_time_np_array = inputList[8]
 
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
+    type2DecileIndex2NumberofMutationsDict = {}
+    sample2Type2DecileIndex2NumberofMutationsDict = {}
 
-    type2DecileIndex2NumberofMutationsDict = searchMutationsForSPMs(signatures,chrBased_spms_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
+    ##################################################################################################################
+    if ((chrBased_subs_df_split is not None) and (not chrBased_subs_df_split.empty)):
+        subsType2DecileIndex2NumberofMutationsDict, sample2SubsType2DecileIndex2NumberofMutationsDict = searchForSubs(
+            sample2NumberofSubsDict,
+            subsSignature2NumberofMutationsDict,
+            sample2SubsSignature2NumberofMutationsDict,
+            chrBased_subs_df_split,
+            chrBased_replication_time_np_array)
 
-    indelType2DecileIndex2NumberofMutationsDict = searchMutationsForIndels(chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
+        type2DecileIndex2NumberofMutationsDict.update(subsType2DecileIndex2NumberofMutationsDict)
 
-    type2DecileIndex2NumberofMutationsDict.update(indelType2DecileIndex2NumberofMutationsDict)
-
-    return type2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-# Case1: SPMS (AGGREGATEDSUBSTITUTIONS and Signatures)
-def generateNPArrayAndSearchMutationsOnNPArrayForSPMsWithExtraSampleBased(inputList):
-
-    chrLong = inputList[0]
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[1]
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[2]
-    chrBased_mutation_df_split = inputList[3]
-    chrBased_grouped_decile_list = inputList[4]
-
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
-
-    type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, chrBased_mutation_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-#Case3: Indels
-def generateNPArrayAndSearchMutationsOnNPArrayForIndelsWithExtraSampleBased(inputList):
-    chrLong = inputList[0]
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[1]
-    chrBased_indels_df_split = inputList[2]
-    chrBased_grouped_decile_list = inputList[3]
-
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
-
-    indelType2DecileIndex2NumberofMutationsDict, sample2IndelType2DecileIndex2NumberofMutationsDict = searchMutationsForIndelsWithExtraSampleBased(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    return indelType2DecileIndex2NumberofMutationsDict, sample2IndelType2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-
-##################################################################
-#Case2: SPMs and Indels
-def generateNPArrayAndSearchMutationsOnNPArrayForSPMsAndIndelsWithExtraSampleBased(inputList):
-
-    chrLong = inputList[0]
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[1]
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = inputList[2]
-    chrBased_spms_df_split = inputList[3]
-    chrBased_indels_df_split = inputList[4]
-    chrBased_grouped_decile_list = inputList[5]
-
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
-
-    type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchMutationsForSPMsWithExtraSampleBased(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBased_spms_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    indelType2DecileIndex2NumberofMutationsDict, sample2IndelType2DecileIndex2NumberofMutationsDict = searchMutationsForIndelsWithExtraSampleBased(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    #Update type2DecileIndex2NumberofMutationsDict with indelType2DecileIndex2NumberofMutationsDict
-    type2DecileIndex2NumberofMutationsDict.update(indelType2DecileIndex2NumberofMutationsDict)
-
-    #Update sample2SPMType2DecileIndex2NumberofMutationsDict with sample2IndelType2DecileIndex2NumberofMutationsDict
-    #Since types are not overlapping.
-    for sample in sample2IndelType2DecileIndex2NumberofMutationsDict:
-        if sample in sample2Type2DecileIndex2NumberofMutationsDict:
-            sample2Type2DecileIndex2NumberofMutationsDict[sample].update(sample2IndelType2DecileIndex2NumberofMutationsDict[sample])
-        else:
-            sample2Type2DecileIndex2NumberofMutationsDict[sample]  = sample2IndelType2DecileIndex2NumberofMutationsDict[sample]
-
-
-    #TODO question can we update two level dictionaries using built in update method?
-    # Answer: No. It overwrites for the firt=st level keys
-    # Answer: It can used when keys are not overlapping.
-
-    #Let's assume that we have correctly  updated sample2SPMType2DecileIndex2NumberofMutationsDict with sample2IndelType2DecileIndex2NumberofMutationsDict
-    #And we return only two dictionaries
-
-    return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-#Case3: Indels
-def generateNPArrayAndSearchMutationsOnNPArrayForIndels(inputList):
-    chrLong = inputList[0]
-    chrBased_indels_df_split = inputList[1]
-    chrBased_grouped_decile_list = inputList[2]
-
-    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
-    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedDecileIndexArray(chrLong,chrBased_grouped_decile_list)
-
-    type2DecileIndex2NumberofMutationsDict = searchMutationsForIndels(chrBased_indels_df_split,chrBasedReplicationTimeDataArrayWithDecileIndex)
-
-    return type2DecileIndex2NumberofMutationsDict
-##################################################################
-
-
-##################################################################
-#Accumulate the counts coming from each chromosome
-def accumulate(listofDictionaries,decileBasedAllChrAccumulatedCountDict):
-    for dict in listofDictionaries:
-        for decileIndex, decileCount in dict.items():
-            #if key in dictionary
-            if decileIndex in decileBasedAllChrAccumulatedCountDict:
-                decileBasedAllChrAccumulatedCountDict[decileIndex] += decileCount
+        for sample in sample2SubsType2DecileIndex2NumberofMutationsDict:
+            if sample in sample2Type2DecileIndex2NumberofMutationsDict:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample].update(sample2SubsType2DecileIndex2NumberofMutationsDict[sample])
             else:
-                decileBasedAllChrAccumulatedCountDict[decileIndex] = decileCount
+                sample2Type2DecileIndex2NumberofMutationsDict[sample]  = sample2SubsType2DecileIndex2NumberofMutationsDict[sample]
+    ##################################################################################################################
+
+    ##################################################################################################################
+    if ((chrBased_indels_df_split is not None) and (not chrBased_indels_df_split.empty)):
+        indelType2DecileIndex2NumberofMutationsDict, sample2IndelsType2DecileIndex2NumberofMutationsDict = searchForIndels(
+            sample2NumberofIndelsDict,
+            indelsSignature2NumberofMutationsDict,
+            sample2IndelsSignature2NumberofMutationsDict,
+            chrBased_indels_df_split,
+            chrBased_replication_time_np_array)
+
+        type2DecileIndex2NumberofMutationsDict.update(indelType2DecileIndex2NumberofMutationsDict)
+
+        for sample in sample2IndelsType2DecileIndex2NumberofMutationsDict:
+            if sample in sample2Type2DecileIndex2NumberofMutationsDict:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample].update(sample2IndelsType2DecileIndex2NumberofMutationsDict[sample])
+            else:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample]  = sample2IndelsType2DecileIndex2NumberofMutationsDict[sample]
+    ##################################################################################################################
+
+    #Question: can we update dictionaries using built in update method?
+    # Answer: Be careful. It can used when keys are not overlapping, otherwise it overwrites
+    return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
 
+
 ##################################################################
-#Accumulate the counts coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-def accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict):
-    for dict in listofDictionaries:
-        for type, decileBasedAllChrAccumulatedCountDict in dict.items():
+#Subs and Indels
+def generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList):
+    chrLong = inputList[0]
+    chromSize = inputList[1]
+    sample2NumberofSubsDict = inputList[2]
+    sample2NumberofIndelsDict = inputList[3]
+    subsSignature2NumberofMutationsDict = inputList[4]
+    indelsSignature2NumberofMutationsDict = inputList[5]
+    sample2SubsSignature2NumberofMutationsDict = inputList[6]
+    sample2IndelsSignature2NumberofMutationsDict = inputList[7]
+    chrBased_subs_df_split = inputList[8]
+    chrBased_indels_df_split = inputList[9]
+    chrBased_grouped_decile_df_list = inputList[10]
 
-            if type not in type2DecileBasedAllChrAccumulatedCountDict:
-                type2DecileBasedAllChrAccumulatedCountDict[type] = {}
+    #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
+    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list)
 
-            tobeUpdatedDecileBasedAllChrAccumulatedCountDict=  type2DecileBasedAllChrAccumulatedCountDict[type]
+    type2DecileIndex2NumberofMutationsDict = {}
+    sample2Type2DecileIndex2NumberofMutationsDict = {}
 
-            for decileIndex, decileCount in decileBasedAllChrAccumulatedCountDict.items():
-                #if key in dictionary
-                if decileIndex in tobeUpdatedDecileBasedAllChrAccumulatedCountDict:
-                    tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] += decileCount
-                else:
-                    tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] = decileCount
+    ##################################################################################################################
+    if ((chrBased_subs_df_split is not None) and (not chrBased_subs_df_split.empty)):
+        subsType2DecileIndex2NumberofMutationsDict, sample2SubsType2DecileIndex2NumberofMutationsDict = searchForSubs(
+            sample2NumberofSubsDict,
+            subsSignature2NumberofMutationsDict,
+            sample2SubsSignature2NumberofMutationsDict,
+            chrBased_subs_df_split,
+            chrBasedReplicationTimeDataArrayWithDecileIndex)
+
+        type2DecileIndex2NumberofMutationsDict.update(subsType2DecileIndex2NumberofMutationsDict)
+
+        for sample in sample2SubsType2DecileIndex2NumberofMutationsDict:
+            if sample in sample2Type2DecileIndex2NumberofMutationsDict:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample].update(sample2SubsType2DecileIndex2NumberofMutationsDict[sample])
+            else:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample]  = sample2SubsType2DecileIndex2NumberofMutationsDict[sample]
+    ##################################################################################################################
+
+    ##################################################################################################################
+    if ((chrBased_indels_df_split is not None) and (not chrBased_indels_df_split.empty)):
+        indelType2DecileIndex2NumberofMutationsDict, sample2IndelsType2DecileIndex2NumberofMutationsDict = searchForIndels(
+            sample2NumberofIndelsDict,
+            indelsSignature2NumberofMutationsDict,
+            sample2IndelsSignature2NumberofMutationsDict,
+            chrBased_indels_df_split,
+            chrBasedReplicationTimeDataArrayWithDecileIndex)
+
+        type2DecileIndex2NumberofMutationsDict.update(indelType2DecileIndex2NumberofMutationsDict)
+
+        for sample in sample2IndelsType2DecileIndex2NumberofMutationsDict:
+            if sample in sample2Type2DecileIndex2NumberofMutationsDict:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample].update(sample2IndelsType2DecileIndex2NumberofMutationsDict[sample])
+            else:
+                sample2Type2DecileIndex2NumberofMutationsDict[sample]  = sample2IndelsType2DecileIndex2NumberofMutationsDict[sample]
+    ##################################################################################################################
+
+    #Question: can we update dictionaries using built in update method?
+    # Answer: Be careful. It can used when keys are not overlapping, otherwise it overwrites
+    return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
+
 
 
 ##################################################################
 #Accumulate the counts coming from each chromosome split in type2DecileBasedAllChrAccumulatedCountDict and sample2Type2DecileBasedAllChrAccumulatedCountDict
-def accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
+def accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
     for dictList in listofDictionaries:
 
         typeBasedDict = dictList[0]
         sampleBasedTypeDict = dictList[1]
-
-        # ############################################################################
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        # print('These 2 dictionaries will be accumulated. Are they full?')
-        # print('typeBasedDict')
-        # print(typeBasedDict)
-        # print('sampleBasedTypeDict')
-        # print(sampleBasedTypeDict)
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        # ############################################################################
 
         ###########################################################################
         for type, decileBasedAllChrAccumulatedCountDict in typeBasedDict.items():
@@ -886,14 +753,12 @@ def accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2
             if type not in type2DecileBasedAllChrAccumulatedCountDict:
                 type2DecileBasedAllChrAccumulatedCountDict[type] = {}
 
-            tobeUpdatedDecileBasedAllChrAccumulatedCountDict=  type2DecileBasedAllChrAccumulatedCountDict[type]
-
             for decileIndex, decileCount in decileBasedAllChrAccumulatedCountDict.items():
                 #if key in dictionary
-                if decileIndex in tobeUpdatedDecileBasedAllChrAccumulatedCountDict:
-                    tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] += decileCount
+                if decileIndex in type2DecileBasedAllChrAccumulatedCountDict[type]:
+                    type2DecileBasedAllChrAccumulatedCountDict[type][decileIndex] += decileCount
                 else:
-                    tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] = decileCount
+                    type2DecileBasedAllChrAccumulatedCountDict[type][decileIndex] = decileCount
         ###########################################################################
 
         ######################## Sample Based starts #######################################
@@ -906,14 +771,12 @@ def accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2
                 if type not in sample2Type2DecileBasedAllChrAccumulatedCountDict[sample]:
                     sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type] = {}
 
-                tobeUpdatedDecileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
-
                 for decileIndex, decileCount in decileBasedAllChrAccumulatedCountDict.items():
                     # if key in dictionary
-                    if decileIndex in tobeUpdatedDecileBasedAllChrAccumulatedCountDict:
-                        tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] += decileCount
+                    if decileIndex in sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]:
+                        sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type][decileIndex] += decileCount
                     else:
-                        tobeUpdatedDecileBasedAllChrAccumulatedCountDict[decileIndex] = decileCount
+                        sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type][decileIndex] = decileCount
         ######################## Sample Based ends #########################################
 
 ##################################################################
@@ -933,18 +796,38 @@ def getNormalizedMutationDensityList(mutationDensityDict):
 ##################################################################
 
 
+
 ##################################################################
-def getMutationDensityDict(deciles,decileBasedAllChrAccumulatedCountDict):
+#March 22, 2019 starts
+def getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict,decileBasedAllChrAccumulatedCountDict):
     decileBasedMutationDensityDict = {}
     numberofMutations = 0
 
+    for decileIndex in decileIndex2NumberofAttributableBasesDict:
+        if (decileIndex in decileBasedAllChrAccumulatedCountDict):
+            count = decileBasedAllChrAccumulatedCountDict[decileIndex]
+            numberofMutations += count
+            numofAttBases = decileIndex2NumberofAttributableBasesDict[decileIndex]
+            mutationDensity = float(count) / numofAttBases
+            decileBasedMutationDensityDict[decileIndex] = mutationDensity
+        else:
+            decileBasedMutationDensityDict[decileIndex] = 0
+
+    return numberofMutations, decileBasedMutationDensityDict
+#March 22, 2019 starts
+##################################################################
+
+##################################################################
+def getMutationDensityDict(decile_df_list,decileBasedAllChrAccumulatedCountDict):
+    decileBasedMutationDensityDict = {}
+    numberofMutations = 0
 
     #Modifiled as enumerate(deciles,1) formerly it was enumerate(deciles,0)
-    for i,decile in enumerate(deciles,1):
+    for i,decile_df in enumerate(decile_df_list,1):
         if (i in decileBasedAllChrAccumulatedCountDict):
             count = decileBasedAllChrAccumulatedCountDict[i]
             numberofMutations += count
-            numofAttBases = decile['numofBases'].sum()
+            numofAttBases = decile_df[NUMOFBASES].sum()
             mutationDensity=float(count)/numofAttBases
             decileBasedMutationDensityDict[i] = mutationDensity
         else:
@@ -955,572 +838,283 @@ def getMutationDensityDict(deciles,decileBasedAllChrAccumulatedCountDict):
     return numberofMutations, decileBasedMutationDensityDict
 ##################################################################
 
-
 ##################################################################
-# Case1: singlePointMutationsFileName is set only
-#   SPMs analysis provides aggregatedSPMs and signatures
-def calculateCountsSPMsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName):
-    type2DecileBasedAllChrAccumulatedCountDict = {}
-    sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
+def loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename):
+    replicationTimeFilename_wo_extension = os.path.basename(replicationTimeDataFilename)[0:-4]
 
-    #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
+    chrBasedReplicationTimeArrayFilename = '%s_%s.npy' % (chrLong, replicationTimeFilename_wo_extension)
 
-    #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
-    for chrLong in chrNamesInReplicationTimeDataList:
-        # chrLong = 'chr%s' %(chr)
-
-        #read chrBased spms_df
-        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
-
-        ###################################################################################################################################################
-        if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-            #split chrBased_mutation_df as many as number of cores
-            chrBased_mutation_df_splits = np.array_split(chrBased_spms_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_mutation_df_split in chrBased_mutation_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-                inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-                inputList.append(chrBased_mutation_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            # pool.map blocks until the result is ready.
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMsWithExtraSampleBased,poolInputList)
-
-
-            # if (chrLong=='chr1'):
-            #     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-            #     print('Debug before accumulation %s' % (chrLong))
-            #     print('type2DecileBasedAllChrAccumulatedCountDict')
-            #     print(type2DecileBasedAllChrAccumulatedCountDict)
-            #     print('sample2Type2DecileBasedAllChrAccumulatedCountDict')
-            #     print(sample2Type2DecileBasedAllChrAccumulatedCountDict)
-            #     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-
-            # if (chrLong=='chr1'):
-            #     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-            #     print('Debug after accumulation %s' %(chrLong))
-            #     print('type2DecileBasedAllChrAccumulatedCountDict')
-            #     print(type2DecileBasedAllChrAccumulatedCountDict)
-            #     print('sample2Type2DecileBasedAllChrAccumulatedCountDict')
-            #     print(sample2Type2DecileBasedAllChrAccumulatedCountDict)
-            #     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-            #
-            #     print('######################################################################')
-            #     print('listofDictionaries: 2 dictionaries coming from each of teh 28 chr1 splits')
-            #     print(listofDictionaries)
-            #     print('######################################################################')
-
-
-
-        ###################################################################################################################################################
-    return type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict
-
-
+    chrBasedReplicationTimeArrayFilenamePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,
+                                                            replicationTimeFilename_wo_extension,chrBasedReplicationTimeArrayFilename )
+    if (os.path.exists(chrBasedReplicationTimeArrayFilenamePath)):
+        chrBased_replication_time_np_array = np.load(chrBasedReplicationTimeArrayFilenamePath)
+    return chrBased_replication_time_np_array
 ##################################################################
 
-
-
 ##################################################################
-# Case1: singlePointMutationsFileName is set only
-#   SPMs analysis provides aggregatedSPMs and signatures
-def calculateCountsSPMs(jobname,numofProcesses,pool,signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName):
-    type2DecileBasedAllChrAccumulatedCountDict = {}
-
-    #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
-
-    for chrLong in chrNamesInReplicationTimeDataList:
-        #read chrBased mutation_df
-        chrBased_mutation_df = readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFileName)
-
-        ##############################################################
-        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
-
-            #split chrBased_mutation_df as many as number of cores
-            chrBased_mutation_df_splits = np.array_split(chrBased_mutation_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_mutation_df_split in chrBased_mutation_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signatures) #Same
-                inputList.append(chrBased_mutation_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMs,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict)
-        ##############################################################
-
-    return type2DecileBasedAllChrAccumulatedCountDict
-##################################################################
-
-
-##################################################################
-def calculateCountsSPMsandIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename):
+def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outputDir,jobname,numofProcesses,pool,
+                                    sample2NumberofSubsDict,
+                                    sample2NumberofIndelsDict,
+                                    subsSignature2NumberofMutationsDict,
+                                    indelsSignature2NumberofMutationsDict,
+                                    sample2SubsSignature2NumberofMutationsDict,
+                                    sample2IndelsSignature2NumberofMutationsDict,
+                                    replicationTimeDataFilename,
+                                    chromNamesList,
+                                    singlePointMutationsFileName,
+                                    indelsFilename):
 
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
 
-    #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
-
-    #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
-    for chrLong in chrNamesInReplicationTimeDataList:
-        # chrLong = 'chr%s' %(chr)
-
-        #read chrBased spms_df
-        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
-
-        # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+    if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
+        #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
 
         ###################################################################################################################################################
-        if (((chrBased_spms_df is not None) and  (not chrBased_spms_df.empty))  and ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)) ):
-            # split chrBased_spms_df as many as number of cores
-            chrBased_spms_df_splits = np.array_split(chrBased_spms_df, numofProcesses)
+        poolInputList = []
+        for chrLong in chromNamesList:
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+            chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
 
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
+            inputList = []
+            inputList.append(sample2NumberofSubsDict)
+            inputList.append(sample2NumberofIndelsDict)
+            inputList.append(subsSignature2NumberofMutationsDict)
+            inputList.append(indelsSignature2NumberofMutationsDict)
+            inputList.append(sample2SubsSignature2NumberofMutationsDict)
+            inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+            inputList.append(chrBased_subs_df) #Different
+            inputList.append(chrBased_indels_df) #Different
+            inputList.append(chrBased_replication_time_np_array)  #Same
+            poolInputList.append(inputList)
+        ###################################################################################################################################################
 
-            zipped = zip(chrBased_spms_df_splits,chrBased_indels_df_splits)
+        # Call the parallel code for poolInputList
+        # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
+        # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
+        # It must return list of tuples
+        # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
+        listofDictionaries = pool.map(searchMutationsOnReplicationTimeNPArray,poolInputList)
+        accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        ###################################################################################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
+        #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        for chrLong in chromNamesList:
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+            chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
+
+            chrBased_subs_df_splits_list = []
+            chrBased_indels_df_splits_list = []
+
+            if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
+                chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+
+            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
+                chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
 
             poolInputList = []
-            for zippedTuple in zipped:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-                inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-                chrBased_spms_df_split= zippedTuple[0]
-                chrBased_indels_df_split = zippedTuple[1]
-                inputList.append(chrBased_spms_df_split) #Different
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list)  #Same
-                poolInputList.append(inputList)
+            ###################################################################################################################################################
+            for split_index in range(numofProcesses):
+                chrBased_subs_df_split_array = None
+                chrBased_indels_df_split_array = None
 
+                if (len(chrBased_subs_df_splits_list)):
+                    chrBased_subs_df_split_array = chrBased_subs_df_splits_list[split_index]
+
+                if (len(chrBased_indels_df_splits_list)):
+                    chrBased_indels_df_split_array = chrBased_indels_df_splits_list[split_index]
+
+                inputList = []
+                inputList.append(sample2NumberofSubsDict)
+                inputList.append(sample2NumberofIndelsDict)
+                inputList.append(subsSignature2NumberofMutationsDict)
+                inputList.append(indelsSignature2NumberofMutationsDict)
+                inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                inputList.append(chrBased_subs_df_split_array) #Different
+                inputList.append(chrBased_indels_df_split_array) #Different
+                inputList.append(chrBased_replication_time_np_array)  #Same
+                poolInputList.append(inputList)
+            ###################################################################################################################################################
+
+            #TODO run this version test it
             # Call the parallel code for poolInputList
             # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
             # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMsAndIndelsWithExtraSampleBased,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            # TODO left here now there are two dictioaries
-            accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
-
-        ###################################################################################################################################################
-        elif ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-            #split chrBased_mutation_df as many as number of cores
-            chrBased_mutation_df_splits = np.array_split(chrBased_spms_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_mutation_df_split in chrBased_mutation_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-                inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) #same
-
-                inputList.append(chrBased_mutation_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
             # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
             # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            # pool.map blocks until the result is ready.
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMsWithExtraSampleBased,poolInputList)
+            listofDictionaries = pool.map(searchMutationsOnReplicationTimeNPArray,poolInputList)
+            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            ###################################################################################################################################################
 
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            #TODO left here check accumulateTypeBasedDictionariesWithExtraSampleBased
-            accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL):
+        #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        for chrLong in chromNamesList:
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+            chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
 
+            inputList = []
+            inputList.append(sample2NumberofSubsDict)
+            inputList.append(sample2NumberofIndelsDict)
+            inputList.append(subsSignature2NumberofMutationsDict)
+            inputList.append(indelsSignature2NumberofMutationsDict)
+            inputList.append(sample2SubsSignature2NumberofMutationsDict)
+            inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+            inputList.append(chrBased_subs_df) #Different
+            inputList.append(chrBased_indels_df) #Different
+            inputList.append(chrBased_replication_time_np_array)  #Same
+            ###################################################################################################################################################
 
-        ###################################################################################################################################################
-
-        ###################################################################################################################################################
-        elif ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_indels_df_split  in chrBased_indels_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForIndelsWithExtraSampleBased,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            #TODO here there are two dictionaries
-            accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
+            type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchMutationsOnReplicationTimeNPArray(inputList)
+            listofDictionaries = []
+            listofDictionaries.append((type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict))
+            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            ###################################################################################################################################################
 
     return type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict
-
-##################################################################
-
-##################################################################
-# Case2: singlePointMutationsFileName and indelsFilename are set
-#   SPMs analysis provides aggregatedSPMs and signatures
-#   Indels analysis provides aggregatedIndels and indels
-def calculateCountsSPMsandIndels(jobname,numofProcesses,pool,signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename):
-
-    type2DecileBasedAllChrAccumulatedCountDict = {}
-
-    #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
-
-    #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
-    for chrLong in chrNamesInReplicationTimeDataList:
-        # chrLong = 'chr%s' %(chr)
-
-        #read chrBased spms_df
-        chrBased_spms_df = readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFileName)
-
-        # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
-
-        ###################################################################################################################################################
-        if (((chrBased_spms_df is not None) and  (not chrBased_spms_df.empty))  and ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)) ):
-            # split chrBased_spms_df as many as number of cores
-            chrBased_spms_df_splits = np.array_split(chrBased_spms_df, numofProcesses)
-
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
-
-            zipped = zip(chrBased_spms_df_splits,chrBased_indels_df_splits)
-
-            poolInputList = []
-            for zippedTuple in zipped:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signatures) #Same
-                chrBased_spms_df_split= zippedTuple[0]
-                chrBased_indels_df_split = zippedTuple[1]
-                inputList.append(chrBased_spms_df_split) #Different
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list)  #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMsAndIndels,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
-
-        ###################################################################################################################################################
-        elif ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-            #split chrBased_mutation_df as many as number of cores
-            chrBased_mutation_df_splits = np.array_split(chrBased_spms_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_mutation_df_split in chrBased_mutation_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(signatures) #Same
-                inputList.append(chrBased_mutation_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForSPMs,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
-
-        ###################################################################################################################################################
-        elif ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_indels_df_split  in chrBased_indels_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForIndels,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
-
-
-
-    return type2DecileBasedAllChrAccumulatedCountDict
-##################################################################
-
-##################################################################
-# Case3: indelsFilename is set only.
-#   Indels analysis provides aggregatedIndels and indels
-def calculateCountsIndels(jobname,numofProcesses,pool,deciles,chrNamesInReplicationTimeDataList,indelsFilename):
-    type2DecileBasedAllChrAccumulatedCountDict = {}
-
-    #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
-
-    #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
-    for chrLong in chrNamesInReplicationTimeDataList:
-        # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(jobname,chrLong,indelsFilename)
-
-        #########################################################
-        if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
-
-            poolInputList = []
-            for chrBased_indels_df_split  in chrBased_indels_df_splits:
-                inputList = []
-                inputList.append(chrLong) #Same
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
-                poolInputList.append(inputList)
-
-            # Call the parallel code for poolInputList
-            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-            # It must return list of tuples
-            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForIndels,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict)
-        #########################################################
-
-
-    return type2DecileBasedAllChrAccumulatedCountDict
 ##################################################################
 
 
-
 ##################################################################
-def calculateCountsIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename):
+def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationType,outputDir,jobname,numofProcesses,pool,
+                                    sample2NumberofSubsDict,
+                                    sample2NumberofIndelsDict,
+                                    subsSignature2NumberofMutationsDict,
+                                    indelsSignature2NumberofMutationsDict,
+                                    sample2SubsSignature2NumberofMutationsDict,
+                                    sample2IndelsSignature2NumberofMutationsDict,
+                                    chromSizesDict,
+                                    decile_df_list,
+                                    chrNamesList,
+                                    singlePointMutationsFileName,
+                                    indelsFilename):
+
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
 
     #Get chrBased grouped deciles
-    chrBased_grouped_decile_list = []
+    chrBased_grouped_decile_df_list = []
     #Get this chrLong of each decile
     #The first decile is the earliest one with index 1
     #The last decile is the latest one with index 10
     #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-    for decile in deciles:
-        chrBased_grouped_decile = decile.groupby('chr')
-        # print('########## debug starts #############')
-        # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-        # print('########## debug ends #############')
-        chrBased_grouped_decile_list.append(chrBased_grouped_decile)
+    for decile_df in decile_df_list:
+        chrBased_grouped_decile_df = decile_df.groupby(CHROM)
+        chrBased_grouped_decile_df_list.append(chrBased_grouped_decile_df)
 
-    #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
-    for chrLong in chrNamesInReplicationTimeDataList:
-        # chrLong = 'chr%s' %(chr)
+    if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
+        # It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        poolInputList = []
+        for chrLong in chrNamesList:
+            chromSize = chromSizesDict[chrLong]
+            chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
 
-        # read chrBased indels_df
-        chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+            ###################################################################################################################################################
+            inputList = []
+            inputList.append(chrLong)
+            inputList.append(chromSize)
+            inputList.append(sample2NumberofSubsDict)
+            inputList.append(sample2NumberofIndelsDict)
+            inputList.append(subsSignature2NumberofMutationsDict)
+            inputList.append(indelsSignature2NumberofMutationsDict)
+            inputList.append(sample2SubsSignature2NumberofMutationsDict)
+            inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+            inputList.append(chrBased_subs_df)  # Different
+            inputList.append(chrBased_indels_df)  # Different
+            inputList.append(chrBased_grouped_decile_df_list)  # Same
+            poolInputList.append(inputList)
 
+        # TODO run this version test it
+        # Call the parallel code for poolInputList
+        # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
+        # It must return list of tuples
+        # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
+        # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
+        listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList)
+        accumulateTypeBasedDictionaries(listofDictionaries, type2DecileBasedAllChrAccumulatedCountDict,
+                                        sample2Type2DecileBasedAllChrAccumulatedCountDict)
         ###################################################################################################################################################
-        if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-            # split chrBased_indels_df as many as number of cores
-            chrBased_indels_df_splits = np.array_split(chrBased_indels_df,numofProcesses)
 
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
+        #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        for chrLong in chrNamesInReplicationTimeDataList:
+            # chrLong = 'chr%s' %(chr)
+            chromSize = chromSizesDict[chrLong]
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFileName)
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+
+            chrBased_subs_df_splits_list = []
+            chrBased_indels_df_splits_list = []
+
+            if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
+                chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+
+            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
+                chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
+
+            ###################################################################################################################################################
             poolInputList = []
-            for chrBased_indels_df_split  in chrBased_indels_df_splits:
+            for split_index in range(numofProcesses):
+                if (len(chrBased_subs_df_splits_list)):
+                    chrBased_subs_df_split_array = chrBased_subs_df_splits_list[split_index]
+                else:
+                    chrBased_subs_df_split_array = None
+
+                if (len(chrBased_indels_df_splits_list)):
+                    chrBased_indels_df_split_array = chrBased_indels_df_splits_list[split_index]
+                else:
+                    chrBased_indels_df_split_array = None
+
                 inputList = []
                 inputList.append(chrLong) #Same
-                inputList.append(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict)
-                inputList.append(chrBased_indels_df_split) #Different
-                inputList.append(chrBased_grouped_decile_list) #Same
+                inputList.append(chromSize)
+                inputList.append(sample2NumberofSubsDict)
+                inputList.append(sample2NumberofIndelsDict)
+                inputList.append(subsSignature2NumberofMutationsDict)
+                inputList.append(indelsSignature2NumberofMutationsDict)
+                inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                inputList.append(chrBased_subs_df_split_array) #Different
+                inputList.append(chrBased_indels_df_split_array) #Different
+                inputList.append(chrBased_grouped_decile_df_list)  #Same
                 poolInputList.append(inputList)
 
+            #TODO run this version test it
             # Call the parallel code for poolInputList
             # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
             # It must return list of tuples
             # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
             # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-            listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArrayForIndelsWithExtraSampleBased,poolInputList)
-
-            #Accumulate listofTuples coming from each chromosome in type2DecileBasedAllChrAccumulatedCountDict
-            accumulateTypeBasedDictionariesWithExtraSampleBased(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-        ###################################################################################################################################################
+            listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray,poolInputList)
+            accumulateTypeBasedDictionaries(listofDictionaries,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+            ###################################################################################################################################################
 
     return type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict
 ##################################################################
 
 
 
-# ##################################################################
-# #Read chrBased mutation_df and uses np.array and outputs for SPMs
-# #This is only for AggregatedSubstitutionss
-# # Can also work for AggregatedIndels
-# def calculateCounts(deciles,chrNamesInSPMsList,singlePointMutationsFileName):
-#     decileBasedAllChrAccumulatedCountDict = {}
-#
-#     #Get chrBased grouped deciles
-#     chrBased_grouped_decile_list = []
-#     #Get this chrLong of each decile
-#     #The first decile is the earliest one with index 1
-#     #The last decile is the latest one with index 10
-#     #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
-#     for decile in deciles:
-#         chrBased_grouped_decile = decile.groupby('chr')
-#         # print('########## debug starts #############')
-#         # print('len(chrBased_grouped_decile): %d' % len(chrBased_grouped_decile))
-#         # print('########## debug ends #############')
-#         chrBased_grouped_decile_list.append(chrBased_grouped_decile)
-#
-#     for chr in chrNamesInSPMsList:
-#         chrLong = 'chr%s' %(chr)
-#         #read chrBased mutation_df
-#         chrBased_mutation_df = readChrBasedMutationDF(jobname,chrLong,singlePointMutationsFileName)
-#
-#         #split chrBased_mutation_df as many as number of cores
-#         chrBased_mutation_df_splits = np.array_split(chrBased_mutation_df,numofProcesses)
-#
-#         poolInputList = []
-#         for chrBased_mutation_df_split in chrBased_mutation_df_splits:
-#             inputList = []
-#             #Same
-#             inputList.append(chrLong)
-#             #Different
-#             inputList.append(chrBased_mutation_df_split)
-#             #Same
-#             inputList.append(chrBased_grouped_decile_list)
-#             poolInputList.append(inputList)
-#
-#         # Call the parallel code for poolInputList
-#         # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
-#         # It must return list of tuples
-#         # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
-#         # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
-#         listofDictionaries = pool.map(generateNPArrayAndSearchMutationsOnNPArray,poolInputList)
-#
-#         #Accumulate listofTuples coming from each chromosome
-#         accumulate(listofDictionaries,decileBasedAllChrAccumulatedCountDict)
-#
-#     return decileBasedAllChrAccumulatedCountDict
-# ##################################################################
-
-
-
-
 ##################################################################
-def augment(pool,wavelet_processed_df,genome):
+def augment(genome,pool,wavelet_processed_df):
     if (genome==GRCh37):
-        genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
+        wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
     elif (genome==GRCh38):
-        genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
+        wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
 
     #Augment in parallel for each chromosome
     poolInputList = []
-    chrBased_wavelet_processed_df_groups = wavelet_processed_df.groupby('chr')
+    chrBased_wavelet_processed_df_groups = wavelet_processed_df.groupby(CHROM)
     for chr, chrBased_wavelet_processed_df_group in chrBased_wavelet_processed_df_groups:
         inputList = []
         inputList.append(chr)
         inputList.append(chrBased_wavelet_processed_df_group)
         #Please note that when you provide the chr based hg19_genome it gives error
-        inputList.append(genome)
+        inputList.append(wholeGenome)
         poolInputList.append(inputList)
 
     # print('Augmentation starts')
@@ -1530,8 +1124,6 @@ def augment(pool,wavelet_processed_df,genome):
     # print('len(listofDFs): %d' %len(listofTuples))
 
     #Define frames which will be a list of dataframes
-    #columns = ['chr','start','end','signal','numofBases']
-    #augment_df = pd.DataFrame(columns=columns)
     frames = []
 
     for tuple in listofTuples:
@@ -1541,67 +1133,13 @@ def augment(pool,wavelet_processed_df,genome):
 
     augment_df = pd.concat(frames,ignore_index=True)
 
-    # print('##### augmented_df description starts #####################')
-    # print(augment_df.columns.values.tolist())
-    # print(type(augment_df))
-    # print(len(augment_df))
-    # print('##### augmented_df description ends #####################')
-    # print('augment ends')
-
     return augment_df
 ##################################################################
 
-##################################################################
-#Case 3: INDELs (AGGREGATEDINDELS and Indels Types)
-def writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
-    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
-
-    ######################### AGGREGATEDINDELS starts #########################
-    decileBasedAllChrAccumulatedCountDict= type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[AGGREGATEDINDELS]
-
-    normalizedMutationDensityFilename = AGGREGATEDINDELS + '_NormalizedMutationDensity.txt'
-    normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                     normalizedMutationDensityFilename)
-
-    numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
-    normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
-
-    with open(normalizedMutationDensityFilePath, 'w') as file:
-        for normalizedMutationDensity in normalizedMutationDensityList:
-            file.write(str(normalizedMutationDensity) + ' ')
-        file.write('\n')
-    ######################### AGGREGATEDINDELS ends ###########################
-
-    indelTypes = [MICROHOMOLOGY, REPEAT]
-
-    ######################### Signatures starts ###################
-    for indelType in indelTypes:
-        if indelType in type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict:
-            decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[indelType]
-
-            normalizedMutationDensityFilename = indelType + '_NormalizedMutationDensity.txt'
-            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                             normalizedMutationDensityFilename)
-
-
-            #If decileBasedAllChrAccumulatedCountDict is not empty
-            if (decileBasedAllChrAccumulatedCountDict):
-                numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
-                normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
-
-                with open(normalizedMutationDensityFilePath, 'w') as file:
-                    for normalizedMutationDensity in normalizedMutationDensityList:
-                        file.write(str(normalizedMutationDensity) + ' ')
-                    file.write('\n')
-    ######################### Signatures ends #####################
 
 ##################################################################
-
-
-
-##################################################################
-#Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
-def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
+#March 22, 2019
+def writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
     os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
 
     #One of the type is AGGREGATEDSUBSTITUTIONS
@@ -1616,7 +1154,7 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile
 
         # If decileBasedAllChrAccumulatedCountDict is not empty
         if (decileBasedAllChrAccumulatedCountDict):
-            numberofMutations, mutationDensityDict = getMutationDensityDict(deciles,decileBasedAllChrAccumulatedCountDict)
+            numberofMutations, mutationDensityDict = getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict,decileBasedAllChrAccumulatedCountDict)
             normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
 
             with open(normalizedMutationDensityFilePath, 'w') as file:
@@ -1636,7 +1174,58 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile
 
             #If decileBasedAllChrAccumulatedCountDict is not empty
             if (decileBasedAllChrAccumulatedCountDict):
-                numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
+                numberofMutations, mutationDensityDict = getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict, decileBasedAllChrAccumulatedCountDict)
+                normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
+
+                with open(normalizedMutationDensityFilePath, 'w') as file:
+                    for normalizedMutationDensity in normalizedMutationDensityList:
+                        file.write(str(normalizedMutationDensity) + ' ')
+                    file.write('\n')
+    ######################### Sample Based ends #######################
+
+
+
+##################################################################
+
+
+##################################################################
+#Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
+def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile_df_list,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
+
+    #One of the type is AGGREGATEDSUBSTITUTIONS
+
+    ##############################################################
+    for type in type2DecileBasedAllChrAccumulatedCountDict:
+        decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountDict[type]
+
+        normalizedMutationDensityFilename = type + '_NormalizedMutationDensity.txt'
+        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+                                                         normalizedMutationDensityFilename)
+
+        # If decileBasedAllChrAccumulatedCountDict is not empty
+        if (decileBasedAllChrAccumulatedCountDict):
+            numberofMutations, mutationDensityDict = getMutationDensityDict(decile_df_list,decileBasedAllChrAccumulatedCountDict)
+            normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
+
+            with open(normalizedMutationDensityFilePath, 'w') as file:
+                for normalizedMutationDensity in normalizedMutationDensityList:
+                    file.write(str(normalizedMutationDensity) + ' ')
+                file.write('\n')
+    ##############################################################
+
+    ######################### Sample Based starts #####################
+    for sample in sample2Type2DecileBasedAllChrAccumulatedCountDict:
+        for type in sample2Type2DecileBasedAllChrAccumulatedCountDict[sample]:
+            decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
+
+            normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
+                                                             normalizedMutationDensityFilename)
+
+            #If decileBasedAllChrAccumulatedCountDict is not empty
+            if (decileBasedAllChrAccumulatedCountDict):
+                numberofMutations, mutationDensityDict = getMutationDensityDict(decile_df_list, decileBasedAllChrAccumulatedCountDict)
                 normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
 
                 with open(normalizedMutationDensityFilePath, 'w') as file:
@@ -1648,222 +1237,91 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile
 ##################################################################
 
 
-
-
 ##################################################################
-#Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
-def writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict):
-    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
-
-    ######################### SPMS starts #########################
-    decileBasedAllChrAccumulatedCountDict= type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[AGGREGATEDSUBSTITUTIONS]
-
-    normalizedMutationDensityFilename = AGGREGATEDSUBSTITUTIONS + '_NormalizedMutationDensity.txt'
-    normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                     normalizedMutationDensityFilename)
-
-    numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
-    normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
-
-    with open(normalizedMutationDensityFilePath, 'w') as file:
-        for normalizedMutationDensity in normalizedMutationDensityList:
-            file.write(str(normalizedMutationDensity) + ' ')
-        file.write('\n')
-    ######################### SPMS ends ###########################
-
-
-    ######################### Signatures starts ###################
-    for signature in signatures:
-        if signature in type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict:
-            decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict[signature]
-
-            normalizedMutationDensityFilename = signature + '_NormalizedMutationDensity.txt'
-            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                             normalizedMutationDensityFilename)
-
-            #If decileBasedAllChrAccumulatedCountDict is not empty
-            if (decileBasedAllChrAccumulatedCountDict):
-                numberofMutations, mutationDensityDict = getMutationDensityDict(deciles, decileBasedAllChrAccumulatedCountDict)
-                normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
-
-                with open(normalizedMutationDensityFilePath, 'w') as file:
-                    for normalizedMutationDensity in normalizedMutationDensityList:
-                        file.write(str(normalizedMutationDensity) + ' ')
-                    file.write('\n')
-    ######################### Signatures ends #####################
-
-
-##################################################################
-
-
-
-##################################################################
-def replicationTimeAnalysis(genome,outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
-# if __name__ == '__main__':
-
-    withExtraSampleBasedAnalysis = True
-
-    # For Your  Information
-    # We will carry out replication time data analysis for these analysis types
-    # analysisTypes = {AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS,INDELBASED,SIGNATUREBASED}
+def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
 
     print('########################## ReplicationTimeAnalysis starts #########################')
-
     #########################################################################
     # Analysis Type can be
     # AggregatedSubstitutions: All in one
     # AggregatedIndels : All in one
     # IndelsBased : Microhomology, Repeat
-    # SignatureBased: Sig1, Sig2, ...
+    # SignatureBased: Subs Signatures Sig1, Sig2, ... and Indels Signatures  ID1, ID2, ...
 
     # We know the indels type we are interested in.
     # Microhomology indels --- len(indels) >= 3
     # Repeat indels --- len(indels) < 3
-    # indeltypes = [MICROHOMOLOGY, REPEAT]
     #########################################################################
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
-    ###################################################################
-    ############### Read MCF-7 RepliSeq Time data starts ##############
-    ###################################################################
-    chrNamesInReplicationTimeDataArray, deciles = readRepliSeqTimeData(pool,repliseqDataFilename,genome)
-    chrNamesInReplicationTimeDataList = chrNamesInReplicationTimeDataArray.tolist()
-    #What is the type of deciles? Deciles is a list of dataframes.
-    ###################################################################
-    ############### Read MCF-7 RepliSeq Time data ends ################
-    ###################################################################
-
-
     ##########################################################################################
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname, DATA,
-                                                                                           SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
+    sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
 
-    if (os.path.exists(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
-        signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
+    subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
+    indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
 
-    signatures = signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict.keys()
+    sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
+    sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
     ##########################################################################################
 
+    # Fill replication np arrays runtime
+    if (replication_time_np_arrays_fill_runtime):
 
-    ##########################################################################################
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
-                                                                                                  Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+        ###################################################################
+        ############### Read MCF-7 RepliSeq Time data starts ##############
+        ###################################################################
+        # Fist decile_df in decile_df_list contains the intervals that are replicated the earliest.
+        # Last decile_df in decile_df_list contains the intervals that are replicated the latest.
+        # Please note that each decile_df contains intervasl from all chroms (mixed chroms)
+        #What is the type of deciles? Deciles is a list of dataframes.
+        chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,pool,repliseqDataFilename)
 
-    if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
-        sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
-    ##########################################################################################
+        type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationType,
+                                                                                                                                outputDir,jobname,numofProcesses,pool,
+                                                                                                                                sample2NumberofSubsDict,
+                                                                                                                                sample2NumberofIndelsDict,
+                                                                                                                                subsSignature2NumberofMutationsDict,
+                                                                                                                                indelsSignature2NumberofMutationsDict,
+                                                                                                                                sample2SubsSignature2NumberofMutationsDict,
+                                                                                                                                sample2IndelsSignature2NumberofMutationsDict,
+                                                                                                                                chromSizesDict,
+                                                                                                                                decile_df_list,
+                                                                                                                                chromNamesList,
+                                                                                                                                singlePointMutationsFileName,
+                                                                                                                                indelsFilename)
 
+        writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile_df_list,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        ###################################################################
+        ############### Read MCF-7 RepliSeq Time data ends ################
+        ###################################################################
 
+    # Use offline or online prepared replication np arrays
+    else:
+        replicationTimeFilename_wo_extension = os.path.basename(repliseqDataFilename)[0:-4]
+        decileIndex2NumberofAttributableBasesDict = getDecileIndex2NumberofAttributableBasesDict(replicationTimeFilename_wo_extension)
+
+        #loading offline prepared numpy array
+        type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,
+                                                                                                                                outputDir,jobname,numofProcesses,pool,
+                                                                                                                                sample2NumberofSubsDict,
+                                                                                                                                sample2NumberofIndelsDict,
+                                                                                                                                subsSignature2NumberofMutationsDict,
+                                                                                                                                indelsSignature2NumberofMutationsDict,
+                                                                                                                                sample2SubsSignature2NumberofMutationsDict,
+                                                                                                                                sample2IndelsSignature2NumberofMutationsDict,
+                                                                                                                                repliseqDataFilename,
+                                                                                                                                chromNamesList,
+                                                                                                                                singlePointMutationsFileName,
+                                                                                                                                indelsFilename)
+
+        writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
 
     #######################################################################################################
     ############### Carry out Replication Time Data Analysis for each analysis type starts ################
     #######################################################################################################
-    if (withExtraSampleBasedAnalysis):
-
-        #NEW code with sample based analysis
-
-        ######################################################################################################
-        ######################################################################################################
-        ######################################################################################################
-
-        # Case1 : SPMs (AggregatedSubstitutions and Signatures)
-        if (singlePointMutationsFileName!=NOTSET and indelsFilename== NOTSET):
-            #######################################################################################################
-            ################ AggregatedSubstitutions and  Signatures starts #######################################
-            #######################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsWithExtraSampleBased(outputDir, jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
-
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-            #######################################################################################################
-            ################ AggregatedSubstitutions and  Signatures ends #########################################
-            #######################################################################################################
-
-
-        elif (singlePointMutationsFileName != NOTSET and indelsFilename != NOTSET):
-            ########################################################################################################################################
-            ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels starts #######################################
-            ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsSPMsandIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                                                                                                                    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                                                                                                                    deciles,
-                                                                                                                                    chrNamesInReplicationTimeDataList,
-                                                                                                                                    singlePointMutationsFileName,
-                                                                                                                                    indelsFilename)
-
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-            ########################################################################################################################################
-            ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels ends #########################################
-            ########################################################################################################################################
-
-        # Case 3: Indels (AggregatedIndels and Indels[Microhomology, Repeat])
-        elif (singlePointMutationsFileName==NOTSET and indelsFilename!= NOTSET):
-            ########################################################################################################################################
-            ############################################ AggregatedIndels --- Indels starts ########################################################
-            ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountDict, sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsIndelsWithExtraSampleBased(outputDir,jobname,numofProcesses,pool,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
-
-            writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
-            ########################################################################################################################################
-            ############################################ AggregatedIndels --- Indels ends ##########################################################
-            ########################################################################################################################################
-
-
-
-        ######################################################################################################
-        ######################################################################################################
-        ######################################################################################################
-
-    else:
-
-        #OLD code without sample based analysis
-
-        ######################################################################################################
-        ######################################################################################################
-        ######################################################################################################
-
-        # Case1 : SPMs (AggregatedSubstitutions and Signatures)
-        if (singlePointMutationsFileName!=NOTSET and indelsFilename== NOTSET):
-            #######################################################################################################
-            ################ AggregatedSubstitutions and  Signatures starts #######################################
-            #######################################################################################################
-            type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsSPMs(signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName)
-            writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
-            #######################################################################################################
-            ################ AggregatedSubstitutions and  Signatures ends #########################################
-            #######################################################################################################
-
-        # Case 2: SPMs (AggregatedSubstitutions and Signatures) and Indels (AggregatedIndels and Indels)
-        elif (singlePointMutationsFileName!=NOTSET and indelsFilename!= NOTSET):
-            ########################################################################################################################################
-            ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels starts #######################################
-            ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsSPMsandIndels(jobname,numofProcesses,pool,signatures,deciles,chrNamesInReplicationTimeDataList,singlePointMutationsFileName,indelsFilename)
-
-            writeReplicationTimeDataForSPMs(outputDir,signatures,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
-            writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
-            ########################################################################################################################################
-            ################ AggregatedSubstitutions ---  Signatures  --- AggregatedIndels --- Indels ends #########################################
-            ########################################################################################################################################
-
-        # Case 3: Indels (AggregatedIndels and Indels[Microhomology, Repeat])
-        elif (singlePointMutationsFileName==NOTSET and indelsFilename!= NOTSET):
-            ########################################################################################################################################
-            ############################################ AggregatedIndels --- Indels starts ########################################################
-            ########################################################################################################################################
-            type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict = calculateCountsIndels(jobname,numofProcesses,pool,deciles,chrNamesInReplicationTimeDataList,indelsFilename)
-            writeReplicationTimeDataForIndels(outputDir,jobname,deciles,type2DecileBasedAllChrAccumulatedCountForAllSinglePointMutationsDict)
-            ########################################################################################################################################
-            ############################################ AggregatedIndels --- Indels ends ##########################################################
-            ########################################################################################################################################
-
-        ######################################################################################################
-        ######################################################################################################
-        ######################################################################################################
-
 
     ################################
     pool.close()

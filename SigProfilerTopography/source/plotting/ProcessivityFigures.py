@@ -12,8 +12,6 @@
 #Plot the signatures versus processivity group lengths figure where the circle radius shows the number of processive groups
 # and  the color represents the signficance of number of processive groups in original data w.r.t. simulations data
 
-import os
-import sys
 import scipy.stats
 import statsmodels.stats.multitest
 
@@ -28,19 +26,7 @@ from matplotlib import pyplot as plt
 import matplotlib as mpl
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
-
-
 from scipy.stats import poisson
-
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('ProcessivityFigures.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ###################################################################

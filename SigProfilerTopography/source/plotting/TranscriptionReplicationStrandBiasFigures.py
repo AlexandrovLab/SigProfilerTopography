@@ -21,13 +21,6 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('TranscriptionReplicationStrandBiasFigures.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
 
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
@@ -341,8 +334,12 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
 #Sig26 is very different
 def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,mutationProbability2Signature2Sample2ReplicationStrand2CountDict,signatures,outputDir,jobname,isFigureAugmentation):
 
-    signature2Sample2TranscriptionStrand2CountDict= mutationProbability2Signature2Sample2TranscriptionStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
-    signature2Sample2ReplicationStrand2CountDict = mutationProbability2Signature2Sample2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
+    #TODO Check it. Dow we need string instead of float?
+    signature2Sample2TranscriptionStrand2CountDict= mutationProbability2Signature2Sample2TranscriptionStrand2CountDict[SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
+    signature2Sample2ReplicationStrand2CountDict = mutationProbability2Signature2Sample2ReplicationStrand2CountDict[SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
+
+    # old code
+    # signature2Sample2ReplicationStrand2CountDict = mutationProbability2Signature2Sample2ReplicationStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING]
 
     transcriptionRatiosDict = {}
     replicationRatiosDict = {}
@@ -861,8 +858,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     ##########################################################################################
     #Please note that this data structure is being used
     sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,
-                                                                                                  Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
+    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath = os.path.join(outputDir, jobname, DATA,Sample2SubsSignature2NumberofMutationsDictFilename)
 
     if (os.path.exists(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)):
         sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = readDictionary(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilePath)
@@ -873,7 +869,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     ##########################################################################################
     #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
     samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
-    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+    samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2NumberofSubsDictFilename)
 
     if (os.path.exists(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)):
         samplesWithAtLeast10KMutations2NumberofMutationsDict = readDictionary(samplesWithAtLeast10KMutations2NumberofMutationsDictFilePath)

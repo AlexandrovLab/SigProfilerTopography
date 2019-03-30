@@ -8,23 +8,12 @@
 # Copyright (C) 2018 Burcak Otlu
 
 
-import os
-import sys
-
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('PartitionSinglePointMutationsData.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
-from SigProfilerTopography.source.commons.TopographyCommons import *
+from SigProfilerTopography.source.commons.TopographyCommons import readSubsAndWriteChrBasedParallel
 
 ######################################################################
-def partitionMutationsData(outputDir,jobname,singlePointMutationsFilename):
+def partitionSubsData(outputDir,jobname,singlePointMutationsFilename):
     # Parallel
-    readMutationsAndWriteChrBasedParallel(outputDir,jobname,singlePointMutationsFilename)
+    readSubsAndWriteChrBasedParallel(outputDir,jobname,singlePointMutationsFilename)
 ######################################################################
 
 

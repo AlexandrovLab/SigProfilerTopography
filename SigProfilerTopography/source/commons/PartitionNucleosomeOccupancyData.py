@@ -1,3 +1,7 @@
+#Depreceated.
+#No more used.
+#Reads nucleosome data, partitions chrom based and writes it in text format.
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -41,11 +45,8 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
     matplotlib.use(BACKEND)
 from matplotlib import pyplot as plt
 
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
+from SigProfilerTopography.source.commons.TopographyCommons import *
 
-from TopographyCommons import *
 
 ######################################################################
 def  writeChrBasedNucleosome(chrNuclesomeList):

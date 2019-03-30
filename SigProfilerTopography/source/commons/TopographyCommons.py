@@ -14,12 +14,12 @@ import math
 import json
 import sys
 import multiprocessing
+import pickle
+import twobitreader
 
 from multiprocessing import Lock
 
-#############################################################
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
-#############################################################
 
 LEADING= 'Leading'
 LAGGING = 'Lagging'
@@ -33,18 +33,17 @@ MINUS = '-'
 MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1000000000
 
-
 #Constraints , Thresholds
-ONE_THOUSAND = 1000
-TEN_THOUSAND = 10000
+SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 10000
+INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
+DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
 
-# #TODO This will be used
-# SUBSTITUTION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-# DINUC_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-# INDEL_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
+INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 
-MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
-MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
+SAMPLE_MMR_DEFICIENT_THRESHOLD = 10000
+SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD = 1000
 
 #Global Constants for Nucleosome Occupancy Analysis
 plusOrMinus = 2000
@@ -96,20 +95,32 @@ GRCh38 = 'GRCh38'
 
 #For each job we will write signatures, chrnames in nucleosomes, single point mutations, and indels
 SignatureFilename = 'Signatures.txt'
-SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename = 'SamplesWithAtLeast10KMutations2NumberofMutationsDict.txt'
-Samples2NumberofIndelsDictFilename = 'Samples2NumberofIndelsDict.txt'
 
-SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename = 'SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict.txt'
-Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename = 'Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict.txt'
+#For Subs
+Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
+SubsSignature2NumberofMutationsDictFilename = 'SubsSignature2NumberofMutationsDict.txt'
+Sample2SubsSignature2NumberofMutationsDictFilename = 'Sample2SubsSignature2NumberofMutationsDict.txt'
+
+#For Indels
+Sample2NumberofIndelsDictFilename = 'Sample2NumberofIndelsDict.txt'
+IndelsSignature2NumberofMutationsDictFilename = 'IndelsSignature2NumberofMutationsDict.txt'
+Sample2IndelsSignature2NumberofMutationsDictFilename = 'Sample2IndelsSignature2NumberofMutationsDict.txt'
+
+#For Replication
+DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
+
+
+#TODO will be depreceated
 ChrNamesInNucleosomesFilename = 'ChrNamesInNucleosomes.txt'
 ChrNamesInIndelsFilename = 'ChrNamesInIndels.txt'
 ChrNamesInSPMsFilename = 'ChrNamesInSPMs.txt'
 
-AVAILABLENUCLEOSOMEOCCUPANCYFILESNAME = 'AvailableNucleosomeOccupancyFiles.txt'
-GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
-GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
 
 ONE_DIRECTORY_UP = '..'
+AVAILABLE_LIBRARY_FILENAMES = 'AvailableLibraryFiles.txt'
+AVAILABLE_LIBRARY_FILENAMES_PATH = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,AVAILABLE_LIBRARY_FILENAMES)
+GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
+GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
 
 INDELBASED = 'indelbased'
 SIGNATUREBASED = 'signaturebased'
@@ -142,8 +153,8 @@ NUMBER_OF_MUTATIONS = 'number_of_mutations'
 MUTATION_DENSITY = 'mutation_density'
 NORMALIZED_MUTATION_DENSITY = 'normalized_mutation_density'
 
-MICROHOMOLOGY = 'Microhomology'
-REPEAT = 'Repeat'
+MICROHOMOLOGY = 'Microhomology-mediated indels'
+REPEAT = 'Repeat-mediated indels'
 
 DEFICIENT = 'deficient'
 PROFICIENT = 'proficient'
@@ -163,6 +174,12 @@ MUTATION = 'Mutation'
 
 CHR = 'chr'
 
+COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
+COMPUTATION_CHROMOSOMES_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL'
+COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL'
+
+
+
 ############################################
 #Column Names
 PROJECT = 'Project'
@@ -179,6 +196,9 @@ PYRAMIDINESTRAND = 'PyramidineStrand'
 MUTATION = 'Mutation'
 MUTATIONS = 'Mutations'
 CONTEXT = 'Context'
+
+#For Replication Time Data
+NUMOFBASES = 'numofBases'
 
 COUNT = 'Count'
 MMR = 'MMR'
@@ -209,19 +229,17 @@ OriginalPaperSignature2Sample2TranscriptionStrand2CountDict_Filename = 'Original
 
 MutationType2ReplicationStrand2CountDict_Filename           = 'MutationType2ReplicationStrand2CountDict.txt'
 MutationType2Sample2ReplicationStrand2CountDict_Filename    = 'MutationType2Sample2ReplicationStrand2CountDict.txt'
-MutationProbability2Signature2ReplicationStrand2CountDict_Filename = 'MutationProbability2Signature2ReplicationStrand2CountDict.txt'
-MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2Signature2Sample2ReplicationStrand2CountDict.txt'
-Signature2ReplicationWeightedAverageRatioDict_Filename = 'Signature2ReplicationWeightedAverageRatioDict.txt'
-Signature2ReplicationStdErrorDict_Filename = 'Signature2ReplicationStdErrorDict.txt'
-Signature2ReplicationSumofMutationProbabilitiesDict_Filename = 'Signature2ReplicationSumofMutationProbabilitiesDict.txt'
+MutationProbability2SubsSignature2ReplicationStrand2CountDict_Filename = 'MutationProbability2SubsSignature2ReplicationStrand2CountDict.txt'
+MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict.txt'
+MutationProbability2IndelsSignature2ReplicationStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2ReplicationStrand2CountDict.txt'
+MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict.txt'
 
 MutationType2TranscriptionStrand2CountDict_Filename = 'MutationType2TranscriptionStrand2CountDict.txt'
 MutationType2Sample2TranscriptionStrand2CountDict_Filename = 'MutationType2Sample2TranscriptionStrand2CountDict.txt'
-MutationProbability2Signature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2Signature2TranscriptionStrand2CountDict.txt'
-MutationProbability2Signature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2Signature2Sample2TranscriptionStrand2CountDict.txt'
-Signature2TranscriptionWeightedAverageRatioDict_Filename = 'Signature2TranscriptionWeightedAverageRatioDict.txt'
-Signature2TranscriptionStdErrorDict_Filename = 'Signature2TranscriptionStdErrorDict.txt'
-Signature2TranscriptionSumofMutationProbabilitiesDict_Filename = 'Signature2TranscriptionSumofMutationProbabilitiesDict.txt'
+MutationProbability2SubsSignature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2SubsSignature2TranscriptionStrand2CountDict.txt'
+MutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict.txt'
+MutationProbability2IndelsSignature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2TranscriptionStrand2CountDict.txt'
+MutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict.txt'
 
 DATA_Folder = 'data'
 
@@ -231,6 +249,120 @@ FDR_BH_CORRECTION = 'FDR_BH_CORRECTION'
 USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
 USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
+
+########################################################################################
+def getChrNamesInNucleosomeList():
+    #Load Chrnames from nucleosome file
+    chrNamesInNucleosomeList = []
+
+    chrNamesInNucleosomeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
+
+    if (os.path.exists(chrNamesInNucleosomeFilePath)):
+        chrNamesInNucleosomeArray = np.loadtxt(chrNamesInNucleosomeFilePath,dtype=str, delimiter='\t')
+        chrNamesInNucleosomeList = list(chrNamesInNucleosomeArray)
+
+    return chrNamesInNucleosomeList
+########################################################################################
+
+
+########################################################################################
+def getAvailableLibraryFilenamesList():
+    availableLibraryFilenamesPath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,AVAILABLE_LIBRARY_FILENAMES)
+
+    if (os.path.exists(availableLibraryFilenamesPath)):
+        availableLibraryFilenamesList = readAsAList(availableLibraryFilenamesPath)
+
+    return availableLibraryFilenamesList
+########################################################################################
+
+
+########################################################################################
+def getSample2NumberofIndelsDict(outputDir,jobname):
+    sample2NumberofIndelsDict = {}
+    sample2NumberofIndelsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2NumberofIndelsDictFilename)
+
+    if (os.path.exists(sample2NumberofIndelsDictFilePath)):
+        sample2NumberofIndelsDict = readDictionary(sample2NumberofIndelsDictFilePath)
+
+    return sample2NumberofIndelsDict
+########################################################################################
+
+########################################################################################
+def getDecileIndex2NumberofAttributableBasesDict(replicationTimeFilename_wo_extension):
+    decileIndex2NumberofAttributableBasesDict = {}
+    decileIndex2NumberofAttributableBasesDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,replicationTimeFilename_wo_extension,DecileIndex2NumfAttributableBasesDictFilename)
+
+    if (os.path.exists(decileIndex2NumberofAttributableBasesDictFilePath)):
+        decileIndex2NumberofAttributableBasesDict = readDictionaryUsingPickle(decileIndex2NumberofAttributableBasesDictFilePath)
+
+    return decileIndex2NumberofAttributableBasesDict
+########################################################################################
+
+
+########################################################################################
+def getSubsSignature2NumberofMutationsDict(outputDir,jobname):
+    #Load signaturesWithAtLeast10KEligibleMutations
+    subsSignature2NumberofMutationsDict = {}
+
+    SubsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SubsSignature2NumberofMutationsDictFilename)
+
+    if (os.path.exists(SubsSignature2NumberofMutationsDictFilePath)):
+        subsSignature2NumberofMutationsDict = readDictionary(SubsSignature2NumberofMutationsDictFilePath)
+
+    return subsSignature2NumberofMutationsDict
+########################################################################################
+
+
+########################################################################################
+def getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname):
+    sample2SubsSignature2NumberofMutationsDict= {}
+
+    sample2SubsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2SubsSignature2NumberofMutationsDictFilename)
+
+    if (os.path.exists(sample2SubsSignature2NumberofMutationsDictFilePath)):
+        sample2SubsSignature2NumberofMutationsDict = readDictionary(sample2SubsSignature2NumberofMutationsDictFilePath)
+
+    return sample2SubsSignature2NumberofMutationsDict
+########################################################################################
+
+
+########################################################################################
+def getSample2NumberofSubsDict(outputDir,jobname):
+    #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
+    sample2NumberofSubsDict = {}
+
+    Sample2NumberofSubsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2NumberofSubsDictFilename)
+
+    if (os.path.exists(Sample2NumberofSubsDictFilePath)):
+        sample2NumberofSubsDict = readDictionary(Sample2NumberofSubsDictFilePath)
+
+    return sample2NumberofSubsDict
+########################################################################################
+
+
+########################################################################################
+def getIndelsSignature2NumberofMutationsDict(outputDir,jobname):
+    indelsSignature2NumberofMutationsDict = {}
+    indelsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,IndelsSignature2NumberofMutationsDictFilename)
+
+    if (os.path.exists(indelsSignature2NumberofMutationsDictFilePath)):
+        indelsSignature2NumberofMutationsDict = readDictionary(indelsSignature2NumberofMutationsDictFilePath)
+
+    return indelsSignature2NumberofMutationsDict
+########################################################################################
+
+
+########################################################################################
+def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
+    sample2IndelsSignature2NumberofMutationsDict = {}
+
+    sample2IndelsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2IndelsSignature2NumberofMutationsDictFilename)
+
+    if (os.path.exists(sample2IndelsSignature2NumberofMutationsDictFilePath)):
+        sample2IndelsSignature2NumberofMutationsDict = readDictionary(sample2IndelsSignature2NumberofMutationsDictFilePath)
+
+    return sample2IndelsSignature2NumberofMutationsDict
+########################################################################################
 
 
 ###################################################################
@@ -261,31 +393,30 @@ def getChromSizesDict(genome):
 
 
 ###################################################################
-def readTrancriptsENSEMBL():
-    transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_ENSEMBL)
+def readTrancriptsENSEMBL(genome):
+
+    if (genome==GRCh37):
+        transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_ENSEMBL)
+
 
     if (os.path.exists(transcriptsFilenamePath)):
-        GRCh37_hg19_ensembl_df = pd.read_table(transcriptsFilenamePath, header=0,sep="\t")
-        print('debug GRCh37_hg19_ensembl_df starts')
-        print('before columns renaming GRCh37_hg19_ensembl_df.columns.values')
-        print(GRCh37_hg19_ensembl_df.columns.values)
-        GRCh37_hg19_ensembl_df.rename(columns={'Chromosome/scaffold name': 'chrom', 'Strand': 'strand', 'Transcript start (bp)':'txStart', 'Transcript end (bp)':'txEnd'}, inplace=True)
-        print('after columns renaming GRCh37_hg19_ensembl_df.columns.values')
-        print(GRCh37_hg19_ensembl_df.columns.values)
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.shape)
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.head())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.tail())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.info())
-        print('debug GRCh37_hg19_ensembl_df ends')
+        ensembl_transcripts_df = pd.read_table(transcriptsFilenamePath, header=0,sep="\t")
+
         #Change the column name     Chromosome/scaffold name    -->     chrom
         #                           Strand                      -->     strand
         #                           Transcript start (bp)       -->     txStart
         #                           Transcript end (bp)         -->     txEnd
-        return GRCh37_hg19_ensembl_df
+        ensembl_transcripts_df.rename(columns={'Chromosome/scaffold name': 'chrom', 'Strand': 'strand', 'Transcript start (bp)':'txStart', 'Transcript end (bp)':'txEnd'}, inplace=True)
+        print('Chromosome names in transcripts data: %s' % (ensembl_transcripts_df['chrom'].unique()))
+
+        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.shape)
+        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.head())
+        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.tail())
+        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.info())
+
+        return ensembl_transcripts_df
     else:
         return None
-
-
 # Gene stable ID	Transcript stable ID	Chromosome/scaffold name	Strand	Transcript start (bp)	Transcript end (bp)	Transcript type
 ###################################################################
 
@@ -324,7 +455,7 @@ def readChrBasedIndelsDF(outputDir,jobname,chrLong,filename):
 
 
 ##################################################################
-def readChrBasedMutationDF(outputDir,jobname,chrLong,filename):
+def readChrBasedSubsDF(outputDir,jobname,chrLong,filename):
 
     filename = chrLong + '_' + filename
 
@@ -376,16 +507,14 @@ def readChrBasedMutationDF(outputDir,jobname,chrLong,filename):
 
 ##################################################################
 #mutationsWithSignatureBasedProbabilitiesFileName 'breast_cancer_mutation_probabilities_final.txt'
-def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
+def readSubs(subsWithSignatureBasedProbabilitiesFileName):
 
-    # Read the file w.r.t. the current folder
-    mutationFilePath = os.path.join(mutationsWithSignatureBasedProbabilitiesFileName)
-    # mutationFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, jobname,mutationsWithSignatureBasedProbabilitiesFileName)
+    subsFilePath = os.path.join(subsWithSignatureBasedProbabilitiesFileName)
 
     #################################################
     #First read only first row
-    mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
-    columnNamesList = list(mutation_df.columns.values)
+    subs_df = pd.read_table(subsFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
+    columnNamesList = list(subs_df.columns.values)
 
     contextIndex = columnNamesList.index(CONTEXT)
 
@@ -393,18 +522,18 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     signatures = columnNamesList[(contextIndex + 1):]
     #################################################
 
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
+    sample2NumberofSubsDict = {}
+    subsSignature2NumberofMutationsDict = {}
+    sample2SubsSignature2NumberofMutationsDict = {}
 
     #################################################
     mydtypes = {}
-
     #np.float16 Half precision float: sign bit, 5 bits exponent, 10 bits mantissa
     #np.int32   Integer (-2147483648 to 2147483647)
     #np.int8 Byte (-128 to 127)
 
-    #To lower the dataframe size
     for signature in signatures:
-        mydtypes[signature] = np.float16
+        mydtypes[signature] = np.float32
 
     mydtypes[SAMPLE] = str
     mydtypes[CHROM] = str
@@ -416,80 +545,57 @@ def readMutations(mutationsWithSignatureBasedProbabilitiesFileName):
     #################################################
 
     #################################################
-    #Read All rows
-    #old way
     # mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#',dtype={'Sample':str,'Chromosome': str, 'Start': int, 'End':int, 'PyramidineStrand': int, 'Mutation':str, 'Context':str})
-    #new way
-    mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#',dtype=mydtypes)
+    subs_df = pd.read_table(subsFilePath, sep="\t", comment='#',dtype=mydtypes)
     #################################################
 
-    print('mutation_df[Chrom].unique()')
-    print(mutation_df[CHROM].unique())
-
-    listofSamples = mutation_df[SAMPLE].unique()
+    listofSamples = subs_df[SAMPLE].unique()
     print('Number of samples in single point mutations file: %d' %(len(listofSamples)))
 
     ##############################################################
-    samplesWithAtLeast10KMutations2NumberofMutationsDict = {}
-
     for sample in listofSamples:
-        numberofMutations =  len(mutation_df[mutation_df[SAMPLE] == sample])
-        if (numberofMutations>=TEN_THOUSAND):
-            samplesWithAtLeast10KMutations2NumberofMutationsDict[sample] = numberofMutations
-
-    ########## debug starts #############
-    print('samplesWithAtLeast10KMutations2NumberofMutationsDict')
-    print(samplesWithAtLeast10KMutations2NumberofMutationsDict)
-
-    print('len(samplesWithAtLeast10KMutations2NumberofMutationsDict)')
-    print(len(samplesWithAtLeast10KMutations2NumberofMutationsDict))
-    ########## debug ends ###############
-
-
+        numberofSubs =  len(subs_df[subs_df[SAMPLE] == sample])
+        if (numberofSubs>=SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+            sample2NumberofSubsDict[sample] = numberofSubs
     ##############################################################
 
     ##############################################################
-    # first write down the header
-    print('Signature\tNumberofMutationsWithProbability>=%f\tNumberofSamples' %MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
     for signature in signatures:
-        signaturebased_df = mutation_df[mutation_df[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
-        numberofMutations = len(signaturebased_df)
-        if (numberofMutations>= TEN_THOUSAND):
-            signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[signature] = numberofMutations
-
-        signatureBased_numberofSamples = len(signaturebased_df[SAMPLE].unique())
-        print('%s\t%d\t%d' % (signature, signaturebased_df.shape[0], signatureBased_numberofSamples))
+        signaturebased_df = subs_df[subs_df[signature] >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
+        numberofSubs = len(signaturebased_df)
+        if (numberofSubs>= SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+            subsSignature2NumberofMutationsDict[signature] = numberofSubs
     ##############################################################
 
 
     ##############################################################
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict = {}
 
-    #We can not get rid of this part since we need the signatures with at least 10K mutations  for that sample
-    # samplesWithAtLeast10KMutationsList and signaturesWithAtLeast10KEligibleMutationsList do not provide this information
-    #Get the list of signatures for each sample that has at least 10K mutations with probability >= 0.5
-    for sample in samplesWithAtLeast10KMutations2NumberofMutationsDict:
-        for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
+    for sample in sample2NumberofSubsDict:
+        for signature in subsSignature2NumberofMutationsDict:
             #check if there are at least 10K mutations with probability >= 0.5 for this (sample,signature) pair
-            numberofMutations = len(mutation_df[ ((mutation_df[SAMPLE]==sample) & (mutation_df[signature]>= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
-            if (numberofMutations>= TEN_THOUSAND):
-                if sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-                    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature] = numberofMutations
+            numberofMutations = len(subs_df[ ((subs_df[SAMPLE]==sample) & (subs_df[signature]>= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
+            if (numberofMutations>= SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+                if sample in sample2SubsSignature2NumberofMutationsDict:
+                    sample2SubsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
                 else:
-                    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]={}
-                    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample][signature] = numberofMutations
+                    sample2SubsSignature2NumberofMutationsDict[sample]={}
+                    sample2SubsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
     ##############################################################
 
-    print('###########################')
-    print('size of %s in %d Bytes -- %f in GB ' %(mutationsWithSignatureBasedProbabilitiesFileName, sys.getsizeof(mutation_df),sys.getsizeof(mutation_df)/GIGABYTE_IN_BYTES))
-    print('###########################')
+    # print('###########################')
+    # print('size of %s in %d Bytes -- %f in GB ' %(subsWithSignatureBasedProbabilitiesFileName, sys.getsizeof(subs_df),sys.getsizeof(subs_df)/GIGABYTE_IN_BYTES))
+    # print('###########################')
 
-    return signatures, samplesWithAtLeast10KMutations2NumberofMutationsDict, signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict, mutation_df
+    return signatures, \
+           sample2NumberofSubsDict, \
+           subsSignature2NumberofMutationsDict, \
+           sample2SubsSignature2NumberofMutationsDict, \
+           subs_df
 ##################################################################
 
 ##################################################################
 def readMutationsAndWriteChrBased(mutationsWithSignatureBasedProbabilitiesFileName):
-    signatures, samplesWithAtLeast10KMutationsList, mutation_df = readMutations(mutationsWithSignatureBasedProbabilitiesFileName)
+    signatures, samplesWithAtLeast10KMutationsList, mutation_df = readSubs(mutationsWithSignatureBasedProbabilitiesFileName)
 
     mutation_df_grouped= mutation_df.groupby(CHROM)
 
@@ -552,7 +658,7 @@ def writeChrBasedMutationDF(inputList):
         chrBased_mutation_df.to_csv(chrBasedMutationFile, index=None, sep='\t', mode='w')
 
     # lock.release()
-    print('write for %s ends' %(chr))
+    # print('write for %s ends' %(chr))
 ##################################################################
 
 
@@ -592,70 +698,23 @@ def accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedSplitsC
 ########################################################################################
 
 
-########################################################################################
-# Common for nucleosome occupancy analyis
-# head chr3_wgEncodeSydhNsomeK562Sig.wig
-#   chr3    60039   60043   1.2
-#   chr3    60043   60049   1.3
-#It seems that ends are exclusive therefore we do not need to add 1 to the end during slicing
-def fillNucleosomeSignalArray(nucleosome_row,nucleosome_array):
-    nucleosome_array[nucleosome_row['start']:nucleosome_row['end']] += nucleosome_row['signal']
-########################################################################################
 
 ########################################################################################
 # For nucleosome occupancy analyis
 #This function is general can be move to TopographyCommons.py
 #This is for single point mutations and signatures
-def fillSplitBasedSignalArrayAndCountArrayForSPMs(mutation_row,nucleosome_array,signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,signature2SignalArrayDict,signature2CountArrayDict,allSinglePointMutationsSignalArray,allSinglePointMutationsCountArray):
-
-    #Do this only once.
-    ##########################################################
-    # Case 1: start is very close to the chromosome start
-    if (mutation_row[START]<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
-        window_array = nucleosome_array[0:(mutation_row[END]+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant')
-    # Case 2: start is very close to the chromosome end
-    elif (mutation_row[END]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(mutation_row[START],mutation_row[END]))
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,mutation_row[END]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
-    #Case 3: No problem
-    else:
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[END]+plusOrMinus+1)]
-    ##########################################################
-
-    #TODO: Is there a faster way than using for loop?
-    ################# Signatures starts #######################
-    for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
-            signature2SignalArrayDict[signature] += window_array
-            signature2CountArrayDict[signature] += (window_array>0)
-    ################# Signatures ends #########################
-
-    ################ All single mutations starts ##############
-    allSinglePointMutationsSignalArray += window_array
-    allSinglePointMutationsCountArray += (window_array>0)
-    ################ All single mutations ends ################
-########################################################################################
-
-
-########################################################################################
-# For nucleosome occupancy analyis
-#This function is general can be move to TopographyCommons.py
-#This is for single point mutations and signatures
-def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_row,
+def  fillSignalArrayAndCountArrayForSubs(mutation_row,
                                                   nucleosome_array,
                                                   maximum_chrom_size,
-                                                  signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                                  samplesWithAtLeast10KMutations2NumberofMutationsDict,
-                                                  sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,
-                                                  signature2SignalArrayDict,
-                                                  signature2CountArrayDict,
+                                                  sample2NumberofSubsDict,
+                                                  subsSignature2NumberofMutationsDict,
+                                                  sample2SubsSignature2NumberofMutationsDict,
+                                                  subsSignature2SignalArrayDict,
+                                                  subsSignature2CountArrayDict,
                                                   allSinglePointMutationsSignalArray,
                                                   allSinglePointMutationsCountArray,
-                                                  sample2Signature2SignalArrayDict,
-                                                  sample2Signature2CountArrayDict,
+                                                  sample2SubsSignature2SignalArrayDict,
+                                                  sample2SubsSignature2CountArrayDict,
                                                   sample2AllSinglePointMutationsSignalArrayDict,
                                                   sample2AllSinglePointMutationsCountArrayDict):
 
@@ -685,18 +744,18 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
     #TODO: Is there a faster way than using for loop?
     ################# Signatures starts #######################
     #We do not want to consider signatures with eligible mutations less than 10K
-    for signature in signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict:
-        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
+    for signature in subsSignature2NumberofMutationsDict:
+        if (mutation_row[signature] >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
 
             ####################################################
-            signature2SignalArrayDict[signature] += window_array
-            signature2CountArrayDict[signature] += (window_array>0)
+            subsSignature2SignalArrayDict[signature] += window_array
+            subsSignature2CountArrayDict[signature] += (window_array>0)
             ####################################################
 
             ####################################################
-            if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict) and (signature in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict[sample]):
-                sample2Signature2SignalArrayDict[sample][signature] += window_array
-                sample2Signature2CountArrayDict[sample][signature] += (window_array>0)
+            if (sample in sample2SubsSignature2NumberofMutationsDict) and (signature in sample2SubsSignature2NumberofMutationsDict[sample]):
+                sample2SubsSignature2SignalArrayDict[sample][signature] += window_array
+                sample2SubsSignature2CountArrayDict[sample][signature] += (window_array>0)
             ####################################################
 
     ################# Signatures ends #########################
@@ -708,40 +767,29 @@ def  fillSplitBasedSignalArrayAndCountArrayForSPMsWithExtraSampleBased(mutation_
     ################ All single mutations ends ################
 
     ################ Sample Based All single mutations starts ##############
-    if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict):
+    if (sample in sample2NumberofSubsDict):
         sample2AllSinglePointMutationsSignalArrayDict[sample] += window_array
         sample2AllSinglePointMutationsCountArrayDict[sample] += (window_array > 0)
     ################ Sample Based All single mutations ends ##############
 
-    # #For debug starts FEB 28, 2019
-    # #for each mutation
-    # if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict and sample=='PD24197a'):
-    #     count_array = np.zeros(windowSize)
-    #     count_array += (window_array > 0)
-    #
-    #     signal_array_sum = np.sum(window_array)
-    #     signal_array_max = np.amax(window_array)
-    #     signal_array_min = np.amin(window_array)
-    #
-    #     count_array_sum = np.sum(count_array)
-    #     count_array_max = np.amax(count_array)
-    #     count_array_min = np.amin(count_array)
-    #
-    #     if (signal_array_sum>0):
-    #         signalFilename = '%s_chr%s_%d_signal_array_sum_%s_max_%s_min_%s.txt' % (sample, mutation_row[CHROM], mutation_row[START], str(signal_array_sum).replace('.','_point'), str(signal_array_max).replace('.','_point'),str(signal_array_min).replace('.','_point'))
-    #         signalFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, '560_BRCA_WGS',DATA, NUCLEOSOMEOCCUPANCY, signalFilename)
-    #         window_array.tofile(file=signalFilePath, sep="\t", format="%s"),
-    #
-    #     if (count_array_sum>0):
-    #         countFilename = '%s_chr%s_%d_count_array_sum_%s_max_%s_min_%s.txt' % (sample, mutation_row[CHROM], mutation_row[START], str(count_array_sum).replace('.','_point'), str(count_array_max).replace('.','_point'),str(count_array_min).replace('.','_point'))
-    #         countFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, '560_BRCA_WGS',DATA, NUCLEOSOMEOCCUPANCY, countFilename)
-    #         count_array.tofile(file=countFilePath, sep="\t", format="%s")
-    # #For debug ends FEB 28, 2019
 ########################################################################################
 
-
 ########################################################################################
-def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_row,nucleosome_array,maximum_chrom_size,sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,allIndelsSignalArray,allIndelsCountArray,sample2AllIndelsSignalArrayDict,sample2AllIndelsCountArrayDict):
+def fillSignalArrayAndCountArrayForIndels(
+        indel_row,
+        nucleosome_array,
+        maximum_chrom_size,
+        sample2NumberofIndelsDict,
+        indelsSignature2NumberofMutationsDict,
+        sample2IndelsSignature2NumberofMutationsDict,
+        indelsSignature2SignalArrayDict,
+        indelsSignature2CountArrayDict,
+        allIndelsSignalArray,
+        allIndelsCountArray,
+        sample2IndelsSignature2SignalArrayDict,
+        sample2IndelsSignature2CountArrayDict,
+        sample2AllIndelsSignalArrayDict,
+        sample2AllIndelsCountArrayDict):
 
     ##########################################################
     # Case 1: start is very close to the chromosome start
@@ -762,47 +810,32 @@ def fillSplitBasedSignalArrayAndCountArrayForIndelsWithExtraSampleBased(indel_ro
     #Get the sample at this mutation_row
     sample = indel_row[SAMPLE]
 
-
     ################ All single mutations starts ##############
     allIndelsSignalArray += window_array
     allIndelsCountArray += (window_array>0)
     ################ All single mutations ends ################
 
-    if (sample in sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict):
+    ####################################################################################
+    if (sample in sample2NumberofIndelsDict):
         sample2AllIndelsSignalArrayDict[sample] += window_array
         sample2AllIndelsCountArrayDict[sample] += (window_array>0)
-########################################################################################
+    ####################################################################################
 
+    ####################################################################################
+    for signature in indelsSignature2NumberofMutationsDict:
+        if (indel_row[signature]>INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
+            indelsSignature2SignalArrayDict[signature] +=  window_array
+            indelsSignature2CountArrayDict[signature] += (window_array>0)
 
-########################################################################################
-# For nucleosome occupancy analyis
-#This is for indels
-#Please notice that I have used indel_row['Start'] only not indel_row['End']
-def fillSplitBasedSignalArrayAndCountArrayForIndels(indel_row,nucleosome_array,allIndelsSignalArray,allIndelsCountArray):
-
-    #Do this only once.
-    ##########################################################
-    # Case 1: start is very close to the chromosome start
-    if (indel_row[START]<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d mutation[Start]:%d' %(indel_row[START],indel_row[START]))
-        window_array = nucleosome_array[0:(indel_row[START]+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-indel_row[START],0),'constant')
-    # Case 2: start is very close to the chromosome end
-    elif (indel_row[START]+plusOrMinus > MAXIMUM_CHROMOSOME_LENGTH):
-        print('mutation[Start]:%d mutation[End]:%d' %(indel_row[START],indel_row[START]))
-        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):MAXIMUM_CHROMOSOME_LENGTH]
-        window_array = np.pad(window_array, (0,indel_row[START]+plusOrMinus-MAXIMUM_CHROMOSOME_LENGTH),'constant')
-    #Case 3: No problem
-    else:
-        window_array = nucleosome_array[(indel_row[START]-plusOrMinus):(indel_row[START]+plusOrMinus+1)]
-    ##########################################################
-
-    ################ All single mutations starts ##############
-    allIndelsSignalArray += window_array
-    allIndelsCountArray += (window_array>0)
-    ################ All single mutations ends ################
+            ####################################################
+            if (sample in sample2IndelsSignature2NumberofMutationsDict) and (signature in sample2IndelsSignature2NumberofMutationsDict[sample]):
+                sample2IndelsSignature2SignalArrayDict[sample][signature] += window_array
+                sample2IndelsSignature2CountArrayDict[sample][signature] += (window_array>0)
+            ####################################################
+    ####################################################################################
 
 ########################################################################################
+
 
 
 ########################################################################################
@@ -866,7 +899,6 @@ def writeSignatureBasedAverageNucleosomeOccupancyFiles(signature2AccumulatedAllC
 ########################################################################################
 def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Signature2AccumulatedAllChromsSignalArrayDict,
                                                                 sample2Signature2AccumulatedAllChromsCountArrayDict,outputDir,jobname):
-
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
 
@@ -935,17 +967,129 @@ def init(l):
     lock = l
 ##################################################################
 
-##################################################################
-def readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFileName):
-    sample2NumberofIndelsDict,indels_df = readIndels(indelsFileName)
 
-    print('For debugging purposes indels_df.columns')
-    print(indels_df.columns)
+############################################################
+#Tested works correctly.
+def getNucleotides(chromosomeShort,start,end,humanGenome):
+    if chromosomeShort == 'MT':
+        chromosomeShort = 'M'
+    elif chromosomeShort == '23':
+        chromosomeShort = 'X'
+    elif chromosomeShort == '24':
+        chromosomeShort = 'Y'
+
+    chromosomeLong = 'chr' + chromosomeShort
+    chrBased_humanGenome = humanGenome[chromosomeLong]
+    seq = chrBased_humanGenome.get_slice(start,end)
+    seq = seq.upper()
+    return seq
+############################################################
+
+############################################################
+def addPyramidineStrandColumnToDF(inputList):
+    chrShort= inputList[0]
+    chr_based_indels_df = inputList[1]
+    genome = inputList[2]
+
+    chr_based_indels_df = chr_based_indels_df.apply(addPyramidineStrandColumn,genome=genome,axis=1)
+
+    return chr_based_indels_df
+############################################################
+
+############################################################
+def allPyrimidine(ref):
+    if (('A' in ref) or ('G' in ref)):
+        return False
+    else:
+        return True
+############################################################
+
+
+############################################################
+def allPurine(ref):
+    if (('T' in ref) or ('C' in ref)):
+        return False
+    else:
+        return True
+############################################################
+
+##################################################################
+def addPyramidineStrandColumn(mutation_row, genome):
+    chromosomeShort = mutation_row[CHROM]
+    start = mutation_row[START]
+    end = mutation_row[END]
+    ref = mutation_row[REF]
+
+    #Make  zero based
+    start = start-1
+    end = end-1
+
+    referenceGenomeDNASequence = getNucleotides(chromosomeShort, start, end, genome)
+
+    if (ref == referenceGenomeDNASequence) and (allPyrimidine(ref)):
+        mutation_row[PYRAMIDINESTRAND] = +1
+    elif (ref == referenceGenomeDNASequence) and (allPurine(ref)):
+        mutation_row[PYRAMIDINESTRAND] = -1
+    else:
+        mutation_row[PYRAMIDINESTRAND] = 0
+
+    return mutation_row
+##################################################################
+
+
+##################################################################
+def readIndelsAndWriteChrBasedParallel(genome,outputDir,jobname,indelsFileName):
+    sample2NumberofIndelsDict, \
+    indelsSignatures2NumberofMutationsDict, \
+    sample2IndelsSignatures2NumberofMutationsDict, \
+    indels_df = readIndels(indelsFileName)
+
+    # print('For debugging purposes indels_df.columns.values')
+    # print(indels_df.columns.values)
+
+    ##############################################################################################
+    #Do we have PYRAMIDINESTRAND column? If not add
+    if (PYRAMIDINESTRAND not in indels_df.columns.values):
+        if (genome == GRCh37):
+            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, 'hg19.2bit'))
+        elif (genome == GRCh38):
+            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, 'hg38.2bit'))
+
+        ###########################################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(numofProcesses)
+
+        poolInputList = []
+        indels_df_grouped = indels_df.groupby(CHROM)
+        for chrom, chr_based_indels_df in indels_df_grouped:
+            inputList = []
+            inputList.append(chrom)
+            inputList.append(chr_based_indels_df)
+            inputList.append(genome)
+            poolInputList.append(inputList)
+
+        list_of_chrBased_indels_df = pool.map(addPyramidineStrandColumnToDF,poolInputList)
+
+        pool.close()
+        pool.join()
+        ###########################################################
+
+        indels_df = pd.concat(list_of_chrBased_indels_df, axis=0)
+
+    ##############################################################################################
 
     indels_df_grouped= indels_df.groupby(CHROM)
 
-    print('len(indels_df_grouped)')
-    print(len(indels_df_grouped))
+    # print('len(indels_df_grouped)')
+    # print(len(indels_df_grouped))
+
+    # print('Debug March 27, 2019 indels_df.head()')
+    # print(indels_df.iloc[0])
+    # print(indels_df.iloc[1])
+    # print(indels_df.iloc[2])
+    # print(indels_df.iloc[3])
+    # print(indels_df.iloc[4])
+    # print(indels_df.iloc[5])
 
     os.makedirs(os.path.join(outputDir,jobname,DATA, CHRBASED),exist_ok=True)
 
@@ -953,25 +1097,28 @@ def readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFileName):
     ############### Write Unique Chrnames starts ############
     #########################################################
     uniqueChrNames = indels_df[CHROM].unique()
+    print('Chromosome names in indels data: %s' %(uniqueChrNames))
     # The unique values are returned as a NumPy array
 
-    # Write uniqueChrNames to a file
-    filename = ChrNamesInIndelsFilename
-
-    ChrNamesFile = os.path.join(outputDir,jobname,DATA,filename)
-
-    np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
+    # # Write uniqueChrNames to a file
+    # filename = ChrNamesInIndelsFilename
+    # ChrNamesFile = os.path.join(outputDir,jobname,DATA,filename)
+    # np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
     #########################################################
     ############### Write Unique Chrnames ends ##############
     #########################################################
 
+
     #############################################################################################################################
-    ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
+    ####################################################### Write starts ########################################################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2NumberofIndelsDict,outputDir,jobname,Samples2NumberofIndelsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2NumberofIndelsDict,outputDir,jobname,Sample2NumberofIndelsDictFilename)
+    writeDictionaryUnderDataDirectory(indelsSignatures2NumberofMutationsDict,outputDir,jobname,IndelsSignature2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2IndelsSignatures2NumberofMutationsDict,outputDir,jobname,Sample2IndelsSignature2NumberofMutationsDictFilename)
     #############################################################################################################################
-    ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
+    ####################################################### Write ends ##########################################################
     #############################################################################################################################
+
 
     #########################################################
     # l = multiprocessing.Lock()
@@ -980,7 +1127,7 @@ def readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFileName):
     pool = multiprocessing.Pool(numofProcesses)
     #########################################################
 
-    print('For debugging purposes number of cores: %d' %(numofProcesses))
+    print('Number of cores: %d' %(numofProcesses))
     poolInputList =[]
 
     #Get the filename at the end of the full path
@@ -1009,14 +1156,14 @@ def readIndelsAndWriteChrBasedParallel(outputDir,jobname,indelsFileName):
 
 
 ##################################################################
-def readMutationsAndWriteChrBasedParallel(outputDir,jobname,mutationsWithSignatureBasedProbabilitiesFileName):
+def readSubsAndWriteChrBasedParallel(outputDir,jobname,subsWithSignatureBasedProbabilitiesFileName):
     signatures, \
-    samplesWithAtLeast10KMutations2NumberofMutationsDict, \
-    signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
-    sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,\
-    mutation_df = readMutations(mutationsWithSignatureBasedProbabilitiesFileName)
+    sample2NumberofSubsDict, \
+    subsSignature2NumberofMutationsDict, \
+    sample2SubsSignature2NumberofMutationsDict, \
+    subs_df = readSubs(subsWithSignatureBasedProbabilitiesFileName)
 
-    mutation_df_grouped= mutation_df.groupby(CHROM)
+    mutation_df_grouped= subs_df.groupby(CHROM)
     os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
 
     #########################################################
@@ -1033,51 +1180,39 @@ def readMutationsAndWriteChrBasedParallel(outputDir,jobname,mutationsWithSignatu
     #########################################################
 
     #############################################################################################################################
-    ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
+    ################################################# Write Dictionaries starts #################################################
     #############################################################################################################################
-    writeDictionaryUnderDataDirectory(samplesWithAtLeast10KMutations2NumberofMutationsDict,outputDir,jobname,SamplesWithAtLeast10KMutations2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2NumberofSubsDict,outputDir,jobname,Sample2NumberofSubsDictFilename)
+    writeDictionaryUnderDataDirectory(subsSignature2NumberofMutationsDict,outputDir,jobname,SubsSignature2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,Sample2SubsSignature2NumberofMutationsDictFilename)
     #############################################################################################################################
-    ######################## Write samplesWithAtLeast10KMutations2NumberofMutationsDict starts ##################################
-    #############################################################################################################################
-
-    #############################################################################################################################
-    ######################## Write signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts ##################################
-    #############################################################################################################################
-    writeDictionaryUnderDataDirectory(signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,outputDir,jobname,SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
-    #############################################################################################################################
-    ######################## Write signaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts ##################################
-    #############################################################################################################################
-
-    #############################################################################################################################
-    ############### Write sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict starts #########################
-    #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict,outputDir,jobname,Sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDictFilename)
-    #############################################################################################################################
-    ############### Write sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict ends ###########################
+    ################################################# Write Dictionaries ends ###################################################
     #############################################################################################################################
 
 
     #########################################################
     ############### Write Unique Chrnames starts ############
     #########################################################
-    uniqueChrNames = mutation_df[CHROM].unique()
+    uniqueChrNames = subs_df[CHROM].unique()
+    print('Chromosome names in single point mutations data: %s' %(uniqueChrNames))
 
-    ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
-    np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
+    # ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
+    # np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
     #########################################################
     ############### Write Unique Chrnames ends ##############
     #########################################################
 
     #########################################################
-    l = multiprocessing.Lock()
+    # l = multiprocessing.Lock()
     numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses,initializer=init, initargs=(l,))
+    # pool = multiprocessing.Pool(numofProcesses,initializer=init, initargs=(l,))
+    pool = multiprocessing.Pool(numofProcesses)
     #########################################################
 
     poolInputList =[]
 
     # Get the filename at the end of the full path
-    mutationsWithSignatureBasedProbabilitiesFileName = os.path.basename(mutationsWithSignatureBasedProbabilitiesFileName)
+    mutationsWithSignatureBasedProbabilitiesFileName = os.path.basename(subsWithSignatureBasedProbabilitiesFileName)
 
     #########################################################
     for chr, chrBased_mutation_df in mutation_df_grouped:
@@ -1106,8 +1241,20 @@ def readMutationsAndWriteChrBasedParallel(outputDir,jobname,mutationsWithSignatu
 def readIndels(allIndelsFileName):
     # Columns: ['Sample', 'Chrom', 'Start', 'End', 'Ref','Alt', 'Type', 'Length', 'Category']
     # Sample  Chrom      Start   End     Ref    Alt Type    Length  Category
-
     allIndelsFilePath = os.path.join(allIndelsFileName)
+
+    #################################################
+    #First read only first row
+    indels_df = pd.read_table(allIndelsFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
+    columnNamesList = list(indels_df.columns.values)
+
+    contextIndex = columnNamesList.index(CONTEXT)
+
+    # We assume that after the column named 'Context' there are the signature columns in tab separated way.
+    signatures = columnNamesList[(contextIndex + 1):]
+    print('Indels Signatures')
+    print(signatures)
+    #################################################
 
     # indels_df = pd.read_table(allIndelsFilePath,sep="\t",dtype={'Sample': str, 'Chromosome': str}, header=0)
     indels_df = pd.read_table(allIndelsFilePath,sep="\t", header=0)
@@ -1122,31 +1269,52 @@ def readIndels(allIndelsFileName):
 
     sample2NumberofIndelsDict = {}
     for sample in listofSamples:
-        numberofMutations =  len(indels_df[indels_df[SAMPLE] == sample])
-        sample2NumberofIndelsDict[sample] = numberofMutations
+        numberofIndels =  len(indels_df[indels_df[SAMPLE] == sample])
+        if (numberofIndels>=INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+            sample2NumberofIndelsDict[sample] = numberofIndels
     ###########################################################################
 
     print('Number of samples in indels file: %d' %(len(indels_df[SAMPLE].unique())))
     print('Number of indels: %d' %(indels_df.shape[0]))
-    print('Indels file shape')
-    print(indels_df.shape)
+    # print('Indels file shape')
+    # print(indels_df.shape)
 
     # drop columns 'Reference','Mutation','Type','Length','Category'
     # Do not drop Length column. If length >= 3bp indel type is Microhomology otherwise < 3bp indel type is repeat-med indel
-    indels_df.drop([REF,ALT,TYPE,CATEGORY], axis=1, inplace=True, errors='ignore')
+    # indels_df.drop([REF,ALT,TYPE,CATEGORY], axis=1, inplace=True, errors='ignore')
+    indels_df.drop([TYPE, CATEGORY], axis=1, inplace=True, errors='ignore')
 
     #Add a new column called Count
     grouped_mutation_df_by_sample = indels_df.groupby(SAMPLE)
     indels_df[COUNT] = indels_df.groupby(SAMPLE)[SAMPLE].transform('count')
 
-    # grouped_mutation_df.groups
-    print('Number of samples in indels file:%s' % len(grouped_mutation_df_by_sample))
+    # print('Number of samples in indels file:%s' % len(grouped_mutation_df_by_sample))
 
     # Add a new column called MMR (Mis Match Repair)
     if 'Count' in indels_df.columns:
-        indels_df[MMR] = np.where(indels_df[COUNT] >= TEN_THOUSAND ,DEFICIENT,PROFICIENT)
+        indels_df[MMR] = np.where(indels_df[COUNT] >= SAMPLE_MMR_DEFICIENT_THRESHOLD ,DEFICIENT,PROFICIENT)
+    #################################################################################################
+    indelsSignature2NumberofMutationsDict = {}
+    sample2IndelsSignature2NumberofMutationsDict = {}
 
-    return sample2NumberofIndelsDict,indels_df
+    for signature in signatures:
+        signaturebased_df = indels_df[indels_df[signature] >= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
+        numberofIndels = len(signaturebased_df)
+        if (numberofIndels>INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+            indelsSignature2NumberofMutationsDict[signature] = numberofIndels
+
+    for sample in sample2NumberofIndelsDict:
+        for signature in indelsSignature2NumberofMutationsDict:
+            numberofMutations = len(indels_df[ ((indels_df[SAMPLE]==sample) & (indels_df[signature]>= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
+            if (numberofMutations> INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
+                if sample in sample2IndelsSignature2NumberofMutationsDict:
+                    sample2IndelsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
+                else:
+                    sample2IndelsSignature2NumberofMutationsDict[sample]={}
+                    sample2IndelsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
+    #################################################################################################
+
+    return sample2NumberofIndelsDict,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,indels_df
 ##################################################################
 
 
@@ -1190,7 +1358,7 @@ def readRepliSeqSignal(repliseqDataFilename):
 
     repliSeqFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,repliseqDataFilename)
     # print(repliSeqFilePath)
-    #todo is there a better/more clean way to handle this?
+    #TODO is there a better/more clean way to handle this?
     #This sep='*' is used for reading line by line without different number of columns error for different lines
     repliSeq_unprocessed_df = pd.read_table(repliSeqFilePath, sep='*', comment='#', header=None)
     # print('debug starts')
@@ -1208,19 +1376,11 @@ def readRepliSeqSignal(repliseqDataFilename):
 ##################################################################
 # Original Filename: GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig
 # WaveletSmoothedSignal Filename: 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-def readWaveletSmoothedRepliSeqSignal(repliseqDataFilename):
-    # Read the file w.r.t. the current folder
-
+def readWaveletSmoothedSignalReplicationTime(repliseqDataFilename):
     waveletFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,repliseqDataFilename)
-    wavelet_unprocessed_df = pd.read_table(waveletFilePath, sep="\t", comment='#', header=None)
-    # print('debug starts')
-    # print('############## wavelet_unprocessed_df ##############')
-    # print(wavelet_unprocessed_df.shape)
-    # print(wavelet_unprocessed_df.head())
-    # print('############## wavelet_unprocessed_df ##############')
-    # print('debug ends')
+    replication_time_wavelet_signal_unprocessed_df = pd.read_table(waveletFilePath, sep="\t", comment='#', header=None)
 
-    return wavelet_unprocessed_df
+    return replication_time_wavelet_signal_unprocessed_df
 ##################################################################
 
 
@@ -1350,22 +1510,10 @@ def prepareMutationProbabilityList(startMutationProbability, endMutationProbabil
     return mutationProbabilityList
 ##################################################################
 
-########################################################################
-#this is called from TranscriptionStrandBiasAnalysis.py and ReplicationStrandBiasAnalysis.py
-def updateDictionaries(mutation_row,
-                        mutationType,
-                        mutationSample,
-                        mutationType2Strand2CountDict,
-                        mutationType2Sample2Strand2CountDict,
-                        mutationProbability2Signature2Strand2CountDict,
-                        mutationProbability2Signature2Sample2Strand2CountDict,
-                        strand,
-                        signatureList,
-                        mutationProbabilityList):
 
-    #################################################################################################
-    # Update1: mutationType2TranscriptionStrand2CountDict
-    if mutationType in mutationType2Strand2CountDict:
+##################################################################
+def  updateDictionary(mutationType2Strand2CountDict,mutationType,strand):
+    if (mutationType in mutationType2Strand2CountDict):
         if strand in mutationType2Strand2CountDict[mutationType]:
             mutationType2Strand2CountDict[mutationType][strand] += 1
         else:
@@ -1373,11 +1521,12 @@ def updateDictionaries(mutation_row,
     else:
         mutationType2Strand2CountDict[mutationType] = {}
         mutationType2Strand2CountDict[mutationType][strand] = 1
-    #################################################################################################
+##################################################################
 
-    #################################################################################################
-    # Update2: mutationType2Sample2TranscriptionStrand2CountDict
-    if mutationType in mutationType2Sample2Strand2CountDict:
+
+##################################################################
+def updateSampleBasedDictionary(mutationType2Sample2Strand2CountDict,mutationType,mutationSample,strand):
+    if (mutationType in mutationType2Sample2Strand2CountDict):
         if mutationSample in mutationType2Sample2Strand2CountDict[mutationType]:
             if strand in mutationType2Sample2Strand2CountDict[mutationType][mutationSample]:
                 mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] += 1
@@ -1391,12 +1540,39 @@ def updateDictionaries(mutation_row,
         mutationType2Sample2Strand2CountDict[mutationType] = {}
         mutationType2Sample2Strand2CountDict[mutationType][mutationSample] = {}
         mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] = 1
+##################################################################
+
+
+########################################################################
+#this is called from TranscriptionStrandBiasAnalysis.py and ReplicationStrandBiasAnalysis.py
+def updateDictionaries(mutation_row,
+                        mutationType,
+                        mutationSample,
+                        mutationType2Strand2CountDict,
+                        mutationType2Sample2Strand2CountDict,
+                        mutationProbability2Signature2Strand2CountDict,
+                        mutationProbability2Signature2Sample2Strand2CountDict,
+                        strand,
+                        signature2NumberofMutationsDict,
+                        mutationProbabilityList):
+
+
+    #################################################################################################
+    # Update1: mutationType2TranscriptionStrand2CountDict
+    if ((mutationType2Strand2CountDict is not None) and (mutationType is not None)):
+        updateDictionary(mutationType2Strand2CountDict,mutationType,strand)
+    #################################################################################################
+
+    #################################################################################################
+    # Update2: mutationType2Sample2TranscriptionStrand2CountDict
+    if (mutationType2Sample2Strand2CountDict is not None) and (mutationType is not None):
+        updateSampleBasedDictionary(mutationType2Sample2Strand2CountDict,mutationType,mutationSample,strand)
     #################################################################################################
 
     #################################################################################################
     # Update3: mutationProbability2Signature2TranscriptionStrand2CountDict
     for mutationProbability in mutationProbabilityList:
-        for signature in signatureList:
+        for signature in signature2NumberofMutationsDict:
             if (mutation_row[signature] >= mutationProbability):
                 if mutationProbability in mutationProbability2Signature2Strand2CountDict:
                     if signature in mutationProbability2Signature2Strand2CountDict[mutationProbability]:
@@ -1416,7 +1592,7 @@ def updateDictionaries(mutation_row,
     #################################################################################################
     # Update4: mutationProbability2Signature2Sample2TranscriptionStrand2CountDict
     for mutationProbability in mutationProbabilityList:
-        for signature in signatureList:
+        for signature in signature2NumberofMutationsDict:
             if (mutation_row[signature] >= mutationProbability):
                 if mutationProbability in mutationProbability2Signature2Sample2Strand2CountDict:
                     if signature in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability]:
@@ -1442,19 +1618,82 @@ def updateDictionaries(mutation_row,
 ########################################################################
 
 
+########################################################################
+def accumulateSignatureBased(chrBasedMutationProbability2Signature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict):
+    # Accumulate mutationProbability2Signature2Strand2CountDict
+    if (chrBasedMutationProbability2Signature2Strand2CountDict is not None):
+        for mutationProbability, signature2StrandCountDict in chrBasedMutationProbability2Signature2Strand2CountDict.items():
+            if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict:
+                for signature, strand2CountDict in signature2StrandCountDict.items():
+                    if signature in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
+                        mutationProbability]:
+                        for strand, count in strand2CountDict.items():
+                            if strand in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
+                                mutationProbability][signature]:
+                                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
+                                    mutationProbability][signature][strand] += count
+                            else:
+                                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
+                                    mutationProbability][signature][strand] = count
+                    else:
+                        accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][
+                            signature] = strand2CountDict
+            else:
+                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
+                    mutationProbability] = signature2StrandCountDict
+########################################################################
+
+
+########################################################################
+def accumulateSampleBasedSignatureBased(chrBasedMutationProbability2Signature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict):
+    # Accumulate mutationProbability2Signature2Sample2Strand2CountDict
+    if (chrBasedMutationProbability2Signature2Sample2Strand2CountDict is not None):
+        for mutationProbability, signature2Sample2Strand2CountDict in chrBasedMutationProbability2Signature2Sample2Strand2CountDict.items():
+            if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict:
+                for signature, sample2Strand2CountDict in signature2Sample2Strand2CountDict.items():
+                    if signature in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                        mutationProbability]:
+                        for sample, strand2CountDict in sample2Strand2CountDict.items():
+                            if sample in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                                mutationProbability][signature]:
+                                for strand, count in strand2CountDict.items():
+                                    if strand in \
+                                            accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                                                mutationProbability][signature][sample]:
+                                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                                            mutationProbability][signature][sample][strand] += count
+                                    else:
+                                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                                            mutationProbability][signature][sample][strand] = count
+                            else:
+                                accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                                    mutationProbability][signature][sample] = strand2CountDict
+                    else:
+                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                            mutationProbability][signature] = sample2Strand2CountDict
+            else:
+                accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
+                    mutationProbability] = signature2Sample2Strand2CountDict
+########################################################################
+
+
 
 ########################################################################
 def accumulate(listofTuples,
                accumulatedAllChromosomesMutationType2Strand2CountDict,
                accumulatedAllChromosomesMutationType2Sample2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict):
+               accumulatedAllChromosomesMutationProbability2SubsSignature2Strand2CountDict,
+               accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2Strand2CountDict,
+               accumulatedAllChromosomesMutationProbability2IndelsSignature2Strand2CountDict,
+               accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2Strand2CountDict):
 
     for mytuple in listofTuples:
         chrBasedMutationType2Strand2CountDict = mytuple[0]
         chrBasedMutationType2Sample2Strand2CountDict = mytuple[1]
-        chrBasedMutationProbability2Signature2Strand2CountDict = mytuple[2]
-        chrBasedMutationProbability2Signature2Sample2Strand2CountDict = mytuple[3]
+        chrBasedMutationProbability2SubsSignature2Strand2CountDict = mytuple[2]
+        chrBasedMutationProbability2SubsSignature2Sample2Strand2CountDict = mytuple[3]
+        chrBasedMutationProbability2IndelsSignature2Strand2CountDict = mytuple[4]
+        chrBasedMutationProbability2IndelsSignature2Sample2Strand2CountDict = mytuple[5]
 
         #Accumulate mutationType2Strand2CountDict
         if (chrBasedMutationType2Strand2CountDict is not None):
@@ -1484,46 +1723,20 @@ def accumulate(listofTuples,
                 else:
                     accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType] = sample2Strand2CountDict
 
-        #Accumulate mutationProbability2Signature2Strand2CountDict
-        if (chrBasedMutationProbability2Signature2Strand2CountDict is not None):
-            for mutationProbability, signature2StrandCountDict in chrBasedMutationProbability2Signature2Strand2CountDict.items():
-                if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict:
-                    for signature, strand2CountDict in signature2StrandCountDict.items():
-                        if signature in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability]:
-                            for strand, count in strand2CountDict.items():
-                                if strand in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][signature]:
-                                    accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] += count
-                                else:
-                                    accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = count
-                        else:
-                            accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = strand2CountDict
-                else:
-                    accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability] = signature2StrandCountDict
+        accumulateSignatureBased(chrBasedMutationProbability2SubsSignature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2SubsSignature2Strand2CountDict)
+        accumulateSignatureBased(chrBasedMutationProbability2IndelsSignature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2IndelsSignature2Strand2CountDict)
 
-        #Accumulate mutationProbability2Signature2Sample2Strand2CountDict
-        if (chrBasedMutationProbability2Signature2Sample2Strand2CountDict is not None):
-            for mutationProbability,signature2Sample2Strand2CountDict in chrBasedMutationProbability2Signature2Sample2Strand2CountDict.items():
-                if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict:
-                    for signature, sample2Strand2CountDict in signature2Sample2Strand2CountDict.items():
-                        if signature in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability]:
-                            for sample, strand2CountDict in sample2Strand2CountDict.items():
-                                if sample in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature]:
-                                    for strand, count in strand2CountDict.items():
-                                        if strand in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][sample]:
-                                            accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][sample][strand] += count
-                                        else:
-                                            accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][sample][strand] = count
-                                else:
-                                    accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][sample] = strand2CountDict
-                        else:
-                            accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = sample2Strand2CountDict
-                else:
-                    accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[mutationProbability] = signature2Sample2Strand2CountDict
+        accumulateSampleBasedSignatureBased(chrBasedMutationProbability2SubsSignature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2Strand2CountDict)
+        accumulateSampleBasedSignatureBased(chrBasedMutationProbability2IndelsSignature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2Strand2CountDict)
 ########################################################################
 
 
 
 ########################################################################
+# A helper function
+# Maybe can be used later
+#accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict is full
+#accumulatedAllChromosomesMutationProbability2Signature2RatioDict is empty, filled in this function
 def calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict,accumulatedAllChromosomesMutationProbability2Signature2RatioDict,strandList):
     numeratorStrand = strandList[0]
     denominatorStrand = strandList[1]
@@ -1532,12 +1745,14 @@ def calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2Strand
         accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability] = {}
         for signature, strandCountDict in signature2StrandCountDict.items():
             if ((numeratorStrand in strandCountDict) and (denominatorStrand in strandCountDict)):
-                if((strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])>=ONE_THOUSAND):
+                if((strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
                     accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability][signature] = (strandCountDict[numeratorStrand]) / (strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])
 ########################################################################
 
 
 ########################################################################
+# A helper function
+# Maybe can be used later
 #mutationProbability2Signature2ReplicationStrand2CountDict contains all the accumulated counts for all chromosomes
 #Ratio is laggingCount/(laggingCount + leadingCount)
 #Ratio is the transcribed/ (transcribed + non_transcribed)
@@ -1562,7 +1777,7 @@ def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
             if ((numeratorStrand in strand2CountDict) and (denominatorStrand in strand2CountDict)):
                 #In order to consider there must be at least ONE_THOUSAND mutations on the leading and lagging strands
                 # In order to consider there must be at least ONE_THOUSAND mutations on the transcribed and non-transcribed strands
-                if (strand2CountDict[numeratorStrand]+strand2CountDict[denominatorStrand] >= ONE_THOUSAND):
+                if (strand2CountDict[numeratorStrand]+strand2CountDict[denominatorStrand] >= SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
                     if signature in signature2SumofMutationProbabilitiesDict:
                         signature2SumofMutationProbabilitiesDict[signature] += mutationProbability
                     else:
@@ -1605,9 +1820,6 @@ def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
 ########################################################################
 
 
-
-
-
 ########################################################################
 #To write samples with signatures with at least 10K eligible mutations
 def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
@@ -1617,6 +1829,29 @@ def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
 
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary))
+########################################################################
+
+
+########################################################################
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
+########################################################################
+
+########################################################################
+def writeDictionaryUsingPickle(dictionary,filepath):
+    fileDir = os.path.dirname(filepath)
+    os.makedirs(fileDir, exist_ok=True)
+
+    with open(filepath, "wb") as file:
+        pickle.dump(dictionary, file)
 ########################################################################
 
 
@@ -1657,6 +1892,13 @@ def readSignatureList(filePath):
         return list
     else:
         return list
+########################################################################
+
+########################################################################
+def readDictionaryUsingPickle(filePath):
+    with open(filePath, "rb") as file:
+        dictionary  = pickle.load(file)
+    return  dictionary
 ########################################################################
 
 ########################################################################
@@ -1745,5 +1987,3 @@ def readChromSizes(genomeAssemby):
 
     return chrom2size_dict
 ########################################################################
-
-

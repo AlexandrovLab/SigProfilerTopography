@@ -48,27 +48,9 @@ def readProbabilities(probabilitiesFile):
 ############################################################
 
 
-############################################################
-#Tested works correctly.
-def getNucleotides(chromosomeShort,start,end,humanGenome):
-    if chromosomeShort == 'MT':
-        chromosomeShort = 'M'
-    elif chromosomeShort == '23':
-        chromosomeShort = 'X'
-    elif chromosomeShort == '24':
-        chromosomeShort = 'Y'
-
-    chromosomeLong = 'chr' + chromosomeShort
-    chrBased_humanGenome = humanGenome[chromosomeLong]
-    seq = chrBased_humanGenome.get_slice(start,end)
-    seq = seq.upper()
-    return seq
-############################################################
-
-
-
 
 ############################################################
+# Notice that [::-1] provides visiting x from the last base to the first base
 revcompl = lambda x: ''.join([{'A':'T','C':'G','G':'C','T':'A','N':'N'}[B] for B in x][::-1])
 ############################################################
 

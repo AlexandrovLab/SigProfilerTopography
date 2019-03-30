@@ -14,6 +14,7 @@ setup(name="SigProfilerTopography",
         "pandas==0.23.4",
         "numpy==1.14.3",
         "statsmodels==0.9.0",
-        "twobitreader"],
+        "twobitreader",
+        "pickle"],
     include_package_data=True,
 	zip_safe=False)

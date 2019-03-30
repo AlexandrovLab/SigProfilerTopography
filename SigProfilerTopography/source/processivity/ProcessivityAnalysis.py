@@ -7,20 +7,7 @@
 # nucleosome occupancy, replication time, strand bias and processivity.
 # Copyright (C) 2018 Burcak Otlu
 
-import os
-import sys
 from json import JSONEncoder
-
-
-#############################################################
-current_abs_path = os.path.dirname(os.path.realpath(__file__))
-print('ProcessivityAnalysis.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 #########################################################################
@@ -37,96 +24,6 @@ class ProcessiveGroupStruct(JSONEncoder):
         self.medianofNumberofProcessiveGroupsinMB = medianofNumberofProcessiveGroupsinMB
 #########################################################################
 
-# #########################################################################
-# #old way
-# def myfunc(x,signatures):
-#     return (x.shape[0], x['Start'].iloc[-1] - x['Start'].iloc[0], *x[signatures].agg(max))
-# #########################################################################
-
-
-# #########################################################################
-# #Old way
-# def fillDict(x,signatures,signature2ProcessiveGroupLength2DistanceListDict):
-#     for signature in signatures:
-#         if signature in signature2ProcessiveGroupLength2DistanceListDict:
-#             processiveGroupLength = x['ProcessiveGroupLength']
-#             distance = x['Distance']
-#             if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
-#                 if (x[signature]>=0.5):
-#                     signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
-#             else:
-#                 if (x[signature]>=0.5):
-#                     signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
-#         else:
-#             if (x[signature] >= 0.5):
-#                 processiveGroupLength = x['ProcessiveGroupLength']
-#                 distance = x['Distance']
-#                 signature2ProcessiveGroupLength2DistanceListDict[signature]= {}
-#                 signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
-# #########################################################################
-
-# ####################################################################################
-# #Old Way
-# def findProcessiveGroups(chrLong,sorted_spms_df,signatures):
-#     signature2ProcessiveGroupLength2DistanceListDict = {}
-#
-#     if (sorted_spms_df is not None):
-#         sorted_spms_df['subgroup'] = (sorted_spms_df[MUTATION] != sorted_spms_df[MUTATION].shift(1)).cumsum()
-#         series_new = sorted_spms_df.groupby('subgroup', as_index=False).apply(myfunc, signatures=signatures)
-#         columns = ['ProcessiveGroupLength', 'Distance']
-#         columns.extend(signatures)
-#         df = series_new.apply(pd.Series)
-#         df.columns = columns
-#         df = df[df['ProcessiveGroupLength'].ne(1)]
-#         signature2ProcessiveGroupLength2DistanceListDict = {}
-#         df.apply(fillDict, signatures=signatures,signature2ProcessiveGroupLength2DistanceListDict=signature2ProcessiveGroupLength2DistanceListDict, axis=1)
-#
-#     return signature2ProcessiveGroupLength2DistanceListDict
-# ####################################################################################
-
-# ####################################################################################
-# Old way
-# def readSinglePointMutationsFindProcessivityGroupsWithoutMultiProcessing(jobname,singlePointMutationsFileName):
-#     if (singlePointMutationsFileName != NOTSET):
-#
-#         signature2ProcessiveGroupLength2DistanceListDict = {}
-#
-#         # Load the chrnames in single point mutations data
-#         ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, OUTPUT, jobname, DATA,ChrNamesInSPMsFilename)
-#         if (os.path.exists(ChrNamesFile)):
-#             chrNamesArray = np.loadtxt(ChrNamesFile, dtype=str, delimiter='\t')
-#             chrNamesInSPMs = list(chrNamesArray)
-#
-#         # read chrBased spms_df
-#         for chrShort in chrNamesInSPMs:
-#             chrLong = 'chr%s'%(chrShort)
-#             # print('%s %s' %(chrLong,chrShort))
-#             chrBased_spms_df = readChrBasedMutationDF(jobname, chrLong, singlePointMutationsFileName)
-#             # print(chrBased_spms_df.shape)
-#
-#             ###########################################
-#             columnNamesList = list(chrBased_spms_df.columns.values)
-#             contextIndex = columnNamesList.index('Context')
-#             # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-#             signatures = columnNamesList[(contextIndex + 1):]
-#             ###########################################
-#
-#             #delete unnecessary columns
-#             chrBased_spms_df.drop([SAMPLE, CHROM, END, PYRAMIDINESTRAND, CONTEXT], inplace=True, errors='ignore', axis=1)
-#
-#             #sort
-#             chrBased_spms_df.sort_values('Start', inplace=True)
-#
-#             chrBased_signature2ProcessiveGroupLength2DistanceListDict = findProcessiveGroups(chrLong,chrBased_spms_df,signatures)
-#
-#             accumulateDict(chrBased_signature2ProcessiveGroupLength2DistanceListDict, signature2ProcessiveGroupLength2DistanceListDict)
-#
-#             writeDictionary(signature2ProcessiveGroupLength2DistanceListDict, jobname,'Signature2ProcessiveGroupLength2DistanceListDict.txt',PROCESSIVITY,None)
-#
-#             findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-# ####################################################################################
-
-
 
 #########################################################################
 def myfuncUpdated(x):
@@ -142,7 +39,7 @@ def fillDictUpdated(x,signature2ProcessiveGroupLength2DistanceListDict, consider
     signature = x['Signature']
     probability = x['Probability']
 
-    if (considerProbability and (probability >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
+    if (considerProbability and (probability >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
         if signature in signature2ProcessiveGroupLength2DistanceListDict:
             if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
                 signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
@@ -249,25 +146,21 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(chromNamesList,outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
     if (singlePointMutationsFileName != NOTSET):
         # Load the chrnames in single point mutations data
-        ChrNamesFile = os.path.join(outputDir, jobname, DATA,ChrNamesInSPMsFilename)
-        if (os.path.exists(ChrNamesFile)):
-            chrNamesArray = np.loadtxt(ChrNamesFile, dtype=str, delimiter='\t')
-            chrNamesInSPMs = chrNamesArray.tolist()
+
 
         signature2ProcessiveGroupLength2DistanceListDict = {}
 
         # read chrBased spms_df
-        for chrShort in chrNamesInSPMs:
-            chrLong = 'chr%s'%(chrShort)
+        for chrLong in chromNamesList:
             # print('%s %s' %(chrLong,chrShort))
-            chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname, chrLong, singlePointMutationsFileName)
+            chrBased_spms_df = readChrBasedSubsDF(outputDir,jobname, chrLong, singlePointMutationsFileName)
 
             if (chrBased_spms_df is not None):
 
@@ -335,10 +228,8 @@ def convertStr2Bool(mystr):
 
 
 ##################################################################################
-def processivityAnalysis(outputDir,jobname,singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def processivityAnalysis(chromNamesList,outputDir,jobname,singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
     print('########################## ProcessivityAnalysis starts ###########################')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(chromNamesList,outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis)
     print('########################## ProcessivityAnalysis ends #############################')
 ##################################################################################
-
-

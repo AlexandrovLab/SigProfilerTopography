@@ -13,18 +13,6 @@
 # Right now replication strand bias analysis works for single point mutations and signatures.
 # This python code analyses the Replication Strand Bias
 
-
-import sys
-import os
-
-#############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
-print('ReplicationStrandBiasAnalysis.py current_abs_path:%s' %(current_abs_path))
-#############################################################
-
-commonsPath = os.path.join(current_abs_path, '..','commons')
-sys.path.append(commonsPath)
-
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 #For Supp Fig2B
@@ -34,9 +22,6 @@ CHR10_THRESHOLD_END = 26400000
 #For Supp Fig2A
 CHR20_START = 36260000
 CHR20_END = 36830000
-
-# Depreceated May 1, 2018
-# THRESHOLD_SIGNATURE_MUTATION_PROBABILITY = 0.6
 
 # FOR FINDING TRANSITION ZONES (LEADING or LAGGING)
 # THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH= 250000 #used in Supp Fig2B
@@ -167,19 +152,111 @@ def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array)
 ########################################################################
 
 
+
 ########################################################################
 # Summary:
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
-def searchMutationOnReplicationStrandArray(mutation_row,
+def searchsIndelsOnReplicationStrandArray(indel_row,
                                             chrBasedReplicationArray,
-                                            mutationType2ReplicationStrand2CountDict,
-                                            mutationType2Sample2ReplicationStrand2CountDict,
-                                            mutationProbability2Signature2ReplicationStrand2CountDict,
-                                            mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                            signatureList,
+                                            mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                                            mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                            signature2NumberofMutationsDict,
                                             mutationProbabilityList):
 
+    indelStart = indel_row[START]
+    indelEnd = indel_row[END]
+    indelPyramidineStrand = indel_row[PYRAMIDINESTRAND]
+    indelSample = indel_row[SAMPLE]
+
+    #############################################################################################################
+    #if there is overlap with chrBasedReplicationArray
+    slicedArray = chrBasedReplicationArray[indelStart:indelEnd]
+
+    if (np.any(slicedArray)):
+
+        #It must be full with at most -1 and +1
+        uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
+
+        if (uniqueValueArray.size>2):
+            print('There is a situation!!!')
+
+        elif ((uniqueValueArray.size==2) and (indelPyramidineStrand!=0)):
+            #Increment both LEADING and LAGGING
+            #TODO can we do this in one call?
+            updateDictionaries(indel_row,
+                               None,
+                               indelSample,
+                               None,
+                               None,
+                               mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                               mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                               LEADING,
+                               signature2NumberofMutationsDict,
+                               mutationProbabilityList)
+
+            updateDictionaries(indel_row,
+                               None,
+                               indelSample,
+                               None,
+                               None,
+                               mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                               mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                               LAGGING,
+                               signature2NumberofMutationsDict,
+                               mutationProbabilityList)
+
+
+
+        # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
+        elif (uniqueValueArray.size == 1):
+            for uniqueValue in np.nditer(uniqueValueArray):
+                # type(decileIndex) is numpy.ndarray
+                slope = int(uniqueValue)
+
+                #They have the same sign, multiplication (1,1) (-1,-1) must be 1
+                if (slope*indelPyramidineStrand > 0):
+                    updateDictionaries(indel_row,
+                                       None,
+                                       indelSample,
+                                       None,
+                                       None,
+                                       mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                                       mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                       LEADING,
+                                       signature2NumberofMutationsDict,
+                                       mutationProbabilityList)
+
+                # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
+                elif (slope*indelPyramidineStrand < 0):
+                    updateDictionaries(indel_row,
+                                       None,
+                                       indelSample,
+                                       None,
+                                       None,
+                                       mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                                       mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                       LAGGING,
+                                       signature2NumberofMutationsDict,
+                                       mutationProbabilityList)
+        else:
+            print('There is a situation!!!')
+    #############################################################################################################
+
+########################################################################
+
+########################################################################
+# Summary:
+#   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
+#   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
+def searchSubsOnReplicationStrandArray(mutation_row,
+                                        chrBasedReplicationArray,
+                                        mutationType2ReplicationStrand2CountDict,
+                                        mutationType2Sample2ReplicationStrand2CountDict,
+                                        mutationProbability2SubsSignature2ReplicationStrand2CountDict,
+                                        mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
+                                        signature2NumberofMutationsDict,
+                                        mutationProbabilityList):
 
     mutationStart = mutation_row[START]
     mutationEnd = mutation_row[END]
@@ -207,10 +284,10 @@ def searchMutationOnReplicationStrandArray(mutation_row,
                                        mutationSample,
                                        mutationType2ReplicationStrand2CountDict,
                                        mutationType2Sample2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
+                                       mutationProbability2SubsSignature2ReplicationStrand2CountDict,
+                                       mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                        LEADING,
-                                       signatureList,
+                                       signature2NumberofMutationsDict,
                                        mutationProbabilityList)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
@@ -220,10 +297,10 @@ def searchMutationOnReplicationStrandArray(mutation_row,
                                        mutationSample,
                                        mutationType2ReplicationStrand2CountDict,
                                        mutationType2Sample2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
+                                       mutationProbability2SubsSignature2ReplicationStrand2CountDict,
+                                       mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                        LAGGING,
-                                       signatureList,
+                                       signature2NumberofMutationsDict,
                                        mutationProbabilityList)
         else:
             print('There is a situation!!!')
@@ -235,97 +312,54 @@ def searchMutationOnReplicationStrandArray(mutation_row,
 ########################################################################
 def  searchMutationsOnReplicationArray(inputList):
     chrBased_replication_array = inputList[0]
-    chrBasedSPMsSplitDF = inputList[1]
-    signatureList = inputList[2]
-    mutationProbabilityList = inputList[3]
-
-    chrBasedMutationType2ReplicationStrand2CountDict = {}
-    chrBasedMutationType2Sample2ReplicationStrand2CountDict = {}
-    mutationProbability2Signature2ReplicationStrand2CountDict = {}
-    mutationProbability2Signature2Sample2ReplicationStrand2CountDict = {}
-
-    ##############################  Fill the type2replicationStranCount dictionaries  starts ########
-    if ((chrBasedSPMsSplitDF is not None) and (not chrBasedSPMsSplitDF.empty)):
-        chrBasedSPMsSplitDF.apply(searchMutationOnReplicationStrandArray,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                mutationType2ReplicationStrand2CountDict=chrBasedMutationType2ReplicationStrand2CountDict,
-                                mutationType2Sample2ReplicationStrand2CountDict=chrBasedMutationType2Sample2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2ReplicationStrand2CountDict=mutationProbability2Signature2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2Sample2ReplicationStrand2CountDict=mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                signatureList=signatureList,
-                                mutationProbabilityList=mutationProbabilityList,
-                                axis=1)
-    ##############################  Fill the type2replicationStranCount dictionaries  ends ##########
-
-    #Fill the type2replicationStranCount dictionaries and return them
-    return (chrBasedMutationType2ReplicationStrand2CountDict,
-            chrBasedMutationType2Sample2ReplicationStrand2CountDict,
-            mutationProbability2Signature2ReplicationStrand2CountDict,
-            mutationProbability2Signature2Sample2ReplicationStrand2CountDict)
-########################################################################
-
-########################################################################
-def fillReplicationStrandArrayAndSearchMutationsOnThisArray(inputList):
-
-    chrLong = inputList[0]
-    chrBasedSmoothedWaveletReplicationTimeSignalDF = inputList[1]
-    chrBasedValleysPeaksDF = inputList[2]
-    chrBasedSPMsDF = inputList[3]
-    signatureList = inputList[4]
+    chrBased_subs_split_df = inputList[1]
+    chrBased_indels_split_df = inputList[2]
+    subsSignature2NumberofMutationsDict = inputList[3]
+    indelsSignature2NumberofMutationsDict = inputList[4]
     mutationProbabilityList = inputList[5]
 
-    chrBasedMutationType2ReplicationStrand2CountDict = {}
-    chrBasedMutationType2Sample2ReplicationStrand2CountDict = {}
-    mutationProbability2Signature2ReplicationStrand2CountDict = {}
-    mutationProbability2Signature2Sample2ReplicationStrand2CountDict = {}
+    mutationType2ReplicationStrand2CountDict = {}
+    mutationType2Sample2ReplicationStrand2CountDict = {}
+    mutationProbability2SubsSignature2ReplicationStrand2CountDict = {}
+    mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict = {}
+    mutationProbability2IndelsSignature2ReplicationStrand2CountDict = {}
+    mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict = {}
 
-    # +1 means leading strand, -1 means lagging strand
-    chrBased_replication_array = np.zeros(MAXIMUM_CHROMOSOME_LENGTH, dtype=np.int8)
-
-    ##############################  Fill the replication array starts ##############################
-    if (chrBasedSmoothedWaveletReplicationTimeSignalDF is not None and not chrBasedSmoothedWaveletReplicationTimeSignalDF.empty):
-
-        firstIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[0]
-        lastIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[-1]
-
-        start = chrBasedSmoothedWaveletReplicationTimeSignalDF.ix[firstIndex,'start']  # get the first row start
-        end = chrBasedSmoothedWaveletReplicationTimeSignalDF.ix[lastIndex,'end']  # get the last row end
-
-        #Step1 Find the transition zones
-        chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,
-                                                                                   start,
-                                                                                   end,
-                                                                                   chrBasedSmoothedWaveletReplicationTimeSignalDF,
-                                                                                   chrBasedValleysPeaksDF)
-
-        labels = ['chr', 'start', 'end', 'slopeDirection', 'length']
-        chrBasedTransitionZonesDF = pd.DataFrame.from_records(chrBasedTransitionZonesList, columns=labels)
-
-
-        #Step2 Fill the replication array using transition zones
-        chrBasedTransitionZonesDF.apply(fillReplicationStrandArray,chrBased_replication_array=chrBased_replication_array,axis=1)
-    ##############################  Fill the replication array ends ################################
-
-    ##############################  Fill the type2replicationStranCount dictionaries  starts ########
-    if (chrBasedSPMsDF is not None and (not chrBasedSPMsDF.empty)):
-        chrBasedSPMsDF.apply(searchMutationOnReplicationStrandArray,
+    ##############################  Fill dictionaries for subs  starts ####################
+    if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
+        chrBased_subs_split_df.apply(searchSubsOnReplicationStrandArray,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                mutationType2ReplicationStrand2CountDict=chrBasedMutationType2ReplicationStrand2CountDict,
-                                mutationType2Sample2ReplicationStrand2CountDict=chrBasedMutationType2Sample2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2ReplicationStrand2CountDict=mutationProbability2Signature2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2Sample2ReplicationStrand2CountDict=mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                signatureList=signatureList,
+                                mutationType2ReplicationStrand2CountDict=mutationType2ReplicationStrand2CountDict,
+                                mutationType2Sample2ReplicationStrand2CountDict=mutationType2Sample2ReplicationStrand2CountDict,
+                                mutationProbability2SubsSignature2ReplicationStrand2CountDict=mutationProbability2SubsSignature2ReplicationStrand2CountDict,
+                                mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict=mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
+                                signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
                                 mutationProbabilityList=mutationProbabilityList,
                                 axis=1)
-    ##############################  Fill the type2replicationStranCount dictionaries  ends ##########
+    ##############################  Fill dictionaries for subs  ends ######################
+
+
+    ##############################  Fill dictionaries for indels  starts ####################
+    if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
+        chrBased_indels_split_df.apply(searchsIndelsOnReplicationStrandArray,
+                                chrBasedReplicationArray=chrBased_replication_array,
+                                mutationProbability2IndelsSignature2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                                mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
+                                mutationProbabilityList=mutationProbabilityList,
+                                axis=1)
+    ##############################  Fill dictionaries for indels  ends ######################
+
 
     #Fill the type2replicationStranCount dictionaries and return them
-    return (chrBasedMutationType2ReplicationStrand2CountDict,
-            chrBasedMutationType2Sample2ReplicationStrand2CountDict,
-            mutationProbability2Signature2ReplicationStrand2CountDict,
-            mutationProbability2Signature2Sample2ReplicationStrand2CountDict)
-
+    return (mutationType2ReplicationStrand2CountDict,
+            mutationType2Sample2ReplicationStrand2CountDict,
+            mutationProbability2SubsSignature2ReplicationStrand2CountDict,
+            mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
+            mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+            mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict)
 ########################################################################
+
 
 
 ########################################################################
@@ -347,40 +381,40 @@ def checkforValidness(chrBased_valleys_peaks_df):
 
 
 ########################################################################
-def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step):
+def fill_chr_based_replication_strand_array(chrLong,
+                                            chromSize,
+                                            chrBasedSmoothedWaveletReplicationTimeSignalDF,
+                                            chrBased_valleys_peaks_df):
+    # +1 means leading strand, -1 means lagging strand
+    # we will fill this array using smoothedSignal, peaks and valleys for each chromosome
+    chrBased_replication_array = np.zeros(chromSize, dtype=np.int8)
 
-    print('########################## ReplicationStrandBias Analysis starts ##########################')
-    print('#################### ReplicationStrandBias Analysis system arguments: #####################')
-    print(sys.argv)
+    firstIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[0]
+    lastIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[-1]
 
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
+    startColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc('start')
+    endColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc('end')
 
-    ############################################
-    # jobname = sys.argv[1]
-    # singlePointMutationsFilename = sys.argv[2]
+    start = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[0, startColumnIndex]  # get the first row start
+    end = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[-1, endColumnIndex]  # get the last row end
 
-    # smoothedWaveletRepliseqDataFilename = sys.argv[3]
-    # valleysBEDFilename = sys.argv[4]
-    # peaksBEDFilename = sys.argv[5]
+    # Step1 Find the transition zones
+    chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,start,end,
+                                                                               chrBasedSmoothedWaveletReplicationTimeSignalDF,
+                                                                               chrBased_valleys_peaks_df)
 
-    # startMutationProbability = float(sys.argv[6])
-    # endMutationProbability = float(sys.argv[7])
-    # step = float(sys.argv[8])
-    ############################################
+    labels = ['chr', 'start', 'end', 'slopeDirection', 'length']
+    chrBasedTransitionZonesDF = pd.DataFrame.from_records(chrBasedTransitionZonesList, columns=labels)
 
-    #Load signatureList
-    signatureList = []
-    SignaturesFilePath = os.path.join(outputDir,jobname,DATA,SignatureFilename)
-    if (os.path.exists(SignaturesFilePath)):
-        signaturesArray = np.loadtxt(SignaturesFilePath,dtype=str, delimiter='\t')
-        signatureList = list(signaturesArray)
+    # Step2 Fill the replication array using transition zones
+    chrBasedTransitionZonesDF.apply(fillReplicationStrandArray, chrBased_replication_array=chrBased_replication_array,axis=1)
 
-    #Load the chrnames in single point mutations data
-    ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
-    if (os.path.exists(ChrNamesFile)):
-        chrNamesArray = np.loadtxt(ChrNamesFile, dtype=str, delimiter='\t')
-        chrNamesInSPMs = chrNamesArray.tolist()
+    return chrBased_replication_array
+########################################################################
+
+
+########################################################################
+def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename):
 
     ################### Read the Smoothed Wavelet Replication Time Signal starts ###########################
     # Do not use sum, GSM923442_hg19_wgEncodeUwRepliSeqMcf7SumSignalRep1.wig contains values greater than 600
@@ -388,14 +422,10 @@ def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename
     unprocessed_df = readRepliSeqSignal(smoothedWaveletRepliseqDataFilename)
 
     #Process the signal, convert into interval version
-    processed_df = processSmoothedWaveletSignal(unprocessed_df)
-    print('repliseq_wavelet_signal_df[chr].unique')
-    print(processed_df['chr'].unique())
-    # print('processed_df.shape interval version')
-    # print(processed_df.shape)
-
-    # print('processed_df.info()')
-    # print(processed_df.info())
+    repliseq_wavelet_signal_df = processSmoothedWaveletSignal(unprocessed_df)
+    print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df['chr'].unique()))
+    # print('repliseq_wavelet_signal_df[chr].unique')
+    # print(repliseq_wavelet_signal_df['chr'].unique())
     ################### Read the Smoothed Wavelet Replication Time Signal ends #############################
 
 
@@ -403,42 +433,35 @@ def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename
     #read Valleys (local minima) bed file and read Peaks (local maxima) bed file
     # valleysBEDFilename = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
     # peaksBEDFilename = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
-
     valleys_df= readBED(valleysBEDFilename)
-    print('valleys_df[chr].unique()')
-    print(valleys_df['chr'].unique())
+    print('Chromosome names in replication time valleys data: %s' % (valleys_df['chr'].unique()))
+    # print('valleys_df[chr].unique()')
+    # print(valleys_df['chr'].unique())
 
     peaks_df = readBED(peaksBEDFilename)
-    print('peaks_df[chr].unique()')
-    print(peaks_df['chr'].unique())
-
-    # print('debug starts')
-    # print('-------------------------valleys_df.dtypes------------------------')
-    # print(valleys_df.dtypes)
-    # print('-------------------------peaks_df.dtypes------------------------')
-    # print(peaks_df.dtypes)
-    # print('debug ends')
+    print('Chromosome names in replication time peaks data: %s' % (peaks_df['chr'].unique()))
+    # print('peaks_df[chr].unique()')
+    # print(peaks_df['chr'].unique())
 
     valleys_df.drop(valleys_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
     peaks_df.drop(peaks_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
     ############## Read the Valleys and Peaks ends ########################################
 
+    return repliseq_wavelet_signal_df, valleys_df, peaks_df
+########################################################################
 
-    #################### Prepare mutation Probability List starts ################################################
+########################################################################
+def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step):
+
+    print('########################## ReplicationStrandBias Analysis starts ##########################')
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+
+    subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
+    indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
+
+    repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
     mutationProbabilityList = prepareMutationProbabilityList(startMutationProbability, endMutationProbability, step)
-    #################### Prepare mutation Probability List ends ##################################################
-
-    ################################### Part3 starts ##################################
-    ################## ncomms11383 Fig2b starts #######################################
-    ######################### MutationType Based starts ###############################
-    ######################### Signature Based starts ##################################
-    ### In this plot we will analyze signature based the replication strand bias
-    # Get the sample based number of mutations that has probability greater than equal to the 0.5
-
-    # get Leading and Lagging Intervals
-    # create an interval tree from these intervals
-    # get for each mutation whether if it overlaps with leading or lagging replication strand.
-    # update the mutation type and signature accordingly
 
     ############################Chr based parallel code starts ################################################
     #prepare the input for parallel lines starts
@@ -448,206 +471,159 @@ def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename
     #Accumulate chrBased Results
     accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict = {}
     accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict = {}
 
-    #For more information
-    accumulatedAllChromosomesMutationProbability2Signature2RatioDict = {}
+    if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
+        ############################################################################################################
+        ###############################    All Chromosomes in parallel starts    ###################################
+        ############################################################################################################
+        poolInputList = []
+        for chrLong in chromNamesList:
+            chromSize = chromSizesDict[chrLong]
 
-    # ############################################################################################################
-    # #####################################      Version 1 starts      ###########################################
-    # ###############################      All Chromosomes in parallel      ######################################
-    # ############################################################################################################
-    # poolInputList = []
-    # for chrShort in chrNamesInSPMs:
-    #     chrLong = 'chr' + chrShort
-    #
-    #     #Read chrBased spms dataframe
-    #     chrBased_spms_df = readChrBasedMutationDF(jobname, chrLong, singlePointMutationsFilename)
-    #
-    #     chrBasedSmoothedWaveletReplicationTimeSignalDF = processed_df[processed_df['chr'] == chrLong]
-    #
-    #     chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
-    #     chrBasedValleysDF['type'] = 'Valley'
-    #     chrBasedValleysDF.astype(dtype={'start': int,'end': int})
-    #
-    #     chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
-    #     chrBasedPeaksDF['type'] = 'Peak'
-    #     chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
-    #
-    #     # Concat Peaks and Valleys
-    #     chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
-    #
-    #     # Sort Valleys and peaks
-    #     chrBased_valleys_peaks_df.sort_values('start', inplace=True)
-    #
-    #     inputList = []
-    #
-    #     #After sorting check for consecutive rows always differ in terms of their types (peak is followed by valley or vice versa)
-    #     if checkforValidness(chrBased_valleys_peaks_df):
-    #         inputList.append(chrLong)
-    #         inputList.append(chrBasedSmoothedWaveletReplicationTimeSignalDF)
-    #         inputList.append(chrBased_valleys_peaks_df)
-    #         inputList.append(chrBased_spms_df)
-    #         inputList.append(signatureList) # same for all
-    #         inputList.append(mutationProbabilityList) # same for all
-    #         poolInputList.append(inputList)
-    # #prepare the input for parallel lines ends
-    #
-    # listofTuples = pool.map(fillReplicationStrandArrayAndSearchMutationsOnThisArray, poolInputList)
-    #
-    # accumulate(listofTuples,
-    #            accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,
-    #            accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,
-    #            accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,
-    #            accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict)
-    # ############################################################################################################
-    # #####################################      Version 1 ends      #############################################
-    # ###############################      All Chromosomes in parallel      ######################################
-    # ############################################################################################################
+            # Read chrBased subs dataframe
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, singlePointMutationsFilename)
+
+            # Read chrBased indels dataframe
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname, chrLong,indelsFilename)
+
+            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
+
+            chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
+            chrBasedValleysDF['type'] = 'Valley'
+            chrBasedValleysDF.astype(dtype={'start': int,'end': int})
+
+            chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
+            chrBasedPeaksDF['type'] = 'Peak'
+            chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
+
+            # Concat Peaks and Valleys
+            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+            # Sort Valleys and peaks
+            chrBased_valleys_peaks_df.sort_values('start', inplace=True)
+
+            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
 
 
-    ############################################################################################################
-    #####################################      Version2  starts      ###########################################
-    ###############################       Chromosomes sequentially      ########################################
-    ###############################      All ChrBased Splits in parallel     ###################################
-    ############################################################################################################
-    for chrShort in chrNamesInSPMs:
-        chrLong = 'chr' + chrShort
-
-        # Read chrBased spms dataframe
-        chrBased_spms_df = readChrBasedMutationDF(outputDir,jobname, chrLong, singlePointMutationsFilename)
-
-        #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
-        chrBasedSmoothedWaveletReplicationTimeSignalDF = processed_df[processed_df['chr'] == chrLong]
-
-        # +1 means leading strand, -1 means lagging strand
-        # we will fill this array using smoothedSignal, peaks and valleys for each chromosome
-        chrBased_replication_array = np.zeros(MAXIMUM_CHROMOSOME_LENGTH, dtype=np.int8)
-
-        chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
-        chrBasedValleysDF['type'] = 'Valley'
-        chrBasedValleysDF.astype(dtype={'start': int, 'end': int})
-
-        chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
-        chrBasedPeaksDF['type'] = 'Peak'
-        chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
-
-        # Concat Peaks and Valleys
-        chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
-
-        # Sort Valleys and peaks
-        chrBased_valleys_peaks_df.sort_values('start', inplace=True)
-
-        if ((chrBasedSmoothedWaveletReplicationTimeSignalDF is not None) and (not chrBasedSmoothedWaveletReplicationTimeSignalDF.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
-            firstIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[0]
-            lastIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[-1]
-
-            startColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc('start')
-            endColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc('end')
-
-            start = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[0, startColumnIndex]  # get the first row start
-            end = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[-1, endColumnIndex]  # get the last row end
-
-            # Step1 Find the transition zones
-            chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,
-                                                                                       start,
-                                                                                       end,
-                                                                                       chrBasedSmoothedWaveletReplicationTimeSignalDF,
-                                                                                       chrBased_valleys_peaks_df)
-
-            labels = ['chr', 'start', 'end', 'slopeDirection', 'length']
-            chrBasedTransitionZonesDF = pd.DataFrame.from_records(chrBasedTransitionZonesList, columns=labels)
-
-            # Step2 Fill the replication array using transition zones
-            chrBasedTransitionZonesDF.apply(fillReplicationStrandArray,chrBased_replication_array=chrBased_replication_array, axis=1)
+                inputList = []
+                inputList.append(chrBased_replication_array)  # same for all
+                inputList.append(chrBased_subs_df)  # different split each time
+                inputList.append(chrBased_indels_df)  # different split each time
+                inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(indelsSignature2NumberofMutationsDict)
+                inputList.append(mutationProbabilityList)  # same for all
+                poolInputList.append(inputList)
 
 
-            if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-                chrBasedSPMsDFSplits = np.array_split(chrBased_spms_df, numofProcesses)
+        listofTuples = pool.map(searchMutationsOnReplicationArray, poolInputList)
+
+        accumulate(listofTuples,
+                   accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,
+                   accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict)
+        ############################################################################################################
+        ###############################      All Chromosomes in parallel  ends    ##################################
+        ############################################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
+
+        ############################################################################################################
+        ###############################       Chromosomes sequentially      ########################################
+        ###############################      All ChrBased Splits in parallel starts    #############################
+        ############################################################################################################
+        for chrLong in chromNamesList:
+
+            chromSize = chromSizesDict[chrLong]
+
+            # Read chrBased subs dataframe
+            chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, singlePointMutationsFilename)
+
+            # Read chrBased indels dataframe
+            chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname, chrLong,indelsFilename)
+
+            #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
+            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
+
+            chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
+            chrBasedValleysDF['type'] = 'Valley'
+            chrBasedValleysDF.astype(dtype={'start': int, 'end': int})
+
+            chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
+            chrBasedPeaksDF['type'] = 'Peak'
+            chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
+
+            # Concat Peaks and Valleys
+            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+            # Sort Valleys and peaks
+            chrBased_valleys_peaks_df.sort_values('start', inplace=True)
+
+            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+
+                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+
+                if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
+                    chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+
+                if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
+                    chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
 
                 poolInputList = []
 
-                for chrBasedSPMsDFSplit in chrBasedSPMsDFSplits:
+                ##########################################################################
+                for split_index in range(numofProcesses):
+
+                    chrBased_subs_split_df = None
+                    chrBased_indels_split_df = None
+
+                    if (len(chrBased_subs_df_splits_list)):
+                        chrBased_subs_split_df = chrBased_subs_df_splits_list[split_index]
+
+                    if (len(chrBased_indels_df_splits_list)):
+                        chrBased_indels_split_df = chrBased_indels_df_splits_list[split_index]
+
                     inputList = []
                     inputList.append(chrBased_replication_array) #same for all
-                    inputList.append(chrBasedSPMsDFSplit) # different split each time
-                    inputList.append(signatureList)  # same for all
+                    inputList.append(chrBased_subs_split_df) # different split each time
+                    inputList.append(chrBased_indels_split_df)  # different split each time
+                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                    inputList.append(indelsSignature2NumberofMutationsDict)
                     inputList.append(mutationProbabilityList)  # same for all
                     poolInputList.append(inputList)
+                ##########################################################################
 
                 listofTuples = pool.map(searchMutationsOnReplicationArray, poolInputList)
 
                 accumulate(listofTuples,
                            accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,
                            accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict)
-    ############################################################################################################
-    #####################################      Version2  ends      #############################################
-    ###############################       Chromosomes sequentially      ########################################
-    ###############################      All ChrBased Splits in parallel     ###################################
-    ############################################################################################################
-
-    ######################### MutationType Based ends ###############################
-    ######################### Signature Based ends ##################################
-    ################## ncomms11383 Fig2A and Fig2B ends #############################
-    ################################### Part3 ends ##################################
-
-
+                           accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,
+                           accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,
+                           accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,
+                           accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict)
+        ############################################################################################################
+        ###############################       Chromosomes sequentially      ########################################
+        ###############################      All ChrBased Splits in parallel ends    ###############################
+        ############################################################################################################
 
 
     ############################################################################################################
     #####################################       Output starts      #############################################
     ############################################################################################################
-    calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2Signature2RatioDict,
-                   replicationStrands)
-
-    #There is no order in keys
-    # print('Keys are not sorted.')
-    print('accumulatedAllChromosomesMutationType2LeadingLaggingStrandCountDict')
-    print(accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict)
-
-    #############################################################################
-    # Highligh the results for mutation probability threshold
-    print('###############################################################')
-
-
-    print('For mutation probability threshold: %f' %MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
-    print('Signature\t%s\t%s' % (LAGGING,LEADING))
-
-    print('For debug March 13, 2019')
-    print('accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict')
-    print(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict)
-
-    signature2ReplicationStrand2CountDict = accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict[MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
-
-    for signature in signatureList:
-        if (signature in signature2ReplicationStrand2CountDict.keys()):
-            replicationStrand2CountDict = signature2ReplicationStrand2CountDict[signature]
-            if ((LAGGING in replicationStrand2CountDict.keys()) and (LEADING in replicationStrand2CountDict.keys())):
-                print('%s\t%d\t%d' %(signature, replicationStrand2CountDict[LAGGING], replicationStrand2CountDict[LEADING]))
-    print('ReplicationStrandBias ratio: number of mutations on lagging/(lagging + leading)')
-    print('###############################################################')
-    #############################################################################
-
-    #Convert
-    signature2WeightedAverageRatioDict, signature2StdErrorDict, signature2SumofMutationProbabilitiesDict = convert(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict, replicationStrands)
-
-    ##############################################################################
-    #To be used for plotting starts
     writeDictionary(accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
     writeDictionary(accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2Signature2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2Signature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2Signature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-
-    writeDictionary(signature2WeightedAverageRatioDict,outputDir,jobname,Signature2ReplicationWeightedAverageRatioDict_Filename,strandBias,None)
-    writeDictionary(signature2StdErrorDict,outputDir,jobname,Signature2ReplicationStdErrorDict_Filename,strandBias,None)
-    writeDictionary(signature2SumofMutationProbabilitiesDict,outputDir,jobname, Signature2ReplicationSumofMutationProbabilitiesDict_Filename,strandBias,None)
-    #To be used for plotting ends
-    ##############################################################################
-
+    writeDictionary(accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2SubsSignature2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
@@ -655,5 +631,3 @@ def replicationStrandBiasAnalysis(outputDir,jobname,singlePointMutationsFilename
     print('########################## ReplicationStrandBias Analysis ends ############################')
 
 ########################################################################
-
-
