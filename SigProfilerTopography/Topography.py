@@ -199,7 +199,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 
     # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL
-    nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename)
+    nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir)
     ###############################################
 
 
@@ -252,14 +252,10 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     valleysBEDFilename = replicationTimeValleyFilename
     peaksBEDFilename = replicationTimePeakFilename
 
-    startMutationProbability = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
-    endMutationProbability = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
-    step = round(float(0.01),2)
-
     if (singlePointMutationsFilename!=NOTSET):
         # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
         computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-        replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step)
+        replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
     ###############################################
 
 
@@ -276,16 +272,10 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    # TranscriptionStrandBias
-    # subprocess.call(['python', os.path.join(current_abs_path,SOURCE,TRANSCRIPTIONSTRANDBIAS, 'TranscriptionStrandBiasAnalysis.py'),jobname,singlePointMutationsFilename,'0.5','0.5','0.01'])
-    startMutationProbability = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
-    endMutationProbability = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
-    step = round(float(0.01),2)
-
     if (singlePointMutationsFilename!=NOTSET):
         computationType =COMPUTATION_ALL_CHROMOSOMES_PARALLEL
         # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-        transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname, singlePointMutationsFilename,indelsFilename,startMutationProbability,endMutationProbability,step)
+        transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname, singlePointMutationsFilename,indelsFilename)
     ###############################################
 
 
@@ -343,7 +333,6 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ############################################################
 
-
     ############################################################
     nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
     replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
@@ -355,7 +344,7 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
 
 
 # ##############################################################
-# #This code for running SigProfilerTopography in local laptop pycharm ide
+# #This code for running SigProfilerTopography in local laptop from pycharm ide
 # if __name__ == '__main__':
 #     genome = 'GRCh37'
 #     singlePointMutationsFilename = os.path.join('C:\\','Users','burcak', 'Developer','Python', 'SigProfilerTopography','SigProfilerTopography','input_test','BreastCancer560','560_BRCA_WGS_snps_for_topography.txt')
@@ -369,5 +358,6 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
 #     replicationTimePeakFilename = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib', 'replication','GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed')
 #
 #     runAnalyses(genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename)
+#     plotFigures(outputDir, jobname, 0,'BONFERRONI_CORRECTION','USING_POISSON_DISTRIBUTION')
 # ##############################################################
 

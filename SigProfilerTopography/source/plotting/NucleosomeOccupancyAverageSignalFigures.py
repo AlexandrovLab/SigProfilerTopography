@@ -559,7 +559,6 @@ def plotAggregatedSubstitutionsandAggregatedIndelsWithSimulations(xlabel,ylabel,
     listofSimulationsAggregatedIndels = None
     listofSimulationsAggregatedSubstitutions = None
 
-
     #######################################################################################################################
     if (sample is None):
         filename = '%s_Aggregated_Substitutions_Indels.png' % (jobname)

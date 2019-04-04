@@ -1,3 +1,7 @@
+# Depreceated
+# Very slow becuase of unnesting
+# Not used anymore
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -13,7 +17,6 @@
 ###### Write the chromosome based average nucleosome occupancy signal arrays ######
 ###################################################################################
 
-#left here why it is so slow?
 
 import os
 import matplotlib
@@ -161,7 +164,6 @@ def readChrBasedNucleosomeOccupancyDataAndWriteAverageSignalArray(genomeassembly
         chrom2Size_dict = {'chr1':	248956422, 'chr2':	242193529, 'chr3':	198295559, 'chr4':	190214555, 'chr5':	181538259, 'chr6':	170805979, 'chr7':	159345973, 'chrX':	156040895, 'chr8':	145138636, 'chr9':	138394717,
                            'chr11':	135086622, 'chr10':	133797422, 'chr12':	133275309, 'chr13':	114364328, 'chr14':	107043718, 'chr15':	101991189, 'chr16':	90338345, 'chr17':	83257441, 'chr18':	80373285, 'chr20':	64444167,
                            'chr19':	58617616, 'chrY':	57227415, 'chr22':	50818468, 'chr21':	46709983, 'chrM':	16569}
-
 
     #read chromnames for this nucleosome data
     ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)

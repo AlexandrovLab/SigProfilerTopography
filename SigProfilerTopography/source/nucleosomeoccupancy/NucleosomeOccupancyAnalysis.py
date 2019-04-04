@@ -33,14 +33,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ##############################################################################################################
 #main function
-def nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename, indelsFilename, nucleosomeFilename):
+def nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename, indelsFilename, nucleosomeFilename_woDir):
     print('########################## NucleosomeOccupancyAnalysis starts ##########################')
     if  (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesList, outputDir, jobname,
-                                                                      singlePointMutationsFilename, indelsFilename, nucleosomeFilename)
+                                                                      singlePointMutationsFilename, indelsFilename, nucleosomeFilename_woDir)
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL):
         nucleosome_occupancy_analysis_each_chrom_sequential(chromSizesDict,chromNamesList, outputDir, jobname,
-                                                                        singlePointMutationsFilename, indelsFilename,nucleosomeFilename)
+                                                                        singlePointMutationsFilename, indelsFilename,nucleosomeFilename_woDir)
     print('########################## NucleosomeOccupancyAnalysis ends ############################')
 ##############################################################################################################
 
@@ -407,7 +407,7 @@ def initializationOfArrays(
 
 ########################################################################################
 #For all chromosome parallel starts
-def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -433,7 +433,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesL
         chromSize = chromSizesDict[chrLong]
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
-        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename)[0:-4]
+        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename_woDir)[0:-4]
 
         ##############################################################
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
@@ -556,7 +556,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesL
 ########################################################################################
 #If chr based subs or indels dataframes are too big we can use this version
 #For each chromosome sequential starts
-def nucleosome_occupancy_analysis_each_chrom_sequential(chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename):
+def nucleosome_occupancy_analysis_each_chrom_sequential(chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -596,11 +596,10 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(chromSizesDict,chromName
     ##################  For each chromsome sequential starts ##########################
     ###################################################################################
     for chrLong in chromNamesList:
-
         chromSize = chromSizesDict[chrLong]
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
-        nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
+        nucleosomeFilenameWoExtension = nucleosomeFilename_woDir[0:-4]
 
         ##############################################################
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
@@ -679,8 +678,8 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(chromSizesDict,chromName
                     nucleosome_array=chrbased_nucleosome_signal_array,
                     maximum_chrom_size=chromSize,
                     sample2NumberofIndelsDict=sample2NumberofIndelsDict,
-                    indelsSignatures2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                    sample2IndelsSignatures2NumberofMutationsDict=sample2IndelsSignature2NumberofMutationsDict,
+                    indelsSignature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
+                    sample2IndelsSignature2NumberofMutationsDict=sample2IndelsSignature2NumberofMutationsDict,
                     indelsSignature2SignalArrayDict=indelsSignature2SignalArrayDict,
                     indelsSignature2CountArrayDict=indelsSignature2CountArrayDict,
                     allIndelsSignalArray=allIndelsSignalArray,

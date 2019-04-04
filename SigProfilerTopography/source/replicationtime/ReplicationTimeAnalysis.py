@@ -1140,7 +1140,7 @@ def augment(genome,pool,wavelet_processed_df):
 ##################################################################
 #March 22, 2019
 def writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
-    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME), exist_ok=True)
 
     #One of the type is AGGREGATEDSUBSTITUTIONS
 
@@ -1149,8 +1149,7 @@ def writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableB
         decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountDict[type]
 
         normalizedMutationDensityFilename = type + '_NormalizedMutationDensity.txt'
-        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                         normalizedMutationDensityFilename)
+        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, normalizedMutationDensityFilename)
 
         # If decileBasedAllChrAccumulatedCountDict is not empty
         if (decileBasedAllChrAccumulatedCountDict):
@@ -1169,8 +1168,7 @@ def writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableB
             decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
 
             normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
-            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                             normalizedMutationDensityFilename)
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,normalizedMutationDensityFilename)
 
             #If decileBasedAllChrAccumulatedCountDict is not empty
             if (decileBasedAllChrAccumulatedCountDict):
@@ -1191,7 +1189,7 @@ def writeReplicationTimeData(outputDir,jobname,decileIndex2NumberofAttributableB
 ##################################################################
 #Case 1: SPMS  (AGGREGATEDSUBSTITUTIONS and Signatures)
 def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile_df_list,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict):
-    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,'normalized_mutation_density'), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME), exist_ok=True)
 
     #One of the type is AGGREGATEDSUBSTITUTIONS
 
@@ -1200,8 +1198,7 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile
         decileBasedAllChrAccumulatedCountDict = type2DecileBasedAllChrAccumulatedCountDict[type]
 
         normalizedMutationDensityFilename = type + '_NormalizedMutationDensity.txt'
-        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                         normalizedMutationDensityFilename)
+        normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,normalizedMutationDensityFilename)
 
         # If decileBasedAllChrAccumulatedCountDict is not empty
         if (decileBasedAllChrAccumulatedCountDict):
@@ -1220,8 +1217,7 @@ def writeReplicationTimeDataForSPMsWithExtraSampleBased(outputDir,jobname,decile
             decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
 
             normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
-            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME, 'normalized_mutation_density',
-                                                             normalizedMutationDensityFilename)
+            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,normalizedMutationDensityFilename)
 
             #If decileBasedAllChrAccumulatedCountDict is not empty
             if (decileBasedAllChrAccumulatedCountDict):

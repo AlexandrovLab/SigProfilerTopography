@@ -62,7 +62,7 @@ def searchIndelOnTranscriptionArray(
         mutationProbability2Signature2TranscriptionStrand2CountDict,
         mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
         signature2NumberofMutationsDict,
-        mutationProbabilityList):
+        mutationProbabilityThreshold):
 
     mutationStart = mutation_row[START]
     mutationEnd = mutation_row[END]
@@ -92,7 +92,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                TRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
             updateDictionaries(mutation_row,
                                None,
@@ -103,7 +103,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                UNTRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
 
     elif (1 in uniqueIndexesArray):
@@ -118,7 +118,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                UNTRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
         elif (mutationPyramidineStrand == -1):
             # Transcription is on positive strand, if mutation pyramidine strand is - then increment transcribed
@@ -131,7 +131,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                TRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
 
     elif (2 in uniqueIndexesArray):
@@ -146,7 +146,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                TRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
         if (mutationPyramidineStrand == -1):
             # Transcription is on negative strand, if mutation pyramidine strand is - then increment untranscribed
@@ -159,7 +159,7 @@ def searchIndelOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                UNTRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 ########################################################################
 
 ########################################################################
@@ -174,7 +174,7 @@ def searchSubstitutionOnTranscriptionArray(
         mutationProbability2Signature2TranscriptionStrand2CountDict,
         mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
         signature2NumberofMutationsDict,
-        mutationProbabilityList):
+        mutationProbabilityThreshold):
 
     #Values on chrBased_transcription_array and their meanings
     # 0 --> no-transcription
@@ -203,7 +203,7 @@ def searchSubstitutionOnTranscriptionArray(
                                    mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                    UNTRANSCRIBED_STRAND,
                                    signature2NumberofMutationsDict,
-                                   mutationProbabilityList)
+                                   mutationProbabilityThreshold)
 
             elif (mutationPyramidineStrand == -1):
                 #Transcription is on positive strand, if mutation pyramidine strand is - then increment transcribed
@@ -216,7 +216,7 @@ def searchSubstitutionOnTranscriptionArray(
                                    mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                    TRANSCRIBED_STRAND,
                                    signature2NumberofMutationsDict,
-                                   mutationProbabilityList)
+                                   mutationProbabilityThreshold)
 
         elif (uniqueIndexesArray[0] == 2):
             if (mutationPyramidineStrand == 1):
@@ -230,7 +230,7 @@ def searchSubstitutionOnTranscriptionArray(
                                    mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                    TRANSCRIBED_STRAND,
                                    signature2NumberofMutationsDict,
-                                   mutationProbabilityList)
+                                   mutationProbabilityThreshold)
 
             elif (mutationPyramidineStrand == -1):
                 # Transcription is on negative strand, if mutation pyramidine strand is - then increment untranscribed
@@ -243,7 +243,7 @@ def searchSubstitutionOnTranscriptionArray(
                                    mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                    UNTRANSCRIBED_STRAND,
                                    signature2NumberofMutationsDict,
-                                   mutationProbabilityList)
+                                   mutationProbabilityThreshold)
 
         elif (uniqueIndexesArray[0] == 3):
             updateDictionaries(mutation_row,
@@ -255,7 +255,7 @@ def searchSubstitutionOnTranscriptionArray(
                                 mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                 TRANSCRIBED_STRAND,
                                 signature2NumberofMutationsDict,
-                                mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
             updateDictionaries(mutation_row,
                                mutationType,
@@ -266,7 +266,7 @@ def searchSubstitutionOnTranscriptionArray(
                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
                                UNTRANSCRIBED_STRAND,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
     else:
         print('There is a situation')
@@ -280,7 +280,6 @@ def searchMutationsOnTranscriptionArray(inputList):
     chrBased_transcription_array = inputList[2]
     subsSignature2NumberofMutationsDict = inputList[3]
     indelsSignature2NumberofMutationsDict = inputList[4]
-    mutationProbabilityList = inputList[5]
 
     #Initialize empty dictionaries
     mutationType2TranscriptionStrand2CountDict = {}
@@ -298,7 +297,7 @@ def searchMutationsOnTranscriptionArray(inputList):
                                 mutationProbability2Signature2TranscriptionStrand2CountDict=mutationProbability2SubsSignature2TranscriptionStrand2CountDict,
                                 mutationProbability2Signature2Sample2TranscriptionStrand2CountDict=mutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict,
                                 signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                mutationProbabilityList=mutationProbabilityList,
+                                mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 axis=1)
 
     if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
@@ -307,7 +306,7 @@ def searchMutationsOnTranscriptionArray(inputList):
                                 mutationProbability2Signature2TranscriptionStrand2CountDict=mutationProbability2IndelsSignature2TranscriptionStrand2CountDict,
                                 mutationProbability2Signature2Sample2TranscriptionStrand2CountDict=mutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                mutationProbabilityList=mutationProbabilityList,
+                                mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 axis=1)
 
 
@@ -321,7 +320,7 @@ def searchMutationsOnTranscriptionArray(inputList):
 
 
 ########################################################################
-def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,mutationProbabilityStart,mutationProbabilityEnd,mutationProbabilityStep):
+def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -336,12 +335,10 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
     #Ensembl has the short chromosome names such as: 1,2,3,4, ... ,21, 22, X, Y, MT
     # transcriptsSource = ENSEMBL
     transcripts_df = readTrancriptsENSEMBL(genome)
+
+    print('transcripts_df.shape')
+    print(transcripts_df.shape)
     ##################### Read Transcripts ends ########################
-
-
-    #################### Prepare mutation Probability List starts ######################################
-    mutationProbabilityList = prepareMutationProbabilityList(float(mutationProbabilityStart),float(mutationProbabilityEnd),float(mutationProbabilityStep))
-    #################### Prepare mutation Probability List ends ########################################
 
     transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
     strandBias = TRANSCRIPTIONSTRANDBIAS
@@ -367,13 +364,19 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
         for chrLong in chromNamesList:
             # THEN READ CHRBASED MUTATION
             chromSize = chromSizesDict[chrLong]
+
             # Read chrBased subs dataframe
             chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFilename)
+
             # Read chrBased indels dataframe
             chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
-            # Get chrBased ensembl transcripts
 
-            chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
+            # Get chrBased ensembl transcripts
+            #For transcripts_df chrShort is needed
+            if (chrLong!='chrM'):
+                chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong[3:]]
+            elif (chrLong=='chrM'):
+                chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == 'MT']
 
             ################################################################################
             chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
@@ -388,7 +391,6 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
             inputList.append(chrBased_transcription_array)  # same for all
             inputList.append(subsSignature2NumberofMutationsDict)  # same for all
             inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
-            inputList.append(mutationProbabilityList)  # same for all
             poolInputList.append(inputList)
 
         listofTuples = pool.map(searchMutationsOnTranscriptionArray, poolInputList)
@@ -455,7 +457,6 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
                 inputList.append(chrBased_transcription_array) # same for all
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
-                inputList.append(mutationProbabilityList)  # same for all
                 poolInputList.append(inputList)
             ####################################################################
 

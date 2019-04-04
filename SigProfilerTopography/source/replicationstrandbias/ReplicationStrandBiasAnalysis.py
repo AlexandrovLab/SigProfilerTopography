@@ -158,11 +158,11 @@ def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array)
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
 def searchsIndelsOnReplicationStrandArray(indel_row,
-                                            chrBasedReplicationArray,
-                                            mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
-                                            mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
-                                            signature2NumberofMutationsDict,
-                                            mutationProbabilityList):
+                                        chrBasedReplicationArray,
+                                        mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
+                                        mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                        signature2NumberofMutationsDict,
+                                        mutationProbabilityThreshold):
 
     indelStart = indel_row[START]
     indelEnd = indel_row[END]
@@ -193,7 +193,7 @@ def searchsIndelsOnReplicationStrandArray(indel_row,
                                mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
                                LEADING,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
             updateDictionaries(indel_row,
                                None,
@@ -204,7 +204,7 @@ def searchsIndelsOnReplicationStrandArray(indel_row,
                                mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
                                LAGGING,
                                signature2NumberofMutationsDict,
-                               mutationProbabilityList)
+                               mutationProbabilityThreshold)
 
 
 
@@ -225,7 +225,7 @@ def searchsIndelsOnReplicationStrandArray(indel_row,
                                        mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
                                        LEADING,
                                        signature2NumberofMutationsDict,
-                                       mutationProbabilityList)
+                                       mutationProbabilityThreshold)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
                 elif (slope*indelPyramidineStrand < 0):
@@ -238,7 +238,7 @@ def searchsIndelsOnReplicationStrandArray(indel_row,
                                        mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
                                        LAGGING,
                                        signature2NumberofMutationsDict,
-                                       mutationProbabilityList)
+                                       mutationProbabilityThreshold)
         else:
             print('There is a situation!!!')
     #############################################################################################################
@@ -256,7 +256,7 @@ def searchSubsOnReplicationStrandArray(mutation_row,
                                         mutationProbability2SubsSignature2ReplicationStrand2CountDict,
                                         mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                         signature2NumberofMutationsDict,
-                                        mutationProbabilityList):
+                                        mutationProbabilityThreshold):
 
     mutationStart = mutation_row[START]
     mutationEnd = mutation_row[END]
@@ -288,7 +288,7 @@ def searchSubsOnReplicationStrandArray(mutation_row,
                                        mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                        LEADING,
                                        signature2NumberofMutationsDict,
-                                       mutationProbabilityList)
+                                       mutationProbabilityThreshold)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
                 elif (slope*mutationPyramidineStrand < 0):
@@ -301,7 +301,7 @@ def searchSubsOnReplicationStrandArray(mutation_row,
                                        mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                        LAGGING,
                                        signature2NumberofMutationsDict,
-                                       mutationProbabilityList)
+                                       mutationProbabilityThreshold)
         else:
             print('There is a situation!!!')
     #############################################################################################################
@@ -316,7 +316,6 @@ def  searchMutationsOnReplicationArray(inputList):
     chrBased_indels_split_df = inputList[2]
     subsSignature2NumberofMutationsDict = inputList[3]
     indelsSignature2NumberofMutationsDict = inputList[4]
-    mutationProbabilityList = inputList[5]
 
     mutationType2ReplicationStrand2CountDict = {}
     mutationType2Sample2ReplicationStrand2CountDict = {}
@@ -334,7 +333,7 @@ def  searchMutationsOnReplicationArray(inputList):
                                 mutationProbability2SubsSignature2ReplicationStrand2CountDict=mutationProbability2SubsSignature2ReplicationStrand2CountDict,
                                 mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict=mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                mutationProbabilityList=mutationProbabilityList,
+                                mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 axis=1)
     ##############################  Fill dictionaries for subs  ends ######################
 
@@ -346,7 +345,7 @@ def  searchMutationsOnReplicationArray(inputList):
                                 mutationProbability2IndelsSignature2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
                                 mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                mutationProbabilityList=mutationProbabilityList,
+                                mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
@@ -451,7 +450,7 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,startMutationProbability,endMutationProbability,step):
+def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
 
     print('########################## ReplicationStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -461,7 +460,6 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
     indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
 
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
-    mutationProbabilityList = prepareMutationProbabilityList(startMutationProbability, endMutationProbability, step)
 
     ############################Chr based parallel code starts ################################################
     #prepare the input for parallel lines starts
@@ -509,16 +507,13 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
             if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
                 chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
 
-
                 inputList = []
                 inputList.append(chrBased_replication_array)  # same for all
                 inputList.append(chrBased_subs_df)  # different split each time
                 inputList.append(chrBased_indels_df)  # different split each time
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(mutationProbabilityList)  # same for all
                 poolInputList.append(inputList)
-
 
         listofTuples = pool.map(searchMutationsOnReplicationArray, poolInputList)
 
@@ -596,7 +591,6 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
                     inputList.append(chrBased_indels_split_df)  # different split each time
                     inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                     inputList.append(indelsSignature2NumberofMutationsDict)
-                    inputList.append(mutationProbabilityList)  # same for all
                     poolInputList.append(inputList)
                 ##########################################################################
 

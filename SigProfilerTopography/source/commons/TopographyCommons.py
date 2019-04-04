@@ -42,6 +42,10 @@ SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
 INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 
+SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
+INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
+DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
+
 SAMPLE_MMR_DEFICIENT_THRESHOLD = 10000
 SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD = 1000
 
@@ -93,9 +97,6 @@ MM10 = 'mm10'
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
 
-#For each job we will write signatures, chrnames in nucleosomes, single point mutations, and indels
-SignatureFilename = 'Signatures.txt'
-
 #For Subs
 Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
 SubsSignature2NumberofMutationsDictFilename = 'SubsSignature2NumberofMutationsDict.txt'
@@ -108,12 +109,6 @@ Sample2IndelsSignature2NumberofMutationsDictFilename = 'Sample2IndelsSignature2N
 
 #For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
-
-
-#TODO will be depreceated
-ChrNamesInNucleosomesFilename = 'ChrNamesInNucleosomes.txt'
-ChrNamesInIndelsFilename = 'ChrNamesInIndels.txt'
-ChrNamesInSPMsFilename = 'ChrNamesInSPMs.txt'
 
 
 ONE_DIRECTORY_UP = '..'
@@ -250,19 +245,6 @@ USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
 USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 
-########################################################################################
-def getChrNamesInNucleosomeList():
-    #Load Chrnames from nucleosome file
-    chrNamesInNucleosomeList = []
-
-    chrNamesInNucleosomeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
-
-    if (os.path.exists(chrNamesInNucleosomeFilePath)):
-        chrNamesInNucleosomeArray = np.loadtxt(chrNamesInNucleosomeFilePath,dtype=str, delimiter='\t')
-        chrNamesInNucleosomeList = list(chrNamesInNucleosomeArray)
-
-    return chrNamesInNucleosomeList
-########################################################################################
 
 
 ########################################################################################
@@ -397,7 +379,6 @@ def readTrancriptsENSEMBL(genome):
 
     if (genome==GRCh37):
         transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_ENSEMBL)
-
 
     if (os.path.exists(transcriptsFilenamePath)):
         ensembl_transcripts_df = pd.read_table(transcriptsFilenamePath, header=0,sep="\t")
@@ -1163,21 +1144,11 @@ def readSubsAndWriteChrBasedParallel(outputDir,jobname,subsWithSignatureBasedPro
     sample2SubsSignature2NumberofMutationsDict, \
     subs_df = readSubs(subsWithSignatureBasedProbabilitiesFileName)
 
+    print('Substitutions Signatures')
+    print(signatures)
+
     mutation_df_grouped= subs_df.groupby(CHROM)
     os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
-
-    #########################################################
-    ############### Write signatures starts #################
-    #########################################################
-    signatures_array = np.array(signatures)
-
-    # Write signatures_array to a file
-    SignaturesFile = os.path.join(outputDir,jobname,DATA, SignatureFilename)
-
-    np.savetxt(SignaturesFile,signatures_array,delimiter='\t', fmt='%s')
-    #########################################################
-    ############### Write signatures ends ###################
-    #########################################################
 
     #############################################################################################################################
     ################################################# Write Dictionaries starts #################################################
@@ -1492,23 +1463,24 @@ def processSumSignal(sum_signal_unprocessed_df):
     return sum_signal_processed_df
 ##################################################################
 
-##################################################################
-def prepareMutationProbabilityList(startMutationProbability, endMutationProbability, step):
-    # print('type(startMutationProbability):%s type(endMutationProbability):%s type(step):%s', (type(startMutationProbability), type(endMutationProbability), type(step)))
-    startMutationProbability = float("{0:.2f}".format(startMutationProbability))
-
-    mutationProbabilityList = []
-    while startMutationProbability <= endMutationProbability:
-        #Put the rounded mutation probability to the list
-        mutationProbabilityList.append(round(startMutationProbability,2))
-        startMutationProbability += step
-        startMutationProbability = float("{0:.2f}".format(startMutationProbability))
-
-    # endMutationProbability += step
-    # mutationProbabilityList = np.arange(startMutationProbability,endMutationProbability,step)
-
-    return mutationProbabilityList
-##################################################################
+# ##################################################################
+# #Will be depreceated
+# def prepareMutationProbabilityList(startMutationProbability, endMutationProbability, step):
+#     # print('type(startMutationProbability):%s type(endMutationProbability):%s type(step):%s', (type(startMutationProbability), type(endMutationProbability), type(step)))
+#     startMutationProbability = float("{0:.2f}".format(startMutationProbability))
+#
+#     mutationProbabilityList = []
+#     while startMutationProbability <= endMutationProbability:
+#         #Put the rounded mutation probability to the list
+#         mutationProbabilityList.append(round(startMutationProbability,2))
+#         startMutationProbability += step
+#         startMutationProbability = float("{0:.2f}".format(startMutationProbability))
+#
+#     # endMutationProbability += step
+#     # mutationProbabilityList = np.arange(startMutationProbability,endMutationProbability,step)
+#
+#     return mutationProbabilityList
+# ##################################################################
 
 
 ##################################################################
@@ -1554,8 +1526,7 @@ def updateDictionaries(mutation_row,
                         mutationProbability2Signature2Sample2Strand2CountDict,
                         strand,
                         signature2NumberofMutationsDict,
-                        mutationProbabilityList):
-
+                        mutationProbability):
 
     #################################################################################################
     # Update1: mutationType2TranscriptionStrand2CountDict
@@ -1571,48 +1542,46 @@ def updateDictionaries(mutation_row,
 
     #################################################################################################
     # Update3: mutationProbability2Signature2TranscriptionStrand2CountDict
-    for mutationProbability in mutationProbabilityList:
-        for signature in signature2NumberofMutationsDict:
-            if (mutation_row[signature] >= mutationProbability):
-                if mutationProbability in mutationProbability2Signature2Strand2CountDict:
-                    if signature in mutationProbability2Signature2Strand2CountDict[mutationProbability]:
-                        if strand in mutationProbability2Signature2Strand2CountDict[mutationProbability][signature]:
-                            mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] += 1
-                        else:
-                            mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
+    for signature in signature2NumberofMutationsDict:
+        if (mutation_row[signature] >= mutationProbability):
+            if mutationProbability in mutationProbability2Signature2Strand2CountDict:
+                if signature in mutationProbability2Signature2Strand2CountDict[mutationProbability]:
+                    if strand in mutationProbability2Signature2Strand2CountDict[mutationProbability][signature]:
+                        mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] += 1
                     else:
-                        mutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
                         mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
                 else:
-                    mutationProbability2Signature2Strand2CountDict[mutationProbability] = {}
                     mutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
                     mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
+            else:
+                mutationProbability2Signature2Strand2CountDict[mutationProbability] = {}
+                mutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
+                mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
     #################################################################################################
 
     #################################################################################################
     # Update4: mutationProbability2Signature2Sample2TranscriptionStrand2CountDict
-    for mutationProbability in mutationProbabilityList:
-        for signature in signature2NumberofMutationsDict:
-            if (mutation_row[signature] >= mutationProbability):
-                if mutationProbability in mutationProbability2Signature2Sample2Strand2CountDict:
-                    if signature in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability]:
-                        if mutationSample in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature]:
-                            if strand in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample]:
-                                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] += 1
-                            else:
-                                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
+    for signature in signature2NumberofMutationsDict:
+        if (mutation_row[signature] >= mutationProbability):
+            if mutationProbability in mutationProbability2Signature2Sample2Strand2CountDict:
+                if signature in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability]:
+                    if mutationSample in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature]:
+                        if strand in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample]:
+                            mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] += 1
                         else:
-                            mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
                             mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
                     else:
-                        mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = {}
                         mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
                         mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
                 else:
-                    mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability] = {}
                     mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = {}
                     mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
                     mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
+            else:
+                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability] = {}
+                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = {}
+                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
+                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
     #################################################################################################
 
 ########################################################################

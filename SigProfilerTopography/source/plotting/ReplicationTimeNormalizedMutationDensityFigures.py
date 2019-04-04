@@ -73,7 +73,8 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
         #################################################################################
 
     ##################### legacy code starts ##########################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType), exist_ok=True)
+    # os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
 
     from matplotlib import rcParams
@@ -135,36 +136,40 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     ########################################################################
     if sample is None:
         if (analysesType == INDELBASED):
-            figureName = '%s_%s_NormalizedMutationDensity.png' % (indelType.replace(' ', ''), analysesType)
+            figureName = '%s_replication_time.png' % (indelType.replace(' ', ''))
         elif (analysesType == SIGNATUREBASED):
             numberofMutations = signature2NumberofMutationsDict[signature]
-            figureName = '%s_%d_%s_NormalizedMutationDensity.png' % (signature.replace(' ', ''), numberofMutations, analysesType)
+            figureName = '%s_%d_replication_time.png' % (signature.replace(' ', ''), numberofMutations)
         else:
             # AGGREGATEDSUBSTITUTIONS
             # AGGREGATEDINDELS
-            figureName = '%s_NormalizedMutationDensity.png' % (analysesType)
+            figureName = '%s_replication_time.png' % (analysesType)
 
     else:
         if (analysesType == INDELBASED):
-            figureName = '%s_%s_%s_NormalizedMutationDensity.png' %(indelType.replace(' ', ''),sample,analysesType)
+            figureName = '%s_%s_replication_timey.png' %(indelType.replace(' ', ''),sample)
         elif (analysesType == SIGNATUREBASED):
             numberofMutations = sample2Signature2NumberofMutationsDict[sample][signature]
-            figureName = '%s_%s_%d_%s_NormalizedMutationDensity.png' % (signature.replace(' ', ''), sample, numberofMutations, analysesType)
+            figureName = '%s_%s_%d_replication_time.png' % (signature.replace(' ', ''), sample, numberofMutations)
         elif (analysesType == AGGREGATEDSUBSTITUTIONS):
             numberofMutations = sample2NumberofMutationsDict[sample]
-            figureName = '%s_%d_%s_NormalizedMutationDensity.png' % (sample, numberofMutations, analysesType)
+            figureName = '%s_%d_replication_time.png' % (sample, numberofMutations)
         elif (analysesType == AGGREGATEDINDELS):
             numberofIndels = sample2NumberofMutationsDict[sample]
-            figureName = '%s_%d_%s_NormalizedMutationDensity.png' % (sample, numberofIndels, analysesType)
+            figureName = '%s_%d_replication_time.png' % (sample, numberofIndels)
     ########################################################################
 
 
     ########################################################################
     if (sample is None):
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType, figureName)
+        # figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, figureName)
+
     else:
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType), exist_ok=True)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType, figureName)
+        # os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME), exist_ok=True)
+        # figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, figureName)
     ########################################################################
 
     fig.savefig(figureFile)
@@ -181,7 +186,7 @@ def readNormalizedMutationData(sample,type,outputDir,jobname):
     else:
         filename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
 
-    filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONTIME,NORMALIZED_MUTATION_DENSITY,filename)
+    filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONTIME,filename)
 
     #Check if filepath exists
     if os.path.exists(filepath):
@@ -205,7 +210,7 @@ def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesT
     ######################################################
     for i in range(1, numberofSimulations + 1):
         simjobname = '%s_Sim%d' %(jobname,i)
-        filepath = os.path.join(outputDir, simjobname, DATA,REPLICATIONTIME, NORMALIZED_MUTATION_DENSITY, filename)
+        filepath = os.path.join(outputDir, simjobname, DATA,REPLICATIONTIME, filename)
 
         # Check if filepath exists
         if os.path.exists(filepath):
@@ -386,7 +391,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
                         plotNormalizedMutationDensityFigureWithSimulations(signature,
                                                             'Normalized\nsingle point mutation density',
                                                             normalizedMutationData, None, signature, analysesType, None,
-                                                            'yellowgreen', outputDir, jobname, isFigureAugmentation,
+                                                            'indianred', outputDir, jobname, isFigureAugmentation,
                                                             sample2NumberofIndelsDict,
                                                             indelsSignature2NumberofMutationsDict,
                                                             sample2IndelsSignature2NumberofMutationsDict,
@@ -404,7 +409,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
                             plotNormalizedMutationDensityFigureWithSimulations('%s_%s' %(signature,sample),
                                                                 'Normalized\nsingle point mutation density',
                                                                 normalizedMutationData, sample,signature, analysesType, None,
-                                                                'yellowgreen', outputDir, jobname,
+                                                                'indianred', outputDir, jobname,
                                                                 isFigureAugmentation,
                                                                 sample2NumberofIndelsDict,
                                                                 indelsSignature2NumberofMutationsDict,
