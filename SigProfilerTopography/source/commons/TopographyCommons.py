@@ -16,6 +16,9 @@ import sys
 import multiprocessing
 import pickle
 import twobitreader
+import urllib.request
+import shutil
+# import wget
 
 from multiprocessing import Lock
 
@@ -89,6 +92,9 @@ HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
 
 HG19_2BIT = 'hg19.2bit'
 HG38_2BIT = 'hg38.2bit'
+
+HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
+HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
 
 HG19 = 'hg19'
 HG38 = 'hg38'
@@ -173,8 +179,6 @@ COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
 COMPUTATION_CHROMOSOMES_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL'
 COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL'
 
-
-
 ############################################
 #Column Names
 PROJECT = 'Project'
@@ -245,6 +249,20 @@ USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
 USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 
+
+###################################################################
+#Works on tscc on python but not from pbs file
+#urllib.error.URLError: <urlopen error [Errno 101] Network is unreachable>
+def downloadFromWeb(url,filepath_to_be_saved):
+    # Download the file from `url` and save it locally under `file_name`:
+    with urllib.request.urlopen(url) as response, open(filepath_to_be_saved, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+###################################################################
+
+# ###################################################################
+# def downloadFromWebUsingWGET(url,filepath_to_be_saved):
+#     wget.download(url,filepath_to_be_saved)
+# ##################################################################
 
 
 ########################################################################################
@@ -1032,9 +1050,9 @@ def readIndelsAndWriteChrBasedParallel(genome,outputDir,jobname,indelsFileName):
     #Do we have PYRAMIDINESTRAND column? If not add
     if (PYRAMIDINESTRAND not in indels_df.columns.values):
         if (genome == GRCh37):
-            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, 'hg19.2bit'))
+            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, HG19_2BIT))
         elif (genome == GRCh38):
-            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, 'hg38.2bit'))
+            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, HG38_2BIT))
 
         ###########################################################
         numofProcesses = multiprocessing.cpu_count()

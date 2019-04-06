@@ -125,7 +125,6 @@ def  writeChrBasedNucleosomeOccupancySignalCountArrays(chrLong, chromSize, chrBa
     pool.join()
     ################################
 
-
     for split_chrBased_SignalArrayAndCountArray_List in allSplits_chrBased_SignalArrayAndCountArray_List:
         print('For debug type(split_chrBased_SignalArrayAndCountArray_List)')
         print(type(split_chrBased_SignalArrayAndCountArray_List))

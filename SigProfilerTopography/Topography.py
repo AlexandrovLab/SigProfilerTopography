@@ -7,8 +7,6 @@
 # nucleosome occupancy, replication time, strand bias and processivity.
 # Copyright (C) 2018 Burcak Otlu
 
-import shutil
-
 # #############################################################
 # import sys
 # import os
@@ -131,6 +129,29 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 #     https://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive/39225039#39225039
 # #######################################################
 
+#######################################################
+def download(genome):
+    if (genome == GRCh37):
+        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
+        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
+        downloadFromWeb(HG19_URL, filepath)
+    elif (genome == GRCh38):
+        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
+        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
+        downloadFromWeb(HG38_URL, filepath)
+
+    # if ((genome == GRCh37) and (HG19_2BIT not in availableLibraryFilenamesList)):
+    #     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
+    #     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
+    #     downloadFromWeb(HG19_URL, filepath)
+    #     append2File(HG19_2BIT, AVAILABLE_LIBRARY_FILENAMES_PATH)
+    # elif ((genome == GRCh38) and (HG38_2BIT not in availableLibraryFilenamesList)):
+    #     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
+    #     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
+    #     downloadFromWeb(HG38_URL, filepath)
+    #     append2File(HG38_2BIT, AVAILABLE_LIBRARY_FILENAMES_PATH)
+#######################################################
+
 
 #######################################################
 #Run SigProfilerTopography Analyses
@@ -145,6 +166,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
     print('current_abs_path: %s ' % current_abs_path)
+
 
     ##############################################
     #Partition the data (Single Point Mutations data and Indels data)
@@ -343,21 +365,5 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
 ##############################################################
 
 
-# ##############################################################
-# #This code for running SigProfilerTopography in local laptop from pycharm ide
-# if __name__ == '__main__':
-#     genome = 'GRCh37'
-#     singlePointMutationsFilename = os.path.join('C:\\','Users','burcak', 'Developer','Python', 'SigProfilerTopography','SigProfilerTopography','input_test','BreastCancer560','560_BRCA_WGS_snps_for_topography.txt')
-#     indelsFilename = os.path.join('C:\\','Users','burcak', 'Developer','Python', 'SigProfilerTopography','SigProfilerTopography','input_test','BreastCancer560','merged.txt')
-#     outputDir = os.path.join('C:\\','Users','burcak', 'Developer','Python', 'SigProfilerTopography','SigProfilerTopography','output_test')
-#     jobname = 'BreastCancer560'
-#
-#     nucleosomeFilename = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib', 'nucleosome','wgEncodeSydhNsomeGm12878Sig.wig')
-#     replicationTimeFilename = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib', 'replication','GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig')
-#     replicationTimeValleyFilename = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib', 'replication','GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed')
-#     replicationTimePeakFilename = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib', 'replication','GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed')
-#
-#     runAnalyses(genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename)
-#     plotFigures(outputDir, jobname, 0,'BONFERRONI_CORRECTION','USING_POISSON_DISTRIBUTION')
-# ##############################################################
+
 

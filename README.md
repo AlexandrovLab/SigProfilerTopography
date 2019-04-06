@@ -12,21 +12,23 @@ $ pip install SigProfilerTopography
 2. Import SigProfilerTopography as follows:
 ```
 $ python
->> from SigProfilerTopography import SigProfilerTopography as topography
->> import os
+>> from SigProfilerTopography import Topography as topography
 ```
-
-
 3. From within a python session, you can run the topography analyses as follows:
 ```
-$ python3
->>current_abs_path = os.path.abspath(os.path.dirname(__file__))
->>jobname = '21BreastCancer'
->>dataDir = '%s/SigProfilerTopography/input/%s' %(current_abs_path,jobname)
->>snpsForTopography= '%s/%s_snps_for_topography.txt' %(dataDir,jobname)
->>indelsForTopography= '%s/%s_indels_for_topography.txt' %(dataDir,jobname)
->>topography.runAnalyses(snpsForTopography,indelsForTopography,jobname,'wgEncodeSydhNsomeGm12878Sig.wig','GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig','GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed','GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed')
+>> genome= 'GRCh37'
+>> jobname = 'BreastCancer560'
+>> inputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_test/%s' %(jobname)
+>> outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
+>> snpsForTopography= '%s/560_BRCA_WGS_snps_for_topography.txt' %(inputDir)
+>> indelsForTopography= '%s/560_BRCA_WGS_indels_for_topography.txt' %(inputDir)
 
+>> nucleosomeOccupancy = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/nucleosome/wgEncodeSydhNsomeGm12878Sig.wig'
+>> replicationSignal = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
+>> replicationValley = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
+>> replicationPeak = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
+
+>> topography.runAnalyses(genome,snpsForTopography,indelsForTopography,outputDir,jobname,nucleosomeOccupancy,replicationSignal,replicationValley,replicationPeak)
 ```
 
 
@@ -42,11 +44,7 @@ https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
 **LIBRARY**
 
 This tool uses ENCODE provided files for topography analysis such as nucleosome occupancy and replcation time.
-These files have to provided under
-
-SigProfilerTopography/lib/
-
-Please notice that SigProfilerTopography/lib/ and SigProfilerTopography/source/ must be at the same level.
+You can also provide your local nucleosome occupancy (.wig format) and replication time (WaveSignal in .wig and Pk and Valleys in bed format) files.
 
 **LIBRARY NUCLEOSOME OCCUPANCY**
 
@@ -59,39 +57,77 @@ Step3: Provide wgEncodeSydhNsomeGm12878Sig.wig file under SigProfilerTopography/
 
 **LIBRARY REPLICATION TIME**
 
-Step1: Download GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig,
-GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed.gz,
-GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed.gz from
-https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923442
-
-Step2: Convert .bed.gz into .bed
-
-Step3: Convert .bigWig file into .wig
-
-Step4: Provide these files under
+When you install SigProfilerTopography python package, SigProfilerTopography downloads replication time data for Mcf7 cell lines under
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
 
 
+# Step1: Download GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig,
+
+# GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed.gz,
+
+# GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed.gz from
+
+#https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923442
+
+#Step2: Convert .bed.gz into .bed
+
+#Step3: Convert .bigWig file into .wig
+
+#Step4: Provide these files under
+
+#SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
+
+#SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
+
+#SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
+
+
 **LIBRARY TRANSCRIPTS**
 
-Transcripts
-Step1: Download GRCh37_transcripts.txt from
-https://drive.google.com/open?id=1TSyV_wA5pbPYg2g7M63m4QEp0bd7nYLB
-
-Step2: Provide GRCh37_transcripts.txt under
+When you install SigProfilerTopography python package, SigProfilerTopography downloads transcripts for GRCh37 under
 SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
+
+# Transcripts
+
+# Step1: Download GRCh37_transcripts.txt from
+
+# https://drive.google.com/open?id=1TSyV_wA5pbPYg2g7M63m4QEp0bd7nYLB
+
+#Step2: Provide GRCh37_transcripts.txt under
+
+#SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
 
 **LIBRARY HG19 and HG38 2bit files**
 
-Step1: Download hg19.2bit and hg38.2bit from
-http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit and
-http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit
+From within a python session, you can download the human genome data as follows:
+```
+$ python
+>> from SigProfilerTopography import Topography as topography
+```
 
-Step2: Provide hg19.2bit and hg38.2bit under
-SigProfilerTopography/lib/ucscgenome/hg19.2bit
-SigProfilerTopography/lib/ucscgenome/hg38.2bit
+For GRCh37,  you can download hg19.2bit as follows:
+```
+>> topography.download('GRCh37')
+```
+
+For GRCh38,  you can download hg38.2bit as follows:
+```
+>> topography.download('GRCh38')
+```
+
+# Step1: Download hg19.2bit and hg38.2bit from
+
+# http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit and
+
+# http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit
+
+# Step2: Provide hg19.2bit and hg38.2bit under
+
+# SigProfilerTopography/lib/ucscgenome/hg19.2bit
+
+# SigProfilerTopography/lib/ucscgenome/hg38.2bit
 
 
 **COPYRIGHT**
