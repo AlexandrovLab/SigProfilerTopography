@@ -56,16 +56,21 @@ def fillTranscriptionArray(transcription_row,chrBased_transcription_array):
 
 
 ########################################################################
-def searchIndelOnTranscriptionArray(
+def searchMutationOnTranscriptionArray(
         mutation_row,
         chrBased_transcription_array,
         mutationProbability2Signature2TranscriptionStrand2CountDict,
         mutationProbability2Signature2Sample2TranscriptionStrand2CountDict,
         signature2NumberofMutationsDict,
-        mutationProbabilityThreshold):
+        mutationProbabilityThreshold,
+        type):
 
     mutationStart = mutation_row[START]
-    mutationEnd = mutation_row[END]
+    if (type==INDELS):
+        mutationEnd = mutation_row[END]
+    elif(type==DINUCS):
+        mutationEnd = mutation_row[START]+2
+
     mutationPyramidineStrand = mutation_row[PYRAMIDINESTRAND]
     mutationSample = mutation_row[SAMPLE]
 
@@ -79,7 +84,9 @@ def searchIndelOnTranscriptionArray(
     # 2 --> transcription on negative strand
     # 3 --> transcription on both positive and negative strands
 
-    uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd + 1])
+    # uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd + 1])
+    # mutationEnd is exclusive
+    uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd])
 
     if ((3 in uniqueIndexesArray) or ((1 in uniqueIndexesArray) and (2 in uniqueIndexesArray))):
         if (mutationPyramidineStrand != 0):
@@ -177,7 +184,7 @@ def searchSubstitutionOnTranscriptionArray(
         mutationProbabilityThreshold):
 
     #Values on chrBased_transcription_array and their meanings
-    # 0 --> no-transcription
+    # 0 --> no-transcriptio
     # 1 --> transcription on positive strand
     # 2 --> transcription on negative strand
     # 3 --> transcription on both positive and negative strands
@@ -188,7 +195,7 @@ def searchSubstitutionOnTranscriptionArray(
     mutationType = mutation_row[MUTATION]
     mutationSample = mutation_row[SAMPLE]
 
-    uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd+1])
+    uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd])
 
     if (len(uniqueIndexesArray)==1):
         if (uniqueIndexesArray[0] == 1):
@@ -277,9 +284,11 @@ def searchSubstitutionOnTranscriptionArray(
 def searchMutationsOnTranscriptionArray(inputList):
     chrBased_subs_split_df = inputList[0]
     chrBased_indels_split_df = inputList[1]
-    chrBased_transcription_array = inputList[2]
-    subsSignature2NumberofMutationsDict = inputList[3]
-    indelsSignature2NumberofMutationsDict = inputList[4]
+    chrBased_dinucs_split_df = inputList[2]
+    chrBased_transcription_array = inputList[3]
+    subsSignature2NumberofMutationsDict = inputList[4]
+    indelsSignature2NumberofMutationsDict = inputList[5]
+    dinucsSignature2NumberofMutationsDict = inputList[6]
 
     #Initialize empty dictionaries
     mutationType2TranscriptionStrand2CountDict = {}
@@ -288,6 +297,9 @@ def searchMutationsOnTranscriptionArray(inputList):
     mutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict = {}
     mutationProbability2IndelsSignature2TranscriptionStrand2CountDict = {}
     mutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict = {}
+    mutationProbability2DinucsSignature2TranscriptionStrand2CountDict = {}
+    mutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict = {}
+
 
     if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
         chrBased_subs_split_df.apply(searchSubstitutionOnTranscriptionArray,
@@ -301,12 +313,24 @@ def searchMutationsOnTranscriptionArray(inputList):
                                 axis=1)
 
     if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
-        chrBased_indels_split_df.apply(searchIndelOnTranscriptionArray,
+        chrBased_indels_split_df.apply(searchMutationOnTranscriptionArray,
                                 chrBased_transcription_array=chrBased_transcription_array,
                                 mutationProbability2Signature2TranscriptionStrand2CountDict=mutationProbability2IndelsSignature2TranscriptionStrand2CountDict,
                                 mutationProbability2Signature2Sample2TranscriptionStrand2CountDict=mutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                type= INDELS,
+                                axis=1)
+
+
+    if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
+        chrBased_dinucs_split_df.apply(searchMutationOnTranscriptionArray,
+                                chrBased_transcription_array=chrBased_transcription_array,
+                                mutationProbability2Signature2TranscriptionStrand2CountDict=mutationProbability2DinucsSignature2TranscriptionStrand2CountDict,
+                                mutationProbability2Signature2Sample2TranscriptionStrand2CountDict=mutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict,
+                                signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
+                                mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                type=DINUCS,
                                 axis=1)
 
 
@@ -315,12 +339,15 @@ def searchMutationsOnTranscriptionArray(inputList):
             mutationProbability2SubsSignature2TranscriptionStrand2CountDict,
             mutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict,
             mutationProbability2IndelsSignature2TranscriptionStrand2CountDict,
-            mutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict)
+            mutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict,
+            mutationProbability2DinucsSignature2TranscriptionStrand2CountDict,
+            mutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict)
 ########################################################################
 
 
 ########################################################################
-def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename):
+#main function
+def transcriptionStrandBiasAnalysis(mutationTypes,computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -340,11 +367,13 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
     print(transcripts_df.shape)
     ##################### Read Transcripts ends ########################
 
+    #TODO Consider NONTRANSCRIBED_STRAND
     transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
     strandBias = TRANSCRIPTIONSTRANDBIAS
 
     subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
     indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
+    dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
 
     #Accumulate chrBased Results
     accumulatedAllChromosomesMutationType2TranscriptStrand2CountDict = {}
@@ -353,6 +382,8 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
     accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2TranscriptStrand2CountDict = {}
     accumulatedAllChromosomesMutationProbability2IndelsSignature2TranscriptStrand2CountDict = {}
     accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2DinucsSignature2TranscriptStrand2CountDict = {}
+    accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2TranscriptStrand2CountDict = {}
 
     if (computationType==COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         ############################################################################################################
@@ -365,11 +396,12 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
             # THEN READ CHRBASED MUTATION
             chromSize = chromSizesDict[chrLong]
 
-            # Read chrBased subs dataframe
-            chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFilename)
-
-            # Read chrBased indels dataframe
-            chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+            if (SUBS in mutationTypes):
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFilename)
+            if (INDELS in mutationTypes):
+                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+            if (DINUCS in mutationTypes):
+                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
 
             # Get chrBased ensembl transcripts
             #For transcripts_df chrShort is needed
@@ -388,9 +420,11 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
             inputList = []
             inputList.append(chrBased_subs_df)  # each time different split
             inputList.append(chrBased_indels_df)
+            inputList.append(chrBased_dinucs_df)
             inputList.append(chrBased_transcription_array)  # same for all
             inputList.append(subsSignature2NumberofMutationsDict)  # same for all
             inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
+            inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
             poolInputList.append(inputList)
 
         listofTuples = pool.map(searchMutationsOnTranscriptionArray, poolInputList)
@@ -401,7 +435,9 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
                    accumulatedAllChromosomesMutationProbability2SubsSignature2TranscriptStrand2CountDict,
                    accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2TranscriptStrand2CountDict,
                    accumulatedAllChromosomesMutationProbability2IndelsSignature2TranscriptStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict)
+                   accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2DinucsSignature2TranscriptStrand2CountDict,
+                   accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2TranscriptStrand2CountDict)
         ############################################################################################################
         #####################################      Version 1 ends      #############################################
         ###############################      All Chromosomes in parallel      ######################################
@@ -417,22 +453,33 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
 
         ####################################################################################################
         for chrLong in chromNamesList:
-            # THEN READ CHRBASED MUTATION
+
             chromSize = chromSizesDict[chrLong]
-            # Read chrBased subs dataframe
-            chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFilename)
-            # Read chrBased indels dataframe
-            chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+
+            if (SUBS in mutationTypes):
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFilename)
+            if (INDELS in mutationTypes):
+                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+            if (DINUCS in mutationTypes):
+                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+
             # Get chrBased ensembl transcripts
             chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
 
             #You need to initialize to None so that you don't use former for loop values accidentally
             chrBased_subs_df_splits_list = None
             chrBased_indels_df_splits_list = None
+            chrBased_dinucs_df_splits_list = None
+
             if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
                 chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+
             if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
                 chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
+
+            if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
+                chrBased_dinucs_df_splits_list = np.array_split(chrBased_dinucs_df, numofProcesses)
+
 
             ################################################################################
             chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
@@ -451,12 +498,18 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
                     chrBased_subs_split_df = chrBased_subs_df_splits_list[split_index]
                 if ((chrBased_indels_df_splits_list is not None) and (len(chrBased_indels_df_splits_list))):
                     chrBased_indels_split_df = chrBased_indels_df_splits_list[split_index]
+                if ((chrBased_dinucs_df_splits_list is not None) and (len(chrBased_dinucs_df_splits_list))):
+                    chrBased_dinucs_split_df = chrBased_dinucs_df_splits_list[split_index]
+
+
                 inputList = []
                 inputList.append(chrBased_subs_split_df)  # each time different split
                 inputList.append(chrBased_indels_split_df)
+                inputList.append(chrBased_dinucs_split_df)
                 inputList.append(chrBased_transcription_array) # same for all
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
                 poolInputList.append(inputList)
             ####################################################################
 
@@ -468,7 +521,9 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
                        accumulatedAllChromosomesMutationProbability2SubsSignature2TranscriptStrand2CountDict,
                        accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2TranscriptStrand2CountDict,
                        accumulatedAllChromosomesMutationProbability2IndelsSignature2TranscriptStrand2CountDict,
-                       accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict)
+                       accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict,
+                       accumulatedAllChromosomesMutationProbability2DinucsSignature2TranscriptStrand2CountDict,
+                       accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2TranscriptStrand2CountDict)
         ############################################################################################################
         #####################################      Version2  ends      #############################################
         ###############################       Chromosomes sequentially      ########################################
@@ -485,6 +540,8 @@ def transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromN
     writeDictionary(accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
     writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2TranscriptionStrand2CountDict_Filename,strandBias,None)
     writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2DinucsSignature2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2DinucsSignature2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2TranscriptStrand2CountDict,outputDir,jobname,MutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict_Filename,strandBias,None)
     #################################################################################################################
     ##########################################      Output ends      ################################################
     #################################################################################################################

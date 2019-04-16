@@ -10,11 +10,7 @@
 # #############################################################
 # import sys
 # import os
-#
 # current_abs_path = os.path.dirname(os.path.realpath(__file__))
-# print('Topography.py current_abs_path:%s' %(current_abs_path))
-#
-# commonsPath = os.path.join(current_abs_path, '..','commons')
 # commonsPath = os.path.join(current_abs_path,'commons')
 # sys.path.append(commonsPath)
 # #############################################################
@@ -24,6 +20,7 @@ from SigProfilerTopography.source.commons.DataPreparationCommons import readProb
 from SigProfilerTopography.source.commons.DataPreparationCommons import mergeSNPsWithSignatureProbabilities
 from SigProfilerTopography.source.commons.DataPreparationCommons import readIndelsandWriteWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import prepareSimulationBasedInputFilesForSigProfilerTopography
+from SigProfilerTopography.source.commons.DataPreparationCommons import readChrBasedDinucsMergeWithProbabilitiesAndWrite
 
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
@@ -46,13 +43,61 @@ from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFig
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 
 
+
+############################################################
+#CAn be move to DataPreparationCommons under /source/commons
+#read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
+def prepareDinucsDataAfterMatrixGenerationAndExtractorForTopography(outputDir, jobname, matrix_generator_output_dir_path,dinucs_probabilities_file_path):
+    os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
+    chrShortList = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X','Y']
+    if (os.path.exists(dinucs_probabilities_file_path)):
+        dinucs_probabilities_df = readProbabilities(dinucs_probabilities_file_path)
+        # dinucs_probabilities_df.columns.names [Sample Names    MutationTypes   DBS2    DBS4    DBS6    DBS7    DBS11]
+        # dinucs_probabilities_df.columns.names [Sample    Mutation   DBS2    DBS4    DBS6    DBS7    DBS11]
+        dinucs_probabilities_df.rename(columns={'Sample Names': 'Sample', 'MutationTypes': 'Mutation'}, inplace=True)
+
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+
+    poolInputList = []
+    if (os.path.exists(matrix_generator_output_dir_path)):
+        for chrShort in chrShortList:
+            chr_based_dinuc_filename = '%s_seqinfo.txt' %(chrShort)
+            chr_based_dinuc_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_dinuc_filename)
+            inputList=[]
+            inputList.append(chrShort)
+            inputList.append(outputDir)
+            inputList.append(jobname)
+            inputList.append(chr_based_dinuc_filepath)
+            inputList.append(dinucs_probabilities_df)
+            poolInputList.append(inputList)
+
+        pool.map(readChrBasedDinucsMergeWithProbabilitiesAndWrite,poolInputList)
+
+    pool.close()
+    pool.join()
+
+    # dinucs_probabilities_file_path
+    # /oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt
+    # Sample Names    MutationTypes   DBS2    DBS4    DBS6    DBS7    DBS11
+    # PD10011a        AC>CA   0.0     0.04003180196828397     0.04286819373415273     0.887661695818471       0.029438308479092352
+    # PD10011a        AC>CG   0.0     0.003750743595000353    0.01840082543246141     0.9452478818045245      0.03260054916801382
+
+    #matrix_generator_output_directory
+    #/ oasis / tscc / scratch / burcak / developer / python / SigProfilerTopography / SigProfilerTopography / input_for_matgen / BreastCancer560_subs_indels_dinucs / output / vcf_files / DINUC
+    #chr based files
+    # 10_seqinfo.txt  13_seqinfo.txt  16_seqinfo.txt  19_seqinfo.txt  21_seqinfo.txt  3_seqinfo.txt  6_seqinfo.txt  9_seqinfo.txt
+    # 11_seqinfo.txt  14_seqinfo.txt  17_seqinfo.txt  1_seqinfo.txt   22_seqinfo.txt  4_seqinfo.txt  7_seqinfo.txt  X_seqinfo.txt
+    # 12_seqinfo.txt  15_seqinfo.txt  18_seqinfo.txt  20_seqinfo.txt  2_seqinfo.txt   5_seqinfo.txt  8_seqinfo.txt  Y_seqinfo.txt
+############################################################
+
+
 ############################################################
 #Step1 read snp positions
 #Step2 read probabilities
 #Step3 merge snp positions with probabilities make ready for SigProfilerTopography
 #Step4 read indels make ready for SigProfilerTopography
 def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabilitiesFile,jobname):
-
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
     #############################################################################
@@ -120,15 +165,6 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 ################################################################
 
 
-# #######################################################
-# def downloadNuclesomeChrBasedSignalArrays(nucleosomeFilename):
-#     left here
-#     use wget
-#     upload to a ftp site
-#     download from that ftp site
-#     https://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive/39225039#39225039
-# #######################################################
-
 #######################################################
 def download(genome):
     if (genome == GRCh37):
@@ -154,49 +190,7 @@ def download(genome):
 
 
 #######################################################
-#Run SigProfilerTopography Analyses
-def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename):
-
-    chromSizesDict = getChromSizesDict(genome)
-    chromNamesList = list(chromSizesDict.keys())
-    availableLibraryFilenamesList = getAvailableLibraryFilenamesList()
-
-    print('Genome: %s' %(genome))
-    print('Chromosome names: %s' %(chromNamesList))
-
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
-    print('current_abs_path: %s ' % current_abs_path)
-
-
-    ##############################################
-    #Partition the data (Single Point Mutations data and Indels data)
-    # Delete the output/jobname/DATA/chrbased if exists
-    jobnamePath = os.path.join(outputDir,jobname,DATA,CHRBASED)
-
-    ######################################################
-    # Let's not delete the existing data
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    ######################################################
-
-    if (indelsFilename!=NOTSET):
-        partitionIndelsData(genome,outputDir,jobname,indelsFilename)
-    if (singlePointMutationsFilename!=NOTSET):
-        partitionSubsData(outputDir,jobname,singlePointMutationsFilename)
-    ##############################################
-
-
-    ##############################################
-    #Please note that singlePointMutationsFilename and indelsFilename are full paths.
-    # They are all read and partitioned chr based
-    # Get the fienames at the end
-    singlePointMutationsFilename = os.path.basename(singlePointMutationsFilename)
-    indelsFilename = os.path.basename(indelsFilename)
-    ##############################################
-
+def runNucleosomeOccupancyAnalyses(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList):
     #############################################
     # NUCLEOSOMEOCCUPANCYANALYSIS
     # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
@@ -221,10 +215,13 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 
     # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL
-    nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir)
+    nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir)
     ###############################################
+#######################################################
 
 
+#######################################################
+def runReplicationTimeAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,chromSizesDict,chromNamesList):
     #############################################
     # REPLICATIONTIME
     # Delete the output/jobname/DATA/REPLICATIONTIME if exists
@@ -253,9 +250,14 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL # Took the longest time
-    replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
+    replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,replicationTimeFilename)
     ###############################################
 
+#######################################################
+
+
+#######################################################
+def runReplicationStrandBiasAnalysis(mutationTypes,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList):
 
     ###############################################
     # REPLICATIONSTRANDBIAS
@@ -277,10 +279,13 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     if (singlePointMutationsFilename!=NOTSET):
         # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
         computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-        replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
+        replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
     ###############################################
 
+#######################################################
 
+#######################################################
+def runTranscriptionStradBiasAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,chromSizesDict,chromNamesList):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -297,10 +302,13 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
     if (singlePointMutationsFilename!=NOTSET):
         computationType =COMPUTATION_ALL_CHROMOSOMES_PARALLEL
         # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-        transcriptionStrandBiasAnalysis(computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname, singlePointMutationsFilename,indelsFilename)
+        transcriptionStrandBiasAnalysis(mutationTypes,computationType,genome,chromSizesDict,chromNamesList,outputDir,jobname, singlePointMutationsFilename,indelsFilename)
     ###############################################
+#######################################################
 
 
+#######################################################
+def runProcessivityAnalysis(singlePointMutationsFilename,outputDir,jobname,chromNamesList):
     ###############################################
     # PROCESSIVITY
     # Delete the output/jobname/DATA/PROCESSIVITY if exists
@@ -325,6 +333,64 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 #######################################################
 
 
+#######################################################
+#Run SigProfilerTopography Analyses
+def runAnalyses(genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,mutationTypes=[SUBS, INDELS, DINUCS]):
+
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
+    availableLibraryFilenamesList = getAvailableLibraryFilenamesList()
+
+    print('Genome: %s' %(genome))
+    print('Chromosome names: %s' %(chromNamesList))
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
+    print('current_abs_path: %s ' % current_abs_path)
+
+    ##############################################
+    #Partition the data (Single Point Mutations data and Indels data)
+    # Delete the output/jobname/DATA/chrbased if exists
+    jobnamePath = os.path.join(outputDir,jobname,DATA,CHRBASED)
+
+    ######################################################
+    # SigProfilerMatrixGenerator will provide chrbased subs, indels and dinucs mutation files.
+    # Let's not delete the existing data
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ######################################################
+
+    if (indelsFilename!=NOTSET):
+        partitionIndelsData(genome,outputDir,jobname,indelsFilename)
+    if (singlePointMutationsFilename!=NOTSET):
+        partitionSubsData(outputDir,jobname,singlePointMutationsFilename)
+    #############################################
+
+
+    ##############################################
+    #Please note that singlePointMutationsFilename and indelsFilename are full paths.
+    # They are all read and partitioned chr based
+    # Get the fienames at the end
+    singlePointMutationsFilename = os.path.basename(singlePointMutationsFilename)
+    indelsFilename = os.path.basename(indelsFilename)
+    ##############################################
+
+    ##########################################################################################
+    fill_dinucs_dictionaries_write(outputDir, jobname, chromNamesList)
+    ##########################################################################################
+
+    #############################################
+    # runNucleosomeOccupancyAnalyses(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList)
+    # runReplicationTimeAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,chromSizesDict,chromNamesList)
+    runReplicationStrandBiasAnalysis(mutationTypes,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList)
+    runTranscriptionStradBiasAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,chromSizesDict,chromNamesList)
+    # runProcessivityAnalysis(singlePointMutationsFilename,outputDir,jobname,chromNamesList)
+    #############################################
+
+#######################################################
+
+
 
 ##############################################################
 # BONFERRONI_CORRECTION = 'BONFERRONI_CORRECTION'
@@ -335,7 +401,7 @@ def runAnalyses(genome, singlePointMutationsFilename,indelsFilename,outputDir,jo
 # USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation):
+def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation,mutationTypes=[SUBS, INDELS, DINUCS]):
 
     #Internally Set
     figureAugmentation = 'noaugmentation'
@@ -356,14 +422,18 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
     ############################################################
 
     ############################################################
-    nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
-    replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
+    # nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
+    # replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
     transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
-    processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
+    # processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
     ############################################################
 
 ##############################################################
 
 
-
-
+# ##############################################################
+# #To run local on laptop
+# matrix_generator_output_dir_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs/output/vcf_files/DINUC'
+# dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
+# prepareDinucsDataAfterMatrixGenerationAndExtractorForTopography(matrix_generator_output_dir_path,dinucs_probabilities_file_path)
+# ##############################################################

@@ -37,6 +37,14 @@ $ python
 >> topography.runAnalyses(genome,snpsForTopography,indelsForTopography,outputDir,jobname,nucleosomeOccupancy,replicationSignal,replicationValley,replicationPeak)
 ```
 
+4. Within a python session, you can plot the topography figures as follows:
+```
+>> numofSimulations = 0
+>> jobname = 'BreastCancer560'
+>> outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
+
+>> topography.plotFigures(outputDir,jobname,numofSimulations,'BONFERRONI_CORRECTION','USING_POISSON_DISTRIBUTION')
+```
 
 **INPUT FILE FORMAT**
 
@@ -135,3 +143,6 @@ The SigProfilerTopography framework is free software and is distributed in the h
 **CONTACT INFORMATION**
 
 Please address any queries or bug reports to Burcak Otlu at burcakotlu@eng.ucsd.edu
+
+
+[comment]: <https://dillinger.io/>

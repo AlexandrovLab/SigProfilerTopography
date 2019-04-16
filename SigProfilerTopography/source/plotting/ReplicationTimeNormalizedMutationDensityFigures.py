@@ -133,6 +133,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     plt.xlabel('Early <--- Replication Time ---> Late', fontsize=40, fontweight='semibold')
     plt.ylabel(ylabel, fontsize=40, fontweight='semibold')
 
+
     ########################################################################
     if sample is None:
         if (analysesType == INDELBASED):
@@ -143,6 +144,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
         else:
             # AGGREGATEDSUBSTITUTIONS
             # AGGREGATEDINDELS
+            # AGGREGATEDDINUCS
             figureName = '%s_replication_time.png' % (analysesType)
 
     else:
@@ -151,12 +153,12 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
         elif (analysesType == SIGNATUREBASED):
             numberofMutations = sample2Signature2NumberofMutationsDict[sample][signature]
             figureName = '%s_%s_%d_replication_time.png' % (signature.replace(' ', ''), sample, numberofMutations)
-        elif (analysesType == AGGREGATEDSUBSTITUTIONS):
+        else:
+            # AGGREGATEDSUBSTITUTIONS
+            # AGGREGATEDINDELS
+            # AGGREGATEDDINUCS
             numberofMutations = sample2NumberofMutationsDict[sample]
             figureName = '%s_%d_replication_time.png' % (sample, numberofMutations)
-        elif (analysesType == AGGREGATEDINDELS):
-            numberofIndels = sample2NumberofMutationsDict[sample]
-            figureName = '%s_%d_replication_time.png' % (sample, numberofIndels)
     ########################################################################
 
 
@@ -222,9 +224,88 @@ def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesT
 #########################################################
 
 
+#########################################################
+def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulations,isFigureAugmentation,sample2NumberofMutationsDict,signature2NumberofMutationsDict,sample2Signature2NumberofMutationsDict):
+    for signature in signature2NumberofMutationsDict:
+        # We check such file exists or not
+        normalizedMutationData = readNormalizedMutationData(None, signature, outputDir, jobname)
+
+        if (normalizedMutationData is not None):
+            normalizedMutationData = normalizedMutationData.iloc[0].tolist()
+            # if not all([v == 0.0 for v in normalizedMutationData]):
+            # use all generator for all true check
+            if not all(v == 0.0 for v in normalizedMutationData):
+                # print('For %s: plot signature based replication time figure' % signature)
+                plotNormalizedMutationDensityFigureWithSimulations(signature,
+                                                                   'Normalized\nsingle point mutation density',
+                                                                   normalizedMutationData, None, signature,
+                                                                   analysesType, None,
+                                                                   color, outputDir, jobname,
+                                                                   isFigureAugmentation,
+                                                                   sample2NumberofMutationsDict,
+                                                                   signature2NumberofMutationsDict,
+                                                                   sample2Signature2NumberofMutationsDict,
+                                                                   numberofSimulations)
+
+    for sample in sample2Signature2NumberofMutationsDict:
+        for signature in sample2Signature2NumberofMutationsDict[sample]:
+            normalizedMutationData = readNormalizedMutationData(sample, signature, outputDir, jobname)
+
+            if (normalizedMutationData is not None):
+                normalizedMutationData = normalizedMutationData.iloc[0].tolist()
+                # if not all([v == 0.0 for v in normalizedMutationData]):
+                # use all generator for all true check
+                if not all(v == 0.0 for v in normalizedMutationData):
+                    plotNormalizedMutationDensityFigureWithSimulations('%s_%s' % (signature, sample),
+                                                                       'Normalized\nsingle point mutation density',
+                                                                       normalizedMutationData, sample, signature,
+                                                                       analysesType, None,
+                                                                       color, outputDir, jobname,
+                                                                       isFigureAugmentation,
+                                                                       sample2NumberofMutationsDict,
+                                                                       signature2NumberofMutationsDict,
+                                                                       sample2Signature2NumberofMutationsDict,
+                                                                       numberofSimulations)
+#########################################################
+
+#########################################################
+def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,jobname,numberofSimulations,isFigureAugmentation,sample2NumberofMutationsDict,signature2NumberofMutationsDict,sample2Signature2NumberofMutationsDict):
+    if (analysesType == INDELBASED):
+        normalizedMutationData = readNormalizedMutationData(None,indelType,outputDir,jobname)
+    else:
+        normalizedMutationData = readNormalizedMutationData(None, analysesType, outputDir, jobname)
+
+    if (normalizedMutationData is not None):
+        normalizedMutationData = normalizedMutationData.iloc[0].tolist()
+        plotNormalizedMutationDensityFigureWithSimulations(title, '\nNormalized mutation density',
+                                                           normalizedMutationData, None, None, analysesType, indelType,
+                                                           color,outputDir, jobname, isFigureAugmentation,
+                                                           sample2NumberofMutationsDict,
+                                                           signature2NumberofMutationsDict,
+                                                           sample2Signature2NumberofMutationsDict,
+                                                           numberofSimulations)
+
+    ######## Sample Based AGGREGATEDINDELS starts ########
+    for sample in sample2NumberofMutationsDict:
+        if (analysesType == INDELBASED):
+            normalizedMutationData = readNormalizedMutationData(sample, indelType, outputDir, jobname)
+        else:
+            normalizedMutationData = readNormalizedMutationData(sample, analysesType, outputDir, jobname)
+        if (normalizedMutationData is not None):
+            normalizedMutationData = normalizedMutationData.iloc[0].tolist()
+            plotNormalizedMutationDensityFigureWithSimulations('%s %s' % (sample,title),
+                                                               '\nNormalized mutation density',
+                                                               normalizedMutationData, sample, None, analysesType, indelType,
+                                                               color, outputDir, jobname, isFigureAugmentation,
+                                                               sample2NumberofMutationsDict,
+                                                               signature2NumberofMutationsDict,
+                                                               sample2Signature2NumberofMutationsDict,
+                                                               numberofSimulations)
+    ######## Sample Based AGGREGATEDINDELS ends #########
+#########################################################
 
 ##################################################################
-def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations):
+def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes):
 
     isFigureAugmentation = False
     if (figureAugmentation == 'augmentation'):
@@ -237,189 +318,31 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
     ##########################################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
     sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
+    sample2NumberofDinucsDict = getDictionary(outputDir, jobname,Sample2NumberofDinucsDictFilename)
+
     subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
     indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
+    dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
+
     sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
     sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
+    sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
     ##########################################################################################
 
     ##########################################################################################
     ##########################  Plot figures starts  #########################################
     ##########################################################################################
-
-    ##########################################################################################
-    ##########################  Simulations starts  ##########################################
-    ##########################################################################################
-    for analysesType in analysesTypes:
-        if (analysesType == AGGREGATEDINDELS):
-            normalizedMutationData = readNormalizedMutationData(None, analysesType,outputDir,jobname)
-            if (normalizedMutationData is not None):
-                normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                plotNormalizedMutationDensityFigureWithSimulations('Aggregated Indels', '\nNormalized mutation density',
-                                                    normalizedMutationData, None, None,analysesType,None, 'indianred',
-                                                    outputDir,jobname, isFigureAugmentation,
-                                                    sample2NumberofIndelsDict,
-                                                    indelsSignature2NumberofMutationsDict,
-                                                    sample2IndelsSignature2NumberofMutationsDict,
-                                                    numberofSimulations)
-
-            ######## Sample Based AGGREGATEDINDELS starts ########
-            for sample in sample2NumberofIndelsDict:
-                normalizedMutationData = readNormalizedMutationData(sample, analysesType,outputDir,jobname)
-                if (normalizedMutationData is not None):
-                    normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                    plotNormalizedMutationDensityFigureWithSimulations('%s Aggregated Indels' %(sample), '\nNormalized mutation density',
-                                                        normalizedMutationData, sample,None, analysesType,None,
-                                                        'indianred', outputDir, jobname, isFigureAugmentation,
-                                                       sample2NumberofIndelsDict,
-                                                       indelsSignature2NumberofMutationsDict,
-                                                       sample2IndelsSignature2NumberofMutationsDict,
-                                                        numberofSimulations)
-            ######## Sample Based AGGREGATEDINDELS ends #########
-
-
-
-        # Data is generated in ReplicationTimeAnalysis.py
-        # If indels based figures not needed/wanted  following lines can be commented.
-        elif (analysesType == INDELBASED):
-            for indelType in indeltypes:
-                normalizedMutationData = readNormalizedMutationData(None, indelType,outputDir,jobname)
-                if (normalizedMutationData is not None):
-                    normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                    plotNormalizedMutationDensityFigureWithSimulations(indelType, 'Normalized mutation density',
-                                                        normalizedMutationData, None, None,analysesType,indelType,
-                                                        'indianred', outputDir, jobname, isFigureAugmentation,
-                                                        sample2NumberofIndelsDict,
-                                                        indelsSignature2NumberofMutationsDict,
-                                                        sample2IndelsSignature2NumberofMutationsDict,
-                                                        numberofSimulations)
-
-                ######## Sample Based INDELBASED starts ########
-                for sample in sample2NumberofIndelsDict:
-                    normalizedMutationData = readNormalizedMutationData(sample, indelType,outputDir,jobname)
-                    if (normalizedMutationData is not None):
-                        normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                        plotNormalizedMutationDensityFigureWithSimulations('%s %s' %(sample,indelType)  , 'Normalized mutation density',
-                                                            normalizedMutationData, sample, None,analysesType,indelType,
-                                                            'indianred', outputDir, jobname, isFigureAugmentation,
-                                                           sample2NumberofIndelsDict,
-                                                           indelsSignature2NumberofMutationsDict,
-                                                           sample2IndelsSignature2NumberofMutationsDict,
-                                                            numberofSimulations)
-                ######## Sample Based INDELBASED starts ########
-
-        elif (analysesType == AGGREGATEDSUBSTITUTIONS):
-            normalizedMutationData = readNormalizedMutationData(None, analysesType,outputDir,jobname)
-
-            if (normalizedMutationData is not None):
-                normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                plotNormalizedMutationDensityFigureWithSimulations('Aggregated Substitutions',
-                                                    'Normalized\nsingle point mutation density',
-                                                    normalizedMutationData, None, None, analysesType, None,'yellowgreen',
-                                                    outputDir,jobname, isFigureAugmentation,
-                                                   sample2NumberofSubsDict,
-                                                   subsSignature2NumberofMutationsDict,
-                                                   sample2SubsSignature2NumberofMutationsDict,
-                                                   numberofSimulations)
-
-
-            for sample in sample2NumberofSubsDict:
-                normalizedMutationData = readNormalizedMutationData(sample, analysesType,outputDir,jobname)
-
-                if (normalizedMutationData is not None):
-                    normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                    plotNormalizedMutationDensityFigureWithSimulations('%s Aggregated Substitutions' %(sample),
-                                                        'Normalized\nsingle point mutation density',
-                                                        normalizedMutationData, sample,None, analysesType,None,
-                                                        'yellowgreen', outputDir, jobname, isFigureAugmentation,
-                                                        sample2NumberofSubsDict,
-                                                        subsSignature2NumberofMutationsDict,
-                                                        sample2SubsSignature2NumberofMutationsDict,
-                                                        numberofSimulations)
-
-
-        elif (analysesType == SIGNATUREBASED):
-            for signature in subsSignature2NumberofMutationsDict:
-                # We check such file exists or not
-                normalizedMutationData = readNormalizedMutationData(None, signature,outputDir,jobname)
-
-                if (normalizedMutationData is not None):
-                    normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                    # if not all([v == 0.0 for v in normalizedMutationData]):
-                    # use all generator for all true check
-                    if not all(v == 0.0 for v in normalizedMutationData):
-                        # print('For %s: plot signature based replication time figure' % signature)
-                        plotNormalizedMutationDensityFigureWithSimulations(signature,
-                                                            'Normalized\nsingle point mutation density',
-                                                            normalizedMutationData, None, signature, analysesType, None,
-                                                            'yellowgreen', outputDir, jobname, isFigureAugmentation,
-                                                           sample2NumberofSubsDict,
-                                                           subsSignature2NumberofMutationsDict,
-                                                           sample2SubsSignature2NumberofMutationsDict,
-                                                           numberofSimulations)
-
-            for sample in sample2SubsSignature2NumberofMutationsDict:
-                for signature in sample2SubsSignature2NumberofMutationsDict[sample]:
-                    normalizedMutationData = readNormalizedMutationData(sample, signature,outputDir,jobname)
-
-                    if (normalizedMutationData is not None):
-                        normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                        # if not all([v == 0.0 for v in normalizedMutationData]):
-                        # use all generator for all true check
-                        if not all(v == 0.0 for v in normalizedMutationData):
-                            plotNormalizedMutationDensityFigureWithSimulations('%s_%s' %(signature,sample),
-                                                                'Normalized\nsingle point mutation density',
-                                                                normalizedMutationData, sample,signature, analysesType, None,
-                                                                'yellowgreen', outputDir, jobname,
-                                                                isFigureAugmentation,
-                                                               sample2NumberofSubsDict,
-                                                               subsSignature2NumberofMutationsDict,
-                                                               sample2SubsSignature2NumberofMutationsDict,
-                                                               numberofSimulations)
-
-
-            for signature in indelsSignature2NumberofMutationsDict:
-                # We check such file exists or not
-                normalizedMutationData = readNormalizedMutationData(None, signature,outputDir,jobname)
-
-                if (normalizedMutationData is not None):
-                    normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                    # if not all([v == 0.0 for v in normalizedMutationData]):
-                    # use all generator for all true check
-                    if not all(v == 0.0 for v in normalizedMutationData):
-                        # print('For %s: plot signature based replication time figure' % signature)
-                        plotNormalizedMutationDensityFigureWithSimulations(signature,
-                                                            'Normalized\nsingle point mutation density',
-                                                            normalizedMutationData, None, signature, analysesType, None,
-                                                            'indianred', outputDir, jobname, isFigureAugmentation,
-                                                            sample2NumberofIndelsDict,
-                                                            indelsSignature2NumberofMutationsDict,
-                                                            sample2IndelsSignature2NumberofMutationsDict,
-                                                            numberofSimulations)
-
-            for sample in sample2IndelsSignature2NumberofMutationsDict:
-                for signature in sample2IndelsSignature2NumberofMutationsDict[sample]:
-                    normalizedMutationData = readNormalizedMutationData(sample, signature,outputDir,jobname)
-                    if (normalizedMutationData is not None):
-                        normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-                        # if not all([v == 0.0 for v in normalizedMutationData]):
-                        # use all generator for all true check
-                        if not all(v == 0.0 for v in normalizedMutationData):
-                            # print('For %s: plot signature based replication time figure' % signature)
-                            plotNormalizedMutationDensityFigureWithSimulations('%s_%s' %(signature,sample),
-                                                                'Normalized\nsingle point mutation density',
-                                                                normalizedMutationData, sample,signature, analysesType, None,
-                                                                'indianred', outputDir, jobname,
-                                                                isFigureAugmentation,
-                                                                sample2NumberofIndelsDict,
-                                                                indelsSignature2NumberofMutationsDict,
-                                                                sample2IndelsSignature2NumberofMutationsDict,
-                                                                numberofSimulations)
-
-    ##########################################################################################
-    ##########################  Simulations ends  ############################################
-    ##########################################################################################
-
+    if (SUBS in mutationTypes):
+        plotAllMutationTypesFigures('Aggregated Substitutions','yellowgreen',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,isFigureAugmentation,sample2NumberofSubsDict,subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict)
+        plotSignatureFigures('yellowgreen',SIGNATUREBASED, outputDir, jobname, numberofSimulations,isFigureAugmentation, sample2NumberofSubsDict,subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict)
+    if (INDELS in mutationTypes):
+        plotAllMutationTypesFigures('Aggregated Indels','indianred',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,isFigureAugmentation,sample2NumberofIndelsDict,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict)
+        plotAllMutationTypesFigures(MICROHOMOLOGY,'indianred',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations, isFigureAugmentation, sample2NumberofIndelsDict, indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict)
+        plotAllMutationTypesFigures(REPEAT, 'indianred',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,isFigureAugmentation, sample2NumberofIndelsDict, indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict)
+        plotSignatureFigures('indianred', SIGNATUREBASED, outputDir, jobname, numberofSimulations, isFigureAugmentation,sample2NumberofIndelsDict, indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict)
+    if (DINUCS in mutationTypes):
+        plotAllMutationTypesFigures('Aggregated Dinucs','crimson',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,isFigureAugmentation,sample2NumberofDinucsDict,dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict)
+        plotSignatureFigures('crimson', SIGNATUREBASED, outputDir, jobname, numberofSimulations, isFigureAugmentation,sample2NumberofDinucsDict,dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict)
     ##########################################################################################
     ##########################  Plot figures ends  ###########################################
     ##########################################################################################

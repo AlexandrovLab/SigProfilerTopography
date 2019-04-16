@@ -31,15 +31,23 @@ def readProbabilities(probabilitiesFile):
     print('probabilities_df.head()')
     print(probabilities_df.head())
 
-    print('Unique samples in probabilities_df')
-    print(probabilities_df['Sample'].unique())
-    print('# of unique samples in probabilities_df: %d' %(len(probabilities_df['Sample'].unique())))
-    print()
+    if ('Sample' in probabilities_df.columns.names):
+        print('Unique samples in probabilities_df')
+        print(probabilities_df['Sample'].unique())
+        print('# of unique samples in probabilities_df: %d' %(len(probabilities_df['Sample'].unique())))
+        print()
 
-    print('Unique mutations in probabilities_df')
-    print(probabilities_df['Mutations'].unique())
-    print('# of unique mutations in probabilities_df: %d' %(len(probabilities_df['Mutations'].unique())))
-    print()
+    if ('Mutations' in probabilities_df.columns.names):
+        print('Unique mutations in probabilities_df')
+        print(probabilities_df['Mutations'].unique())
+        print('# of unique mutations in probabilities_df: %d' %(len(probabilities_df['Mutations'].unique())))
+        print()
+
+    if ('MutationTypes' in probabilities_df.columns.names):
+        print('Unique MutationTypes in probabilities_df')
+        print(probabilities_df['MutationTypes'].unique())
+        print('# of unique MutationTypes in probabilities_df: %d' %(len(probabilities_df['MutationTypes'].unique())))
+        print()
 
     print('Probabilities information ends')
     print('###########################################')
@@ -129,6 +137,66 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
     return row
 ############################################################
 
+############################################################
+def readChrBasedDinucs(chr_based_dinuc_filepath):
+    # PD10011a        10      24033662        U:G[TC>AA]A     1
+    # PD10011a        10      63439037        T:G[CT>TA]C     -1
+    # PD10011a        10      67761104        T:T[TG>GC]C     -1
+    # PD10011a        10      130808548       N:T[TC>AG]T     -1
+
+    if (os.path.exists(chr_based_dinuc_filepath)):
+        try:
+            dinucs_with_genomic_positions_df = pd.read_table(chr_based_dinuc_filepath, sep="\t", header=None)
+        except pd.errors.EmptyDataError:
+            dinucs_with_genomic_positions_df = pd.DataFrame()
+
+        if (not dinucs_with_genomic_positions_df.empty):
+            dinucs_with_genomic_positions_df.columns = [SAMPLE, CHROM, START, 'MutationLong',PYRAMIDINESTRAND]
+            dinucs_with_genomic_positions_df[SAMPLE] = dinucs_with_genomic_positions_df[SAMPLE].astype(str)
+            dinucs_with_genomic_positions_df[CHROM] = dinucs_with_genomic_positions_df[CHROM].astype(str)
+            dinucs_with_genomic_positions_df[START] = dinucs_with_genomic_positions_df[START].astype(int)
+            dinucs_with_genomic_positions_df['MutationLong'] = dinucs_with_genomic_positions_df['MutationLong'].astype(str)
+            dinucs_with_genomic_positions_df[PYRAMIDINESTRAND] = dinucs_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
+            #Add new column
+            dinucs_with_genomic_positions_df['Mutation'] = dinucs_with_genomic_positions_df['MutationLong'].str[4:9]
+            return dinucs_with_genomic_positions_df
+
+    return None
+############################################################
+
+
+############################################################
+def readChrBasedDinucsMergeWithProbabilitiesAndWrite(inputList):
+    chrShort = inputList[0]
+    outputDir = inputList[1]
+    jobname = inputList[2]
+    chr_based_dinuc_filepath = inputList[3]
+    dinucs_probabilities_df = inputList[4]
+
+    chr_based_dinuc_df = readChrBasedDinucs(chr_based_dinuc_filepath)
+
+    #chr_based_dinuc_df columns ['Sample', 'Chrom', 'Start', 'Mutation','PyrimidineStrand']
+    #dinucs_probabilities_df columns ['Sample', 'Mutation', 'DBS2', 'DBS4', 'DBS6', 'DBS7', 'DBS11']
+    if ((chr_based_dinuc_df is not None) and (dinucs_probabilities_df is not None)):
+        merged_df = pd.merge(chr_based_dinuc_df,dinucs_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
+
+        # print('chr_based_dinuc_df.shape')
+        # print(chr_based_dinuc_df.shape[0])
+        # print('dinucs_probabilities_df.shape')
+        # print(dinucs_probabilities_df.shape)
+        # print('merged_df.shape')
+        # print(merged_df.shape[0])
+
+        if (chr_based_dinuc_df.shape[0]!=merged_df.shape[0]):
+            print('There is a situation. For chr:%s All dinucs are not merged with dinucs signature probabilities' %(chrShort))
+
+        if ((merged_df is not None) and (not merged_df.empty)):
+            chrBasedDinuscFileName = 'chr%s_dinucs_for_topography.txt' %(chrShort)
+            chr_based_dinucs_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedDinuscFileName)
+            merged_df.drop(['MutationLong'], inplace=True, axis=1)
+            merged_df.to_csv(chr_based_dinucs_file_path, sep='\t', header=True, index=False)
+############################################################
+
 
 ############################################################
 def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
@@ -187,7 +255,6 @@ def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
     indels_with_genomic_positions_df[CATEGORY] = np.where(indels_with_genomic_positions_df[LENGTH] > 3,INDEL_GT_3BP, INDEL_LTE_3BP)
 
     # Rename
-
     indels_with_genomic_positions_df.rename(columns={'mutType' : TYPE}, inplace=True)
 
     #Order the columns
@@ -195,14 +262,12 @@ def readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile):
     ordered_column_names = [PROJECT, SAMPLE, CHROM, START, END, REF, ALT, TYPE, LENGTH, CATEGORY]
     indels_with_genomic_positions_df = indels_with_genomic_positions_df[ordered_column_names]
 
-
     #########################################################
     #Write indels_df by project
     indels_df_groupby_project = indels_with_genomic_positions_df.groupby(PROJECT)
 
     numberofGroupsBasedonProject = len(indels_df_groupby_project)
     print('numberofGroupsBasedonProject:%d' %(numberofGroupsBasedonProject))
-
 
     for projectType, projectBased_indels_df  in indels_df_groupby_project:
         if (numberofGroupsBasedonProject==1):
