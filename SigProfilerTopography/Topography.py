@@ -381,11 +381,11 @@ def runAnalyses(genome,singlePointMutationsFilename,indelsFilename,outputDir,job
     ##########################################################################################
 
     #############################################
-    # runNucleosomeOccupancyAnalyses(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList)
-    # runReplicationTimeAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,chromSizesDict,chromNamesList)
+    runNucleosomeOccupancyAnalyses(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList)
+    runReplicationTimeAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,chromSizesDict,chromNamesList)
     runReplicationStrandBiasAnalysis(mutationTypes,singlePointMutationsFilename,indelsFilename,outputDir,jobname,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList)
     runTranscriptionStradBiasAnalysis(mutationTypes,genome,singlePointMutationsFilename,indelsFilename,outputDir,jobname,chromSizesDict,chromNamesList)
-    # runProcessivityAnalysis(singlePointMutationsFilename,outputDir,jobname,chromNamesList)
+    runProcessivityAnalysis(singlePointMutationsFilename,outputDir,jobname,chromNamesList)
     #############################################
 
 #######################################################
@@ -422,10 +422,10 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
     ############################################################
 
     ############################################################
-    # nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
-    # replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
+    nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
+    replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
     transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
-    # processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
+    processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
     ############################################################
 
 ##############################################################

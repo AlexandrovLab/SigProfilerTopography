@@ -152,27 +152,34 @@ def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array)
 ########################################################################
 
 
-
 ########################################################################
 # Summary:
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
-def searchMutationsOnReplicationStrandArray(mutation_row,
-                                        chrBasedReplicationArray,
-                                        mutationProbability2Signature2ReplicationStrand2CountDict,
-                                        mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                        signature2NumberofMutationsDict,
-                                        mutationProbabilityThreshold,
-                                        type):
+def searchMutationOnReplicationStrandArray(
+        mutation_row,
+        chrBasedReplicationArray,
+        type2ReplicationStrand2CountDict,
+        sample2Type2ReplicationStrand2CountDict,
+        type2Sample2ReplicationStrand2CountDict,
+        signature2MutationType2ReplicationStrand2CountDict,
+        signature2NumberofMutationsDict,
+        sample2Signature2NumberofMutationsDict,
+        mutationProbabilityThreshold,
+        type):
 
     start = mutation_row[START]
+    mutationType = None
+    pyramidineStrand = mutation_row[PYRAMIDINESTRAND]
+    sample = mutation_row[SAMPLE]
+
+    if(type==SUBS):
+        end = mutation_row[START]+1
+        mutationType = mutation_row[MUTATION]
     if (type==INDELS):
         end = mutation_row[END]
     elif (type==DINUCS):
         end= mutation_row[START]+2
-
-    mutationPyramidineStrand = mutation_row[PYRAMIDINESTRAND]
-    sample = mutation_row[SAMPLE]
 
     #############################################################################################################
     #if there is overlap with chrBasedReplicationArray
@@ -186,31 +193,31 @@ def searchMutationsOnReplicationStrandArray(mutation_row,
         if (uniqueValueArray.size>2):
             print('There is a situation!!!')
 
-        elif ((uniqueValueArray.size==2) and (mutationPyramidineStrand!=0)):
+        elif ((uniqueValueArray.size==2) and (pyramidineStrand!=0)):
             #Increment both LEADING and LAGGING
-            #TODO can we do this in one call?
             updateDictionaries(mutation_row,
-                               None,
-                               sample,
-                               None,
-                               None,
-                               mutationProbability2Signature2ReplicationStrand2CountDict,
-                               mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                               LEADING,
-                               signature2NumberofMutationsDict,
-                               mutationProbabilityThreshold)
+                                        mutationType,
+                                        sample,
+                                        type2ReplicationStrand2CountDict,
+                                        sample2Type2ReplicationStrand2CountDict,
+                                        type2Sample2ReplicationStrand2CountDict,
+                                        signature2MutationType2ReplicationStrand2CountDict,
+                                        LAGGING,
+                                        signature2NumberofMutationsDict,
+                                        sample2Signature2NumberofMutationsDict,
+                                        mutationProbabilityThreshold)
 
             updateDictionaries(mutation_row,
-                               None,
-                               sample,
-                               None,
-                               None,
-                               mutationProbability2Signature2ReplicationStrand2CountDict,
-                               mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                               LAGGING,
-                               signature2NumberofMutationsDict,
-                               mutationProbabilityThreshold)
-
+                                        mutationType,
+                                        sample,
+                                        type2ReplicationStrand2CountDict,
+                                        sample2Type2ReplicationStrand2CountDict,
+                                        type2Sample2ReplicationStrand2CountDict,
+                                        signature2MutationType2ReplicationStrand2CountDict,
+                                        LEADING,
+                                        signature2NumberofMutationsDict,
+                                        sample2Signature2NumberofMutationsDict,
+                                        mutationProbabilityThreshold)
 
 
         # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
@@ -220,102 +227,40 @@ def searchMutationsOnReplicationStrandArray(mutation_row,
                 slope = int(uniqueValue)
 
                 #They have the same sign, multiplication (1,1) (-1,-1) must be 1
-                if (slope*mutationPyramidineStrand > 0):
+                if (slope*pyramidineStrand > 0):
                     updateDictionaries(mutation_row,
-                                       None,
-                                       sample,
-                                       None,
-                                       None,
-                                       mutationProbability2Signature2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                       LEADING,
-                                       signature2NumberofMutationsDict,
-                                       mutationProbabilityThreshold)
+                                            mutationType,
+                                            sample,
+                                            type2ReplicationStrand2CountDict,
+                                            sample2Type2ReplicationStrand2CountDict,
+                                            type2Sample2ReplicationStrand2CountDict,
+                                            signature2MutationType2ReplicationStrand2CountDict,
+                                            LEADING,
+                                            signature2NumberofMutationsDict,
+                                            sample2Signature2NumberofMutationsDict,
+                                            mutationProbabilityThreshold)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
-                elif (slope*mutationPyramidineStrand < 0):
+                elif (slope*pyramidineStrand < 0):
                     updateDictionaries(mutation_row,
-                                       None,
-                                       sample,
-                                       None,
-                                       None,
-                                       mutationProbability2Signature2ReplicationStrand2CountDict,
-                                       mutationProbability2Signature2Sample2ReplicationStrand2CountDict,
-                                       LAGGING,
-                                       signature2NumberofMutationsDict,
-                                       mutationProbabilityThreshold)
+                                            mutationType,
+                                            sample,
+                                            type2ReplicationStrand2CountDict,
+                                            sample2Type2ReplicationStrand2CountDict,
+                                            type2Sample2ReplicationStrand2CountDict,
+                                            signature2MutationType2ReplicationStrand2CountDict,
+                                            LAGGING,
+                                            signature2NumberofMutationsDict,
+                                            sample2Signature2NumberofMutationsDict,
+                                            mutationProbabilityThreshold)
         else:
             print('There is a situation!!!')
     #############################################################################################################
-
-########################################################################
-
-########################################################################
-# Summary:
-#   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
-#   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
-def searchSubsOnReplicationStrandArray(mutation_row,
-                                        chrBasedReplicationArray,
-                                        mutationType2ReplicationStrand2CountDict,
-                                        mutationType2Sample2ReplicationStrand2CountDict,
-                                        mutationProbability2SubsSignature2ReplicationStrand2CountDict,
-                                        mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
-                                        signature2NumberofMutationsDict,
-                                        mutationProbabilityThreshold):
-
-    mutationStart = mutation_row[START]
-    mutationEnd = mutation_row[START]+1
-    mutationPyramidineStrand = mutation_row[PYRAMIDINESTRAND]
-    mutationType = mutation_row[MUTATION]
-    mutationSample = mutation_row[SAMPLE]
-
-    #############################################################################################################
-    #if there is overlap with chrBasedReplicationArray
-    slicedArray = chrBasedReplicationArray[mutationStart:mutationEnd]
-
-    if (np.any(slicedArray)):
-        uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-        # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
-        if (uniqueValueArray.size == 1):
-            for uniqueValue in np.nditer(uniqueValueArray):
-                # type(decileIndex) is numpy.ndarray
-                slope = int(uniqueValue)
-
-                #They have the same sign, multiplication (1,1) (-1,-1) must be 1
-                if (slope*mutationPyramidineStrand > 0):
-                    updateDictionaries(mutation_row,
-                                       mutationType,
-                                       mutationSample,
-                                       mutationType2ReplicationStrand2CountDict,
-                                       mutationType2Sample2ReplicationStrand2CountDict,
-                                       mutationProbability2SubsSignature2ReplicationStrand2CountDict,
-                                       mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
-                                       LEADING,
-                                       signature2NumberofMutationsDict,
-                                       mutationProbabilityThreshold)
-
-                # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
-                elif (slope*mutationPyramidineStrand < 0):
-                    updateDictionaries(mutation_row,
-                                       mutationType,
-                                       mutationSample,
-                                       mutationType2ReplicationStrand2CountDict,
-                                       mutationType2Sample2ReplicationStrand2CountDict,
-                                       mutationProbability2SubsSignature2ReplicationStrand2CountDict,
-                                       mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
-                                       LAGGING,
-                                       signature2NumberofMutationsDict,
-                                       mutationProbabilityThreshold)
-        else:
-            print('There is a situation!!!')
-    #############################################################################################################
-
 ########################################################################
 
 
 ########################################################################
-def  searchMutationsOnReplicationArray(inputList):
+def  searchMutationsOnReplicationStrandArray(inputList):
     chrBased_replication_array = inputList[0]
     chrBased_subs_split_df = inputList[1]
     chrBased_indels_split_df = inputList[2]
@@ -323,69 +268,68 @@ def  searchMutationsOnReplicationArray(inputList):
     subsSignature2NumberofMutationsDict = inputList[4]
     indelsSignature2NumberofMutationsDict = inputList[5]
     dinucsSignature2NumberofMutationsDict = inputList[6]
+    sample2SubsSignature2NumberofMutationsDict = inputList[7]
+    sample2IndelsSignature2NumberofMutationsDict = inputList[8]
+    sample2DinucsSignature2NumberofMutationsDict = inputList[9]
 
-    mutationType2ReplicationStrand2CountDict = {}
-    mutationType2Sample2ReplicationStrand2CountDict = {}
-    mutationProbability2SubsSignature2ReplicationStrand2CountDict = {}
-    mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict = {}
-
-    mutationProbability2IndelsSignature2ReplicationStrand2CountDict = {}
-    mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict = {}
-    mutationProbability2DinucsSignature2ReplicationStrand2CountDict = {}
-    mutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict = {}
-
-    #TODO Can we use same searchMutationsOnReplicationStrandArray for all mutation types?
-    #TODO Fill subsSignature2MutatonType2ReplicationStrand2CountDict for substitutions
+    type2ReplicationStrand2CountDict= {}
+    sample2Type2ReplicationStrand2CountDict= {}
+    type2Sample2ReplicationStrand2CountDict = {}
+    signature2MutationType2ReplicationStrand2CountDict = {}
 
     ##############################  Fill dictionaries for subs  starts ####################
     if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
-        chrBased_subs_split_df.apply(searchSubsOnReplicationStrandArray,
+        chrBased_subs_split_df.apply(searchMutationOnReplicationStrandArray,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                mutationType2ReplicationStrand2CountDict=mutationType2ReplicationStrand2CountDict,
-                                mutationType2Sample2ReplicationStrand2CountDict=mutationType2Sample2ReplicationStrand2CountDict,
-                                mutationProbability2SubsSignature2ReplicationStrand2CountDict=mutationProbability2SubsSignature2ReplicationStrand2CountDict,
-                                mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict=mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
+                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
+                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
+                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
+                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
+                                sample2Signature2NumberofMutationsDict =  sample2SubsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                type=SUBS,
                                 axis=1)
     ##############################  Fill dictionaries for subs  ends ######################
 
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
-        chrBased_indels_split_df.apply(searchMutationsOnReplicationStrandArray,
+        chrBased_indels_split_df.apply(searchMutationOnReplicationStrandArray,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                mutationProbability2Signature2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2Sample2ReplicationStrand2CountDict=mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
+                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
+                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
+                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
+                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
+                                sample2Signature2NumberofMutationsDict =  sample2IndelsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                                type = INDELS,
+                                type=INDELS,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
-        chrBased_dinucs_split_df.apply(searchMutationsOnReplicationStrandArray,
+        chrBased_dinucs_split_df.apply(searchMutationOnReplicationStrandArray,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                mutationProbability2Signature2ReplicationStrand2CountDict=mutationProbability2DinucsSignature2ReplicationStrand2CountDict,
-                                mutationProbability2Signature2Sample2ReplicationStrand2CountDict=mutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict,
+                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
+                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
+                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
+                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
+                                sample2Signature2NumberofMutationsDict =  sample2DinucsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                                type = DINUCS,
+                                type=DINUCS,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
 
     #Fill the type2replicationStranCount dictionaries and return them
-    return (mutationType2ReplicationStrand2CountDict,
-            mutationType2Sample2ReplicationStrand2CountDict,
-            mutationProbability2SubsSignature2ReplicationStrand2CountDict,
-            mutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict,
-            mutationProbability2IndelsSignature2ReplicationStrand2CountDict,
-            mutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict,
-            mutationProbability2DinucsSignature2ReplicationStrand2CountDict,
-            mutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict)
+    return (type2ReplicationStrand2CountDict,
+            sample2Type2ReplicationStrand2CountDict,
+            type2Sample2ReplicationStrand2CountDict,
+            signature2MutationType2ReplicationStrand2CountDict)
 ########################################################################
 
 
@@ -489,6 +433,10 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
     dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
 
+    sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
+    sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir, jobname)
+    sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir, jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
+
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
 
     ############################Chr based parallel code starts ################################################
@@ -497,14 +445,10 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     strandBias = REPLICATIONSTRANDBIAS
 
     #Accumulate chrBased Results
-    accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2DinucsSignature2LeadingLaggingStrand2CountDict = {}
-    accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2LeadingLaggingStrand2CountDict = {}
+    accumulatedAllChromosomesType2ReplicationStrand2CountDict = {}
+    accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict = {}
+    accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict = {}
+    accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict = {}
 
     if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         ############################################################################################################
@@ -548,19 +492,19 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)
                 inputList.append(dinucsSignature2NumberofMutationsDict)
+                inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                inputList.append(sample2DinucsSignature2NumberofMutationsDict)
                 poolInputList.append(inputList)
 
-        listofTuples = pool.map(searchMutationsOnReplicationArray, poolInputList)
+        listofTuples = pool.map(searchMutationsOnReplicationStrandArray, poolInputList)
 
         accumulate(listofTuples,
-                   accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2DinucsSignature2LeadingLaggingStrand2CountDict,
-                   accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2LeadingLaggingStrand2CountDict)
+                        accumulatedAllChromosomesType2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
+
         ############################################################################################################
         ###############################      All Chromosomes in parallel  ends    ##################################
         ############################################################################################################
@@ -639,20 +583,20 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
                     inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                     inputList.append(indelsSignature2NumberofMutationsDict)
                     inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                    inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                    inputList.append(sample2DinucsSignature2NumberofMutationsDict)
                     poolInputList.append(inputList)
                 ##########################################################################
 
-                listofTuples = pool.map(searchMutationsOnReplicationArray, poolInputList)
+                listofTuples = pool.map(searchMutationsOnReplicationStrandArray, poolInputList)
 
                 accumulate(listofTuples,
-                           accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2DinucsSignature2LeadingLaggingStrand2CountDict,
-                           accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2LeadingLaggingStrand2CountDict)
+                            accumulatedAllChromosomesType2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
+
         ############################################################################################################
         ###############################       Chromosomes sequentially      ########################################
         ###############################      All ChrBased Splits in parallel ends    ###############################
@@ -662,15 +606,10 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     ############################################################################################################
     #####################################       Output starts      #############################################
     ############################################################################################################
-    writeDictionary(accumulatedAllChromosomesMutationType2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationType2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationType2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2SubsSignature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2SubsSignature2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-
-    writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2DinucsSignature2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2DinucsSignature2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2LeadingLaggingStrand2CountDict,outputDir,jobname,MutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesType2ReplicationStrand2CountDict,outputDir,jobname,Type2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict,outputDir,jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################

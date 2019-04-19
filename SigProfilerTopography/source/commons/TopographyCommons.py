@@ -234,23 +234,16 @@ signal= 'signal'
 OriginalPaperSignature2Sample2ReplicationStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2ReplicationStrand2CountDict.txt'
 OriginalPaperSignature2Sample2TranscriptionStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2TranscriptionStrand2CountDict.txt'
 
-MutationType2ReplicationStrand2CountDict_Filename           = 'MutationType2ReplicationStrand2CountDict.txt'
-MutationType2Sample2ReplicationStrand2CountDict_Filename    = 'MutationType2Sample2ReplicationStrand2CountDict.txt'
-MutationProbability2SubsSignature2ReplicationStrand2CountDict_Filename = 'MutationProbability2SubsSignature2ReplicationStrand2CountDict.txt'
-MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2SubsSignature2Sample2ReplicationStrand2CountDict.txt'
-MutationProbability2IndelsSignature2ReplicationStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2ReplicationStrand2CountDict.txt'
-MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2Sample2ReplicationStrand2CountDict.txt'
-MutationProbability2DinucsSignature2ReplicationStrand2CountDict_Filename = 'MutationProbability2DinucsSignature2ReplicationStrand2CountDict.txt'
-MutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict_Filename = 'MutationProbability2DinucsSignature2Sample2ReplicationStrand2CountDict.txt'
 
-MutationType2TranscriptionStrand2CountDict_Filename = 'MutationType2TranscriptionStrand2CountDict.txt'
-MutationType2Sample2TranscriptionStrand2CountDict_Filename = 'MutationType2Sample2TranscriptionStrand2CountDict.txt'
-MutationProbability2SubsSignature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2SubsSignature2TranscriptionStrand2CountDict.txt'
-MutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2SubsSignature2Sample2TranscriptionStrand2CountDict.txt'
-MutationProbability2IndelsSignature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2TranscriptionStrand2CountDict.txt'
-MutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2IndelsSignature2Sample2TranscriptionStrand2CountDict.txt'
-MutationProbability2DinucsSignature2TranscriptionStrand2CountDict_Filename = 'MutationProbability2DinucsSignature2TranscriptionStrand2CountDict.txt'
-MutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict_Filename = 'MutationProbability2DinucsSignature2Sample2TranscriptionStrand2CountDict.txt'
+Type2ReplicationStrand2CountDict_Filename = 'Type2ReplicationStrand2CountDict.txt'
+Sample2Type2ReplicationStrand2CountDict_Filename = 'Sample2Type2ReplicationStrand2CountDict.txt'
+Type2Sample2ReplicationStrand2CountDict_Filename = 'Type2Sample2ReplicationStrand2CountDict.txt'
+Signature2MutationType2ReplicationStrand2CountDict_Filename  = 'Signature2MutationType2ReplicationStrand2CountDict.txt'
+
+Type2TranscriptionStrand2CountDict_Filename = 'Type2TranscriptionStrand2CountDict.txt'
+Sample2Type2TranscriptionStrand2CountDict_Filename = 'Sample2Type2TranscriptionStrand2CountDict.txt'
+Type2Sample2TranscriptionStrand2CountDict_Filename = 'Type2Sample2TranscriptionStrand2CountDict.txt'
+Signature2MutationType2TranscriptionStrand2CountDict_Filename  = 'Signature2MutationType2TranscriptionStrand2CountDict.txt'
 
 DATA_Folder = 'data'
 
@@ -472,8 +465,6 @@ def getDinucSignatures(chrBased_mutation_df):
     signatures = columnNamesList[(contextIndex+1):]
     return signatures
 ##################################################################
-
-
 
 ##################################################################
 def fill_dinucs_dictionaries_write(outputDir,jobname,chromNamesList):
@@ -1587,247 +1578,224 @@ def processSumSignal(sum_signal_unprocessed_df):
     return sum_signal_processed_df
 ##################################################################
 
-# ##################################################################
-# #Will be depreceated
-# def prepareMutationProbabilityList(startMutationProbability, endMutationProbability, step):
-#     # print('type(startMutationProbability):%s type(endMutationProbability):%s type(step):%s', (type(startMutationProbability), type(endMutationProbability), type(step)))
-#     startMutationProbability = float("{0:.2f}".format(startMutationProbability))
-#
-#     mutationProbabilityList = []
-#     while startMutationProbability <= endMutationProbability:
-#         #Put the rounded mutation probability to the list
-#         mutationProbabilityList.append(round(startMutationProbability,2))
-#         startMutationProbability += step
-#         startMutationProbability = float("{0:.2f}".format(startMutationProbability))
-#
-#     # endMutationProbability += step
-#     # mutationProbabilityList = np.arange(startMutationProbability,endMutationProbability,step)
-#
-#     return mutationProbabilityList
-# ##################################################################
-
 
 ##################################################################
-def  updateDictionary(mutationType2Strand2CountDict,mutationType,strand):
-    if (mutationType in mutationType2Strand2CountDict):
-        if strand in mutationType2Strand2CountDict[mutationType]:
-            mutationType2Strand2CountDict[mutationType][strand] += 1
+def  updateDictionary(type2Strand2CountDict,mutationType,strand):
+    if (mutationType in type2Strand2CountDict):
+        if strand in type2Strand2CountDict[mutationType]:
+            type2Strand2CountDict[mutationType][strand] += 1
         else:
-            mutationType2Strand2CountDict[mutationType][strand] = 1
+            type2Strand2CountDict[mutationType][strand] = 1
     else:
-        mutationType2Strand2CountDict[mutationType] = {}
-        mutationType2Strand2CountDict[mutationType][strand] = 1
+        type2Strand2CountDict[mutationType] = {}
+        type2Strand2CountDict[mutationType][strand] = 1
 ##################################################################
 
 
 ##################################################################
-def updateSampleBasedDictionary(mutationType2Sample2Strand2CountDict,mutationType,mutationSample,strand):
-    if (mutationType in mutationType2Sample2Strand2CountDict):
-        if mutationSample in mutationType2Sample2Strand2CountDict[mutationType]:
-            if strand in mutationType2Sample2Strand2CountDict[mutationType][mutationSample]:
-                mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] += 1
+def updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand):
+    if (mutationSample in sample2Type2Strand2CountDict):
+        if mutationType in sample2Type2Strand2CountDict[mutationSample]:
+            if strand in sample2Type2Strand2CountDict[mutationSample][mutationType]:
+                sample2Type2Strand2CountDict[mutationSample][mutationType][strand] += 1
             else:
-                mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] = 1
+                sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
         else:
-            mutationType2Sample2Strand2CountDict[mutationType][mutationSample] = {}
-            mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] = 1
+            sample2Type2Strand2CountDict[mutationSample][mutationType] = {}
+            sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
+    else:
+        sample2Type2Strand2CountDict[mutationSample] = {}
+        sample2Type2Strand2CountDict[mutationSample][mutationType] = {}
+        sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
+##################################################################
+
+
+##################################################################
+#type can be signature or mutationType
+def updateTypeBasedDictionary(type2Sample2Strand2CountDict,type,mutationSample,strand):
+    if type in type2Sample2Strand2CountDict:
+        if mutationSample in type2Sample2Strand2CountDict[type]:
+            if strand in type2Sample2Strand2CountDict[type][mutationSample]:
+                type2Sample2Strand2CountDict[type][mutationSample][strand] += 1
+            else:
+                type2Sample2Strand2CountDict[type][mutationSample][strand] = 1
+        else:
+            type2Sample2Strand2CountDict[type][mutationSample]= {}
+            type2Sample2Strand2CountDict[type][mutationSample][strand] = 1
 
     else:
-        mutationType2Sample2Strand2CountDict[mutationType] = {}
-        mutationType2Sample2Strand2CountDict[mutationType][mutationSample] = {}
-        mutationType2Sample2Strand2CountDict[mutationType][mutationSample][strand] = 1
+        type2Sample2Strand2CountDict[type]={}
+        type2Sample2Strand2CountDict[type][mutationSample]={}
+        type2Sample2Strand2CountDict[type][mutationSample][strand] =1
 ##################################################################
 
 
 ########################################################################
-#this is called from TranscriptionStrandBiasAnalysis.py and ReplicationStrandBiasAnalysis.py
 def updateDictionaries(mutation_row,
                         mutationType,
                         mutationSample,
-                        mutationType2Strand2CountDict,
-                        mutationType2Sample2Strand2CountDict,
-                        mutationProbability2Signature2Strand2CountDict,
-                        mutationProbability2Signature2Sample2Strand2CountDict,
+                        type2Strand2CountDict,
+                        sample2Type2Strand2CountDict,
+                        type2Sample2Strand2CountDict,
+                        signature2MutationType2Strand2CountDict,
                         strand,
                         signature2NumberofMutationsDict,
+                        sample2Signature2NumberofMutationsDict,
                         mutationProbability):
 
     #################################################################################################
-    # Update1: mutationType2TranscriptionStrand2CountDict
-    if ((mutationType2Strand2CountDict is not None) and (mutationType is not None)):
-        updateDictionary(mutationType2Strand2CountDict,mutationType,strand)
+    # Update1: update mutationType in type2Strand2CountDict
+    if ((type2Strand2CountDict is not None) and (mutationType is not None)):
+        updateDictionary(type2Strand2CountDict,mutationType,strand)
     #################################################################################################
 
     #################################################################################################
-    # Update2: mutationType2Sample2TranscriptionStrand2CountDict
-    if (mutationType2Sample2Strand2CountDict is not None) and (mutationType is not None):
-        updateSampleBasedDictionary(mutationType2Sample2Strand2CountDict,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update3: mutationProbability2Signature2TranscriptionStrand2CountDict
+    # Update2: signature in type2Strand2CountDict
     for signature in signature2NumberofMutationsDict:
         if (mutation_row[signature] >= mutationProbability):
-            if mutationProbability in mutationProbability2Signature2Strand2CountDict:
-                if signature in mutationProbability2Signature2Strand2CountDict[mutationProbability]:
-                    if strand in mutationProbability2Signature2Strand2CountDict[mutationProbability][signature]:
-                        mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] += 1
-                    else:
-                        mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
+            if signature in type2Strand2CountDict:
+                if strand in type2Strand2CountDict[signature]:
+                    type2Strand2CountDict[signature][strand] += 1
                 else:
-                    mutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
-                    mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
+                    type2Strand2CountDict[signature][strand] = 1
             else:
-                mutationProbability2Signature2Strand2CountDict[mutationProbability] = {}
-                mutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
-                mutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = 1
+                type2Strand2CountDict[signature] = {}
+                type2Strand2CountDict[signature][strand] = 1
     #################################################################################################
 
+
     #################################################################################################
-    # Update4: mutationProbability2Signature2Sample2TranscriptionStrand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            if mutationProbability in mutationProbability2Signature2Sample2Strand2CountDict:
-                if signature in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability]:
-                    if mutationSample in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature]:
-                        if strand in mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample]:
-                            mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] += 1
+    #Update3 signature2MutationType2Strand2CountDict
+    if ((signature2MutationType2Strand2CountDict is not None) and (mutationType is not None)):
+        for signature in signature2NumberofMutationsDict:
+            if (mutation_row[signature] >= mutationProbability):
+                if signature in signature2MutationType2Strand2CountDict:
+                    if mutationType in signature2MutationType2Strand2CountDict[signature]:
+                        if strand in signature2MutationType2Strand2CountDict[signature][mutationType]:
+                            signature2MutationType2Strand2CountDict[signature][mutationType][strand] +=1
                         else:
-                            mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
+                            signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
+
                     else:
-                        mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
-                        mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
+                        signature2MutationType2Strand2CountDict[signature][mutationType] = {}
+                        signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
                 else:
-                    mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = {}
-                    mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
-                    mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
-            else:
-                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability] = {}
-                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature] = {}
-                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample] = {}
-                mutationProbability2Signature2Sample2Strand2CountDict[mutationProbability][signature][mutationSample][strand] = 1
+                    signature2MutationType2Strand2CountDict[signature] = {}
+                    signature2MutationType2Strand2CountDict[signature][mutationType]={}
+                    signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
+    #################################################################################################
+
+    #################################################################################################
+    # Update4: sample and mutationType in sample2Type2Strand2CountDict
+    if (sample2Type2Strand2CountDict is not None) and (mutationType is not None):
+        updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand)
+    #################################################################################################
+
+    #################################################################################################
+    # Update5: sample and signature in sample2Type2Strand2CountDict
+    for signature in signature2NumberofMutationsDict:
+        if (mutation_row[signature] >= mutationProbability):
+            updateSampleBasedDictionary(sample2Type2Strand2CountDict, signature, mutationSample, strand)
+    #################################################################################################
+
+    #################################################################################################
+    #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
+    if (type2Sample2Strand2CountDict is not None) and (mutationType is not None):
+        updateTypeBasedDictionary(type2Sample2Strand2CountDict,mutationType,mutationSample,strand)
+    #################################################################################################
+
+    #################################################################################################
+    #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
+    for signature in signature2NumberofMutationsDict:
+        if (mutation_row[signature] >= mutationProbability):
+            if (type2Sample2Strand2CountDict is not None):
+                updateTypeBasedDictionary(type2Sample2Strand2CountDict,signature,mutationSample,strand)
     #################################################################################################
 
 ########################################################################
 
 
-########################################################################
-def accumulateSignatureBased(chrBasedMutationProbability2Signature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict):
-    # Accumulate mutationProbability2Signature2Strand2CountDict
-    if (chrBasedMutationProbability2Signature2Strand2CountDict is not None):
-        for mutationProbability, signature2StrandCountDict in chrBasedMutationProbability2Signature2Strand2CountDict.items():
-            if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict:
-                for signature, strand2CountDict in signature2StrandCountDict.items():
-                    if signature in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
-                        mutationProbability]:
-                        for strand, count in strand2CountDict.items():
-                            if strand in accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
-                                mutationProbability][signature]:
-                                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
-                                    mutationProbability][signature][strand] += count
-                            else:
-                                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
-                                    mutationProbability][signature][strand] = count
-                    else:
-                        accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[mutationProbability][
-                            signature] = strand2CountDict
-            else:
-                accumulatedAllChromosomesMutationProbability2Signature2Strand2CountDict[
-                    mutationProbability] = signature2StrandCountDict
-########################################################################
 
 
 ########################################################################
-def accumulateSampleBasedSignatureBased(chrBasedMutationProbability2Signature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict):
-    # Accumulate mutationProbability2Signature2Sample2Strand2CountDict
-    if (chrBasedMutationProbability2Signature2Sample2Strand2CountDict is not None):
-        for mutationProbability, signature2Sample2Strand2CountDict in chrBasedMutationProbability2Signature2Sample2Strand2CountDict.items():
-            if mutationProbability in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict:
-                for signature, sample2Strand2CountDict in signature2Sample2Strand2CountDict.items():
-                    if signature in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                        mutationProbability]:
-                        for sample, strand2CountDict in sample2Strand2CountDict.items():
-                            if sample in accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                                mutationProbability][signature]:
-                                for strand, count in strand2CountDict.items():
-                                    if strand in \
-                                            accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                                                mutationProbability][signature][sample]:
-                                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                                            mutationProbability][signature][sample][strand] += count
-                                    else:
-                                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                                            mutationProbability][signature][sample][strand] = count
-                            else:
-                                accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                                    mutationProbability][signature][sample] = strand2CountDict
-                    else:
-                        accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                            mutationProbability][signature] = sample2Strand2CountDict
-            else:
-                accumulatedAllChromosomesMutationProbability2Signature2Sample2Strand2CountDict[
-                    mutationProbability] = signature2Sample2Strand2CountDict
-########################################################################
-
-
 
 ########################################################################
 def accumulate(listofTuples,
-               accumulatedAllChromosomesMutationType2Strand2CountDict,
-               accumulatedAllChromosomesMutationType2Sample2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2SubsSignature2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2IndelsSignature2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2DinucsSignature2Strand2CountDict,
-               accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2Strand2CountDict):
+               accumulatedAllChromosomesType2Strand2CountDict,
+               accumulatedAllChromosomesSample2Type2Strand2CountDict,
+               accumulatedAllChromosomesType2Sample2Strand2CountDict,
+               accumulatedAllChromosomesSignature2MutationType2Strand2CountDict):
 
     for mytuple in listofTuples:
-        chrBasedMutationType2Strand2CountDict = mytuple[0]
-        chrBasedMutationType2Sample2Strand2CountDict = mytuple[1]
-        chrBasedMutationProbability2SubsSignature2Strand2CountDict = mytuple[2]
-        chrBasedMutationProbability2SubsSignature2Sample2Strand2CountDict = mytuple[3]
-        chrBasedMutationProbability2IndelsSignature2Strand2CountDict = mytuple[4]
-        chrBasedMutationProbability2IndelsSignature2Sample2Strand2CountDict = mytuple[5]
-        chrBasedMutationProbability2DinucsSignature2Strand2CountDict = mytuple[6]
-        chrBasedMutationProbability2DinucsSignature2Sample2Strand2CountDict = mytuple[7]
+        chrBasedType2Strand2CountDict = mytuple[0]
+        chrBasedSample2Type2Strand2CountDict = mytuple[1]
+        chrBasedType2Sample2Strand2CountDict = mytuple[2]
+        chrBasedSignature2MutationType2Strand2CountDict = mytuple[3]
 
-        #Accumulate mutationType2Strand2CountDict
-        if (chrBasedMutationType2Strand2CountDict is not None):
-            for mutationType,strand2CountDict in chrBasedMutationType2Strand2CountDict.items():
-                if mutationType in accumulatedAllChromosomesMutationType2Strand2CountDict:
+        #Accumulate1 chrBasedType2Strand2CountDict in accumulatedAllChromosomesType2Strand2CountDict
+        if (chrBasedType2Strand2CountDict is not None):
+            for type,strand2CountDict in chrBasedType2Strand2CountDict.items():
+                if type in accumulatedAllChromosomesType2Strand2CountDict:
                     for strand, count in strand2CountDict.items():
-                        if strand in accumulatedAllChromosomesMutationType2Strand2CountDict[mutationType]:
-                            accumulatedAllChromosomesMutationType2Strand2CountDict[mutationType][strand] += count
+                        if strand in accumulatedAllChromosomesType2Strand2CountDict[type]:
+                            accumulatedAllChromosomesType2Strand2CountDict[type][strand] += count
                         else:
-                            accumulatedAllChromosomesMutationType2Strand2CountDict[mutationType][strand] = count
+                            accumulatedAllChromosomesType2Strand2CountDict[type][strand] = count
                 else:
-                    accumulatedAllChromosomesMutationType2Strand2CountDict[mutationType] = strand2CountDict
+                    accumulatedAllChromosomesType2Strand2CountDict[type] = strand2CountDict
 
-        #Accumulate mutationType2Sample2Strand2CountDict
-        if (chrBasedMutationType2Sample2Strand2CountDict is not None):
-            for mutationType, sample2Strand2CountDict in chrBasedMutationType2Sample2Strand2CountDict.items():
-                if mutationType in accumulatedAllChromosomesMutationType2Sample2Strand2CountDict:
-                    for sample, strand2CountDict in sample2Strand2CountDict.items():
-                        if sample in accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType]:
-                            for strand, count in strand2CountDict.items():
-                                if strand in accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType][sample]:
-                                    accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType][sample][strand] += count
+        #Accumulate2 chrBasedSample2Type2ReplicationStrand2CountDict in accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict
+        if (chrBasedSample2Type2Strand2CountDict is not None):
+            for sample, type2Strand2CountDict in chrBasedSample2Type2Strand2CountDict.items():
+                if sample in accumulatedAllChromosomesSample2Type2Strand2CountDict:
+                    for type,strand2CountDict in chrBasedSample2Type2Strand2CountDict[sample].items():
+                        if type in accumulatedAllChromosomesSample2Type2Strand2CountDict[sample]:
+                            for strand, count in chrBasedSample2Type2Strand2CountDict[sample][type].items():
+                                if strand in accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type]:
+                                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type][strand] += count
                                 else:
-                                    accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType][sample][strand] = count
+                                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type][strand] = count
                         else:
-                            accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType][sample] = strand2CountDict
+                            accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type] = strand2CountDict
                 else:
-                    accumulatedAllChromosomesMutationType2Sample2Strand2CountDict[mutationType] = sample2Strand2CountDict
+                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample] = type2Strand2CountDict
 
-        accumulateSignatureBased(chrBasedMutationProbability2SubsSignature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2SubsSignature2Strand2CountDict)
-        accumulateSignatureBased(chrBasedMutationProbability2IndelsSignature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2IndelsSignature2Strand2CountDict)
-        accumulateSignatureBased(chrBasedMutationProbability2DinucsSignature2Strand2CountDict,accumulatedAllChromosomesMutationProbability2DinucsSignature2Strand2CountDict)
-        accumulateSampleBasedSignatureBased(chrBasedMutationProbability2SubsSignature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2SubsSignature2Sample2Strand2CountDict)
-        accumulateSampleBasedSignatureBased(chrBasedMutationProbability2IndelsSignature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2IndelsSignature2Sample2Strand2CountDict)
-        accumulateSampleBasedSignatureBased(chrBasedMutationProbability2DinucsSignature2Sample2Strand2CountDict,accumulatedAllChromosomesMutationProbability2DinucsSignature2Sample2Strand2CountDict)
+
+        #Accumulate3 chrBasedType2Sample2Strand2CountDict in accumulatedAllChromosomesType2Sample2Strand2CountDict
+        if (chrBasedType2Sample2Strand2CountDict is not None):
+            for type, sample2Strand2CountDict in chrBasedType2Sample2Strand2CountDict.items():
+                if type in accumulatedAllChromosomesType2Sample2Strand2CountDict:
+                    for sample, strand2CountDict in chrBasedType2Sample2Strand2CountDict[type].items():
+                        if sample in accumulatedAllChromosomesType2Sample2Strand2CountDict[type]:
+                            for strand,count in chrBasedType2Sample2Strand2CountDict[type][sample].items():
+                                if strand in accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample]:
+                                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample][strand] += count
+                                else:
+                                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample][strand] = count
+                        else:
+                            accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample] = strand2CountDict
+                else:
+                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type] = sample2Strand2CountDict
+
+
+        #Accumulate4 chrBasedSignature2MutationType2Strand2CountDict in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict
+        if (chrBasedSignature2MutationType2Strand2CountDict is not None):
+            for signature,mutationType2Strand2CountDict in chrBasedSignature2MutationType2Strand2CountDict.items():
+                if signature in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict:
+                    for mutationType, strand2CountDict in chrBasedSignature2MutationType2Strand2CountDict[signature].items():
+                        if mutationType in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature]:
+                            for strand, count in chrBasedSignature2MutationType2Strand2CountDict[signature][mutationType].items():
+                                if strand in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType]:
+                                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType][strand] += count
+                                else:
+                                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType][strand] = count
+
+                        else:
+                            accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType] = strand2CountDict
+                else:
+                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature] = mutationType2Strand2CountDict
+
 ########################################################################
-
 
 
 ########################################################################
