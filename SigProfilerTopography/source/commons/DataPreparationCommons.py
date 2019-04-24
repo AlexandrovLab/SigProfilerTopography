@@ -31,19 +31,19 @@ def readProbabilities(probabilitiesFile):
     print('probabilities_df.head()')
     print(probabilities_df.head())
 
-    if ('Sample' in probabilities_df.columns.names):
+    if ('Sample' in probabilities_df.columns.values):
         print('Unique samples in probabilities_df')
         print(probabilities_df['Sample'].unique())
         print('# of unique samples in probabilities_df: %d' %(len(probabilities_df['Sample'].unique())))
         print()
 
-    if ('Mutations' in probabilities_df.columns.names):
+    if ('Mutations' in probabilities_df.columns.values):
         print('Unique mutations in probabilities_df')
         print(probabilities_df['Mutations'].unique())
         print('# of unique mutations in probabilities_df: %d' %(len(probabilities_df['Mutations'].unique())))
         print()
 
-    if ('MutationTypes' in probabilities_df.columns.names):
+    if ('MutationTypes' in probabilities_df.columns.values):
         print('Unique MutationTypes in probabilities_df')
         print(probabilities_df['MutationTypes'].unique())
         print('# of unique MutationTypes in probabilities_df: %d' %(len(probabilities_df['MutationTypes'].unique())))
@@ -138,47 +138,71 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
 ############################################################
 
 ############################################################
-def readChrBasedDinucs(chr_based_dinuc_filepath):
-    # PD10011a        10      24033662        U:G[TC>AA]A     1
-    # PD10011a        10      63439037        T:G[CT>TA]C     -1
-    # PD10011a        10      67761104        T:T[TG>GC]C     -1
-    # PD10011a        10      130808548       N:T[TC>AG]T     -1
+def readChrBasedMutations(chr_based_mutation_filepath,mutationType):
 
-    if (os.path.exists(chr_based_dinuc_filepath)):
+    if (os.path.exists(chr_based_mutation_filepath)):
         try:
-            dinucs_with_genomic_positions_df = pd.read_table(chr_based_dinuc_filepath, sep="\t", header=None)
+            mutations_with_genomic_positions_df = pd.read_table(chr_based_mutation_filepath, sep="\t", header=None)
         except pd.errors.EmptyDataError:
-            dinucs_with_genomic_positions_df = pd.DataFrame()
+            mutations_with_genomic_positions_df = pd.DataFrame()
 
-        if (not dinucs_with_genomic_positions_df.empty):
-            dinucs_with_genomic_positions_df.columns = [SAMPLE, CHROM, START, 'MutationLong',PYRAMIDINESTRAND]
-            dinucs_with_genomic_positions_df[SAMPLE] = dinucs_with_genomic_positions_df[SAMPLE].astype(str)
-            dinucs_with_genomic_positions_df[CHROM] = dinucs_with_genomic_positions_df[CHROM].astype(str)
-            dinucs_with_genomic_positions_df[START] = dinucs_with_genomic_positions_df[START].astype(int)
-            dinucs_with_genomic_positions_df['MutationLong'] = dinucs_with_genomic_positions_df['MutationLong'].astype(str)
-            dinucs_with_genomic_positions_df[PYRAMIDINESTRAND] = dinucs_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
-            #Add new column
-            dinucs_with_genomic_positions_df['Mutation'] = dinucs_with_genomic_positions_df['MutationLong'].str[4:9]
-            return dinucs_with_genomic_positions_df
+        if (not mutations_with_genomic_positions_df.empty):
+            if (mutationType==DINUCS):
+                mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
+                #Add new columns
+                mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
+                mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
+            elif (mutationType==INDELS):
+                mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,PYRAMIDINESTRAND]
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
+                #Add new column
+                mutations_with_genomic_positions_df[LENGTH] = mutations_with_genomic_positions_df[REF].apply(len)
+                mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
+                mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[2:]
+                #order the columns make CONTEXT at the end.
+                ordered_column_names = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,LENGTH,PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND,MUTATION]
+                mutations_with_genomic_positions_df = mutations_with_genomic_positions_df[ordered_column_names]
+            elif(mutationType==SUBS):
+                mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
+                #Add new column
+                # Add Context Column from T:TG[C>T]GC to GCC
+                mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
+                mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+            return mutations_with_genomic_positions_df
 
     return None
 ############################################################
 
 
 ############################################################
-def readChrBasedDinucsMergeWithProbabilitiesAndWrite(inputList):
+def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     chrShort = inputList[0]
     outputDir = inputList[1]
     jobname = inputList[2]
-    chr_based_dinuc_filepath = inputList[3]
-    dinucs_probabilities_df = inputList[4]
+    chr_based_mutation_filepath = inputList[3]
+    mutations_probabilities_df = inputList[4]
+    mutationType = inputList[5]
 
-    chr_based_dinuc_df = readChrBasedDinucs(chr_based_dinuc_filepath)
+    chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutationType)
 
     #chr_based_dinuc_df columns ['Sample', 'Chrom', 'Start', 'Mutation','PyrimidineStrand']
     #dinucs_probabilities_df columns ['Sample', 'Mutation', 'DBS2', 'DBS4', 'DBS6', 'DBS7', 'DBS11']
-    if ((chr_based_dinuc_df is not None) and (dinucs_probabilities_df is not None)):
-        merged_df = pd.merge(chr_based_dinuc_df,dinucs_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
+    if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
+        merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
 
         # print('chr_based_dinuc_df.shape')
         # print(chr_based_dinuc_df.shape[0])
@@ -187,14 +211,22 @@ def readChrBasedDinucsMergeWithProbabilitiesAndWrite(inputList):
         # print('merged_df.shape')
         # print(merged_df.shape[0])
 
-        if (chr_based_dinuc_df.shape[0]!=merged_df.shape[0]):
+        if (chr_based_mutation_df.shape[0]!=merged_df.shape[0]):
             print('There is a situation. For chr:%s All dinucs are not merged with dinucs signature probabilities' %(chrShort))
 
         if ((merged_df is not None) and (not merged_df.empty)):
-            chrBasedDinuscFileName = 'chr%s_dinucs_for_topography.txt' %(chrShort)
-            chr_based_dinucs_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedDinuscFileName)
-            merged_df.drop(['MutationLong'], inplace=True, axis=1)
-            merged_df.to_csv(chr_based_dinucs_file_path, sep='\t', header=True, index=False)
+            chrBasedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,mutationType)
+            chr_based_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedMutationsFileName)
+
+            # #After test uncomment
+            # if ('MutationLong' in merged_df.columns.values):
+            #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
+
+            #After merge
+            if (mutationType==SUBS):
+                merged_df[MUTATION] = merged_df[MUTATION].str[2:5]
+
+            merged_df.to_csv(chr_based_mutations_file_path, sep='\t', header=True, index=False)
 ############################################################
 
 

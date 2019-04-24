@@ -29,7 +29,7 @@ from matplotlib import pyplot as plt
 plt.rcParams['agg.path.chunksize'] = 10000
 
 #############################################################
-current_abs_path = os.path.abspath(os.path.dirname(__file__))
+current_abs_path = os.path.dirname(os.path.realpath(__file__))
 #############################################################
 
 commonsPath = os.path.join(current_abs_path, '..','commons')
@@ -246,25 +246,20 @@ def readChromBasedNucleosomeDF(chrLong,nucleosomeFilename):
 ######################################################################
 #main function parallel
 # parallel it does not end for big chromosomes
-def plotChrBasedNucleosomeOccupancyFigures(nucleosomeFilename):
+def plotChrBasedNucleosomeOccupancyFigures(genome,nucleosomeFilename):
     #read chromnames for this nucleosome data
 
     nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
 
-    ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
-    print('for debug ChrNamesFilepath: %s:' %(ChrNamesFilepath))
-
-    if (os.path.exists(ChrNamesFilepath)):
-        chromNames = np.loadtxt(ChrNamesFilepath,dtype=np.str)
-
-    print('for debug type(chromNames): %s' %type(chromNames))
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
 
     #Start the pool
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
     poolInputList = []
-    for chrLong in chromNames:
+    for chrLong in chromNamesList:
         chromBasedNucleosomeDF = readChromBasedNucleosomeDF(chrLong,nucleosomeFilename)
         if chromBasedNucleosomeDF is not None:
             inputList = []
@@ -283,20 +278,14 @@ def plotChrBasedNucleosomeOccupancyFigures(nucleosomeFilename):
 
 ######################################################################
 #main function sequential
-def plotChrBasedNucleosomeOccupancyFiguresSequential(nucleosomeFilename):
+def plotChrBasedNucleosomeOccupancyFiguresSequential(genome,nucleosomeFilename):
     #read chromnames for this nucleosome data
-
     nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
 
-    ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
-    print('for debug ChrNamesFilepath: %s:' %(ChrNamesFilepath))
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
 
-    if (os.path.exists(ChrNamesFilepath)):
-        chromNames = np.loadtxt(ChrNamesFilepath,dtype=np.str)
-
-    print('for debug type(chromNames): %s' %type(chromNames))
-
-    for chrLong in chromNames:
+    for chrLong in chromNamesList:
         #Actually no need for such a check
         chromBasedNucleosomeDF = readChromBasedNucleosomeDF(chrLong,nucleosomeFilename)
         if chromBasedNucleosomeDF is not None:
@@ -304,32 +293,26 @@ def plotChrBasedNucleosomeOccupancyFiguresSequential(nucleosomeFilename):
             inputList.append(chrLong)
             inputList.append(nucleosomeFilenameWoExtension)
             plotNucleosomeOccupancySignalCountFiguresInParallel(inputList)
-
 ######################################################################
 
 
 
 ######################################################################
 #main function
-def plotChrBasedNucleosomeOccupancyFiguresFromText(nucleosomeFilename):
+def plotChrBasedNucleosomeOccupancyFiguresFromText(genome,nucleosomeFilename):
     #read chromnames for this nucleosome data
 
     nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
 
-    ChrNamesFilepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ChrNamesInNucleosomesFilename)
-    print('for debug ChrNamesFilepath: %s:' %(ChrNamesFilepath))
-
-    if (os.path.exists(ChrNamesFilepath)):
-        chromNames = np.loadtxt(ChrNamesFilepath,dtype=np.str)
-
-    print('for debug type(chromNames): %s' %type(chromNames))
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
 
     #Start the pool
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
     poolInputList = []
-    for chrLong in chromNames:
+    for chrLong in chromNamesList:
         chromBasedNucleosomeDF = readChromBasedNucleosomeDF(chrLong,nucleosomeFilename)
         if chromBasedNucleosomeDF is not None:
             inputList = []
@@ -348,14 +331,12 @@ def plotChrBasedNucleosomeOccupancyFiguresFromText(nucleosomeFilename):
 
 ######################################################################
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quantileValue, nucleosomeFilename):
-
     chromSizesDict = getChromSizesDict(genome)
 
     # Start the pool
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
-    # nucleosmeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, nucleosomeFilename)
     column_names = [chrom, start, end, signal]
     if os.path.exists(nucleosomeFilename):
         nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})

@@ -307,11 +307,11 @@ def searchMutation(mutation_row,
     start= mutation_row[START]
 
     if (type==AGGREGATEDINDELS):
-        end = mutation_row[END]
+        end = start + mutation_row[LENGTH]
     elif (type==AGGREGATEDSUBSTITUTIONS):
-        end = mutation_row[START]+1
+        end = start + 1
     elif (type==AGGREGATEDDINUCS):
-        end = mutation_row[START]+2
+        end = start + 2
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
@@ -770,9 +770,7 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computa
                                     sample2IndelsSignature2NumberofMutationsDict,
                                     sample2DinucsSignature2NumberofMutationsDict,
                                     replicationTimeDataFilename,
-                                    chromNamesList,
-                                    singlePointMutationsFileName,
-                                    indelsFilename):
+                                    chromNamesList):
 
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
@@ -784,13 +782,13 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computa
         poolInputList = []
         for chrLong in chromNamesList:
             if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
 
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
 
             if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS)
 
             chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
 
@@ -825,13 +823,13 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computa
         #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
         for chrLong in chromNamesList:
             if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
 
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
 
             if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS)
 
             chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
 
@@ -893,13 +891,13 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computa
         #It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
         for chrLong in chromNamesList:
             if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
 
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
 
             if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS)
 
             chrBased_replication_time_np_array = loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename)
 
@@ -942,9 +940,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
                                     sample2DinucsSignature2NumberofMutationsDict,
                                     chromSizesDict,
                                     decile_df_list,
-                                    chrNamesList,
-                                    singlePointMutationsFileName,
-                                    indelsFilename):
+                                    chrNamesList):
 
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
@@ -966,13 +962,13 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
             chromSize = chromSizesDict[chrLong]
 
             if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
 
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
 
             if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS)
 
             ###################################################################################################################################################
             inputList = []
@@ -1010,13 +1006,13 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
             chromSize = chromSizesDict[chrLong]
 
             if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, singlePointMutationsFileName)
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
 
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir, jobname, chrLong, indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
 
             if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS)
 
             chrBased_subs_df_splits_list = []
             chrBased_indels_df_splits_list = []
@@ -1175,7 +1171,7 @@ def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2Number
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFileName,indelsFilename,repliseqDataFilename):
+def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,repliseqDataFilename):
 
     print('########################## ReplicationTimeAnalysis starts #########################')
     #########################################################################
@@ -1235,9 +1231,7 @@ def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_ar
                                                                                                                                 sample2DinucsSignature2NumberofMutationsDict,
                                                                                                                                 chromSizesDict,
                                                                                                                                 decile_df_list,
-                                                                                                                                chromNamesList,
-                                                                                                                                singlePointMutationsFileName,
-                                                                                                                                indelsFilename)
+                                                                                                                                chromNamesList)
         writeReplicationTimeData(outputDir,jobname,decile_df_list,None,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
         ###################################################################
         ############### Read MCF-7 RepliSeq Time data ends ################
@@ -1262,9 +1256,7 @@ def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_ar
                                                                                                                                 sample2IndelsSignature2NumberofMutationsDict,
                                                                                                                                 sample2DinucsSignature2NumberofMutationsDict,
                                                                                                                                 repliseqDataFilename,
-                                                                                                                                chromNamesList,
-                                                                                                                                singlePointMutationsFileName,
-                                                                                                                                indelsFilename)
+                                                                                                                                chromNamesList)
         writeReplicationTimeData(outputDir,jobname,None,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
 
     #######################################################################################################

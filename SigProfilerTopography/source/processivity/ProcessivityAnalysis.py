@@ -81,7 +81,7 @@ def findProcessiveGroupsUpdated(sorted_sampleBased_chrBased_spms_df,considerProb
     signature2ProcessiveGroupLength2DistanceListDict = {}
 
     if (sorted_sampleBased_chrBased_spms_df is not None):
-        sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df['Mutation'] != sorted_sampleBased_chrBased_spms_df['Mutation'].shift(1)) |
+        sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION] != sorted_sampleBased_chrBased_spms_df[MUTATION].shift(1)) |
                                                            (sorted_sampleBased_chrBased_spms_df['Signature'] != sorted_sampleBased_chrBased_spms_df['Signature'].shift(1))) .cumsum()
 
 
@@ -146,33 +146,33 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(chromNamesList,outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTypes,chromNamesList,outputDir,jobname,considerProbabilityInProcessivityAnalysis):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
-    if (singlePointMutationsFileName != NOTSET):
-        # Load the chrnames in single point mutations data
-
-
+    if (SUBS in mutationTypes):
         signature2ProcessiveGroupLength2DistanceListDict = {}
 
         # read chrBased spms_df
         for chrLong in chromNamesList:
             # print('%s %s' %(chrLong,chrShort))
-            chrBased_spms_df = readChrBasedSubsDF(outputDir,jobname, chrLong, singlePointMutationsFileName)
+            chrBased_spms_df = readChrBasedSubsDF(outputDir,jobname, chrLong, SUBS)
 
             if (chrBased_spms_df is not None):
 
                 ###########################################
                 columnNamesList = list(chrBased_spms_df.columns.values)
-                contextIndex = columnNamesList.index('Context')
                 # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-                signatures = columnNamesList[(contextIndex + 1):]
+                mutationIndex = columnNamesList.index(MUTATION)
+                signatures = columnNamesList[(mutationIndex + 1):]
                 ###########################################
 
+                #What are the columns in subs_df?
+                # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        SBS1    SBS2    SBS3    SBS13   SBS26   SBS40   SBS44
+
                 #delete unnecessary columns
-                chrBased_spms_df.drop([CHROM, END, PYRAMIDINESTRAND,CONTEXT], inplace=True, errors='ignore',axis=1)
+                chrBased_spms_df.drop([CHROM,MUTATIONLONG, PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND], inplace=True, errors='ignore',axis=1)
 
                 # df['Max'] = df.idxmax(axis=1).
                 # left here
@@ -228,8 +228,8 @@ def convertStr2Bool(mystr):
 
 
 ##################################################################################
-def processivityAnalysis(chromNamesList,outputDir,jobname,singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis):
+def processivityAnalysis(mutationTypes,chromNamesList,outputDir,jobname,considerProbabilityInProcessivityAnalysis):
     print('########################## ProcessivityAnalysis starts ###########################')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(chromNamesList,outputDir,jobname, singlePointMutationsFileName,considerProbabilityInProcessivityAnalysis)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTypes,chromNamesList,outputDir,jobname,considerProbabilityInProcessivityAnalysis)
     print('########################## ProcessivityAnalysis ends #############################')
 ##################################################################################

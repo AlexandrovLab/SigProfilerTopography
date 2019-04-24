@@ -180,7 +180,7 @@ sixMutationTypes = [C2A,C2G,C2T,T2A,T2C,T2G]
 
 SIGNATURE = 'Signature'
 MUTATION = 'Mutation'
-
+MUTATIONLONG = 'MutationLong'
 CHR = 'chr'
 
 COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
@@ -200,9 +200,12 @@ STRAND = 'Strand'
 REF = 'Ref'
 ALT = 'Alt'
 PYRAMIDINESTRAND = 'PyramidineStrand'
+TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
 MUTATION = 'Mutation'
 MUTATIONS = 'Mutations'
 CONTEXT = 'Context'
+
+TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
 
 #For Replication Time Data
 NUMOFBASES = 'numofBases'
@@ -257,6 +260,11 @@ USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
+
+DEFAULT_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.wig'
+DEFAULT_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
+DEFAULT_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
+DEFAULT_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
 
 ###################################################################
 #Works on tscc on python but not from pbs file
@@ -458,85 +466,107 @@ def readTranscriptsNCBI():
 
 
 ##################################################################
-def getDinucSignatures(chrBased_mutation_df):
+def getSignatures(chrBased_mutation_df):
+    # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
     columnNamesList = list(chrBased_mutation_df.columns.values)
-    contextIndex = columnNamesList.index(MUTATION)
-    # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-    signatures = columnNamesList[(contextIndex+1):]
+    mutationIndex = columnNamesList.index(MUTATION)
+    signatures = columnNamesList[(mutationIndex+1):]
     return signatures
 ##################################################################
 
 ##################################################################
-def fill_dinucs_dictionaries_write(outputDir,jobname,chromNamesList):
-    sample2NumberofDinucsDict = {}
-    dinucsSignature2NumberofMutationsDict = {}
-    sample2DinucsSignature2NumberofMutationsDict = {}
+def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type):
+    sample2NumberofMutationsDict = {}
+    signature2NumberofMutationsDict = {}
+    sample2Signature2NumberofMutationsDict = {}
+
+    #Fill dictionaries with conditions satisfied
+    if (type==SUBS):
+        Sample2NumberofMutationsDictFilename = Sample2NumberofSubsDictFilename
+        Signature2NumberofMutationsDictFilename = SubsSignature2NumberofMutationsDictFilename
+        Sample2Signature2NumberofMutationsDictFilename = Sample2SubsSignature2NumberofMutationsDictFilename
+        minimum_number_of_mutations_required = SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
+    elif (type==INDELS):
+        Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
+        Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
+        Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
+        minimum_number_of_mutations_required = INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
+    elif (type==DINUCS):
+        Sample2NumberofMutationsDictFilename = Sample2NumberofDinucsDictFilename
+        Signature2NumberofMutationsDictFilename = DinucsSignature2NumberofMutationsDictFilename
+        Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
+        minimum_number_of_mutations_required = DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
 
     #######################################################################
     for chrLong in chromNamesList:
-        chrBased_mutation_df = readChrBasedDinucsDF(outputDir, jobname,chrLong)
+        if (type==SUBS):
+            chrBased_mutation_df = readChrBasedSubsDF(outputDir,jobname,chrLong,type)
+        elif (type == INDELS):
+            chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,type)
+        elif (type== DINUCS):
+            chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,type)
+
 
         if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
             # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
             # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
-            dinucSignatures = getDinucSignatures(chrBased_mutation_df)
+            signatures = getSignatures(chrBased_mutation_df)
             chrBased_mutation_df_sample_grouped = chrBased_mutation_df.groupby('Sample')
 
             for sample, chrBased_mutation_df_sample_group_df in chrBased_mutation_df_sample_grouped:
-                number_of_dinucs = chrBased_mutation_df_sample_group_df.shape[0]
-                if sample in sample2NumberofDinucsDict:
-                    sample2NumberofDinucsDict[sample] += number_of_dinucs
+                number_of_mutations = chrBased_mutation_df_sample_group_df.shape[0]
+                if sample in sample2NumberofMutationsDict:
+                    sample2NumberofMutationsDict[sample] += number_of_mutations
                 else:
-                    sample2NumberofDinucsDict[sample] = number_of_dinucs
+                    sample2NumberofMutationsDict[sample] = number_of_mutations
 
-                for dinucSignature in dinucSignatures:
-                    number_of_dinucs= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[dinucSignature]>=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD])
-                    if dinucSignature in dinucsSignature2NumberofMutationsDict:
-                        dinucsSignature2NumberofMutationsDict[dinucSignature] += number_of_dinucs
+                for signature in signatures:
+                    number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=MUTATION_SIGNATURE_PROBABILITY_THRESHOLD])
+                    if signature in signature2NumberofMutationsDict:
+                        signature2NumberofMutationsDict[signature] += number_of_mutations
                     else:
-                        dinucsSignature2NumberofMutationsDict[dinucSignature] = number_of_dinucs
+                        signature2NumberofMutationsDict[signature] = number_of_mutations
 
-                    if sample in sample2DinucsSignature2NumberofMutationsDict:
-                        if dinucSignature in sample2DinucsSignature2NumberofMutationsDict[sample]:
-                            sample2DinucsSignature2NumberofMutationsDict[sample][dinucSignature] += number_of_dinucs
+                    if sample in sample2Signature2NumberofMutationsDict:
+                        if signature in sample2Signature2NumberofMutationsDict[sample]:
+                            sample2Signature2NumberofMutationsDict[sample][signature] += number_of_mutations
                         else:
-                            sample2DinucsSignature2NumberofMutationsDict[sample][dinucSignature] = number_of_dinucs
+                            sample2Signature2NumberofMutationsDict[sample][signature] = number_of_mutations
                     else:
-                        sample2DinucsSignature2NumberofMutationsDict[sample] = {}
-                        sample2DinucsSignature2NumberofMutationsDict[sample][dinucSignature] = number_of_dinucs
+                        sample2Signature2NumberofMutationsDict[sample] = {}
+                        sample2Signature2NumberofMutationsDict[sample][signature] = number_of_mutations
     #######################################################################
 
-    #Fill dictionaries with conditions satisfied
-    new_sample2NumberofDinucsDict = {k: v for k, v in sample2NumberofDinucsDict.items() if sample2NumberofDinucsDict[k] >= DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS}
-    new_dinucsSignature2NumberofMutationsDict = {k: v for k, v in dinucsSignature2NumberofMutationsDict.items() if dinucsSignature2NumberofMutationsDict[k] >= DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS}
 
-    new_sample2DinucsSignature2NumberofMutationsDict = {}
-    for k1, v1 in sample2DinucsSignature2NumberofMutationsDict.items():
-        for k2, v2 in sample2DinucsSignature2NumberofMutationsDict[k1].items():
-            if (sample2DinucsSignature2NumberofMutationsDict[k1][k2] >= DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-                if k1 in new_sample2DinucsSignature2NumberofMutationsDict:
-                    new_sample2DinucsSignature2NumberofMutationsDict[k1][k2] = v2
+    new_sample2NumberofMutatiosDict = {k: v for k, v in sample2NumberofMutationsDict.items() if sample2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
+    new_signature2NumberofMutationsDict = {k: v for k, v in signature2NumberofMutationsDict.items() if signature2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
+
+    new_sample2Signature2NumberofMutationsDict = {}
+    for k1, v1 in sample2Signature2NumberofMutationsDict.items():
+        for k2, v2 in sample2Signature2NumberofMutationsDict[k1].items():
+            if (sample2Signature2NumberofMutationsDict[k1][k2] >= minimum_number_of_mutations_required):
+                if k1 in new_sample2Signature2NumberofMutationsDict:
+                    new_sample2Signature2NumberofMutationsDict[k1][k2] = v2
                 else:
-                    new_sample2DinucsSignature2NumberofMutationsDict[k1] = {}
-                    new_sample2DinucsSignature2NumberofMutationsDict[k1][k2] = v2
+                    new_sample2Signature2NumberofMutationsDict[k1] = {}
+                    new_sample2Signature2NumberofMutationsDict[k1][k2] = v2
 
     #Write Conditions satisfied Dictionaries
-    writeDictionaryUnderDataDirectory(new_sample2NumberofDinucsDict,outputDir,jobname,Sample2NumberofDinucsDictFilename)
-    writeDictionaryUnderDataDirectory(new_dinucsSignature2NumberofMutationsDict,outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
-    writeDictionaryUnderDataDirectory(new_sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(new_sample2NumberofMutatiosDict,outputDir,jobname,Sample2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(new_signature2NumberofMutationsDict,outputDir,jobname,Signature2NumberofMutationsDictFilename)
+    writeDictionaryUnderDataDirectory(new_sample2Signature2NumberofMutationsDict,outputDir,jobname,Sample2Signature2NumberofMutationsDictFilename)
 ##################################################################
 
 ##################################################################
-#TODO read chr based subs indels dinucs all in the same way with the same function
-def readChrBasedDinucsDF(outputDir, jobname, chrLong):
+#Used for Dinucs and Indels
+def readChrBasedMutationsDF(outputDir,jobname,chrLong,type):
+    filename = '%s_%s_for_topography.txt' %(chrLong,type)
+    chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
+
     chrBased_mutation_df = None
-
-    filename = '%s_dinucs_for_topography.txt' %(chrLong)
-    head, tail = os.path.split(outputDir)
-    head, tail = os.path.split(head)
-
-    #TODO to be changed. for testing purposes only
-    chrBasedMutationDFFilePath = os.path.join(head, 'input_test','BreastCancer560_Dinuc_Test', DATA, CHRBASED, filename)
 
     #############################################
     if (os.path.exists(chrBasedMutationDFFilePath)):
@@ -548,25 +578,11 @@ def readChrBasedDinucsDF(outputDir, jobname, chrLong):
     return chrBased_mutation_df
 ##################################################################
 
-##################################################################
-def readChrBasedIndelsDF(outputDir,jobname,chrLong,filename):
-    filename = '%s_%s' %(chrLong,filename)
-
-    chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
-
-    #############################################
-    if os.path.exists(chrBasedMutationDFFilePath):
-        chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath,sep="\t", comment='#')
-        return chrBased_mutation_df
-    else:
-        return None
-##################################################################
 
 
 ##################################################################
-def readChrBasedSubsDF(outputDir,jobname,chrLong,filename):
-
-    filename = chrLong + '_' + filename
+def readChrBasedSubsDF(outputDir,jobname,chrLong,type):
+    filename = '%s_%s_for_topography.txt' %(chrLong,type)
 
     chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
 
@@ -577,10 +593,9 @@ def readChrBasedSubsDF(outputDir,jobname,chrLong,filename):
         only_header_chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath, sep="\t", comment='#', nrows=1)
         columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
 
-        contextIndex = columnNamesList.index(CONTEXT)
-
-        # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-        signatures = columnNamesList[(contextIndex + 1):]
+        # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
+        mutationtIndex = columnNamesList.index(MUTATION)
+        signatures = columnNamesList[(mutationtIndex + 1):]
         #############################################
 
         #################################################
@@ -597,18 +612,16 @@ def readChrBasedSubsDF(outputDir,jobname,chrLong,filename):
         mydtypes[SAMPLE] = str
         mydtypes[CHROM] = str
         mydtypes[START] = np.int32
-        mydtypes[END] = np.int32
+        mydtypes[MUTATIONLONG] = str
         mydtypes[PYRAMIDINESTRAND] = np.int8
+        mydtypes[TRANSCRIPTIONSTRAND] = str
         mydtypes[MUTATION] = str
-        mydtypes[CONTEXT] = str
         #################################################
     ##########################################################################################
 
     #############################################
     if os.path.exists(chrBasedMutationDFFilePath):
         chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath,sep="\t", comment='#',dtype=mydtypes)
-        #To make end exlcusive
-        chrBased_mutation_df[END] = chrBased_mutation_df[START]+1
         return chrBased_mutation_df
     else:
         return None
@@ -1408,13 +1421,10 @@ def readIndels(allIndelsFileName):
 
 ##################################################################
 def readBED(bedFilename):
-    # Read the file w.r.t. the current folder
-    bedFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,bedFilename)
-
     columns = ['chr', 'start', 'end', 'column4','column5','column6','column7','column8','column9']
 
     #BED files are seperated by tab
-    bed_df = pd.read_table(bedFilePath, sep='\t', comment='#', header=None, names=columns)
+    bed_df = pd.read_table(bedFilename, sep='\t', comment='#', header=None, names=columns)
 
     #BED files are end exclusive by default.
     #Make end inclusive
@@ -1440,13 +1450,9 @@ def readBED(bedFilename):
 # WaveletSmoothedSignal Filename: 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 # SumSignal: GSM923442_hg19_wgEncodeUwRepliSeqMcf7SumSignalRep1.wig
 def readRepliSeqSignal(repliseqDataFilename):
-    # Read the file w.r.t. the current folder
-
-    repliSeqFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,repliseqDataFilename)
-    # print(repliSeqFilePath)
     #TODO is there a better/more clean way to handle this?
     #This sep='*' is used for reading line by line without different number of columns error for different lines
-    repliSeq_unprocessed_df = pd.read_table(repliSeqFilePath, sep='*', comment='#', header=None)
+    repliSeq_unprocessed_df = pd.read_table(repliseqDataFilename, sep='*', comment='#', header=None)
     # print('debug starts')
     # print('############## wavelet_unprocessed_df ##############')
     # print(repliSeq_unprocessed_df.shape)
@@ -1463,8 +1469,7 @@ def readRepliSeqSignal(repliseqDataFilename):
 # Original Filename: GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig
 # WaveletSmoothedSignal Filename: 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 def readWaveletSmoothedSignalReplicationTime(repliseqDataFilename):
-    waveletFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,repliseqDataFilename)
-    replication_time_wavelet_signal_unprocessed_df = pd.read_table(waveletFilePath, sep="\t", comment='#', header=None)
+    replication_time_wavelet_signal_unprocessed_df = pd.read_table(repliseqDataFilename, sep="\t", comment='#', header=None)
 
     return replication_time_wavelet_signal_unprocessed_df
 ##################################################################
@@ -1640,7 +1645,6 @@ def updateDictionaries(mutation_row,
                         signature2MutationType2Strand2CountDict,
                         strand,
                         signature2NumberofMutationsDict,
-                        sample2Signature2NumberofMutationsDict,
                         mutationProbability):
 
     #################################################################################################

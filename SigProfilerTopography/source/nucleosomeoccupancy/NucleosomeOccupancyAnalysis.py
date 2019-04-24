@@ -25,16 +25,12 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ##############################################################################################################
 #main function
-def nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename, indelsFilename, nucleosomeFilename_woDir):
+def nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
     print('########################## NucleosomeOccupancyAnalysis starts ##########################')
     if  (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
-        nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,
-                                                            outputDir,jobname,
-                                                            singlePointMutationsFilename, indelsFilename, nucleosomeFilename_woDir)
+        nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename)
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL):
-        nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,
-                                                            outputDir,jobname,
-                                                            singlePointMutationsFilename, indelsFilename,nucleosomeFilename_woDir)
+        nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename)
     print('########################## NucleosomeOccupancyAnalysis ends ############################')
 ##############################################################################################################
 
@@ -98,12 +94,8 @@ def fillSignalArrayAndCountArrays(inputList):
                                  type=AGGREGATEDINDELS,
                                  axis=1)
 
+    #Fill for dinucs
     if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-        dinucs_signatures = []
-        for column_name in chrBased_dinucs_df.columns.values:
-            if (column_name.startswith("DBS")):
-                dinucs_signatures.append(column_name)
-
         chrBased_dinucs_df.apply(fillSignalArrayAndCountArrayForMutations,
             nucleosome_array=chrbased_nucleosome_signal_array,
             maximum_chrom_size=maximum_chrom_size,
@@ -177,7 +169,7 @@ def accumulateSignalCountArrays(all_partials_chrBased_SignalArrayAndCountArray_D
 
 ########################################################################################
 #For all chromosome parallel starts
-def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir):
+def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -208,7 +200,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
         chromSize = chromSizesDict[chrLong]
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
-        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename_woDir)[0:-4]
+        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename)[0:-4]
 
         ##############################################################
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
@@ -232,18 +224,18 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
 
             #READ CHRBASED SINGLE POINT MUTATIONS
             if (SUBS in mutationTypes):
-                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFilename)
+                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS)
                 print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
 
             #READ CHRBASED INDELS
             if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS)
                 print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
 
             #READ CHRBASED_DINUCS
             if (DINUCS in mutationTypes):
-                # READ CHRBASED DINUCS
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir, jobname, chrLong)
+                # READ CHRBASED DINUCS/
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS)
                 print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong, sys.getsizeof(chrBased_dinucs_df), sys.getsizeof(chrBased_dinucs_df) / GIGABYTE_IN_BYTES))
 
             inputList.append(chrbased_nucleosome_signal_array)
@@ -298,7 +290,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
 ########################################################################################
 #If chr based subs or indels dataframes are too big we can use this version
 #For each chromosome sequential starts
-def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,singlePointMutationsFilename,indelsFilename,nucleosomeFilename_woDir):
+def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
 
     total_num_of_dinucs = 0
 
@@ -330,7 +322,7 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
         chromSize = chromSizesDict[chrLong]
 
         #FIRST READ CHRBASED NUCLEOSOME OCCUPANCY
-        nucleosomeFilenameWoExtension = nucleosomeFilename_woDir[0:-4]
+        nucleosomeFilenameWoExtension = os.path.basename(nucleosomeFilename)[0:-4]
 
         ##############################################################
         signalArrayFilename = '%s_signal_%s.npy' % (chrLong, nucleosomeFilenameWoExtension)
@@ -354,17 +346,17 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
 
             if (SUBS in mutationTypes):
                 #READ CHRBASED SINGLE POINT MUTATIONS
-                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,singlePointMutationsFilename)
+                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS)
                 print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
 
             if (INDELS in mutationTypes):
                 #READ CHRBASED INDELS
-                chrBased_indels_df = readChrBasedIndelsDF(outputDir,jobname,chrLong,indelsFilename)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS)
                 print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
 
             if (DINUCS in mutationTypes):
                 #READ CHRBASED DINUCS
-                chrBased_dinucs_df = readChrBasedDinucsDF(outputDir,jobname,chrLong)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,DINUCS)
                 print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_dinucs_df),sys.getsizeof(chrBased_dinucs_df)/GIGABYTE_IN_BYTES))
                 if (chrBased_dinucs_df is not None):
                     chr_based_number_of_dinucs = chrBased_dinucs_df.shape[0]
@@ -415,11 +407,6 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
 
             # Fill for Dinucs
             if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-                dinucs_signatures = []
-                for column_name in chrBased_dinucs_df.columns.values:
-                    if (column_name.startswith("DBS")):
-                        dinucs_signatures.append(column_name)
-
                 chrBased_dinucs_df.apply(
                     fillSignalArrayAndCountArrayForMutations,
                     nucleosome_array=chrbased_nucleosome_signal_array,
@@ -463,7 +450,6 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
     ###################################################################################
 
     print('For information --- Number of dinucs: %d' %(total_num_of_dinucs))
-
     writeAverageNucleosomeOccupancy(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname)
 
 #For each chromosome sequential ends
