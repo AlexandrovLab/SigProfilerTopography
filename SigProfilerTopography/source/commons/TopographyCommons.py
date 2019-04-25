@@ -85,7 +85,7 @@ GSM923442_HG19_ENCODE_REPLISEQ_MCF7_WAVELET_SIGNAL_WIG = 'GSM923442_hg19_wgEncod
 GSM923442_HG19_ENCODE_REPLISEQ_MCF7_VALLEY_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
 GSM923442_HG19_ENCODE_REPLISEQ_MCF7_PEAK_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
 GRCh37_hg19_NCBIREFSEQCURATED = 'GRCh37_hg19_NCBIRefSeqCurated'
-GRCh37_hg19_ENSEMBL = 'GRCh37_transcripts.txt'
+GRCh37_ENSEMBL = 'GRCh37_transcripts.txt'
 
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
@@ -423,10 +423,12 @@ def getChromSizesDict(genome):
 def readTrancriptsENSEMBL(genome):
 
     if (genome==GRCh37):
-        transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_ENSEMBL)
+        transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_ENSEMBL)
 
     if (os.path.exists(transcriptsFilenamePath)):
         ensembl_transcripts_df = pd.read_table(transcriptsFilenamePath, header=0,sep="\t")
+
+        #Gene stable ID  Transcript stable ID    Chromosome/scaffold name        Strand  Transcript start (bp)   Transcript end (bp)     Transcript type
 
         #Change the column name     Chromosome/scaffold name    -->     chrom
         #                           Strand                      -->     strand
@@ -1598,20 +1600,20 @@ def  updateDictionary(type2Strand2CountDict,mutationType,strand):
 
 
 ##################################################################
-def updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand):
+def updateSampleBasedDictionary(sample2Type2Strand2CountDict,signature_or_mutationType,mutationSample,strand):
     if (mutationSample in sample2Type2Strand2CountDict):
-        if mutationType in sample2Type2Strand2CountDict[mutationSample]:
-            if strand in sample2Type2Strand2CountDict[mutationSample][mutationType]:
-                sample2Type2Strand2CountDict[mutationSample][mutationType][strand] += 1
+        if signature_or_mutationType in sample2Type2Strand2CountDict[mutationSample]:
+            if strand in sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType]:
+                sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType][strand] += 1
             else:
-                sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
+                sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType][strand] = 1
         else:
-            sample2Type2Strand2CountDict[mutationSample][mutationType] = {}
-            sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
+            sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType] = {}
+            sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType][strand] = 1
     else:
         sample2Type2Strand2CountDict[mutationSample] = {}
-        sample2Type2Strand2CountDict[mutationSample][mutationType] = {}
-        sample2Type2Strand2CountDict[mutationSample][mutationType][strand] = 1
+        sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType] = {}
+        sample2Type2Strand2CountDict[mutationSample][signature_or_mutationType][strand] = 1
 ##################################################################
 
 

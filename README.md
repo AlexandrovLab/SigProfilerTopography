@@ -15,43 +15,45 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. Import SigProfilerTopography as follows:
+3. SigProfilerTopography requires SigProf ilerMatrixGenerator. Install branch of this SigProfilerMatrixGenerator.
+```
+$ git clone --single-branch --branch Development https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.git
+$ cd SigProfilerMatrixGenerator
+$ pip install .
+```
+4. Install your desired reference genome from the command line/terminal as follows (available reference genomes are: GRCh37, GRCh38, mm9, and mm10):
+```
+$ python
+>> from SigProfilerMatrixGenerator import install as genInstall
+>> genInstall.install('GRCh37')
+```
+
+5. Import SigProfilerTopography as follows:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 ```
-3. Within a python session, you can run the topography analyses as follows:
+
+6. Within a python session, you can run the topography analyses as follows: 
+This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'
+>> inputDir = '.../from/googledrive/you/can/download/sample/input/under/matrixgenerator/'
+>> outputDir = '.../as/you/wish/output/'
 >> jobname = 'BreastCancer560'
->> inputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_test/%s' %(jobname)
->> outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
->> snpsForTopography= '%s/560_BRCA_WGS_snps_for_topography.txt' %(inputDir)
->> indelsForTopography= '%s/560_BRCA_WGS_indels_for_topography.txt' %(inputDir)
-
->> nucleosomeOccupancy = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/nucleosome/wgEncodeSydhNsomeGm12878Sig.wig'
->> replicationSignal = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
->> replicationValley = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
->> replicationPeak = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
-
->> topography.runAnalyses(genome,snpsForTopography,indelsForTopography,outputDir,jobname,nucleosomeOccupancy,replicationSignal,replicationValley,replicationPeak)
-```
-
-4. Within a python session, you can plot the topography figures as follows:
-```
 >> numofSimulations = 0
->> jobname = 'BreastCancer560'
->> outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
-
->> topography.plotFigures(outputDir,jobname,numofSimulations,'BONFERRONI_CORRECTION','USING_POISSON_DISTRIBUTION')
+>> subs_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
+>> indels_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/ID83_Mutation_Probabilities.txt'
+>> dinucs_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path)
 ```
 
 **INPUT FILE FORMAT**
 
-This tool currently supports simple text file format. The user must provide input files with their paths.
+This tool currently supports formats (maf, vcf, simple text file, and ICGC) that are supported by SigProfilerMatrixGenerator. The user must provide input files with their paths.
 
 **SAMPLE INPUT FILES**
-Download sample snps and indels input data from
+Download sample input files from
 https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
 
 
@@ -77,41 +79,24 @@ SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveS
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
 ```
-
-[comment]: <Step1: Download GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig,>
-[comment]: <GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed.gz,>
-[comment]: <GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed.gz from>
-[comment]: <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923442>
-[comment]: <Step2: Convert .bed.gz into .bed>
-[comment]: <Step3: Convert .bigWig file into .wig>
-[comment]: <Step4: Provide these files under>
-[comment]: <SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig>
-[comment]: <SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed>
-[comment]: <SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed>
-
-
+Unless you set different files, these installed files are used for topography replication time and replication strand bias analyses.
+```
 **LIBRARY TRANSCRIPTS**
 
 When you install SigProfilerTopography python package, SigProfilerTopography downloads transcripts for GRCh37 under
 ```
 SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
+For GRCh37,  you can download hg19.2bit as follows:
 ```
-[comment]: <Transcripts>
-[comment]: <Step1: Download GRCh37_transcripts.txt from>
-[comment]: <https://drive.google.com/open?id=1TSyV_wA5pbPYg2g7M63m4QEp0bd7nYLB>
-[comment]: <Step2: Provide GRCh37_transcripts.txt under>
-[comment]: <SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt>
-
 **LIBRARY HG19 and HG38 2bit files**
 
 Within a python session, you can download the human genome data as follows:
 ```
-$ python
->> from SigProfilerTopography import Topography as topography
-```
 
 For GRCh37,  you can download hg19.2bit as follows:
 ```
+>> $ python
+>> from SigProfilerTopography import Topography as topography
 >> topography.download('GRCh37')
 ```
 
@@ -126,15 +111,6 @@ or
 SigProfilerTopography/lib/ucscgenome/hg38.2bit
 ```
 
-
-[comment]: <Step1: Download hg19.2bit and hg38.2bit from>
-[comment]: <http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit and>
-[comment]: <http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit>
-[comment]: <Step2: Provide hg19.2bit and hg38.2bit under>
-[comment]: <SigProfilerTopography/lib/ucscgenome/hg19.2bit>
-[comment]: <SigProfilerTopography/lib/ucscgenome/hg38.2bit>
-
-
 **COPYRIGHT**
 
 This software and its documentation are copyright 2018 as a part of the SigProfiler project.
@@ -143,6 +119,3 @@ The SigProfilerTopography framework is free software and is distributed in the h
 **CONTACT INFORMATION**
 
 Please address any queries or bug reports to Burcak Otlu at burcakotlu@eng.ucsd.edu
-
-
-[comment]: <https://dillinger.io/>

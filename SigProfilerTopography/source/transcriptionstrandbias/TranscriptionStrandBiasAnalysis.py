@@ -27,31 +27,25 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 ########################################################################
 # Fill chrBased array once for each chromosome
 # int8	Byte (-128 to 127)
-# We use only one array.
-# 0 --> no-transcription
-# 1 --> transcription on positive strand
-# 2 --> transcription on negative strand
-# 3 --> transcription on both positive and negative strands
+# We use two arrays; one for positive strand and one for negative strand.
+# 0 --> no gene
+# 1 --> there is a gene on positive strand
+# -2 --> there is a gene on negative strand
 
 # Legacy Comments
 # Each row is a pandas series in fact
 # labels = ['#bin', 'name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames']
 # using cdsStart and cdsEnd give error since there are intervals of 0 length in that case
 # such as cdsStart 33623833 cdsEnd 33623833
-#Please notice that same genomic loci on a certain strand can be transcribed and nontranscribed at the same time.
+#Please notice that same genomic loci on a certain strand can be transcribed and untranscribed at the same time.
 #However same genomic loci on a certain strand can be leading or lagging but not both
-
-# Legacy code
-# if (transcriptsSource == NCBI):
-#     if (transcription_row['strand'] == PLUS):
-#         chrBased_transcription_plus_array[transcription_row['txStart']:(transcription_row['txEnd'] + 1)] = 1
-#     elif (transcription_row['strand'] == MINUS):
-#         chrBased_transcription_minus_array[transcription_row['txStart']:(transcription_row['txEnd'] + 1)] = -1
-def fillTranscriptionArray(transcription_row,chrBased_transcription_array):
+def fillTranscriptionArray(transcription_row,chrBased_genes_on_positive_strand,chrBased_genes_on_negative_strand):
+    #gene on positive strand
     if (transcription_row['strand']==1):
-        chrBased_transcription_array[transcription_row['txStart']:(transcription_row['txEnd']+1)] += 1
+        chrBased_genes_on_positive_strand[transcription_row['txStart']:(transcription_row['txEnd']+1)] = 1
+    #gene on negative strand
     elif (transcription_row['strand']==-1):
-        chrBased_transcription_array[transcription_row['txStart']:(transcription_row['txEnd']+1)] += 2
+        chrBased_genes_on_negative_strand[transcription_row['txStart']:(transcription_row['txEnd']+1)] = -2
 ########################################################################
 
 
@@ -130,7 +124,7 @@ def searchMutationUsingTranscriptionStrandColumn(
 # TODO Consider NONTRANSCRIBED_STRAND
 def searchMutationOnTranscriptionStrandArray(
         mutation_row,
-        chrBased_transcription_array,
+        chrBased_gene_array,
         type2TranscriptionStrand2CountDict,
         sample2Type2TranscriptionStrand2CountDict,
         type2Sample2TranscriptionStrand2CountDict,
@@ -150,6 +144,21 @@ def searchMutationOnTranscriptionStrandArray(
         mutationType = mutation_row[MUTATION]
     elif (type==INDELS):
         mutationEnd = mutationStart+mutation_row[LENGTH]
+        ref = mutation_row[REF]
+        alt = mutation_row[ALT]
+
+        if (len(ref)>len(alt)):
+            mutation = ref[len(alt):]
+        elif (len(alt)>len(ref)):
+            mutation = alt[len(ref):]
+
+        if (allPyrimidine(mutation)):
+            mutationPyramidineStrand = 1
+        elif (allPurine(mutation)):
+            mutationPyramidineStrand = -1
+        else:
+            mutationPyramidineStrand = 0
+
     elif(type==DINUCS):
         mutationEnd = mutationStart+2
 
@@ -160,14 +169,14 @@ def searchMutationOnTranscriptionStrandArray(
     #Values on chrBased_transcription_array and their meanings
     # 0 --> no-transcription
     # 1 --> transcription on positive strand
-    # 2 --> transcription on negative strand
-    # 3 --> transcription on both positive and negative strands
+    # -2 --> transcription on negative strand
+    # -1 --> transcription on both positive and negative strands
 
     # uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd + 1])
     # mutationEnd is exclusive
-    uniqueIndexesArray = np.unique(chrBased_transcription_array[mutationStart:mutationEnd])
+    uniqueIndexesArray = np.unique(chrBased_gene_array[mutationStart:mutationEnd])
 
-    if ((3 in uniqueIndexesArray) or ((1 in uniqueIndexesArray) and (2 in uniqueIndexesArray))):
+    if ((-1 in uniqueIndexesArray) or ((1 in uniqueIndexesArray) and (-2 in uniqueIndexesArray))):
         if (mutationPyramidineStrand != 0):
             updateDictionaries(mutation_row,
                                     mutationType,
@@ -219,7 +228,7 @@ def searchMutationOnTranscriptionStrandArray(
                                     mutationProbabilityThreshold)
 
 
-    elif (2 in uniqueIndexesArray):
+    elif (-2 in uniqueIndexesArray):
         if (mutationPyramidineStrand == 1):
             # Transcription is on negative strand, if mutation pyramidine strand is + then increment transcribed
             updateDictionaries(mutation_row,
@@ -253,7 +262,7 @@ def searchMutations(inputList):
     chrBased_subs_split_df = inputList[0]
     chrBased_indels_split_df = inputList[1]
     chrBased_dinucs_split_df = inputList[2]
-    chrBased_transcription_array = inputList[3]
+    chrBased_gene_array = inputList[3]
     subsSignature2NumberofMutationsDict = inputList[4]
     indelsSignature2NumberofMutationsDict = inputList[5]
     dinucsSignature2NumberofMutationsDict = inputList[6]
@@ -263,10 +272,10 @@ def searchMutations(inputList):
     type2Sample2TranscriptionStrand2CountDict= {}
     signature2MutationType2TranscriptionStrand2CountDict = {}
 
-    if (chrBased_transcription_array is not None):
+    if (chrBased_gene_array is not None):
         if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
             chrBased_subs_split_df.apply(searchMutationOnTranscriptionStrandArray,
-                                    chrBased_transcription_array=chrBased_transcription_array,
+                                    chrBased_gene_array=chrBased_gene_array,
                                     type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
                                     sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
                                     type2Sample2TranscriptionStrand2CountDict =type2Sample2TranscriptionStrand2CountDict,
@@ -278,7 +287,7 @@ def searchMutations(inputList):
 
         if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
             chrBased_indels_split_df.apply(searchMutationOnTranscriptionStrandArray,
-                                    chrBased_transcription_array=chrBased_transcription_array,
+                                    chrBased_gene_array=chrBased_gene_array,
                                     type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
                                     sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
                                     type2Sample2TranscriptionStrand2CountDict =type2Sample2TranscriptionStrand2CountDict,
@@ -291,7 +300,7 @@ def searchMutations(inputList):
 
         if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
             chrBased_dinucs_split_df.apply(searchMutationOnTranscriptionStrandArray,
-                                    chrBased_transcription_array=chrBased_transcription_array,
+                                    chrBased_gene_array=chrBased_gene_array,
                                     type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
                                     sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
                                     type2Sample2TranscriptionStrand2CountDict=type2Sample2TranscriptionStrand2CountDict,
@@ -301,7 +310,7 @@ def searchMutations(inputList):
                                     type=DINUCS,
                                     axis=1)
 
-    elif (chrBased_transcription_array is None):
+    elif (chrBased_gene_array is None):
         if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
             chrBased_subs_split_df.apply(searchMutationUsingTranscriptionStrandColumn,
                                          type2TranscriptionStrand2CountDict=type2TranscriptionStrand2CountDict,
@@ -402,20 +411,29 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
                 chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == 'MT']
 
             if (useTranscriptionStrandColumn):
-                chrBased_transcription_array = None
+                chrBased_gene_array = None
             else:
                 ################################################################################
-                chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
+                chrBased_genes_on_positive_strand = np.zeros(chromSize, dtype=np.int8)
+                chrBased_genes_on_negative_strand = np.zeros(chromSize, dtype=np.int8)
+
                 chrBased_transcripts_df.apply(fillTranscriptionArray,
-                                            chrBased_transcription_array=chrBased_transcription_array,
-                                            axis=1)
+                                              chrBased_genes_on_positive_strand = chrBased_genes_on_positive_strand,
+                                              chrBased_genes_on_negative_strand = chrBased_genes_on_negative_strand,
+                                              axis=1)
+
+                #0 means no gene
+                #-1 means gene on both strands: positive and negative
+                #+1 means gene on positive strand
+                #-2 means gene on negative strand
+                chrBased_gene_array = np.add(chrBased_genes_on_positive_strand,chrBased_genes_on_negative_strand)
                 ################################################################################
 
             inputList = []
             inputList.append(chrBased_subs_df)  # each time different split
             inputList.append(chrBased_indels_df)
             inputList.append(chrBased_dinucs_df)
-            inputList.append(chrBased_transcription_array)  # same for all
+            inputList.append(chrBased_gene_array)  # same for all
             inputList.append(subsSignature2NumberofMutationsDict)  # same for all
             inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
             inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all

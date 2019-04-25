@@ -21,8 +21,6 @@ from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as
 
 from SigProfilerTopography.source.commons.DataPreparationCommons import readMutationsWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import readProbabilities
-from SigProfilerTopography.source.commons.DataPreparationCommons import mergeSNPsWithSignatureProbabilities
-from SigProfilerTopography.source.commons.DataPreparationCommons import readIndelsandWriteWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import prepareSimulationBasedInputFilesForSigProfilerTopography
 from SigProfilerTopography.source.commons.DataPreparationCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
 
@@ -82,56 +80,6 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir
     pool.close()
     pool.join()
 ############################################################
-
-
-############################################################
-#TODO To be depreceated. To be deleted.
-#TODO All the auxiliary functions called from this function will be depreceated and then be deleted
-#Step1 read snp positions
-#Step2 read probabilities
-#Step3 merge snp positions with probabilities make ready for SigProfilerTopography
-#Step4 read indels make ready for SigProfilerTopography
-def prepareDataAfterExtractorForTopography(snpsInputFile,indelsInputFile,probabilitiesFile,jobname):
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
-
-    #############################################################################
-    #Step1 read snps with genomic positions circa 28 million rows
-    snps_df = readMutationsWithGenomicPositions(snpsInputFile)
-
-    #Drop the unnecessary columns before the merge with probabilities
-    snps_df.drop(['locID','mutType','Type','VarID','Gene','GeneID','ccdsID','TranscriptID','GeneType'], inplace=True, errors='ignore',axis=1)
-
-    print('snps_df.columns.values')
-    print(snps_df.columns.values)
-
-    #If snps start and end are  not equal
-    #We can make them equal here.
-    if (not snps_df[START].equals(snps_df[END])):
-        snps_df[END] = snps_df[START]
-    #############################################################################
-
-    #############################################################################
-    # Step2 read sample based mutation based signature probabilities
-    probabilities_df = readProbabilities(probabilitiesFile)
-    #############################################################################
-
-    ###################################################
-    hg19_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, LIB, UCSCGENOME, 'hg19.2bit'))
-    hg38_genome = twobitreader.TwoBitFile(os.path.join(current_abs_path, LIB, UCSCGENOME, 'hg38.2bit'))
-    ###################################################
-
-    #############################################################################
-    # Step3
-    mergeSNPsWithSignatureProbabilities(jobname,snps_df,probabilities_df,hg19_genome,hg38_genome)
-    #############################################################################
-
-    #############################################################################
-    # Step4
-    readIndelsandWriteWithGenomicPositions(jobname,indelsInputFile)
-    #############################################################################
-
-############################################################
-
 
 ################################################################
 #Step1 read probabilities
@@ -405,6 +353,7 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
 
     if (replicationTimeValleyFilename == DEFAULT_REPLICATION_TIME_VALLEY_FILE):
         replicationTimeValleyFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_VALLEY_FILE)
+
     if (replicationTimePeakFilename == DEFAULT_REPLICATION_TIME_PEAK_FILE):
         replicationTimePeakFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_PEAK_FILE)
     #################################################################################
@@ -464,9 +413,22 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
 ##############################################################
 
 
+
 # ##############################################################
-# #To run local on laptop
-# matrix_generator_output_dir_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs/output/vcf_files/DINUC'
-# dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-# prepareDinucsDataAfterMatrixGenerationAndExtractorForTopography(matrix_generator_output_dir_path,dinucs_probabilities_file_path)
+# import os
+#
+# if __name__== "__main__":
+#     genome= 'GRCh37'
+#     inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
+#     outputDir = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_test')
+#     jobname = 'BreastCancer560'
+#     numberofSimulations = 0
+#     subs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','SBS_Mutation_Probabilities.txt')
+#     indels_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','ID_Mutation_Probabilities.txt')
+#     dinucs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','DBS_Mutation_Probabilities.txt')
+#
+#     runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path)
 # ##############################################################
+
+
+
