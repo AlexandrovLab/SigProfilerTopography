@@ -45,7 +45,14 @@ If you want to download nucleosome occupancy data for 'K562' cell line, just pas
 >> topography.download_nucleosome_occupancy_convert_bigWig2wig('GM12878')
 ```
 
-8. Within a python session, you can run the topography analyses as follows:
+8. Within a python session, you need to download corresponding 2bit file for your genome.
+Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
+```
+>> genome= 'GRCh37'
+>> topography.download_2bit_file(genome)
+```
+
+9. Within a python session, you can run the topography analyses as follows:
 This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'

@@ -107,7 +107,7 @@ def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,
 
 
 #######################################################
-def download(genome):
+def download_2bit_file(genome):
     if (genome == GRCh37):
         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
@@ -118,13 +118,12 @@ def download(genome):
         downloadFromWeb(HG38_URL, filepath)
 #######################################################
 
-
-#######################################################
-def download_bigwig2wig():
-    filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
-    downloadFromWeb(BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL,filepath)
-    os.chmod(filepath,0o744)
-#######################################################
+# #######################################################
+# def download_bigwig2wig():
+#     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
+#     downloadFromWeb(BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL,filepath)
+#     os.chmod(filepath,0o744)
+# #######################################################
 
 #######################################################
 def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
@@ -411,7 +410,6 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
 # USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
 # USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 # USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
-
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
 def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation,mutationTypes=[SUBS, INDELS, DINUCS]):
 
