@@ -139,6 +139,10 @@ def findLongStretchesofConsistentTransitionZones(chrLong,fromStart,toEnd,chrBase
 
 ########################################################################
 #TODO Is (replicationStrand_row['end']+1) okey?
+#We assume that there are no overlapping intervals with positive and negative slopes.
+#To test it have one array for positive slope fill with 1s
+#                one array for negative slope fill with -2a
+#                add them if you habe any -1 that means that you contradict this assumption.
 def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array):
     # e.g.: replicationStrand_row
     # chr chrX
@@ -181,6 +185,7 @@ def searchMutationOnReplicationStrandArray(
     elif (type==DINUCS):
         end = start+2
 
+
     #############################################################################################################
     #if there is overlap with chrBasedReplicationArray
     slicedArray = chrBasedReplicationArray[start:end]
@@ -189,6 +194,10 @@ def searchMutationOnReplicationStrandArray(
 
         #It must be full with at most -1 and +1
         uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
+
+        if (sample == 'PD10014a'):
+            print('Debug type:%s slicedArray=%s slicedArray.size=%d uniqueValueArray=%s uniqueValueArray.size=%d' % (
+            type, slicedArray, slicedArray.size, uniqueValueArray, uniqueValueArray.size))
 
         if (uniqueValueArray.size>2):
             print('There is a situation!!!')

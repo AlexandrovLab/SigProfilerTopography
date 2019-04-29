@@ -16,7 +16,7 @@
 # #############################################################
 
 import SigProfilerMatrixGenerator as matgen_package
-print(matgen_package.__path__[0])
+# print(matgen_package.__path__[0])
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 
 from SigProfilerTopography.source.commons.DataPreparationCommons import readMutationsWithGenomicPositions
@@ -44,7 +44,7 @@ from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDens
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 
-
+import subprocess
 
 ############################################################
 #CAn be move to DataPreparationCommons under /source/commons
@@ -88,7 +88,6 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir
 #Step3 merge snp positions with probabilities make snps ready for SigProfilerTopography
 #Step4 make indels ready for SigProfilerTopography
 def prepareDataAfterSimulatorForTopography(jobname,genomeAssembly,mutationTypes,numberofSimulations,probabilitiesFile):
-
     # Where are simulations?
     #/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input/21BreastCancer/output/simulations/21BreastCancer_simulations_GRCh37_INDEL_96/
 
@@ -117,19 +116,33 @@ def download(genome):
         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
         downloadFromWeb(HG38_URL, filepath)
-
-    # if ((genome == GRCh37) and (HG19_2BIT not in availableLibraryFilenamesList)):
-    #     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-    #     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
-    #     downloadFromWeb(HG19_URL, filepath)
-    #     append2File(HG19_2BIT, AVAILABLE_LIBRARY_FILENAMES_PATH)
-    # elif ((genome == GRCh38) and (HG38_2BIT not in availableLibraryFilenamesList)):
-    #     os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-    #     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
-    #     downloadFromWeb(HG38_URL, filepath)
-    #     append2File(HG38_2BIT, AVAILABLE_LIBRARY_FILENAMES_PATH)
 #######################################################
 
+
+#######################################################
+def download_bigwig2wig():
+    filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
+    downloadFromWeb(BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL,filepath)
+    os.chmod(filepath,0o744)
+#######################################################
+
+#######################################################
+def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
+    bigWig2Wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, BIGWIG2WIG)
+    os.chmod(bigWig2Wig_filepath,0o744)
+
+    bigwig2wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
+    if (cellLine==GM12878):
+        gm12878_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_GM12878_BIGWIG)
+        gm12878_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ENCODE_NUCLEOSOME_GM12878_WIG)
+        downloadFromWeb(ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL, gm12878_bigWig_filepath)
+        subprocess.call([bigwig2wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
+    elif (cellLine==K562):
+        K562_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_BIGWIG)
+        K562_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_WIG)
+        downloadFromWeb(ENCODE_NUCLEOSOME_K562_BIGWIG_URL, K562_bigWig_filepath)
+        subprocess.call([bigwig2wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
+#######################################################
 
 #######################################################
 def runNucleosomeOccupancyAnalyses(mutationTypes,genome,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList):
@@ -149,11 +162,17 @@ def runNucleosomeOccupancyAnalyses(mutationTypes,genome,outputDir,jobname,nucleo
     nucleosomeFilename_wo_dir = os.path.basename(nucleosomeFilename)
 
     if (nucleosomeFilename_wo_dir not in availableLibraryFilenamesList):
-        quantileValue = round(float(0.97), 2)
-        # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
-        readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
-        #append
-        append2File(nucleosomeFilename_wo_dir,AVAILABLE_LIBRARY_FILENAMES_PATH)
+
+        #Check whether nucleosomeFilename_wo_dir is downloaded
+        if (os.path.exists(nucleosomeFilename)):
+            quantileValue = round(float(0.97), 2)
+            # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
+            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+            #append
+            append2File(nucleosomeFilename_wo_dir,AVAILABLE_LIBRARY_FILENAMES_PATH)
+        else:
+            download_nucleosome_command = 'download_nucleosome_occupancy_convert_bigWig2wig(cellLine) command'
+            print('Download %s using %s' %(nucleosomeFilename_wo_dir,download_nucleosome_command))
 
     # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL
@@ -285,6 +304,19 @@ def runProcessivityAnalysis(mutationTypes,outputDir,jobname,chromNamesList):
 # indels_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/ID83/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,mutationTypes=[SUBS, INDELS, DINUCS]):
+
+    # ucsc hg19 chromosome names:
+    # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
+
+    # ensembl GRCh37 chromosome names:
+    # '1', '2', '3', '4', '5', '6', '7', 'X', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '20', 'Y', '19', '22', '21', 'MT'
+
+    # default library files (nucleosome occupancy and replication time) are all in hg19
+    # hg19 wgEncodeSydhNsomeGm12878Sig.bigWig from http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeSydhNsome
+    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
+    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
+    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
+
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
     availableLibraryFilenamesList = getAvailableLibraryFilenamesList()
@@ -316,7 +348,6 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     #######################  SigProfilerMatrixGenerator ends ########################
     #################################################################################
 
-
     #################################################################################
     ##################  Merge Files with Mutation Probabilities starts ##############
     #################################################################################
@@ -346,7 +377,7 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
 
     #################################################################################
     if (nucleosomeFilename == DEFAULT_NUCLEOSOME_OCCUPANCY_FILE):
-        nucleosomeFilename = os.path.join(current_abs_path,LIB,NUCLEOSOMEOCCUPANCY,DEFAULT_NUCLEOSOME_OCCUPANCY_FILE)
+        nucleosomeFilename = os.path.join(current_abs_path,LIB,NUCLEOSOME,DEFAULT_NUCLEOSOME_OCCUPANCY_FILE)
 
     if (replicationTimeFilename == DEFAULT_REPLICATION_TIME_SIGNAL_FILE):
         replicationTimeFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_SIGNAL_FILE)
@@ -357,7 +388,6 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     if (replicationTimePeakFilename == DEFAULT_REPLICATION_TIME_PEAK_FILE):
         replicationTimePeakFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_PEAK_FILE)
     #################################################################################
-
 
     #################################################################################
     runNucleosomeOccupancyAnalyses(mutationTypes,genome,outputDir,jobname,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList)

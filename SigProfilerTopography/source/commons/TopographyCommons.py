@@ -80,7 +80,17 @@ UCSCGENOME = 'ucscgenome'
 NCBI = 'ncbi'
 ENSEMBL = 'ensembl'
 
+GM12878 = 'GM12878'
+K562 = 'K562'
+
+ENCODE_NUCLEOSOME_GM12878_BIGWIG = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
+ENCODE_NUCLEOSOME_K562_BIGWIG = 'wgEncodeSydhNsomeK562Sig.bigWig'
+
+ENCODE_NUCLEOSOME_GM12878_WIG = 'wgEncodeSydhNsomeGm12878Sig.wig'
 ENCODE_NUCLEOSOME_K562_WIG = 'wgEncodeSydhNsomeK562Sig.wig'
+
+BIGWIG2WIG = 'bigWigToWig'
+
 GSM923442_HG19_ENCODE_REPLISEQ_MCF7_WAVELET_SIGNAL_WIG = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 GSM923442_HG19_ENCODE_REPLISEQ_MCF7_VALLEY_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
 GSM923442_HG19_ENCODE_REPLISEQ_MCF7_PEAK_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
@@ -95,6 +105,11 @@ HG38_2BIT = 'hg38.2bit'
 
 HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
 HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
+
+ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeGm12878Sig.bigWig'
+ENCODE_NUCLEOSOME_K562_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeK562Sig.bigWig'
+# BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL = 'http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToWig'
+BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL = 'http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v369/bigWigToWig'
 
 HG19 = 'hg19'
 HG38 = 'hg38'

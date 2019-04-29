@@ -27,14 +27,25 @@ $ python
 >> from SigProfilerMatrixGenerator import install as genInstall
 >> genInstall.install('GRCh37')
 ```
+5. SigProfilerTopography requires SigProf ilerSimulator. Install SigProfilerSimulator.
+```
+$ pip install SigProfilerSimulator
+```
 
-5. Import SigProfilerTopography as follows:
+6. Import SigProfilerTopography as follows:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 ```
 
-6. Within a python session, you can run the topography analyses as follows: 
+7. Within a python session, you can download nucleosome occupancy data for 'GM12878' and 'K562' as follows:
+The command below will download 'wgEncodeSydhNsomeGm12878Sig.bigWig' and convert  into 'wgEncodeSydhNsomeGm12878Sig.wig'.
+If you want to download nucleosome occupancy data for 'K562' cell line, just pass 'K562' instead of 'GM12878'.
+```
+>> topography.download_nucleosome_occupancy_convert_bigWig2wig('GM12878')
+```
+
+8. Within a python session, you can run the topography analyses as follows:
 This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'
@@ -56,20 +67,20 @@ This tool currently supports formats (maf, vcf, simple text file, and ICGC) that
 Download sample input files from
 https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
 
-
 **LIBRARY**
 
 This tool uses ENCODE provided files for topography analysis such as nucleosome occupancy and replcation time.
-You can also provide your local nucleosome occupancy (.wig format) and replication time (WaveSignal in .wig and Pk and Valleys in bed format) files with their paths.
+You can also provide your local nucleosome occupancy (.wig format) and replication time (WaveSignal in .wig and Pk and Valleys in bed formats) files with their paths.
 
 **LIBRARY NUCLEOSOME OCCUPANCY**
 
-Step1: Download nucleosome occupancy data wgEncodeSydhNsomeGm12878Sig.bigWig from
-http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeSydhNsome
+Within a python session you can download nucleosome occupancy data for 'GM12878' and 'K562' cell lines.
+Or you can provide your nucleosome occupancy data file as follows.
+```
+>> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.wig'
 
-Step2: Convert .bigWig file into .wig
-
-Step3: Provide wgEncodeSydhNsomeGm12878Sig.wig file under SigProfilerTopography/lib/nucleosome/wgEncodeSydhNsomeGm12878Sig.wig
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,nucleosomeFilename=user_provided_nucleosome_data_file_path)
+```
 
 **LIBRARY REPLICATION TIME**
 
@@ -80,36 +91,22 @@ SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep
 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
 ```
 Unless you set different files, these installed files are used for topography replication time and replication strand bias analyses.
+You can provide your replication data file as follows.
 ```
+>> user_provided_replication_time_file_path = '.../user_provided_replication_time.wig'
+>> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
+>> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
+
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path)
+```
+
 **LIBRARY TRANSCRIPTS**
 
 When you install SigProfilerTopography python package, SigProfilerTopography downloads transcripts for GRCh37 under
 ```
 SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
-For GRCh37,  you can download hg19.2bit as follows:
-```
-**LIBRARY HG19 and HG38 2bit files**
-
-Within a python session, you can download the human genome data as follows:
 ```
 
-For GRCh37,  you can download hg19.2bit as follows:
-```
->> $ python
->> from SigProfilerTopography import Topography as topography
->> topography.download('GRCh37')
-```
-
-For GRCh38,  you can download hg38.2bit as follows:
-```
->> topography.download('GRCh38')
-```
-Corresponding .2bit file will be downloaded under:
-```
-SigProfilerTopography/lib/ucscgenome/hg19.2bit
-or
-SigProfilerTopography/lib/ucscgenome/hg38.2bit
-```
 
 **COPYRIGHT**
 
