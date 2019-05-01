@@ -18,6 +18,7 @@
 import SigProfilerMatrixGenerator as matgen_package
 # print(matgen_package.__path__[0])
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
+from SigProfilerSimulator import SigProfilerSimulator as simulator
 
 from SigProfilerTopography.source.commons.DataPreparationCommons import readMutationsWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import readProbabilities
@@ -52,33 +53,38 @@ import subprocess
 def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir, jobname,mutationType, matrix_generator_output_dir_path,mutations_probabilities_file_path):
     os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
     chrShortList = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X','Y']
+
     if (os.path.exists(mutations_probabilities_file_path)):
         mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path)
         # dinucs_probabilities_df.columns.names [Sample Names    MutationTypes   DBS2    DBS4    DBS6    DBS7    DBS11]
         # dinucs_probabilities_df.columns.names [Sample    Mutation   DBS2    DBS4    DBS6    DBS7    DBS11]
         mutations_probabilities_df.rename(columns={'Sample Names': 'Sample', 'MutationTypes': 'Mutation'}, inplace=True)
 
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(numofProcesses)
 
-    poolInputList = []
-    if (os.path.exists(matrix_generator_output_dir_path)):
-        for chrShort in chrShortList:
-            chr_based_mutation_filename = '%s_seqinfo.txt' %(chrShort)
-            chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
-            inputList=[]
-            inputList.append(chrShort)
-            inputList.append(outputDir)
-            inputList.append(jobname)
-            inputList.append(chr_based_mutation_filepath)
-            inputList.append(mutations_probabilities_df)
-            inputList.append(mutationType)
-            poolInputList.append(inputList)
+        poolInputList = []
+        if (os.path.exists(matrix_generator_output_dir_path)):
+            for chrShort in chrShortList:
+                chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+                chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+                inputList = []
+                inputList.append(chrShort)
+                inputList.append(outputDir)
+                inputList.append(jobname)
+                inputList.append(chr_based_mutation_filepath)
+                inputList.append(mutations_probabilities_df)
+                inputList.append(mutationType)
+                poolInputList.append(inputList)
 
-        pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite,poolInputList)
+            pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
 
-    pool.close()
-    pool.join()
+        pool.close()
+        pool.join()
+
+    else:
+        print('%s does not exist.' %(mutations_probabilities_file_path))
+
 ############################################################
 
 ################################################################
@@ -125,22 +131,23 @@ def download_2bit_file(genome):
 #     os.chmod(filepath,0o744)
 # #######################################################
 
-#######################################################
+########################################################
+# bigWig2Wig executable is for linux/unix
+# https://hgdownload.cse.ucsc.edu/admin/exe/
+# At this address mac version is also provided but not for windows
 def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
     bigWig2Wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, BIGWIG2WIG)
     os.chmod(bigWig2Wig_filepath,0o744)
-
-    bigwig2wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
     if (cellLine==GM12878):
         gm12878_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_GM12878_BIGWIG)
         gm12878_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ENCODE_NUCLEOSOME_GM12878_WIG)
         downloadFromWeb(ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL, gm12878_bigWig_filepath)
-        subprocess.call([bigwig2wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
+        subprocess.call([bigWig2Wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
     elif (cellLine==K562):
         K562_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_BIGWIG)
         K562_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_WIG)
         downloadFromWeb(ENCODE_NUCLEOSOME_K562_BIGWIG_URL, K562_bigWig_filepath)
-        subprocess.call([bigwig2wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
+        subprocess.call([bigWig2Wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
 #######################################################
 
 #######################################################
@@ -302,7 +309,7 @@ def runProcessivityAnalysis(mutationTypes,outputDir,jobname,chromNamesList):
 # subs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/SBS96/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # indels_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/ID83/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,mutationTypes=[SUBS, INDELS, DINUCS]):
+def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path=None,indels_probabilities_file_path= None,dinucs_probabilities_file_path=None,nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,mutationTypes=[SUBS, INDELS, DINUCS]):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -347,21 +354,36 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     #######################  SigProfilerMatrixGenerator ends ########################
     #################################################################################
 
+    # #################################################################################
+    # ############################  SigProfilerSimulator starts #######################
+    # #################################################################################
+    # mutationTypes_for_simulator= []
+    # if (SUBS in mutationTypes):
+    #     mutationTypes_for_simulator.append('96')
+    # if (INDELS in mutationTypes):
+    #     mutationTypes_for_simulator.append('INDEL')
+    # if (DINUCS in mutationTypes):
+    #     mutationTypes_for_simulator.append('DINUC')
+    # simulator.SigProfilerSimulator(jobname, inputDir, genome, mutationTypes_for_simulator, simulations=numofSimulations,gender='female')
+    # #################################################################################
+    # ############################  SigProfilerSimulator ends #########################
+    # #################################################################################
+
     #################################################################################
     ##################  Merge Files with Mutation Probabilities starts ##############
     #################################################################################
     #SUBS
-    if (SUBS in mutationTypes):
+    if ((SUBS in mutationTypes) and (subs_probabilities_file_path is not None)):
         matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files','SNV')
         prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir,jobname,SUBS,matrix_generator_output_dir_path,subs_probabilities_file_path)
 
     #INDELS
-    if (INDELS in mutationTypes):
+    if ((INDELS in mutationTypes) and (indels_probabilities_file_path is not None)):
         matrix_generator_output_dir_path =  os.path.join(inputDir,'output','vcf_files','ID')
         prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir,jobname,INDELS,matrix_generator_output_dir_path,indels_probabilities_file_path)
 
     #DINUCS
-    if (DINUCS in mutationTypes):
+    if ((DINUCS in mutationTypes) and (dinucs_probabilities_file_path is not None)):
         matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files','DBS')
         prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(outputDir,jobname,DINUCS,matrix_generator_output_dir_path,dinucs_probabilities_file_path)
     #################################################################################
@@ -375,6 +397,7 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     #################################################################################
 
     #################################################################################
+    #We need full path of the library files
     if (nucleosomeFilename == DEFAULT_NUCLEOSOME_OCCUPANCY_FILE):
         nucleosomeFilename = os.path.join(current_abs_path,LIB,NUCLEOSOME,DEFAULT_NUCLEOSOME_OCCUPANCY_FILE)
 

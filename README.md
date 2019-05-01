@@ -15,7 +15,7 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. SigProfilerTopography requires SigProf ilerMatrixGenerator. Install branch of this SigProfilerMatrixGenerator.
+3. SigProfilerTopography currently requires a certain branch of SigProfilerMatrixGenerator. Please clone and install as follows:
 ```
 $ git clone --single-branch --branch Development https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.git
 $ cd SigProfilerMatrixGenerator
@@ -27,32 +27,32 @@ $ python
 >> from SigProfilerMatrixGenerator import install as genInstall
 >> genInstall.install('GRCh37')
 ```
-5. SigProfilerTopography requires SigProf ilerSimulator. Install SigProfilerSimulator.
-```
-$ pip install SigProfilerSimulator
-```
 
-6. Import SigProfilerTopography as follows:
+5. Import SigProfilerTopography as follows:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 ```
 
-7. Within a python session, you can download nucleosome occupancy data for 'GM12878' and 'K562' as follows:
+6. Within a python session, you can download nucleosome occupancy data for 'GM12878' and 'K562' as follows:
 The command below will download 'wgEncodeSydhNsomeGm12878Sig.bigWig' and convert  into 'wgEncodeSydhNsomeGm12878Sig.wig'.
+Please notice that converter bigWigToWig runs in linux 64 bit environment.
 If you want to download nucleosome occupancy data for 'K562' cell line, just pass 'K562' instead of 'GM12878'.
 ```
 >> topography.download_nucleosome_occupancy_convert_bigWig2wig('GM12878')
 ```
 
-8. Within a python session, you need to download corresponding 2bit file for your genome.
+7. Within a python session, you need to download corresponding 2bit file for your genome.
 Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 ```
 >> genome= 'GRCh37'
 >> topography.download_2bit_file(genome)
 ```
 
-9. Within a python session, you can run the topography analyses as follows:
+8. Within a python session, you can run the topography analyses as follows:
+You must provide the mutation types that you want to carry out topography analyses for in mutationTypes list.
+You must provide the corresponding probabilities files in subs_probabilities_file_path, indels_probabilities_file_path and dinucs_probabilities_file_path accordingly.
+For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutationTypes=['SUBS', 'DINUCS']
 This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'
@@ -60,10 +60,10 @@ This call also plots topography output figures.
 >> outputDir = '.../as/you/wish/output/'
 >> jobname = 'BreastCancer560'
 >> numofSimulations = 0
->> subs_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
->> indels_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/ID83_Mutation_Probabilities.txt'
->> dinucs_probabilities_file_path = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path)
+>> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
+>> indels_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/ID83_Mutation_Probabilities.txt'
+>> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path=subs_probabilities,indels_probabilities_file_path=indels_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutationTypes=['SUBS','INDELS','DINUCS'])
 ```
 
 **INPUT FILE FORMAT**

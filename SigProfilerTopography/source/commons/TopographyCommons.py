@@ -106,6 +106,12 @@ HG38_2BIT = 'hg38.2bit'
 HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
 HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
 
+MM9_2BIT = 'mm9.2bit'
+MM10_2BIT = 'mm10.2bit'
+
+MM9_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm9/bigZips/mm9.2bit'
+MM10_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/mm10.2bit'
+
 ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeGm12878Sig.bigWig'
 ENCODE_NUCLEOSOME_K562_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeK562Sig.bigWig'
 # BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL = 'http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToWig'
@@ -877,7 +883,6 @@ def fillSignalArrayAndCountArrayForMutations(mutation_row,
 
     #TODO: Is there a faster way than using for loop?
     ################# Signatures starts #######################
-    #We do not want to consider signatures with eligible mutations less than 10K
     for signature in signature2NumberofMutationsDict:
         if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
             if (signature in type2SignalArrayDict):
