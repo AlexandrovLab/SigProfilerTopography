@@ -48,9 +48,82 @@ def fillTranscriptionArray(transcription_row,chrBased_genes_on_positive_strand,c
         chrBased_genes_on_negative_strand[transcription_row['txStart']:(transcription_row['txEnd']+1)] = -2
 ########################################################################
 
+########################################################################
+def searchMutationUsingTranscriptionStrandColumn_simulations_integrated(
+        mutation_row,
+        simNum2Type2TranscriptionStrand2CountDict,
+        simNum2Sample2Type2TranscriptionStrand2CountDict,
+        simNum2Type2Sample2TranscriptionStrand2CountDict,
+        simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+        signature2NumberofMutationsDict,
+        mutationProbabilityThreshold,
+        type):
+
+    mutationType = None
+    mutationTranscriptionStrand = mutation_row[TRANSCRIPTIONSTRAND]
+    mutationSample = mutation_row[SAMPLE]
+
+    if (type==SUBS):
+        #e.g.: C>A
+        mutationType = mutation_row[MUTATION]
+
+    #Values on TranscriptionStrand column
+    # N --> Non-transcribed
+    # T --> Transcribed
+    # U --> Untranscribed
+    # Q --> Question Not known
+
+    if (mutationTranscriptionStrand == 'U'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                UNTRANSCRIBED_STRAND,
+                                signature2NumberofMutationsDict,
+                                mutationProbabilityThreshold)
+
+    elif (mutationTranscriptionStrand == 'T'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                TRANSCRIBED_STRAND,
+                                signature2NumberofMutationsDict,
+                                mutationProbabilityThreshold)
+    elif (mutationTranscriptionStrand == 'B'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                               simNum2Type2TranscriptionStrand2CountDict,
+                               simNum2Sample2Type2TranscriptionStrand2CountDict,
+                               simNum2Type2Sample2TranscriptionStrand2CountDict,
+                               simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                UNTRANSCRIBED_STRAND,
+                                signature2NumberofMutationsDict,
+                                mutationProbabilityThreshold)
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                TRANSCRIBED_STRAND,
+                                signature2NumberofMutationsDict,
+                                mutationProbabilityThreshold)
+########################################################################
+
+
 
 ########################################################################
 # TODO Consider NONTRANSCRIBED_STRAND
+#legacy code
 def searchMutationUsingTranscriptionStrandColumn(
         mutation_row,
         type2TranscriptionStrand2CountDict,
@@ -125,10 +198,10 @@ def searchMutationUsingTranscriptionStrandColumn(
 def searchMutationOnTranscriptionStrandArray(
         mutation_row,
         chrBased_gene_array,
-        type2TranscriptionStrand2CountDict,
-        sample2Type2TranscriptionStrand2CountDict,
-        type2Sample2TranscriptionStrand2CountDict,
-        signature2MutationType2TranscriptionStrand2CountDict,
+        simNum2Type2TranscriptionStrand2CountDict,
+        simNum2Sample2Type2TranscriptionStrand2CountDict,
+        simNum2Type2Sample2TranscriptionStrand2CountDict,
+        simNum2Signature2MutationType2TranscriptionStrand2CountDict,
         signature2NumberofMutationsDict,
         mutationProbabilityThreshold,
         type):
@@ -178,51 +251,51 @@ def searchMutationOnTranscriptionStrandArray(
 
     if ((-1 in uniqueIndexesArray) or ((1 in uniqueIndexesArray) and (-2 in uniqueIndexesArray))):
         if (mutationPyramidineStrand != 0):
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
-                                    TRANSCRIBED_STRAND,
+                                  simNum2Type2TranscriptionStrand2CountDict,
+                                  simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                  simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                  simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                  TRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
 
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
-                                    UNTRANSCRIBED_STRAND,
+                                  simNum2Type2TranscriptionStrand2CountDict,
+                                  simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                  simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                  simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                  UNTRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
 
     elif (1 in uniqueIndexesArray):
         if (mutationPyramidineStrand == 1):
             # Transcription is on positive strand, if mutation pyramidine strand is + then increment untranscribed
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     UNTRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
 
         elif (mutationPyramidineStrand == -1):
             # Transcription is on positive strand, if mutation pyramidine strand is - then increment transcribed
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     TRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
@@ -231,26 +304,26 @@ def searchMutationOnTranscriptionStrandArray(
     elif (-2 in uniqueIndexesArray):
         if (mutationPyramidineStrand == 1):
             # Transcription is on negative strand, if mutation pyramidine strand is + then increment transcribed
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     TRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
 
         if (mutationPyramidineStrand == -1):
             # Transcription is on negative strand, if mutation pyramidine strand is - then increment untranscribed
-            updateDictionaries(mutation_row,
+            updateDictionaries_simulations_integrated(mutation_row,
                                     mutationType,
                                     mutationSample,
-                                    type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     UNTRANSCRIBED_STRAND,
                                     signature2NumberofMutationsDict,
                                     mutationProbabilityThreshold)
@@ -266,20 +339,33 @@ def searchMutations(inputList):
     subsSignature2NumberofMutationsDict = inputList[4]
     indelsSignature2NumberofMutationsDict = inputList[5]
     dinucsSignature2NumberofMutationsDict = inputList[6]
+    numofSimulations = inputList[7]
 
-    type2TranscriptionStrand2CountDict= {}
-    sample2Type2TranscriptionStrand2CountDict= {}
-    type2Sample2TranscriptionStrand2CountDict= {}
-    signature2MutationType2TranscriptionStrand2CountDict = {}
+    #legacy code
+    # type2TranscriptionStrand2CountDict= {}
+    # sample2Type2TranscriptionStrand2CountDict= {}
+    # type2Sample2TranscriptionStrand2CountDict= {}
+    # signature2MutationType2TranscriptionStrand2CountDict = {}
+
+    simNum2Type2TranscriptionStrand2CountDict = {}
+    simNum2Sample2Type2TranscriptionStrand2CountDict = {}
+    simNum2Type2Sample2TranscriptionStrand2CountDict = {}
+    simNum2Signature2MutationType2TranscriptionStrand2CountDict = {}
+
+    for simNum in range(0,numofSimulations+1):
+        simNum2Type2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Sample2Type2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Type2Sample2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Signature2MutationType2TranscriptionStrand2CountDict[simNum]={}
 
     if (chrBased_gene_array is not None):
         if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
             chrBased_subs_split_df.apply(searchMutationOnTranscriptionStrandArray,
                                     chrBased_gene_array=chrBased_gene_array,
-                                    type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict =type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict =signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict = simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict = simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict = simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
                                     mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                     type=SUBS,
@@ -288,10 +374,10 @@ def searchMutations(inputList):
         if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
             chrBased_indels_split_df.apply(searchMutationOnTranscriptionStrandArray,
                                     chrBased_gene_array=chrBased_gene_array,
-                                    type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict =type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict =signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict = simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict = simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict =simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                                     mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                     type= INDELS,
@@ -301,10 +387,10 @@ def searchMutations(inputList):
         if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
             chrBased_dinucs_split_df.apply(searchMutationOnTranscriptionStrandArray,
                                     chrBased_gene_array=chrBased_gene_array,
-                                    type2TranscriptionStrand2CountDict = type2TranscriptionStrand2CountDict,
-                                    sample2Type2TranscriptionStrand2CountDict =sample2Type2TranscriptionStrand2CountDict,
-                                    type2Sample2TranscriptionStrand2CountDict=type2Sample2TranscriptionStrand2CountDict,
-                                    signature2MutationType2TranscriptionStrand2CountDict =signature2MutationType2TranscriptionStrand2CountDict,
+                                    simNum2Type2TranscriptionStrand2CountDict = simNum2Type2TranscriptionStrand2CountDict,
+                                    simNum2Sample2Type2TranscriptionStrand2CountDict = simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                    simNum2Type2Sample2TranscriptionStrand2CountDict= simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                    simNum2Signature2MutationType2TranscriptionStrand2CountDict = simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
                                     mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                     type=DINUCS,
@@ -312,48 +398,48 @@ def searchMutations(inputList):
 
     elif (chrBased_gene_array is None):
         if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
-            chrBased_subs_split_df.apply(searchMutationUsingTranscriptionStrandColumn,
-                                         type2TranscriptionStrand2CountDict=type2TranscriptionStrand2CountDict,
-                                         sample2Type2TranscriptionStrand2CountDict=sample2Type2TranscriptionStrand2CountDict,
-                                         type2Sample2TranscriptionStrand2CountDict=type2Sample2TranscriptionStrand2CountDict,
-                                         signature2MutationType2TranscriptionStrand2CountDict=signature2MutationType2TranscriptionStrand2CountDict,
+            chrBased_subs_split_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated(),
+                                         simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
+                                         simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                         simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                         simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                          signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
                                          mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                          type=SUBS,
                                          axis=1)
 
         if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
-            chrBased_indels_split_df.apply(searchMutationUsingTranscriptionStrandColumn,
-                                           type2TranscriptionStrand2CountDict=type2TranscriptionStrand2CountDict,
-                                           sample2Type2TranscriptionStrand2CountDict=sample2Type2TranscriptionStrand2CountDict,
-                                           type2Sample2TranscriptionStrand2CountDict=type2Sample2TranscriptionStrand2CountDict,
-                                           signature2MutationType2TranscriptionStrand2CountDict=signature2MutationType2TranscriptionStrand2CountDict,
+            chrBased_indels_split_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
+                                           simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
+                                           simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                           simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                           simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                            signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                                            mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                            type=INDELS,
                                            axis=1)
 
         if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
-            chrBased_dinucs_split_df.apply(searchMutationUsingTranscriptionStrandColumn,
-                                           type2TranscriptionStrand2CountDict=type2TranscriptionStrand2CountDict,
-                                           sample2Type2TranscriptionStrand2CountDict=sample2Type2TranscriptionStrand2CountDict,
-                                           type2Sample2TranscriptionStrand2CountDict=type2Sample2TranscriptionStrand2CountDict,
-                                           signature2MutationType2TranscriptionStrand2CountDict=signature2MutationType2TranscriptionStrand2CountDict,
+            chrBased_dinucs_split_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
+                                           simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
+                                           simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                           simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                           simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                            signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
                                            mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                            type=DINUCS,
                                            axis=1)
 
-    return (type2TranscriptionStrand2CountDict,
-            sample2Type2TranscriptionStrand2CountDict,
-            type2Sample2TranscriptionStrand2CountDict,
-            signature2MutationType2TranscriptionStrand2CountDict)
+    return (simNum2Type2TranscriptionStrand2CountDict,
+            simNum2Sample2Type2TranscriptionStrand2CountDict,
+            simNum2Type2Sample2TranscriptionStrand2CountDict,
+            simNum2Signature2MutationType2TranscriptionStrand2CountDict)
 ########################################################################
 
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname):
+def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -396,12 +482,19 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
             # THEN READ CHRBASED MUTATION
             chromSize = chromSizesDict[chrLong]
 
-            if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, SUBS)
-            if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, INDELS)
-            if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, DINUCS)
+            #legacy code
+            # chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, SUBS,0)
+            # chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, INDELS,0)
+            # chrBased_dinucs_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, DINUCS,0)
+
+            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, 0)
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
+
+            combined_chrBased_subs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong, original_chrBased_subs_df,SUBS, numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df, INDELS, numofSimulations)
+            combined_chrBased_dinucs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df, DINUCS, numofSimulations)
+
 
             # Get chrBased ensembl transcripts
             #For transcripts_df chrShort is needed
@@ -430,18 +523,19 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
                 ################################################################################
 
             inputList = []
-            inputList.append(chrBased_subs_df)  # each time different split
-            inputList.append(chrBased_indels_df)
-            inputList.append(chrBased_dinucs_df)
+            inputList.append(combined_chrBased_subs_df)  # each time different split
+            inputList.append(combined_chrBased_indels_df)
+            inputList.append(combined_chrBased_dinucs_df)
             inputList.append(chrBased_gene_array)  # same for all
             inputList.append(subsSignature2NumberofMutationsDict)  # same for all
             inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
             inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
+            inputList.append(numofSimulations)
             poolInputList.append(inputList)
 
         listofTuples = pool.map(searchMutations, poolInputList)
 
-        accumulate(listofTuples,
+        accumulate_simulations_integrated(listofTuples,
                    accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
                    accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
                    accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
@@ -465,12 +559,9 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
 
             chromSize = chromSizesDict[chrLong]
 
-            if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS)
-            if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS)
-            if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS)
+            chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS,0)
+            chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,0)
+            chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,0)
 
             # Get chrBased ensembl transcripts
             chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
@@ -522,6 +613,7 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(numofSimulations)
                 poolInputList.append(inputList)
             ####################################################################
 

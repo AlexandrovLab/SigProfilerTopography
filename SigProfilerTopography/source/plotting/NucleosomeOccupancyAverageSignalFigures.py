@@ -81,64 +81,63 @@ def readAsNumpyArray(averageFilePath):
 ##################### Read Average for Simulations start ####################
 #############################################################################
 def readAverageForSimulations(sample,signature,analyseType,outputDir,jobname,numberofSimulations):
-
     listofAverages = []
-
     # Read the file w.r.t. the current folder
-
     if (analyseType == SIGNATUREBASED):
         # for signature based name may contain empty spaces
         #new way
-        for i in range(1,numberofSimulations+1):
-            simulationJobName = '%s_Sim%d' %(jobname,i)
-            filename = '%s_AverageNucleosomeSignalArray.txt' %(signature)
-            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+        for simNum in range(1,numberofSimulations+1):
+            filename = '%s_sim%d_AverageNucleosomeSignalArray.txt' %(signature,simNum)
+            averageFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,analyseType,filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
 
-    elif (analyseType== AGGREGATEDSUBSTITUTIONS or analyseType == AGGREGATEDINDELS):
+    elif (analyseType== AGGREGATEDSUBSTITUTIONS or analyseType == AGGREGATEDINDELS or analyseType == AGGREGATEDDINUCS):
         # i=0 for real/original data
         # i=1 for Sim1
         # ...
         # i=numberofSimulations for the last Simulations numberofSimulations
-        for i in range(1,numberofSimulations+1):
-            simulationJobName = '%s_Sim%d' %(jobname,i)
-            filename = '%s_AverageNucleosomeSignalArray.txt' %(simulationJobName)
-            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
+        for simNum in range(1,numberofSimulations+1):
+            filename = '%s_sim%d_AverageNucleosomeSignalArray.txt' %(jobname,simNum)
+            averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, analyseType, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
 
     #########################################################################
     if (analyseType == SAMPLEBASED_SIGNATUREBASED):
-        for i in range(1,numberofSimulations+1):
-            simulationJobName = '%s_Sim%d' %(jobname,i)
-            filename = '%s_%s_AverageNucleosomeSignalArray.txt' %(signature,sample)
-            averageFilePath = os.path.join(outputDir, simulationJobName, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
+        for simNum in range(1,numberofSimulations+1):
+            filename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' %(signature,sample,simNum)
+            averageFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, SIGNATUREBASED, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
 
     elif (analyseType == SAMPLEBASED_AGGREGATEDSUBSTITUTIONS):
-        for i in range(1, numberofSimulations + 1):
-            simulationJobName = '%s_Sim%d' % (jobname, i)
-            filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample,simulationJobName)
-            averageFilePath = os.path.join(outputDir,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDSUBSTITUTIONS, filename)
+        for simNum in range(1, numberofSimulations + 1):
+            filename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' % (sample,jobname,simNum)
+            averageFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDSUBSTITUTIONS, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
 
     elif (analyseType == SAMPLEBASED_AGGREGATEDINDELS):
-        for i in range(1, numberofSimulations + 1):
-            simulationJobName = '%s_Sim%d' % (jobname, i)
-            filename = '%s_%s_AverageNucleosomeSignalArray.txt' % (sample,simulationJobName)
-            averageFilePath = os.path.join(outputDir,simulationJobName, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDINDELS, filename)
+        for simNum in range(1, numberofSimulations + 1):
+            filename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' % (sample,jobname,simNum)
+            averageFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDINDELS, filename)
+            averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
+            if (averageNucleosomeOccupancy is not None):
+                listofAverages.append(averageNucleosomeOccupancy)
+
+    elif (analyseType == SAMPLEBASED_AGGREGATEDDINUCS):
+        for simNum in range(1, numberofSimulations + 1):
+            filename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' % (sample,jobname,simNum)
+            averageFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY,AGGREGATEDDINUCS, filename)
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
     #########################################################################
-
 
     return listofAverages
 #############################################################################
@@ -189,9 +188,9 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
             realAverage = label2NumpyArrayDict[label]
             if (realAverage is not None):
                 if (label==signature):
-                    original = plt.plot(x, realAverage, color='black', label=label, linewidth=3,zorder=10)
+                    original = plt.plot(x,realAverage,color=color,label=label,linewidth=3,zorder=10)
                 else:
-                    original = plt.plot(x, realAverage, color=color, label=label,linewidth=3,zorder=5)
+                    original = plt.plot(x,realAverage,color='gray',label=label,linewidth=3,zorder=5)
                 listofLegends.append(original[0])
 
 
@@ -313,7 +312,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
             listofLegends.append(original[0])
 
         if (simulationsSignatureBasedMedians is not None):
-            label = 'Average Simulations Aggregated %s' %(label)
+            label = 'Average Simulations %s' %(label)
             simulations = plt.plot(x, simulationsSignatureBasedMedians, color='gray', linestyle='--',  label=label, linewidth=3)
             listofLegends.append(simulations[0])
             plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor='lightblue')
@@ -410,14 +409,10 @@ def takeAverage(listofSimulationsAggregatedMutations):
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,isFigureAugmentation,numberofSPMs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes):
+def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSPMs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes):
     realAggregatedSubstitutions = None
     realAggregatedIndels = None
     realAggregatedDinucs = None
-
-    simulationsAggregatedSubstitutionsMedians = None
-    simulationsAggregatedIndelsMedians = None
-    simulationsAggregatedDinucsMedians = None
 
     listofSimulationsAggregatedSubstitutions = None
     listofSimulationsAggregatedIndels = None
@@ -463,6 +458,10 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
                 listofSimulationsAggregatedDinucs = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDDINUCS, outputDir,jobname,numberofSimulations)
     #######################################################################################################################
 
+    print('Debug May 13 2019 starts')
+    print('listofSimulationsAggregatedDinucs')
+    print(listofSimulationsAggregatedDinucs)
+    print('Debug May 13 2019 starts')
 
     #####################################################################
     #Take Median
@@ -470,6 +469,15 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     simulationsAggregatedIndelsLows,simulationsAggregatedIndelsMedians,simulationsAggregatedIndelsHighs = takeAverage(listofSimulationsAggregatedIndels)
     simulationsAggregatedDinucsLows,simulationsAggregatedDinucsMedians,simulationsAggregatedDinucsHighs = takeAverage(listofSimulationsAggregatedDinucs)
     #####################################################################
+
+    print('Debug May 13 2019 starts')
+    print('simulationsAggregatedDinucsLows')
+    print(simulationsAggregatedDinucsLows)
+    print('simulationsAggregatedDinucsMedians')
+    print(simulationsAggregatedDinucsMedians)
+    print('simulationsAggregatedDinucsHighs')
+    print(simulationsAggregatedDinucsHighs)
+    print('Debug May 13 2019 starts')
 
 
     #####################################################################
@@ -496,7 +504,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=3,zorder=10)
         listofLegends.append(aggSubs[0])
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='--', label='Average Simulations Aggregated substitutions',linewidth=3,zorder=10)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='--', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
         listofLegends.append(simsAggSubs[0])
         plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
 
@@ -504,7 +512,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label='Aggregated indels',linewidth=3,zorder=10)
         listofLegends.append(aggIndels[0])
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated indels', linewidth=3,zorder=10)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
         listofLegends.append(simsAggIndels[0])
         plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
 
@@ -513,7 +521,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label='Aggregated dinucs',linewidth=3,zorder=10)
         listofLegends.append(aggDinucs[0])
     if simulationsAggregatedDinucsMedians is not None:
-        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated dinucs', linewidth=3,zorder=10)
+        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
         plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightgreen',zorder=5)
 
@@ -600,19 +608,19 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
     if (mutationType==SUBS):
         xlabel = 'Interval around single point mutation (bp)'
         ylabel = 'Average nucleosome signal'
-        label = 'Aggregated substitutions'
+        label = 'Aggregated Substitutions'
         text = 'subs'
         color = 'royalblue'
     elif (mutationType==INDELS):
         xlabel = 'Interval around indel (bp)'
         ylabel = 'Average nucleosome signal'
-        label = 'Aggregated indels'
+        label = 'Aggregated Indels'
         text = 'indels'
         color = 'darkgreen'
     elif (mutationType==DINUCS):
         xlabel = 'Interval around dinuc (bp)'
         ylabel = 'Average nucleosome signal'
-        label = 'Aggregated dinucs'
+        label = 'Aggregated Dinucs'
         text = 'dinucs'
         color = 'crimson'
 
@@ -663,18 +671,16 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
     sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir, jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
     ############## Read necessary dictionaries ends ##########################################
 
+    ##############################################################
     #Plot "all samples pooled" and "sample based" signature based in one figure
     plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)','Average nucleosome signal')
     plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)','Average nucleosome signal')
     plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)','Average nucleosome signal')
-
-
-    ##############################################################
-    plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',
-                                                                      None,outputDir,jobname,isFigureAugmentation,
-                                                                      0,0,0,numberofSimulations,mutationTypes)
     ##############################################################
 
+    ##############################################################
+    plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',None,outputDir,jobname,0,0,0,numberofSimulations,mutationTypes)
+    ##############################################################
 
     ##############################################################
     #Arrays are filled w.r.t. sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
@@ -693,8 +699,7 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
         if sample in sample2NumberofDinucsDict:
             numberofDinucs = sample2NumberofDinucsDict[sample]
 
-            plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',
-                                                                    sample,outputDir,jobname, isFigureAugmentation,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationTypes)
+            plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',sample,outputDir,jobname,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationTypes)
     ##############################################################
 
 

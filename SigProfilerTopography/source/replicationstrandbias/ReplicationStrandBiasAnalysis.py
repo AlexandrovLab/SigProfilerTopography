@@ -155,8 +155,113 @@ def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array)
     chrBased_replication_array[replicationStrand_row['start']:replicationStrand_row['end']+1] = replicationStrand_row['slopeDirection']
 ########################################################################
 
+########################################################################
+# Summary:
+#   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
+#   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
+def searchMutationOnReplicationStrandArray_simulations_integrated(
+        mutation_row,
+        chrBasedReplicationArray,
+        simNum2Type2ReplicationStrand2CountDict,
+        simNum2Sample2Type2ReplicationStrand2CountDict,
+        simNum2Type2Sample2ReplicationStrand2CountDict,
+        simNum2Signature2MutationType2ReplicationStrand2CountDict,
+        signature2NumberofMutationsDict,
+        mutationProbabilityThreshold,
+        type):
+
+    start = mutation_row[START]
+    mutationType = None
+
+    #TODO for indels pyrimidine strand that comes from MatrixGenerator is wrong
+    pyramidineStrand = mutation_row[PYRAMIDINESTRAND]
+    sample = mutation_row[SAMPLE]
+
+    if(type==SUBS):
+        end = start+1
+        #e.g.: C>A
+        mutationType = mutation_row[MUTATION]
+    if (type==INDELS):
+        end = start+mutation_row[LENGTH]
+    elif (type==DINUCS):
+        end = start+2
+
+    #############################################################################################################
+    #if there is overlap with chrBasedReplicationArray
+    slicedArray = chrBasedReplicationArray[start:end]
+
+    if (np.any(slicedArray)):
+
+        #It must be full with at most -1 and +1
+        uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
+
+        if (uniqueValueArray.size>2):
+            print('There is a situation!!!')
+
+        elif ((uniqueValueArray.size==2) and (pyramidineStrand!=0)):
+            #Increment both LEADING and LAGGING
+            updateDictionaries_simulations_integrated(mutation_row,
+                                        mutationType,
+                                        sample,
+                                        simNum2Type2ReplicationStrand2CountDict,
+                                        simNum2Sample2Type2ReplicationStrand2CountDict,
+                                        simNum2Type2Sample2ReplicationStrand2CountDict,
+                                        simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                        LAGGING,
+                                        signature2NumberofMutationsDict,
+                                        mutationProbabilityThreshold)
+
+            updateDictionaries_simulations_integrated(mutation_row,
+                                        mutationType,
+                                        sample,
+                                        simNum2Type2ReplicationStrand2CountDict,
+                                        simNum2Sample2Type2ReplicationStrand2CountDict,
+                                        simNum2Type2Sample2ReplicationStrand2CountDict,
+                                        simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                        LEADING,
+                                        signature2NumberofMutationsDict,
+                                        mutationProbabilityThreshold)
+
+
+        # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
+        elif (uniqueValueArray.size == 1):
+            for uniqueValue in np.nditer(uniqueValueArray):
+                # type(decileIndex) is numpy.ndarray
+                slope = int(uniqueValue)
+
+                #They have the same sign, multiplication (1,1) (-1,-1) must be 1
+                if (slope*pyramidineStrand > 0):
+                    updateDictionaries_simulations_integrated(mutation_row,
+                                            mutationType,
+                                            sample,
+                                            simNum2Type2ReplicationStrand2CountDict,
+                                            simNum2Sample2Type2ReplicationStrand2CountDict,
+                                            simNum2Type2Sample2ReplicationStrand2CountDict,
+                                            simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                            LEADING,
+                                            signature2NumberofMutationsDict,
+                                            mutationProbabilityThreshold)
+
+                # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
+                elif (slope*pyramidineStrand < 0):
+                    updateDictionaries_simulations_integrated(mutation_row,
+                                            mutationType,
+                                            sample,
+                                            simNum2Type2ReplicationStrand2CountDict,
+                                            simNum2Sample2Type2ReplicationStrand2CountDict,
+                                            simNum2Type2Sample2ReplicationStrand2CountDict,
+                                            simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                            LAGGING,
+                                            signature2NumberofMutationsDict,
+                                            mutationProbabilityThreshold)
+        else:
+            print('There is a situation!!!')
+    #############################################################################################################
+########################################################################
+
 
 ########################################################################
+#legacy code
 # Summary:
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
@@ -185,7 +290,6 @@ def searchMutationOnReplicationStrandArray(
     elif (type==DINUCS):
         end = start+2
 
-
     #############################################################################################################
     #if there is overlap with chrBasedReplicationArray
     slicedArray = chrBasedReplicationArray[start:end]
@@ -194,10 +298,6 @@ def searchMutationOnReplicationStrandArray(
 
         #It must be full with at most -1 and +1
         uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-        if (sample == 'PD10014a'):
-            print('Debug type:%s slicedArray=%s slicedArray.size=%d uniqueValueArray=%s uniqueValueArray.size=%d' % (
-            type, slicedArray, slicedArray.size, uniqueValueArray, uniqueValueArray.size))
 
         if (uniqueValueArray.size>2):
             print('There is a situation!!!')
@@ -273,20 +373,33 @@ def  searchMutationsOnReplicationStrandArray(inputList):
     subsSignature2NumberofMutationsDict = inputList[4]
     indelsSignature2NumberofMutationsDict = inputList[5]
     dinucsSignature2NumberofMutationsDict = inputList[6]
+    numofSimulations = inputList[7]
 
-    type2ReplicationStrand2CountDict= {}
-    sample2Type2ReplicationStrand2CountDict= {}
-    type2Sample2ReplicationStrand2CountDict = {}
-    signature2MutationType2ReplicationStrand2CountDict = {}
+    #LEGACY CODE
+    # type2ReplicationStrand2CountDict= {}
+    # sample2Type2ReplicationStrand2CountDict= {}
+    # type2Sample2ReplicationStrand2CountDict = {}
+    # signature2MutationType2ReplicationStrand2CountDict = {}
+
+    simNum2Type2ReplicationStrand2CountDict= {}
+    simNum2Sample2Type2ReplicationStrand2CountDict= {}
+    simNum2Type2Sample2ReplicationStrand2CountDict = {}
+    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
+
+    for simNum in range(0,numofSimulations+1):
+        simNum2Type2ReplicationStrand2CountDict[simNum]={}
+        simNum2Sample2Type2ReplicationStrand2CountDict[simNum]={}
+        simNum2Type2Sample2ReplicationStrand2CountDict[simNum]={}
+        simNum2Signature2MutationType2ReplicationStrand2CountDict[simNum]={}
 
     ##############################  Fill dictionaries for subs  starts ####################
     if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
-        chrBased_subs_split_df.apply(searchMutationOnReplicationStrandArray,
+        chrBased_subs_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
-                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
-                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
-                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 type=SUBS,
@@ -296,27 +409,26 @@ def  searchMutationsOnReplicationStrandArray(inputList):
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
-        chrBased_indels_split_df.apply(searchMutationOnReplicationStrandArray,
+        chrBased_indels_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
-                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
-                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
-                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 type=INDELS,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
-
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
-        chrBased_dinucs_split_df.apply(searchMutationOnReplicationStrandArray,
+        chrBased_dinucs_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
-                                type2ReplicationStrand2CountDict=type2ReplicationStrand2CountDict,
-                                sample2Type2ReplicationStrand2CountDict=sample2Type2ReplicationStrand2CountDict,
-                                type2Sample2ReplicationStrand2CountDict=type2Sample2ReplicationStrand2CountDict,
-                                signature2MutationType2ReplicationStrand2CountDict=signature2MutationType2ReplicationStrand2CountDict,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
                                 mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                 type=DINUCS,
@@ -325,10 +437,10 @@ def  searchMutationsOnReplicationStrandArray(inputList):
 
 
     #Fill the type2replicationStranCount dictionaries and return them
-    return (type2ReplicationStrand2CountDict,
-            sample2Type2ReplicationStrand2CountDict,
-            type2Sample2ReplicationStrand2CountDict,
-            signature2MutationType2ReplicationStrand2CountDict)
+    return (simNum2Type2ReplicationStrand2CountDict,
+            simNum2Sample2Type2ReplicationStrand2CountDict,
+            simNum2Type2Sample2ReplicationStrand2CountDict,
+            simNum2Signature2MutationType2ReplicationStrand2CountDict)
 ########################################################################
 
 
@@ -422,7 +534,7 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
+def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
 
     print('########################## ReplicationStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -445,6 +557,16 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict = {}
     accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict = {}
 
+    #Unnecessary
+    # for simNum in range(0,numofSimulations+1):
+    #     accumulatedAllChromosomesType2ReplicationStrand2CountDict[simNum] = {}
+    #     accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[simNum] = {}
+    #     accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[simNum] = {}
+    #     accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[simNum] = {}
+
+    writeDictionaryForDebug(accumulatedAllChromosomesType2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2ReplicationStrand2CountDict.txt', strandBias, None)
+    writeDictionaryForDebug(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2Sample2ReplicationStrand2CountDict.txt', strandBias, None)
+
     if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         ############################################################################################################
         ###############################    All Chromosomes in parallel starts    ###################################
@@ -453,12 +575,13 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
         for chrLong in chromNamesList:
             chromSize = chromSizesDict[chrLong]
 
-            if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, SUBS)
-            if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname, chrLong,INDELS)
-            if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS)
+            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, 0)
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
+
+            combined_chrBased_subs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong, original_chrBased_subs_df,SUBS, numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df, INDELS, numofSimulations)
+            combined_chrBased_dinucs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df, DINUCS, numofSimulations)
 
             chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
 
@@ -481,17 +604,18 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
 
                 inputList = []
                 inputList.append(chrBased_replication_array)  # same for all
-                inputList.append(chrBased_subs_df)  # different split each time
-                inputList.append(chrBased_indels_df)  # different split each time
-                inputList.append(chrBased_dinucs_df)  # different split each time
+                inputList.append(combined_chrBased_subs_df)  # different split each time
+                inputList.append(combined_chrBased_indels_df)  # different split each time
+                inputList.append(combined_chrBased_dinucs_df)  # different split each time
                 inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(indelsSignature2NumberofMutationsDict)
                 inputList.append(dinucsSignature2NumberofMutationsDict)
+                inputList.append(numofSimulations)
                 poolInputList.append(inputList)
 
         listofTuples = pool.map(searchMutationsOnReplicationStrandArray, poolInputList)
 
-        accumulate(listofTuples,
+        accumulate_simulations_integrated(listofTuples,
                         accumulatedAllChromosomesType2ReplicationStrand2CountDict,
                         accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
                         accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
@@ -508,15 +632,15 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
         ###############################      All ChrBased Splits in parallel starts    #############################
         ############################################################################################################
         for chrLong in chromNamesList:
-
             chromSize = chromSizesDict[chrLong]
 
-            if (SUBS in mutationTypes):
-                chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS)
-            if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS)
-            if (DINUCS in mutationTypes):
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname,chrLong,DINUCS)
+            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, 0)
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
+
+            combined_chrBased_subs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong, original_chrBased_subs_df,SUBS, numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df, INDELS, numofSimulations)
+            combined_chrBased_dinucs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df, DINUCS, numofSimulations)
 
             #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
             chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
@@ -539,32 +663,34 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
 
                 chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
 
-                if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
-                    chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+                chrBased_subs_df_splits_list = None
+                chrBased_indels_df_splits_list = None
+                chrBased_dinucs_df_splits_list = None
 
-                if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-                    chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
+                if ((combined_chrBased_subs_df is not None) and (not combined_chrBased_subs_df.empty)):
+                    chrBased_subs_df_splits_list = np.array_split(combined_chrBased_subs_df, numofProcesses)
 
-                if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-                    chrBased_dinucs_df_splits_list = np.array_split(chrBased_dinucs_df, numofProcesses)
+                if ((combined_chrBased_indels_df is not None) and (not combined_chrBased_indels_df.empty)):
+                    chrBased_indels_df_splits_list = np.array_split(combined_chrBased_indels_df, numofProcesses)
 
+                if ((combined_chrBased_dinucs_df is not None) and (not combined_chrBased_dinucs_df.empty)):
+                    chrBased_dinucs_df_splits_list = np.array_split(combined_chrBased_dinucs_df, numofProcesses)
 
                 poolInputList = []
 
                 ##########################################################################
                 for split_index in range(numofProcesses):
-
                     chrBased_subs_split_df = None
                     chrBased_indels_split_df = None
                     chrBased_dinucs_split_df = None
 
-                    if (len(chrBased_subs_df_splits_list)):
+                    if ((chrBased_subs_df_splits_list is not None) and (len(chrBased_subs_df_splits_list))):
                         chrBased_subs_split_df = chrBased_subs_df_splits_list[split_index]
 
-                    if (len(chrBased_indels_df_splits_list)):
+                    if ((chrBased_indels_df_splits_list is not None) and (len(chrBased_indels_df_splits_list))):
                         chrBased_indels_split_df = chrBased_indels_df_splits_list[split_index]
 
-                    if (len(chrBased_dinucs_df_splits_list)):
+                    if ((chrBased_dinucs_df_splits_list is not None) and len(chrBased_dinucs_df_splits_list)):
                         chrBased_dinucs_split_df = chrBased_dinucs_df_splits_list[split_index]
 
                     inputList = []
@@ -575,17 +701,20 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
                     inputList.append(subsSignature2NumberofMutationsDict)  # same for all
                     inputList.append(indelsSignature2NumberofMutationsDict)
                     inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(numofSimulations)
                     poolInputList.append(inputList)
                 ##########################################################################
 
                 listofTuples = pool.map(searchMutationsOnReplicationStrandArray, poolInputList)
 
-                accumulate(listofTuples,
+                accumulate_simulations_integrated(listofTuples,
                             accumulatedAllChromosomesType2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
 
+                writeDictionaryForDebug(accumulatedAllChromosomesType2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2ReplicationStrand2CountDict.txt', strandBias, None)
+                writeDictionaryForDebug(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2Sample2ReplicationStrand2CountDict.txt', strandBias, None)
         ############################################################################################################
         ###############################       Chromosomes sequentially      ########################################
         ###############################      All ChrBased Splits in parallel ends    ###############################

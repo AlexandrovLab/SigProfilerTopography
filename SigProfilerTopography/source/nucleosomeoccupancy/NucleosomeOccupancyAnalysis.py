@@ -25,12 +25,12 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ##############################################################################################################
 #main function
-def nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
+def nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename):
     print('########################## NucleosomeOccupancyAnalysis starts ##########################')
     if  (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
-        nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename)
+        nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename)
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL):
-        nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename)
+        nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename)
     print('########################## NucleosomeOccupancyAnalysis ends ############################')
 ##############################################################################################################
 
@@ -38,9 +38,9 @@ def nucleosomeOccupancyAnalysis(mutationTypes,computationType,chromSizesDict,chr
 ########################################################################################
 def fillSignalArrayAndCountArrays(inputList):
     chrbased_nucleosome_signal_array = inputList[0]
-    chrBased_spms_df = inputList[1]
-    chrBased_indels_df =  inputList[2]
-    chrBased_dinucs_df = inputList[3]
+    combined_chrBased_subs_df = inputList[1]
+    combined_chrBased_indels_df =  inputList[2]
+    combined_chrBased_dinucs_df = inputList[3]
     maximum_chrom_size =  inputList[4]
     sample2NumberofSubsDict = inputList[5]
     sample2NumberofIndelsDict = inputList[6]
@@ -53,60 +53,68 @@ def fillSignalArrayAndCountArrays(inputList):
     sample2DinucsSignature2NumberofMutationsDict = inputList[13]
 
     ##############################################################
-    type2SignalArrayDict = {}
-    type2CountArrayDict = {}
-    sample2Type2SignalArrayDict = {}
-    sample2Type2CountArrayDict = {}
+    # old way
+    # type2SignalArrayDict = {}
+    # type2CountArrayDict = {}
+    # sample2Type2SignalArrayDict = {}
+    # sample2Type2CountArrayDict = {}
+    ##############################################################
+
+    ##############################################################
+    simNum2Type2SignalArrayDict = {}
+    simNum2Type2CountArrayDict = {}
+    simNum2Sample2Type2SignalArrayDict = {}
+    simNum2Sample2Type2CountArrayDict = {}
     ##############################################################
 
     ###############################################################################
     ################### Fill signal and count array starts ########################
     ###############################################################################
     #Fill for single point mutations
-    if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-        chrBased_spms_df.apply(fillSignalArrayAndCountArrayForMutations,
+    if ((combined_chrBased_subs_df is not None) and (not combined_chrBased_subs_df.empty)):
+        combined_chrBased_subs_df.apply(fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(),
                            nucleosome_array=chrbased_nucleosome_signal_array,
                            maximum_chrom_size =maximum_chrom_size,
                            sample2NumberofMutationsDict = sample2NumberofSubsDict,
                            signature2NumberofMutationsDict = subsSignature2NumberofMutationsDict,
                            sample2Signature2NumberofMutationsDict=sample2SubsSignature2NumberofMutationsDict,
-                           type2SignalArrayDict=type2SignalArrayDict,
-                           type2CountArrayDict=type2CountArrayDict,
-                           sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-                           sample2Type2CountArrayDict=sample2Type2CountArrayDict,
-                           MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                            simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+                            simNum2Type2CountArrayDict = simNum2Type2CountArrayDict,
+                            simNum2Sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict,
+                            simNum2Sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict,
+                            MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                            type = AGGREGATEDSUBSTITUTIONS,
                            axis=1)
 
     #Fill for indels
-    if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-        chrBased_indels_df.apply(fillSignalArrayAndCountArrayForMutations,
+    if ((combined_chrBased_indels_df is not None) and (not combined_chrBased_indels_df.empty)):
+        combined_chrBased_indels_df.apply(fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated,
                                  nucleosome_array=chrbased_nucleosome_signal_array,
                                  maximum_chrom_size=maximum_chrom_size,
                                  sample2NumberofMutationsDict = sample2NumberofIndelsDict,
                                  signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                                  sample2Signature2NumberofMutationsDict = sample2IndelsSignature2NumberofMutationsDict,
-                                 type2SignalArrayDict=type2SignalArrayDict,
-                                 type2CountArrayDict=type2CountArrayDict,
-                                 sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-                                 sample2Type2CountArrayDict=sample2Type2CountArrayDict,
-                                 MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                  simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+                                  simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
+                                  simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
+                                  simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
+                                  MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                  type=AGGREGATEDINDELS,
                                  axis=1)
 
     #Fill for dinucs
-    if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-        chrBased_dinucs_df.apply(fillSignalArrayAndCountArrayForMutations,
+    if ((combined_chrBased_dinucs_df is not None) and (not combined_chrBased_dinucs_df.empty)):
+        combined_chrBased_dinucs_df.apply(fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated,
             nucleosome_array=chrbased_nucleosome_signal_array,
             maximum_chrom_size=maximum_chrom_size,
             sample2NumberofMutationsDict=sample2NumberofDinucsDict,
             signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
             sample2Signature2NumberofMutationsDict=sample2DinucsSignature2NumberofMutationsDict,
-            type2SignalArrayDict=type2SignalArrayDict,
-            type2CountArrayDict=type2CountArrayDict,
-            sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-            sample2Type2CountArrayDict=sample2Type2CountArrayDict,
-            MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+          simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+          simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
+          simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
+          simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
+          MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
             type=AGGREGATEDDINUCS,
             axis=1)
 
@@ -119,14 +127,13 @@ def fillSignalArrayAndCountArrays(inputList):
     ################### Return  starts ############################################
     ###############################################################################
     # Initialzie the list, you will return this list
-    chrBased_SignalArrayAndCountArray_List = []
+    combined_chrBased_SignalArrayAndCountArray_List = []
+    combined_chrBased_SignalArrayAndCountArray_List.append(simNum2Type2SignalArrayDict)
+    combined_chrBased_SignalArrayAndCountArray_List.append(simNum2Type2CountArrayDict)
+    combined_chrBased_SignalArrayAndCountArray_List.append(simNum2Sample2Type2SignalArrayDict)
+    combined_chrBased_SignalArrayAndCountArray_List.append(simNum2Sample2Type2CountArrayDict)
 
-    chrBased_SignalArrayAndCountArray_List.append(type2SignalArrayDict)
-    chrBased_SignalArrayAndCountArray_List.append(type2CountArrayDict)
-    chrBased_SignalArrayAndCountArray_List.append(sample2Type2SignalArrayDict)
-    chrBased_SignalArrayAndCountArray_List.append(sample2Type2CountArrayDict)
-
-    return chrBased_SignalArrayAndCountArray_List
+    return combined_chrBased_SignalArrayAndCountArray_List
     ###############################################################################
     ################### Return  ends ##############################################
     ###############################################################################
@@ -169,7 +176,7 @@ def accumulateSignalCountArrays(all_partials_chrBased_SignalArrayAndCountArray_D
 
 ########################################################################################
 #For all chromosome parallel starts
-def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
+def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -218,30 +225,30 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
             if (chrLong=='chrM'):
                 chrLong='chrMT'
 
-            chrBased_spms_df = None
-            chrBased_indels_df = None
-            chrBased_dinucs_df = None
-
+            #Read original data
             #READ CHRBASED SINGLE POINT MUTATIONS
-            if (SUBS in mutationTypes):
-                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS)
-                print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+            original_chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS,0)
+            if (original_chrBased_spms_df is not None):
+                print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(original_chrBased_spms_df),sys.getsizeof(original_chrBased_spms_df)/GIGABYTE_IN_BYTES))
 
             #READ CHRBASED INDELS
-            if (INDELS in mutationTypes):
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS)
-                print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS,0)
+            if (original_chrBased_indels_df is not None):
+                print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(original_chrBased_indels_df),sys.getsizeof(original_chrBased_indels_df)/GIGABYTE_IN_BYTES))
 
             #READ CHRBASED_DINUCS
-            if (DINUCS in mutationTypes):
-                # READ CHRBASED DINUCS/
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS)
-                print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong, sys.getsizeof(chrBased_dinucs_df), sys.getsizeof(chrBased_dinucs_df) / GIGABYTE_IN_BYTES))
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,0)
+            if (original_chrBased_dinucs_df is not None):
+                print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong, sys.getsizeof(original_chrBased_dinucs_df), sys.getsizeof(original_chrBased_dinucs_df) / GIGABYTE_IN_BYTES))
+
+            combined_chrBased_subs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_spms_df,SUBS,numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df,INDELS,numofSimulations)
+            combined_chrBased_dinucs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df,DINUCS,numofSimulations)
 
             inputList.append(chrbased_nucleosome_signal_array)
-            inputList.append(chrBased_spms_df)
-            inputList.append(chrBased_indels_df)
-            inputList.append(chrBased_dinucs_df)
+            inputList.append(combined_chrBased_subs_df)
+            inputList.append(combined_chrBased_indels_df)
+            inputList.append(combined_chrBased_dinucs_df)
             inputList.append(chromSize)
             inputList.append(sample2NumberofSubsDict)
             inputList.append(sample2NumberofIndelsDict)
@@ -269,6 +276,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
     ###################################################################################
     ##############################  Accumulation starts  ##############################
     ###################################################################################
+    #TODO update for combines
     # Accumulate the results coming from each chrom
     # allChroms_SignalArrayAndCountArrayList_List is a list of lists.
 
@@ -280,6 +288,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
     ##############################  Accumulation ends  ################################
     ###################################################################################
 
+    #TODO update for combines
     writeAverageNucleosomeOccupancy(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname)
 
 #For all chromosome parallel ends
@@ -290,9 +299,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(mutationTypes,chromSizesDi
 ########################################################################################
 #If chr based subs or indels dataframes are too big we can use this version
 #For each chromosome sequential starts
-def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,nucleosomeFilename):
-
-    total_num_of_dinucs = 0
+def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -309,10 +316,18 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
     ##########################################################################
 
     ##############################################################
-    type2AccumulatedSignalArrayDict = {}
-    type2AccumulatedCountArrayDict = {}
-    sample2Type2AccumulatedSignalArrayDict = {}
-    sample2Type2AccumulatedCountArrayDict = {}
+    # old way
+    # type2AccumulatedSignalArrayDict = {}
+    # type2AccumulatedCountArrayDict = {}
+    # sample2Type2AccumulatedSignalArrayDict = {}
+    # sample2Type2AccumulatedCountArrayDict = {}
+    ##############################################################
+
+    ##############################################################
+    simNum2Type2AccumulatedSignalArrayDict = {}
+    simNum2Type2AccumulatedCountArrayDict = {}
+    simNum2Sample2Type2AccumulatedSignalArrayDict = {}
+    simNum2Sample2Type2AccumulatedCountArrayDict = {}
     ##############################################################
 
     ###################################################################################
@@ -340,84 +355,105 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
             if (chrLong=='chrM'):
                 chrLong='chrMT'
 
-            chrBased_spms_df = None
-            chrBased_indels_df = None
-            chrBased_dinucs_df = None
+            #Read original data
+            #READ CHRBASED SINGLE POINT MUTATIONS
+            original_chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS,0)
+            if (original_chrBased_spms_df is not None):
+                print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(original_chrBased_spms_df),sys.getsizeof(original_chrBased_spms_df)/GIGABYTE_IN_BYTES))
 
-            if (SUBS in mutationTypes):
-                #READ CHRBASED SINGLE POINT MUTATIONS
-                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong,SUBS)
-                print('chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+            #READ CHRBASED INDELS
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS,0)
+            if (original_chrBased_indels_df is not None):
+                print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(original_chrBased_indels_df),sys.getsizeof(original_chrBased_indels_df)/GIGABYTE_IN_BYTES))
 
-            if (INDELS in mutationTypes):
-                #READ CHRBASED INDELS
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,INDELS)
-                print('chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+            #READ CHRBASED_DINUCS
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,0)
+            if (original_chrBased_dinucs_df is not None):
+                print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong, sys.getsizeof(original_chrBased_dinucs_df), sys.getsizeof(original_chrBased_dinucs_df) / GIGABYTE_IN_BYTES))
 
-            if (DINUCS in mutationTypes):
-                #READ CHRBASED DINUCS
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,DINUCS)
-                print('chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(chrLong,sys.getsizeof(chrBased_dinucs_df),sys.getsizeof(chrBased_dinucs_df)/GIGABYTE_IN_BYTES))
-                if (chrBased_dinucs_df is not None):
-                    chr_based_number_of_dinucs = chrBased_dinucs_df.shape[0]
-                    total_num_of_dinucs += chr_based_number_of_dinucs
+            combined_chrBased_subs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_spms_df,SUBS,numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df,INDELS,numofSimulations)
+            combined_chrBased_dinucs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df,DINUCS,numofSimulations)
 
             ##############################################################
-            type2SignalArrayDict = {}
-            type2CountArrayDict = {}
-            sample2Type2SignalArrayDict = {}
-            sample2Type2CountArrayDict = {}
+            #old way
+            # type2SignalArrayDict = {}
+            # type2CountArrayDict = {}
+            # sample2Type2SignalArrayDict = {}
+            # sample2Type2CountArrayDict = {}
+            ##############################################################
+
+            ##############################################################
+            simNum2Type2SignalArrayDict = {}
+            simNum2Type2CountArrayDict = {}
+            simNum2Sample2Type2SignalArrayDict = {}
+            simNum2Sample2Type2CountArrayDict = {}
             ##############################################################
 
             ###############################################################################
             ################### Fill signal and count array starts ########################
             ###############################################################################
             # Fill for single point mutations
-            if ((chrBased_spms_df is not None) and (not chrBased_spms_df.empty)):
-                chrBased_spms_df.apply(fillSignalArrayAndCountArrayForMutations,
+            if ((combined_chrBased_subs_df is not None) and (not combined_chrBased_subs_df.empty)):
+                combined_chrBased_subs_df.apply(fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated,
                                     nucleosome_array=chrbased_nucleosome_signal_array,
                                     maximum_chrom_size=chromSize,
                                     sample2NumberofMutationsDict=sample2NumberofSubsDict,
                                     signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
                                     sample2Signature2NumberofMutationsDict=sample2SubsSignature2NumberofMutationsDict,
-                                    type2SignalArrayDict=type2SignalArrayDict,
-                                    type2CountArrayDict=type2CountArrayDict,
-                                    sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-                                    sample2Type2CountArrayDict=sample2Type2CountArrayDict,
+                                    simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+                                    simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
+                                    simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
+                                    simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
                                     MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                                     type = AGGREGATEDSUBSTITUTIONS,
                                     axis=1)
 
+                # former version
+                # chrBased_subs_df.apply(fillSignalArrayAndCountArrayForMutations,
+                #                     nucleosome_array=chrbased_nucleosome_signal_array,
+                #                     maximum_chrom_size=chromSize,
+                #                     sample2NumberofMutationsDict=sample2NumberofSubsDict,
+                #                     signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
+                #                     sample2Signature2NumberofMutationsDict=sample2SubsSignature2NumberofMutationsDict,
+                #                     type2SignalArrayDict=type2SignalArrayDict,
+                #                     type2CountArrayDict=type2CountArrayDict,
+                #                     sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
+                #                     sample2Type2CountArrayDict=sample2Type2CountArrayDict,
+                #                     MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                #                     type = AGGREGATEDSUBSTITUTIONS,
+                #                     axis=1)
+
             # Fill for indels
-            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-                chrBased_indels_df.apply(
-                    fillSignalArrayAndCountArrayForMutations,
+            if ((combined_chrBased_indels_df is not None) and (not combined_chrBased_indels_df.empty)):
+                combined_chrBased_indels_df.apply(
+                    fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated,
                     nucleosome_array=chrbased_nucleosome_signal_array,
                     maximum_chrom_size=chromSize,
                     sample2NumberofMutationsDict=sample2NumberofIndelsDict,
                     signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
                     sample2Signature2NumberofMutationsDict=sample2IndelsSignature2NumberofMutationsDict,
-                    type2SignalArrayDict=type2SignalArrayDict,
-                    type2CountArrayDict=type2CountArrayDict,
-                    sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-                    sample2Type2CountArrayDict=sample2Type2CountArrayDict,
+                    simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+                    simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
+                    simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
+                    simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
                     MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                     type=AGGREGATEDINDELS,
                     axis=1)
 
             # Fill for Dinucs
-            if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-                chrBased_dinucs_df.apply(
-                    fillSignalArrayAndCountArrayForMutations,
+            if ((combined_chrBased_dinucs_df is not None) and (not combined_chrBased_dinucs_df.empty)):
+                combined_chrBased_dinucs_df.apply(
+                    fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated,
                     nucleosome_array=chrbased_nucleosome_signal_array,
                     maximum_chrom_size=chromSize,
                     sample2NumberofMutationsDict=sample2NumberofDinucsDict,
                     signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
                     sample2Signature2NumberofMutationsDict=sample2DinucsSignature2NumberofMutationsDict,
-                    type2SignalArrayDict=type2SignalArrayDict,
-                    type2CountArrayDict=type2CountArrayDict,
-                    sample2Type2SignalArrayDict=sample2Type2SignalArrayDict,
-                    sample2Type2CountArrayDict=sample2Type2CountArrayDict,
+                    simNum2Type2SignalArrayDict=simNum2Type2SignalArrayDict,
+                    simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
+                    simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
+                    simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
                     MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
                     type=AGGREGATEDDINUCS,
                     axis=1)
@@ -432,11 +468,11 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
             #####################################################################################################
             ######################### Accumulate right in the left starts  ######################################
             #####################################################################################################
-            accumulateTypeBasedArrays(type2AccumulatedSignalArrayDict, type2SignalArrayDict)
-            accumulateTypeBasedArrays(type2AccumulatedCountArrayDict, type2CountArrayDict)
+            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
+            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
 
-            accumulateSampleBasedTypeBasedArrays(sample2Type2AccumulatedSignalArrayDict,sample2Type2SignalArrayDict)
-            accumulateSampleBasedTypeBasedArrays(sample2Type2AccumulatedCountArrayDict,sample2Type2CountArrayDict)
+            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
             #####################################################################################################
             ######################### Accumulate right in the left ends  ########################################
             #####################################################################################################
@@ -449,8 +485,7 @@ def nucleosome_occupancy_analysis_each_chrom_sequential(mutationTypes,chromSizes
     ##################  For each chromsome sequential ends ############################
     ###################################################################################
 
-    print('For information --- Number of dinucs: %d' %(total_num_of_dinucs))
-    writeAverageNucleosomeOccupancy(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname)
+    writeSimulationBasedAverageNucleosomeOccupancy(simNum2Type2AccumulatedSignalArrayDict,simNum2Type2AccumulatedCountArrayDict,simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2AccumulatedCountArrayDict,outputDir,jobname)
 
 #For each chromosome sequential ends
 ########################################################################################

@@ -204,15 +204,13 @@ def readNormalizedMutationData(sample,type,outputDir,jobname):
 def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesType, outputDir, jobname,numberofSimulations):
     listofAverages = []
 
-    if sample is None:
-        filename = '%s_NormalizedMutationDensity.txt' % (indelorSignatureorAnalysesType)
-    else:
-        filename = '%s_%s_NormalizedMutationDensity.txt' % (sample,indelorSignatureorAnalysesType)
-
     ######################################################
-    for i in range(1, numberofSimulations + 1):
-        simjobname = '%s_Sim%d' %(jobname,i)
-        filepath = os.path.join(outputDir, simjobname, DATA,REPLICATIONTIME, filename)
+    for simNum in range(1, numberofSimulations + 1):
+        if sample is None:
+            filename = '%s_sim%d_NormalizedMutationDensity.txt' % (indelorSignatureorAnalysesType,simNum)
+        else:
+            filename = '%s_%s_sim%d_NormalizedMutationDensity.txt' % (sample, indelorSignatureorAnalysesType,simNum)
+        filepath = os.path.join(outputDir,jobname, DATA,REPLICATIONTIME, filename)
 
         # Check if filepath exists
         if os.path.exists(filepath):
