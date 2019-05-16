@@ -117,6 +117,18 @@ def searchMutationUsingTranscriptionStrandColumn_simulations_integrated(
                                 TRANSCRIBED_STRAND,
                                 signature2NumberofMutationsDict,
                                 mutationProbabilityThreshold)
+    elif (mutationTranscriptionStrand == 'N'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                NONTRANSCRIBED_STRAND,
+                                signature2NumberofMutationsDict,
+                                mutationProbabilityThreshold)
+
 ########################################################################
 
 
@@ -398,7 +410,7 @@ def searchMutations(inputList):
 
     elif (chrBased_gene_array is None):
         if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
-            chrBased_subs_split_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated(),
+            chrBased_subs_split_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
                                          simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
                                          simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
                                          simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,

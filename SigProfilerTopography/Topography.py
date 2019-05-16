@@ -269,7 +269,8 @@ def runTranscriptionStradBiasAnalysis(mutationTypes,genome,outputDir,jobname,num
 
     computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-    useTranscriptionStrandColumn = False
+    # useTranscriptionStrandColumn = False
+    useTranscriptionStrandColumn = True
     transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations)
     ###############################################
 #######################################################
@@ -370,16 +371,25 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     ###################################################################################################
     ############################  SigProfilerSimulator for n simulations starts #######################
     ###################################################################################################
-    mutationTypes_for_simulator= []
+    #Call SigProfilerSimulator separately for each mutation type otherwise it counts DBS mutations also in SBS mutations
+    #Go to directory and file names will be affected
     if (SUBS in mutationTypes):
-        mutationTypes_for_simulator.append('96')
-    if (INDELS in mutationTypes):
-        mutationTypes_for_simulator.append('ID')
-    if (DINUCS in mutationTypes):
-        mutationTypes_for_simulator.append('DBS')
+        mutationType_for_simulator = []
+        mutationType_for_simulator.append('96')
+        # Please notice that Simulator reverse the given input mutationTypes_for_simulator
+        simulator.SigProfilerSimulator(jobname, inputDir, genome, mutationType_for_simulator,simulations=numofSimulations)
 
-    #Please notice that Simulator reverse the given input mutationTypes_for_simulator
-    simulator.SigProfilerSimulator(jobname, inputDir, genome, mutationTypes_for_simulator, simulations=numofSimulations)
+    if (INDELS in mutationTypes):
+        mutationType_for_simulator = []
+        mutationType_for_simulator.append('ID')
+        # Please notice that Simulator reverse the given input mutationTypes_for_simulator
+        simulator.SigProfilerSimulator(jobname, inputDir, genome, mutationType_for_simulator,simulations=numofSimulations)
+
+    if (DINUCS in mutationTypes):
+        mutationType_for_simulator = []
+        mutationType_for_simulator.append('DBS')
+        # Please notice that Simulator reverse the given input mutationTypes_for_simulator
+        simulator.SigProfilerSimulator(jobname, inputDir, genome, mutationType_for_simulator,simulations=numofSimulations)
     ###################################################################################################
     ############################  SigProfilerSimulator for n simulations ends #########################
     ###################################################################################################
@@ -402,33 +412,24 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
 
     #Copy sample files under corresponding simulation directory
     # simulations sample based directories will be under inputDir/jobname/output/simulations/jobname_simulations_genome_mutationTypes_for_simulator[lastIndex]_..._mutationTypes_for_simulator[firstIndex]
-    dirName = '%s_simulations_%s' %(jobname,genome)
-    for mutationType in mutationTypes_for_simulator:
-        dirName = dirName + '_' + mutationType
-    goToThisDir = os.path.join(inputDir,'output','simulations',dirName)
 
-    print('goToThisDir')
-    print(goToThisDir)
+    if (SUBS in mutationTypes):
+        dirName = '%s_simulations_%s' %(jobname, genome)
+        dirName = dirName + '_' + '96'
+        goToThisDir = os.path.join(inputDir,'output','simulations',dirName)
+        copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir)
 
-    # Go to this directory
-    os.chdir(goToThisDir)
+    if (INDELS in mutationTypes):
+        dirName = '%s_simulations_%s' %(jobname, genome)
+        dirName = dirName + '_' + 'ID'
+        goToThisDir = os.path.join(inputDir,'output','simulations',dirName)
+        copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir)
 
-    # Traverse this directory
-    # for sample in directory
-    # copy file with end _1.vcf under inputDir/jobname/output/simulations/sim1/
-    # copy file with end _2.vcf under inputDir/jobname/output/simulations/sim2/
-    # ...
-    # copy file with end _N.vcf under inputDir/jobname/output/simulations/simN/
-
-    for dirName, subdirList, fileList in os.walk('.'):
-        for fname in fileList:
-            lastIndexUnderscore = fname.rfind('_')
-            indexDot = fname.rfind('.')
-            simNum = fname[lastIndexUnderscore+1:indexDot]
-            simName = 'sim%s' %(simNum)
-            copyDir = os.path.join(inputDir, 'output', 'simulations', simName,'.')
-            fileDir = os.path.join(dirName,fname)
-            shutil.copy(fileDir, copyDir)
+    if (DINUCS in mutationTypes):
+        dirName = '%s_simulations_%s' %(jobname, genome)
+        dirName = dirName + '_' + 'DBS'
+        goToThisDir = os.path.join(inputDir,'output','simulations',dirName)
+        copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir)
     ###################################################################################################
     ########################### Create simN directories for MatrixGenerator ends ######################
     ###################################################################################################
@@ -497,8 +498,8 @@ def runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabil
     #################################################################################
 
     #################################################################################
-    plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_ONE_SAMPLE_TTEST')
-    plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_NULL_DISTRIBUTION')
+    # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_ONE_SAMPLE_TTEST')
+    # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_NULL_DISTRIBUTION')
     plotFigures(outputDir, jobname, numofSimulations, 'USING_ZSCORE', 'USING_ZSCORE')
     #################################################################################
 
@@ -534,9 +535,9 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
     ############################################################
 
     ############################################################
-    # nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
-    # replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
-    # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
+    nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
+    replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
+    transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
     processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
     ############################################################
 
@@ -544,17 +545,17 @@ def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilit
 
 
 
-# ##############################################################
-import os
-
-if __name__== "__main__":
-    genome= 'GRCh37'
-    inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
-    outputDir = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_test')
-    jobname = 'BreastCancer560'
-    numberofSimulations = 2
-    subs_probabilities = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','SBS_Mutation_Probabilities.txt')
-    indels_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','ID_Mutation_Probabilities.txt')
-    dinucs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','DBS_Mutation_Probabilities.txt')
-    runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities_file_path,mutationTypes=['SUBS','DINUCS'])
-# ##############################################################
+# # ##############################################################
+# import os
+#
+# if __name__== "__main__":
+#     genome= 'GRCh37'
+#     inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
+#     outputDir = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_test')
+#     jobname = 'BreastCancer560'
+#     numberofSimulations = 2
+#     subs_probabilities = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','SBS_Mutation_Probabilities.txt')
+#     indels_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','ID_Mutation_Probabilities.txt')
+#     dinucs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Documents','DrLudmilAlexandrovLab','SigProfilerTopography','SigProfilerTopographyInput','Extractor','DBS_Mutation_Probabilities.txt')
+#     runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities_file_path,mutationTypes=['SUBS','DINUCS'])
+# # ##############################################################

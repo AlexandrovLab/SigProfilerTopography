@@ -29,6 +29,7 @@ LAGGING = 'Lagging'
 
 UNTRANSCRIBED_STRAND = 'UnTranscribed'
 TRANSCRIBED_STRAND = 'Transcribed'
+NONTRANSCRIBED_STRAND = 'NonTranscribed'
 
 PLUS = '+'
 MINUS = '-'
@@ -2470,6 +2471,33 @@ def readDictionary(filePath):
         # return None
         # Provide empty dictionary for not to fail for loops on None type dictionary
         return {}
+########################################################################
+
+
+########################################################################
+def copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir):
+    print('goToThisDir')
+    print(goToThisDir)
+
+    # Go to this directory
+    os.chdir(goToThisDir)
+
+    # Traverse this directory
+    # for sample in directory
+    # copy file with end _1.vcf under inputDir/jobname/output/simulations/sim1/
+    # copy file with end _2.vcf under inputDir/jobname/output/simulations/sim2/
+    # ...
+    # copy file with end _N.vcf under inputDir/jobname/output/simulations/simN/
+
+    for dirName, subdirList, fileList in os.walk('.'):
+        for fname in fileList:
+            lastIndexUnderscore = fname.rfind('_')
+            indexDot = fname.rfind('.')
+            simNum = fname[lastIndexUnderscore+1:indexDot]
+            simName = 'sim%s' %(simNum)
+            copyDir = os.path.join(inputDir, 'output', 'simulations', simName,'.')
+            fileDir = os.path.join(dirName,fname)
+            shutil.copy(fileDir, copyDir)
 ########################################################################
 
 

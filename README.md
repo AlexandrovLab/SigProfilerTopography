@@ -15,11 +15,10 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. SigProfilerTopography currently requires a certain branch of SigProfilerMatrixGenerator. Please clone and install as follows:
+3. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
 ```
-$ git clone --single-branch --branch Development https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.git
-$ cd SigProfilerMatrixGenerator
-$ pip install .
+$ pip install SigProfilerMatrixGenerator
+$ pip install SigProfilerSimulator
 ```
 4. Install your desired reference genome from the command line/terminal as follows (available reference genomes are: GRCh37, GRCh38, mm9, and mm10):
 ```
@@ -59,11 +58,10 @@ This call also plots topography output figures.
 >> inputDir = '.../from/googledrive/you/can/download/sample/input/under/matrixgenerator/'
 >> outputDir = '.../as/you/wish/output/'
 >> jobname = 'BreastCancer560'
->> numofSimulations = 0
+>> numofSimulations = 2
 >> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
->> indels_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/ID83_Mutation_Probabilities.txt'
 >> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path=subs_probabilities,indels_probabilities_file_path=indels_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutationTypes=['SUBS','INDELS','DINUCS'])
+topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutationTypes=['SUBS','DINUCS'])
 ```
 
 **INPUT FILE FORMAT**
@@ -86,7 +84,7 @@ Or you can provide your nucleosome occupancy data file as follows.
 ```
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.wig'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,nucleosomeFilename=user_provided_nucleosome_data_file_path)
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosomeFilename=user_provided_nucleosome_data_file_path,mutationTypes=['SUBS','DINUCS'])
 ```
 
 **LIBRARY REPLICATION TIME**
@@ -104,7 +102,7 @@ You can provide your replication data file as follows.
 >> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
 >> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,subs_probabilities_file_path,indels_probabilities_file_path,dinucs_probabilities_file_path,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path)
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path,mutationTypes=['SUBS','DINUCS'])
 ```
 
 **LIBRARY TRANSCRIPTS**
