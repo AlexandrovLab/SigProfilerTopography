@@ -38,7 +38,7 @@ MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1000000000
 
 #Constraints , Thresholds
-SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 10000
+SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 5000
 INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
 DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
 
@@ -172,6 +172,7 @@ NUCLEOSOMEOCCUPANCY = 'nucleosome_occupancy'
 REPLICATIONTIME = 'replication_time'
 PROCESSIVITY = 'processivity'
 STRANDBIAS = 'strand_bias'
+SCATTERPLOTS= 'scatter_plots'
 PLOTTING = 'plotting'
 TRANSCRIPTIONSTRANDBIAS = 'transcriptionstrandbias'
 REPLICATIONSTRANDBIAS = 'replicationstrandbias'
@@ -207,8 +208,16 @@ MUTATION = 'Mutation'
 MUTATIONLONG = 'MutationLong'
 CHR = 'chr'
 
-COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
+
 COMPUTATION_CHROMOSOMES_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL'
+
+#For small number of samples
+COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
+
+#For big number of samples
+COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL'
+COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL'
+
 COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL'
 
 ############################################
@@ -283,6 +292,16 @@ USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 USING_ZSCORE = 'USING_ZSCORE'
 
+SBS96   = '96'
+SBS192  = '192'
+SBS384  = '384'
+SBS1536 = '1536'
+SBS3072 = '3072'
+ID = 'ID'
+DBS= 'DBS'
+SBS_CONTEXTS = [SBS96,SBS192,SBS384,SBS1536,SBS3072]
+
+#TODO old way: to be deleted
 SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
@@ -617,6 +636,8 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber):
 ##################################################################
 
 ##################################################################
+#TODO To be deleted
+#TODO This was making big dataframe and will be depreceated
 def getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_mutations_df,mutationType,numofSimulations):
     # Simulation case
     # Read also simulated data and append them vertically
@@ -900,31 +921,6 @@ def accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2Accum
                     sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] = sample2Type2SplitArrayDict[sample][type]
 ########################################################################################
 
-########################################################################################
-#TODO To be depreceated
-#We will accumulate signature2SplitArrayDict in signature2AccumulatedSplitsChrBasedArrayDict
-def accumulateTypeBasedArrays(type2AccumulatedSplitsChrBasedArrayDict, type2SplitArrayDict):
-    for type in type2SplitArrayDict.keys():
-        if type in type2AccumulatedSplitsChrBasedArrayDict:
-            type2AccumulatedSplitsChrBasedArrayDict[type] += type2SplitArrayDict[type]
-        else:
-            type2AccumulatedSplitsChrBasedArrayDict[type] = type2SplitArrayDict[type]
-########################################################################################
-
-########################################################################################
-#TODO To be depreceated
-def accumulateSampleBasedTypeBasedArrays(sample2Type2AccumulatedSplitsChrBasedArrayDict,sample2Type2SplitArrayDict):
-    for sample in sample2Type2SplitArrayDict.keys():
-        for type in sample2Type2SplitArrayDict[sample].keys():
-            if (sample in sample2Type2AccumulatedSplitsChrBasedArrayDict):
-                if (type in sample2Type2AccumulatedSplitsChrBasedArrayDict[sample]):
-                    sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] += sample2Type2SplitArrayDict[sample][type]
-                else:
-                    sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] = sample2Type2SplitArrayDict[sample][type]
-            else:
-                sample2Type2AccumulatedSplitsChrBasedArrayDict[sample]= {}
-                sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] = sample2Type2SplitArrayDict[sample][type]
-########################################################################################
 
 ########################################################################################
 def accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedSplitsChrBasedArrayDict,sample2AllSinglePointMutationsSplitArrayDict):
@@ -1174,7 +1170,6 @@ def computeAverageNucleosomeOccupancyArray(signalArray,countArray):
 ########################################################################################
 
 ########################################################################################
-#TODO To be tested
 def writeSimulationBasedAverageNucleosomeOccupancy(
         simNum2Type2AccumulatedSignalArrayDict,
         simNum2Type2AccumulatedCountArrayDict,
@@ -1209,29 +1204,6 @@ def writeSimulationBasedAverageNucleosomeOccupancy(
 
 ########################################################################################
 
-
-########################################################################################
-#TODO To be depreceated
-def writeAverageNucleosomeOccupancy(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname):
-
-    ####################################################################################
-    if (AGGREGATEDSUBSTITUTIONS in type2AccumulatedSignalArrayDict):
-        writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDSUBSTITUTIONS],type2AccumulatedCountArrayDict[AGGREGATEDSUBSTITUTIONS],outputDir, jobname, AGGREGATEDSUBSTITUTIONS,0)
-    if (AGGREGATEDINDELS in type2AccumulatedSignalArrayDict):
-        writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDINDELS],type2AccumulatedCountArrayDict[AGGREGATEDINDELS], outputDir,jobname, AGGREGATEDINDELS,0)
-    if (AGGREGATEDDINUCS in type2AccumulatedSignalArrayDict):
-        writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDDINUCS],type2AccumulatedCountArrayDict[AGGREGATEDDINUCS], outputDir,jobname, AGGREGATEDDINUCS,0)
-    writeSignatureBasedAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,outputDir,jobname,0)
-    ####################################################################################
-
-    ####################################################################################
-    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,AGGREGATEDSUBSTITUTIONS,0)
-    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,AGGREGATEDINDELS,0)
-    writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict, outputDir,jobname, AGGREGATEDDINUCS,0)
-    writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,0)
-    ####################################################################################
-
-########################################################################################
 
 
 ########################################################################################
@@ -2475,12 +2447,12 @@ def readDictionary(filePath):
 
 
 ########################################################################
-def copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir):
-    print('goToThisDir')
-    print(goToThisDir)
+def copySampleFilesToCorrespondingSimulationDirectory(inputDir,copyFromDir,subDirName):
+    print('copyFromDir')
+    print(copyFromDir)
 
     # Go to this directory
-    os.chdir(goToThisDir)
+    os.chdir(copyFromDir)
 
     # Traverse this directory
     # for sample in directory
@@ -2495,7 +2467,7 @@ def copySampleFilesToCorrespondingSimulationDirectory(inputDir,goToThisDir):
             indexDot = fname.rfind('.')
             simNum = fname[lastIndexUnderscore+1:indexDot]
             simName = 'sim%s' %(simNum)
-            copyDir = os.path.join(inputDir, 'output', 'simulations', simName,'.')
+            copyDir = os.path.join(inputDir,'output','simulations',simName,subDirName,'.')
             fileDir = os.path.join(dirName,fname)
             shutil.copy(fileDir, copyDir)
 ########################################################################

@@ -193,12 +193,18 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     ax.set_yticks(np.arange(0, len(sortedSignatureList) + 1, 1))
 
-    cmap = cm.get_cmap('Greens')
+    # cmap = cm.get_cmap('Greens')
+    # cmap = cm.get_cmap('Greys')
+    # cmap = cm.get_cmap('Oranges')
+    cmap = cm.get_cmap('YlOrRd')  # Looks better good
+    # cmap = cm.get_cmap('YlOrBr')
+    # cmap = cm.get_cmap('OrRd')
+    # cmap = cm.get_cmap('PuBuGn') #Looks so so
 
     # Set the Colour Scale
-    vmin = 0
-    vmax = 7
-    norm = Normalize(vmin,vmax,clip=True)
+    # vmin = 0
+    # vmax = 7
+    # norm = Normalize(vmin,vmax,clip=True)
 
     #p values
     all_p_values = []
@@ -313,7 +319,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     min_zScore = min(zScores)
     max_zScore = max(zScores)
     print('min_zScore:%f max_zScore:%f ' %(min_zScore,max_zScore))
-    norm = Normalize(0, max_zScore, clip=True)
+    # norm = Normalize(0, max_zScore, clip=True)
+    norm = Normalize(min_zScore, max_zScore, clip=True)
 
     numofPval= 0
     for pval in all_p_values:
@@ -376,7 +383,31 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                             correctedPValue = all_Bonferroni_corrected_p_values[correctedPValueIndex]
                         elif (multipleTestingCorrection==USING_ZSCORE):
                             zScore = zScores[correctedPValueIndex]
-                            color = norm(zScore)*vmax
+                            # color = norm(zScore)*vmax
+                            # color = norm(zScore)*max_zScore
+
+                            # color = norm(zScore)
+                            color = zScore
+
+                            # if zScore<=0:
+                            #     color=0
+                            # else:
+                            #     color=math.log2(zScore)
+
+                            print('------------------')
+                            # print('signature')
+                            # print(type(signature))
+                            # print(signature)
+                            # print('processiveGroupLength')
+                            # print(type(processiveGroupLength))
+                            # print(processiveGroupLength)
+                            # print('color')
+                            # print(type(color))
+                            # print(color)
+                            print('June 7, 2019 --- Signature:%s processiveGroupLength:%s zScore:%f color:%f' %(signature,processiveGroupLength,zScore,color))
+                            print('cmap(color)')
+                            print(cmap(color))
+                            print('------------------')
 
                         correctedPValueIndex +=1
 
@@ -398,6 +429,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
                         if (radius>0):
                             circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(color), fill=True)
+                            # circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=color,fill=True) #does not work for this direct color value
                             ax.add_artist(circle)
         ##########################################################################################
 
@@ -436,8 +468,12 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     ax.set_aspect(1.0)  # make aspect ratio square
 
+    #This code defines the ticks on the color bar
     # plot the scatter plot
-    sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=vmin, vmax=vmax, edgecolors='black')
+    # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=vmin, vmax=vmax, edgecolors='black')
+    sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=min_zScore, vmax=max_zScore, edgecolors='black')
+    # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=0, vmax=1, edgecolors='black')
+
     ax.set_facecolor('white')
     plt.grid(color='black')
 
@@ -466,7 +502,9 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
         text_x.set_font_properties(font)
         text_y.set_font_properties(font)
 
-        cb.set_label("-log10\n  (P value)", horizontalalignment='right', rotation=0, labelpad=80)
+        # cb.set_label("-log10\n  (P value)", horizontalalignment='right', rotation=0, labelpad=80)
+        cb.set_label("Z score", horizontalalignment='right', rotation=0, labelpad=80)
+
     ################### Put the color bar if there are simulations ends #####################
 
 

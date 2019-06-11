@@ -534,7 +534,7 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
+def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
 
     print('########################## ReplicationStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -556,13 +556,6 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict = {}
     accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict = {}
     accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict = {}
-
-    #Unnecessary
-    # for simNum in range(0,numofSimulations+1):
-    #     accumulatedAllChromosomesType2ReplicationStrand2CountDict[simNum] = {}
-    #     accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[simNum] = {}
-    #     accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[simNum] = {}
-    #     accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[simNum] = {}
 
     writeDictionaryForDebug(accumulatedAllChromosomesType2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2ReplicationStrand2CountDict.txt', strandBias, None)
     writeDictionaryForDebug(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2Sample2ReplicationStrand2CountDict.txt', strandBias, None)
@@ -621,9 +614,123 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
                         accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
                         accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
 
+
         ############################################################################################################
         ###############################      All Chromosomes in parallel  ends    ##################################
         ############################################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL):
+
+        ################################################################################
+        for chrLong in chromNamesList:
+            chromSize = chromSizesDict[chrLong]
+
+            # Read chrBasedSmoothedWaveletReplicationTimeSignalDF
+            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
+
+            chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
+            chrBasedValleysDF['type'] = 'Valley'
+            chrBasedValleysDF.astype(dtype={'start': int, 'end': int})
+
+            chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
+            chrBasedPeaksDF['type'] = 'Peak'
+            chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
+
+            # Concat Peaks and Valleys
+            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+            # Sort Valleys and peaks
+            chrBased_valleys_peaks_df.sort_values('start', inplace=True)
+
+            ################################################################################
+            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong, chromSize,
+                                                                                     chrBased_SmoothedWaveletReplicationTimeSignal_df,
+                                                                                     chrBased_valleys_peaks_df)
+
+
+                ################################################################################
+                for simNum in range(0, numofSimulations + 1):
+                    chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                    chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+                    chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+                    inputList = []
+                    inputList.append(chrBased_replication_array)  # same for all
+                    inputList.append(chrBased_subs_df)  # different split each time
+                    inputList.append(chrBased_indels_df)  # different split each time
+                    inputList.append(chrBased_dinucs_df)  # different split each time
+                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                    inputList.append(indelsSignature2NumberofMutationsDict)
+                    inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(numofSimulations)
+                    simBased_tuple = searchMutationsOnReplicationStrandArray(inputList)
+                    tupleList = []
+                    tupleList.append(simBased_tuple)
+                    accumulate_simulations_integrated(tupleList,
+                                                      accumulatedAllChromosomesType2ReplicationStrand2CountDict,
+                                                      accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
+                                                      accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
+                                                      accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
+                ################################################################################
+            ################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+        ################################################################################
+        for chrLong in chromNamesList:
+            chromSize = chromSizesDict[chrLong]
+
+            #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
+            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
+
+            chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
+            chrBasedValleysDF['type'] = 'Valley'
+            chrBasedValleysDF.astype(dtype={'start': int, 'end': int})
+
+            chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
+            chrBasedPeaksDF['type'] = 'Peak'
+            chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
+
+            # Concat Peaks and Valleys
+            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+            # Sort Valleys and peaks
+            chrBased_valleys_peaks_df.sort_values('start', inplace=True)
+
+            ################################################################################
+            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+
+                #For each chrom
+                poolInputList = []
+
+                ################################################################################
+                for simNum in range(0,numofSimulations+1):
+                    chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                    chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+                    chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+                    inputList = []
+                    inputList.append(chrBased_replication_array) #same for all
+                    inputList.append(chrBased_subs_df) # different split each time
+                    inputList.append(chrBased_indels_df)  # different split each time
+                    inputList.append(chrBased_dinucs_df)  # different split each time
+                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                    inputList.append(indelsSignature2NumberofMutationsDict)
+                    inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(numofSimulations)
+                    poolInputList.append(inputList)
+                ################################################################################
+
+                listofTuples = pool.map(searchMutationsOnReplicationStrandArray, poolInputList)
+
+                accumulate_simulations_integrated(listofTuples,
+                            accumulatedAllChromosomesType2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
+                            accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
+            ################################################################################
+
 
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
 
@@ -712,14 +819,21 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
                             accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
-
-                writeDictionaryForDebug(accumulatedAllChromosomesType2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2ReplicationStrand2CountDict.txt', strandBias, None)
-                writeDictionaryForDebug(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2Sample2ReplicationStrand2CountDict.txt', strandBias, None)
         ############################################################################################################
         ###############################       Chromosomes sequentially      ########################################
         ###############################      All ChrBased Splits in parallel ends    ###############################
         ############################################################################################################
 
+    print('ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
+    print('accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
+    print(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0])
+    print('accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
+    print(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0])
+    print('accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
+    print(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0])
+    print('accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
+    print(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0])
+    print('ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
 
     ############################################################################################################
     #####################################       Output starts      #############################################
@@ -731,6 +845,11 @@ def replicationStrandBiasAnalysis(mutationTypes,computationType,chromSizesDict,c
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
+
+    ################################
+    pool.close()
+    pool.join()
+    ################################
 
     print('########################## ReplicationStrandBias Analysis ends ############################')
 

@@ -242,7 +242,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname, isFigureAugmentation,numberofSimulations,color):
+def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname, isFigureAugmentation,numberofSimulations,color,fillcolor):
 
     simulationsSignatureBasedMedians = None
     listofSimulationsSignatureBased = None
@@ -315,7 +315,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
             label = 'Average Simulations %s' %(label)
             simulations = plt.plot(x, simulationsSignatureBasedMedians, color='gray', linestyle='--',  label=label, linewidth=3)
             listofLegends.append(simulations[0])
-            plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor='lightblue')
+            plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor=fillcolor)
 
         plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
 
@@ -420,7 +420,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     #######################################################################################################################
     if (sample is None):
-        filename = '%s_Aggregated_All_Mutations.png' % (jobname)
+        filename = 'Aggregated_All_Mutations_NucleosomeOccupancy.png'
         if (SUBS in mutationTypes):
             realAggregatedSubstitutions = readAverage(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname)
         if (INDELS in mutationTypes):
@@ -441,7 +441,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     #######################################################################################################################
     else:
         # filename = '%s_%s_Aggregated_Substitutions_%d_Indels_%d.png' % (sample, jobname, numberofSPMs, numberofIndels)
-        filename = '%s_%s_Aggregated_All_Mutations.png' % (sample, jobname)
+        filename = '%s_Aggregated_All_Mutations_NucleosomeOccupancy.png' % (sample)
         if (SUBS in mutationTypes):
             realAggregatedSubstitutions = readAverage(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,outputDir,jobname)
         if (INDELS in mutationTypes):
@@ -458,10 +458,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
                 listofSimulationsAggregatedDinucs = readAverageForSimulations(sample, None, SAMPLEBASED_AGGREGATEDDINUCS, outputDir,jobname,numberofSimulations)
     #######################################################################################################################
 
-    print('Debug May 13 2019 starts')
-    print('listofSimulationsAggregatedDinucs')
-    print(listofSimulationsAggregatedDinucs)
-    print('Debug May 13 2019 starts')
 
     #####################################################################
     #Take Median
@@ -469,16 +465,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     simulationsAggregatedIndelsLows,simulationsAggregatedIndelsMedians,simulationsAggregatedIndelsHighs = takeAverage(listofSimulationsAggregatedIndels)
     simulationsAggregatedDinucsLows,simulationsAggregatedDinucsMedians,simulationsAggregatedDinucsHighs = takeAverage(listofSimulationsAggregatedDinucs)
     #####################################################################
-
-    print('Debug May 13 2019 starts')
-    print('simulationsAggregatedDinucsLows')
-    print(simulationsAggregatedDinucsLows)
-    print('simulationsAggregatedDinucsMedians')
-    print(simulationsAggregatedDinucsMedians)
-    print('simulationsAggregatedDinucsHighs')
-    print(simulationsAggregatedDinucsHighs)
-    print('Debug May 13 2019 starts')
-
 
     #####################################################################
     #####################################################################
@@ -523,7 +509,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if simulationsAggregatedDinucsMedians is not None:
         simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
-        plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightgreen',zorder=5)
+        plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
 
 
     # old code
@@ -611,18 +597,21 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
         label = 'Aggregated Substitutions'
         text = 'subs'
         color = 'royalblue'
+        fillcolor = 'lightblue'
     elif (mutationType==INDELS):
         xlabel = 'Interval around indel (bp)'
         ylabel = 'Average nucleosome signal'
         label = 'Aggregated Indels'
         text = 'indels'
         color = 'darkgreen'
+        fillcolor = 'lightgreen'
     elif (mutationType==DINUCS):
         xlabel = 'Interval around dinuc (bp)'
         ylabel = 'Average nucleosome signal'
         label = 'Aggregated Dinucs'
         text = 'dinucs'
         color = 'crimson'
+        fillcolor = 'lightpink'
 
     for signature in signature2NumberofMutationsDict:
         signatureBasedNumberofMutations = signature2NumberofMutationsDict[signature]
@@ -630,7 +619,7 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
                                                                           signatureBasedNumberofMutations,
                                                                           xlabel,ylabel,label,text,
                                                                           outputDir, jobname, isFigureAugmentation,
-                                                                          numberofSimulations, color)
+                                                                          numberofSimulations, color,fillcolor)
 
     # SampleBased Subs SignatureBased Nucleosome Occupancy Figures
     for sample in sample2Signature2NumberofMutationsDict:
@@ -640,7 +629,7 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
                                                                               sampleBasedSignatureBasedNumberofMutations,
                                                                               xlabel,ylabel,label,text,
                                                                               outputDir, jobname, isFigureAugmentation,
-                                                                              numberofSimulations,color)
+                                                                              numberofSimulations,color,fillcolor)
 
 
 #########################################################

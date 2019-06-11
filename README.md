@@ -51,7 +51,8 @@ Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 8. Within a python session, you can run the topography analyses as follows:
 You must provide the mutation types that you want to carry out topography analyses for in mutationTypes list.
 You must provide the corresponding probabilities files in subs_probabilities_file_path, indels_probabilities_file_path and dinucs_probabilities_file_path accordingly.
-For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutationTypes=['SUBS', 'DINUCS']
+For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutation_types_contexts=['96', 'DBS'].
+'96' for substitutions and 'DBS' for dinucleotides and 'ID' for indels.
 This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'
@@ -61,7 +62,7 @@ This call also plots topography output figures.
 >> numofSimulations = 2
 >> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
 >> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
-topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutationTypes=['SUBS','DINUCS'])
+topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutation_types_contexts=['96','DBS'])
 ```
 
 **INPUT FILE FORMAT**
@@ -84,7 +85,7 @@ Or you can provide your nucleosome occupancy data file as follows.
 ```
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.wig'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosomeFilename=user_provided_nucleosome_data_file_path,mutationTypes=['SUBS','DINUCS'])
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosomeFilename=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'])
 ```
 
 **LIBRARY REPLICATION TIME**
@@ -102,7 +103,7 @@ You can provide your replication data file as follows.
 >> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
 >> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path,mutationTypes=['SUBS','DINUCS'])
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'])
 ```
 
 **LIBRARY TRANSCRIPTS**

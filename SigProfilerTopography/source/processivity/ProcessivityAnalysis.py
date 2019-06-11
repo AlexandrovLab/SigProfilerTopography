@@ -146,12 +146,12 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTypes,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
-    if (SUBS in mutationTypes):
+    if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
 
         #####################################################################
         for simNum in range(0,numofSimulations+1):
@@ -206,20 +206,23 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTy
                         poolInputList.append(inputList)
 
                     # Call the function findProcessiveGroups
+                    # Sequential for each simulation and chromosome
                     # Parallel for each sample
-                    allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list = pool.map(
-                        findProcessiveGroupsForInputList, poolInputList)
+                    allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list = pool.map(findProcessiveGroupsForInputList, poolInputList)
 
                     # Accumuate all the list of dictionaries coming from all samples
-                    allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict = accumulateListofDicts(
-                        allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list)
+                    allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict = accumulateListofDicts(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list)
 
                     # Accumulate the dictionary coming from each chromosome
-                    accumulateDict(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict,
-                                   signature2ProcessiveGroupLength2DistanceListDict)
+                    accumulateDict(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict,signature2ProcessiveGroupLength2DistanceListDict)
 
             signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
             filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' %(simNum)
+
+            if (simNum==0):
+                print('For original data signature2ProcessiveGroupLength2PropertiesDict')
+                print(signature2ProcessiveGroupLength2PropertiesDict)
+
             writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname,filename, PROCESSIVITY,ProcessiveGroupStructEncoder)
 
         #####################################################################
@@ -228,8 +231,8 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTy
 
 
 ##################################################################################
-def processivityAnalysis(mutationTypes,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
+def processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
     print('########################## ProcessivityAnalysis starts ###########################')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutationTypes,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis)
     print('########################## ProcessivityAnalysis ends #############################')
 ##################################################################################

@@ -816,17 +816,6 @@ def accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,si
         simNum2Sample2Type2DecileIndex2CountDict = dictList[1]
 
         accumulate(simNum2Type2DecileIndex2CountBasedDict,simNum2Sample2Type2DecileIndex2CountDict,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
-        print('------------------Debug May 6, 2019 starts---------------------')
-        print('simNum2Type2DecileIndex2CountBasedDict')
-        print(simNum2Type2DecileIndex2CountBasedDict)
-        print('simNum2Sample2Type2DecileIndex2CountDict')
-        print(simNum2Sample2Type2DecileIndex2CountDict)
-        print('simNum2Type2DecileBasedAllChrAccumulatedCountDict')
-        print(simNum2Type2DecileBasedAllChrAccumulatedCountDict)
-        print('simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict')
-        print(simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
-        print('--------------------Debug May 6, 2019 ends----------------------')
-
 ##################################################################
 
 
@@ -943,7 +932,7 @@ def loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename):
 ##################################################################
 
 ##################################################################
-def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computationType,outputDir,jobname,numofProcesses,pool,
+def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outputDir,jobname,numofProcesses,pool,
                                     sample2NumberofSubsDict,
                                     sample2NumberofIndelsDict,
                                     sample2NumberofDinucsDict,
@@ -1097,7 +1086,7 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,computa
 
 
 ##################################################################
-def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationTypes,computationType,outputDir,jobname,numofSimulations,numofProcesses,pool,
+def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationType,outputDir,jobname,numofSimulations,numofProcesses,pool,
                                     sample2NumberofSubsDict,
                                     sample2NumberofIndelsDict,
                                     sample2NumberofDinucsDict,
@@ -1124,6 +1113,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
         chrBased_grouped_decile_df = decile_df.groupby(CHROM)
         chrBased_grouped_decile_df_list.append(chrBased_grouped_decile_df)
 
+    ########################################################################################################################################################
     if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         # It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
         poolInputList = []
@@ -1134,6 +1124,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
             original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,0)
             original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,0)
 
+            #original data combined with simulations dara
             combined_chrBased_subs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_subs_df,SUBS,numofSimulations)
             combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df,INDELS,numofSimulations)
             combined_chrBased_dinucs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df,DINUCS,numofSimulations)
@@ -1164,9 +1155,81 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
         # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
         # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
         listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList)
-        accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,
-                                        simNum2Type2DecileBasedAllChrAccumulatedCountDict,
-                                        simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        ###################################################################################################################################################
+
+    ########################################################################################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL):
+        # It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        for chrLong in chrNamesList:
+            chromSize = chromSizesDict[chrLong]
+
+            for simNum in range(0,numofSimulations+1):
+                subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS,simNum)
+                indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,simNum)
+                dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,simNum)
+
+                ###################################################################################################################################################
+                inputList = []
+                inputList.append(chrLong)
+                inputList.append(chromSize)
+                inputList.append(sample2NumberofSubsDict)
+                inputList.append(sample2NumberofIndelsDict)
+                inputList.append(sample2NumberofDinucsDict)
+                inputList.append(subsSignature2NumberofMutationsDict)
+                inputList.append(indelsSignature2NumberofMutationsDict)
+                inputList.append(dinucsSignature2NumberofMutationsDict)
+                inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                inputList.append(sample2DinucsSignature2NumberofMutationsDict)
+                inputList.append(subs_df)  # Different
+                inputList.append(indels_df)  # Different
+                inputList.append(dinucs_df)  # Different
+                inputList.append(chrBased_grouped_decile_df_list)  # Same
+                inputList.append(numofSimulations)
+                simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList)
+                accumulate(simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        ###################################################################################################################################################
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+        # It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
+        for chrLong in chrNamesList:
+            poolInputList = []
+            chromSize = chromSizesDict[chrLong]
+
+            for simNum in range(0,numofSimulations+1):
+                subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS,simNum)
+                indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,simNum)
+                dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,simNum)
+
+                ###################################################################################################################################################
+                inputList = []
+                inputList.append(chrLong)
+                inputList.append(chromSize)
+                inputList.append(sample2NumberofSubsDict)
+                inputList.append(sample2NumberofIndelsDict)
+                inputList.append(sample2NumberofDinucsDict)
+                inputList.append(subsSignature2NumberofMutationsDict)
+                inputList.append(indelsSignature2NumberofMutationsDict)
+                inputList.append(dinucsSignature2NumberofMutationsDict)
+                inputList.append(sample2SubsSignature2NumberofMutationsDict)
+                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+                inputList.append(sample2DinucsSignature2NumberofMutationsDict)
+                inputList.append(subs_df)  # Different
+                inputList.append(indels_df)  # Different
+                inputList.append(dinucs_df)  # Different
+                inputList.append(chrBased_grouped_decile_df_list)  # Same
+                inputList.append(numofSimulations)
+                poolInputList.append(inputList)
+
+            # Call the parallel code for poolInputList
+            # It returns a list of whatever generateNPArrayAndSearchMutationsOnNPArray will return
+            # It must return list of tuples
+            # Since generateNPArrayAndSearchMutationsOnNPArray return tuple
+            # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
+            listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList)
+            accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
         ###################################################################################################################################################
 
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
@@ -1175,40 +1238,45 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
             # chrLong = 'chr%s' %(chr)
             chromSize = chromSizesDict[chrLong]
 
-            chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS,0)
-            chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,0)
-            chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS,0)
+            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS,0)
+            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,0)
+            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS,0)
 
-            chrBased_subs_df_splits_list = []
-            chrBased_indels_df_splits_list = []
-            chrBased_dinucs_df_splits_list = []
+            #original data combined with simulations dara
+            combined_chrBased_subs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_subs_df,SUBS,numofSimulations)
+            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df,INDELS,numofSimulations)
+            combined_chrBased_dinucs_df= getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df,DINUCS,numofSimulations)
 
-            if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
-                chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
+            chrBased_combined_subs_df_splits_list = []
+            chrBased_combined_indels_df_splits_list = []
+            chrBased_combined_dinucs_df_splits_list = []
 
-            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-                chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
+            if ((combined_chrBased_subs_df is not None) and (not combined_chrBased_subs_df.empty)):
+                chrBased_combined_subs_df_splits_list = np.array_split(combined_chrBased_subs_df, numofProcesses)
 
-            if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-                chrBased_dinucs_df_splits_list = np.array_split(chrBased_dinucs_df, numofProcesses)
+            if ((combined_chrBased_indels_df is not None) and (not combined_chrBased_indels_df.empty)):
+                chrBased_combined_indels_df_splits_list = np.array_split(combined_chrBased_indels_df, numofProcesses)
+
+            if ((combined_chrBased_dinucs_df is not None) and (not combined_chrBased_dinucs_df.empty)):
+                chrBased_combined_dinucs_df_splits_list = np.array_split(combined_chrBased_dinucs_df, numofProcesses)
 
             ###################################################################################################################################################
             poolInputList = []
             for split_index in range(numofProcesses):
-                if (len(chrBased_subs_df_splits_list)):
-                    chrBased_subs_df_split_array = chrBased_subs_df_splits_list[split_index]
+                if (len(chrBased_combined_subs_df_splits_list)):
+                    chrBased_combined_subs_df_split_array = chrBased_combined_subs_df_splits_list[split_index]
                 else:
-                    chrBased_subs_df_split_array = None
+                    chrBased_combined_subs_df_split_array = None
 
-                if (len(chrBased_indels_df_splits_list)):
-                    chrBased_indels_df_split_array = chrBased_indels_df_splits_list[split_index]
+                if (len(chrBased_combined_indels_df_splits_list)):
+                    chrBased_combined_indels_df_split_array = chrBased_combined_indels_df_splits_list[split_index]
                 else:
-                    chrBased_indels_df_split_array = None
+                    chrBased_combined_indels_df_split_array = None
 
-                if (len(chrBased_dinucs_df_splits_list)):
-                    chrBased_dinucs_df_split_array = chrBased_dinucs_df_splits_list[split_index]
+                if (len(chrBased_combined_dinucs_df_splits_list)):
+                    chrBased_combined_dinucs_df_split_array = chrBased_combined_dinucs_df_splits_list[split_index]
                 else:
-                    chrBased_dinucs_df_split_array = None
+                    chrBased_combined_dinucs_df_split_array = None
 
                 inputList = []
                 inputList.append(chrLong) #Same
@@ -1222,10 +1290,11 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
-                inputList.append(chrBased_subs_df_split_array) #Different
-                inputList.append(chrBased_indels_df_split_array) #Different
-                inputList.append(chrBased_dinucs_df_split_array)  # Different
+                inputList.append(chrBased_combined_subs_df_split_array) #Different
+                inputList.append(chrBased_combined_indels_df_split_array) #Different
+                inputList.append(chrBased_combined_dinucs_df_split_array)  # Different
                 inputList.append(chrBased_grouped_decile_df_list)  #Same
+                inputList.append(numofSimulations)
                 poolInputList.append(inputList)
 
             # Call the parallel code for poolInputList
@@ -1236,6 +1305,15 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(mutationType
             listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray,poolInputList)
             accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
             ###################################################################################################################################################
+
+        ###################################################################################################################################################
+
+    print('Replication Time Results %s starts' %(computationType))
+    print('simNum2Type2DecileBasedAllChrAccumulatedCountDict[0]')
+    print(simNum2Type2DecileBasedAllChrAccumulatedCountDict[0])
+    print('simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[0]')
+    print(simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[0])
+    print('Replication Time Results %s ends' %(computationType))
 
     return simNum2Type2DecileBasedAllChrAccumulatedCountDict, simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict
 ##################################################################
@@ -1348,7 +1426,7 @@ def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2Number
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename):
+def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename):
 
     print('########################## ReplicationTimeAnalysis starts #########################')
     #########################################################################
@@ -1381,7 +1459,7 @@ def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_ar
     sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
     ##########################################################################################
 
-    # Fill replication np arrays runtime
+    # Fill replication np arrays during runtime
     if (replication_time_np_arrays_fill_runtime):
 
         ###################################################################
@@ -1394,7 +1472,6 @@ def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_ar
         chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,pool,repliseqDataFilename)
 
         simNum2Type2DecileBasedAllChrAccumulatedCountDict, simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(
-                                                                                                                                mutationTypes,
                                                                                                                                 computationType,
                                                                                                                                 outputDir,jobname,numofSimulations,numofProcesses,pool,
                                                                                                                                 sample2NumberofSubsDict,
@@ -1416,12 +1493,13 @@ def replicationTimeAnalysis(mutationTypes,computationType,replication_time_np_ar
         ###################################################################
 
     # Use offline or online prepared replication np arrays
+    # This part is not maintained/updated for simulations
     else:
         replicationTimeFilename_wo_extension = os.path.basename(repliseqDataFilename)[0:-4]
         decileIndex2NumberofAttributableBasesDict = getDecileIndex2NumberofAttributableBasesDict(replicationTimeFilename_wo_extension)
 
         #loading offline prepared numpy array
-        type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsUsingReplicationTimeNPArray(mutationTypes,
+        type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsUsingReplicationTimeNPArray(
                                                                                                                                 computationType,
                                                                                                                                 outputDir,jobname,numofProcesses,pool,
                                                                                                                                 sample2NumberofSubsDict,

@@ -110,12 +110,12 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
 
     if sample is None:
         figureName = 'all_mutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
 
     else:
         figureName = 'all_mutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
 
     fig.savefig(figureFile)
     plt.close(fig)
@@ -223,12 +223,12 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
 
         if sample is None:
             figureName = 'all_%s_signatures_%s_scatterplots.png' % (signatureType, STRANDBIAS)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
         else:
             figureName = 'all_%s_signatures_%s_%d_%s_scatterplots.png' % (
             signatureType, sample, numberofMutations, STRANDBIAS)
-            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS), exist_ok=True)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, figureName)
+            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
 
         fig.savefig(figureFile)
         plt.close(fig)
@@ -325,7 +325,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         newMutationType = mutationType.replace('>', '2')
 
         figureName = newMutationType + '_MutationType_' + STRANDBIAS + '.png'
-        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,figureName)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
         fig.savefig(figureFile)
         plt.close(fig)
 ########################################################################
@@ -417,7 +417,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
                 plt.title(jobname + ' ' + signature)
 
             figureName = signature.replace(' ','') + '_Signature_' + STRANDBIAS + '.png'
-            figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,figureName)
+            figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
             fig.savefig(figureFile)
             plt.close(fig)
 ########################################################################
@@ -490,7 +490,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
 
         legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
                            (strand1Name, strand2Name, simulationsStrand1Name, simulationsStrand2Name),
-                           prop={'size': 25}, ncol = 2, loc = 'upper center')
+                           prop={'size': 20}, ncol = 2, loc = 'best')
 
     else:
         #Old way with no simulations
@@ -885,7 +885,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         isFigureAugmentation = True
 
     #######################################################################################################################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
     #######################################################################################################################
 
@@ -1216,11 +1216,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         #########################################################################################################################
 
         #########################################################################################################################
-        print('Debug Part1 starts')
-        print('simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict')
-        print(simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict)
-        print('Debug Part1 ends')
-
         # simulations signature --- mutation type --- transcription
         subsSignature2SimulationsMutationTypesTranscribedMediansListDict, subsSignature2SimulationsMutationTypesUntranscribedMediansListDict = \
             fillSimulationsSample2Type2StrandCountList(simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict,
@@ -1229,19 +1224,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                                                 subsSignature2NumberofMutationsDict,
                                                 TRANSCRIPTIONSTRANDBIAS)
 
-        print('################### Debug Part2 starts')
-        print('subsSignature2SimulationsMutationTypesTranscribedMediansListDict')
-        print(subsSignature2SimulationsMutationTypesTranscribedMediansListDict)
-        print('subsSignature2SimulationsMutationTypesUntranscribedMediansListDict')
-        print(subsSignature2SimulationsMutationTypesUntranscribedMediansListDict)
-        print('################### Debug Part2 ends')
-
-        print('Debug Part3 starts')
-        print('simNum2SubsSignature2MutationType2ReplicationStrand2CountDict')
-        print(simNum2SubsSignature2MutationType2ReplicationStrand2CountDict)
-        print('Debug Part3 ends')
-
-
         # simulations signature --- mutation type --- replication
         subsSignature2SimulationsMutationTypesLaggingMediansListDict, subsSignature2SimulationsMutationTypesLeadingMediansListDict = \
             fillSimulationsSample2Type2StrandCountList(simNum2SubsSignature2MutationType2ReplicationStrand2CountDict,
@@ -1249,22 +1231,9 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                                                 numberofSimulations,
                                                 subsSignature2NumberofMutationsDict,
                                                 REPLICATIONSTRANDBIAS)
-
-        print('################### Debug Part4 starts')
-        print('subsSignature2SimulationsMutationTypesLaggingMediansListDict')
-        print(subsSignature2SimulationsMutationTypesLaggingMediansListDict)
-        print('subsSignature2SimulationsMutationTypesLeadingMediansListDict')
-        print(subsSignature2SimulationsMutationTypesLeadingMediansListDict)
-        print('################### Debug Part4 ends')
-
         #########################################################################################################################
 
         #########################################################################################################################
-        print('Debug Part5 starts')
-        print('simNum2Sample2Type2TranscriptionStrand2CountDict')
-        print(simNum2Sample2Type2TranscriptionStrand2CountDict)
-        print('Debug Part5 ends')
-
         #sample based starts
         # samplebased --- simulations --- mutation type --- transcription
         sample2SimulationsMutationTypesTranscribedMediansListDict, sample2SimulationsMutationTypesUntranscribedMediansListDict =\
@@ -1273,14 +1242,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 numberofSimulations,
                 sample2NumberofSubsDict,
                 TRANSCRIPTIONSTRANDBIAS)
-
-        print('################### Debug Part6 starts')
-        print('sample2SimulationsMutationTypesTranscribedMediansListDict')
-        print(sample2SimulationsMutationTypesTranscribedMediansListDict)
-        print('sample2SimulationsMutationTypesUntranscribedMediansListDict')
-        print(sample2SimulationsMutationTypesUntranscribedMediansListDict)
-        print('################### Debug Part6 ends')
-
 
         # samplebased --- simulations --- mutation type --- replication
         sample2SimulationsMutationTypesLaggingMediansListDict, sample2SimulationsMutationTypesLeadingMediansListDict =\

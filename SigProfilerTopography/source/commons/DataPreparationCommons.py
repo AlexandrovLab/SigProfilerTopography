@@ -138,7 +138,7 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
 ############################################################
 
 ############################################################
-def readChrBasedMutations(chr_based_mutation_filepath,mutationType):
+def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
 
     if (os.path.exists(chr_based_mutation_filepath)):
         try:
@@ -147,7 +147,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutationType):
             mutations_with_genomic_positions_df = pd.DataFrame()
 
         if (not mutations_with_genomic_positions_df.empty):
-            if (mutationType==DINUCS):
+            if (mutation_type_context==DBS):
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -157,7 +157,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutationType):
                 #Add new columns
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
                 mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
-            elif (mutationType==INDELS):
+            elif (mutation_type_context==ID):
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -171,7 +171,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutationType):
                 #order the columns make CONTEXT at the end.
                 ordered_column_names = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,LENGTH,PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND,MUTATION]
                 mutations_with_genomic_positions_df = mutations_with_genomic_positions_df[ordered_column_names]
-            elif(mutationType==SUBS):
+            elif(mutation_type_context in SBS_CONTEXTS):
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -195,40 +195,55 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     jobname = inputList[2]
     chr_based_mutation_filepath = inputList[3]
     mutations_probabilities_df = inputList[4]
-    mutationType = inputList[5]
+    mutation_type_context = inputList[5]
     simNum = inputList[6]
 
-    chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutationType)
+    chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context)
 
-    #chr_based_dinuc_df columns ['Sample', 'Chrom', 'Start', 'Mutation','PyrimidineStrand']
-    #dinucs_probabilities_df columns ['Sample', 'Mutation', 'DBS2', 'DBS4', 'DBS6', 'DBS7', 'DBS11']
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
         if(simNum>0):
             #Convert PD10010a_DBS_96_1 ==> PD10010a
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_',expand=True)[0]
 
+        print('Before merge -- sim%d mutation_type_context:%s for chr%s chr_based_mutation_filepath:%s' %(simNum,mutation_type_context,chrShort,chr_based_mutation_filepath))
+        print('chr_based_mutation_df.shape')
+        print(chr_based_mutation_df.shape)
+
         merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
 
         if (chr_based_mutation_df.shape[0]!=merged_df.shape[0]):
-            print('There is a situation. For chr:%s All dinucs are not merged with dinucs signature probabilities' %(chrShort))
+            print('There is a situation. For chr:%s All %s mutations are not merged with signature probabilities' %(chrShort,mutation_type_context))
 
         if ((merged_df is not None) and (not merged_df.empty)):
-            chrBasedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,mutationType)
+            if (mutation_type_context in SBS_CONTEXTS):
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,SUBS)
+            elif (mutation_type_context == DBS):
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,DINUCS)
+            elif (mutation_type_context==ID):
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,INDELS)
+
             if (simNum ==0):
-                chr_based_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedMutationsFileName)
+                chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,chrBasedMergedMutationsFileName)
             else:
                 simDir = 'sim%d' %(simNum)
-                chr_based_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,simDir,chrBasedMutationsFileName)
+                chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,simDir,chrBasedMergedMutationsFileName)
+
+            print('merged_df.shape')
+            print(merged_df.shape)
+
+            print('chr_based_merged_mutations_file_path:%s' %(chr_based_merged_mutations_file_path))
 
             # #After test uncomment
             # if ('MutationLong' in merged_df.columns.values):
             #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
             #After merge
-            if (mutationType==SUBS):
+            if (mutation_type_context in SBS_CONTEXTS):
                 merged_df[MUTATION] = merged_df[MUTATION].str[2:5]
 
-            merged_df.to_csv(chr_based_mutations_file_path, sep='\t', header=True, index=False)
+            merged_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
+        else:
+            print('-------------No merge file for sim%d mutation_type_context:%s for chr%s' %(simNum,mutation_type_context,chrShort))
 ############################################################
 
 

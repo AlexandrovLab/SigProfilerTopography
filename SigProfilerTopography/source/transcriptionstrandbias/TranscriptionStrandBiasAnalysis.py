@@ -451,7 +451,7 @@ def searchMutations(inputList):
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations):
+def transcriptionStrandBiasAnalysis(computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -558,6 +558,101 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
         ###############################      All Chromosomes in parallel      ######################################
         ############################################################################################################
 
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+
+        ####################################################################################################
+        for chrLong in chromNamesList:
+            chromSize = chromSizesDict[chrLong]
+            poolInputList = []
+            # Get chrBased ensembl transcripts
+            chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
+
+            #You need to initialize to None so that you don't use former for loop values accidentally
+            if (useTranscriptionStrandColumn):
+                chrBased_transcription_array = None
+            else:
+                ################################################################################
+                chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
+                chrBased_transcripts_df.apply(fillTranscriptionArray,chrBased_transcription_array=chrBased_transcription_array,axis=1)
+                ################################################################################
+
+            ####################################################################
+            for simNum in range(0,numofSimulations+1):
+                inputList = []
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+                inputList.append(chrBased_subs_df)  # each time different split
+                inputList.append(chrBased_indels_df)
+                inputList.append(chrBased_dinucs_df)
+                inputList.append(chrBased_transcription_array) # same for all
+                inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(numofSimulations)
+                poolInputList.append(inputList)
+            ####################################################################
+
+            listofTuples = pool.map(searchMutations,poolInputList)
+
+            accumulate_simulations_integrated(listofTuples,
+                                              accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
+        ####################################################################################################
+
+
+    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL):
+
+        ####################################################################################################
+        for chrLong in chromNamesList:
+
+            chromSize = chromSizesDict[chrLong]
+            poolInputList = []
+
+            # Get chrBased ensembl transcripts
+            chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
+
+            #You need to initialize to None so that you don't use former for loop values accidentally
+            if (useTranscriptionStrandColumn):
+                chrBased_transcription_array = None
+            else:
+                ################################################################################
+                chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
+                chrBased_transcripts_df.apply(fillTranscriptionArray,chrBased_transcription_array=chrBased_transcription_array,axis=1)
+                ################################################################################
+
+            ####################################################################
+            for simNum in range(0,numofSimulations+1):
+                inputList = []
+
+                chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+                inputList.append(chrBased_subs_df)  # each time different split
+                inputList.append(chrBased_indels_df)
+                inputList.append(chrBased_dinucs_df)
+                inputList.append(chrBased_transcription_array) # same for all
+                inputList.append(subsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
+                inputList.append(numofSimulations)
+                result_tuple = searchMutations(inputList)
+
+                result_tuple_list = []
+                result_tuple_list.append(result_tuple)
+
+                accumulate_simulations_integrated(result_tuple_list,
+                                                  accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
+                                                  accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
+                                                  accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
+                                                  accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
+            ####################################################################
+
+        ####################################################################################################
+
     elif (computationType==COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
 
         ############################################################################################################
@@ -631,16 +726,28 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
 
             listofTuples = pool.map(searchMutations,poolInputList)
 
-            accumulate(listofTuples,
-                           accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
-                           accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
-                           accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
-                           accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
+            accumulate_simulations_integrated(listofTuples,
+                                              accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
+                                              accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
+
         ############################################################################################################
         #####################################      Version2  ends      #############################################
         ###############################       Chromosomes sequentially      ########################################
         ###############################      All ChrBased Splits sequentially     ##################################
         ############################################################################################################
+
+    print('TranscriptionStrandBiasAnalysis Results %s starts' %(computationType))
+    print('accumulatedAllChromosomesType2TranscriptionStrand2CountDict[0]')
+    print(accumulatedAllChromosomesType2TranscriptionStrand2CountDict[0])
+    print('accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict[0]')
+    print(accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict[0])
+    print('accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict[0]')
+    print(accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict[0])
+    print('accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict[0]')
+    print(accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict[0])
+    print('TranscriptionStrandBiasAnalysis Results %s ends' %(computationType))
 
     #################################################################################################################
     ##########################################      Output starts      ##############################################
@@ -653,6 +760,12 @@ def transcriptionStrandBiasAnalysis(mutationTypes,computationType,useTranscripti
     #################################################################################################################
     ##########################################      Output ends      ################################################
     #################################################################################################################
+
+    ################################
+    pool.close()
+    pool.join()
+    ################################
+
     print('########################## TranscriptionStrandBias Analysis ends ############################')
 
 ########################################################################
