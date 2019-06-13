@@ -28,6 +28,7 @@ from SigProfilerTopography.source.commons.DataPreparationCommons import readChrB
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
 from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays
+from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
 from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import nucleosomeOccupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import readReplicationTimeDataAndWriteChrBasedReplicationTimeNPArrays
@@ -177,7 +178,8 @@ def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nuc
         if (os.path.exists(nucleosomeFilename)):
             quantileValue = round(float(0.97), 2)
             # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
-            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename)
             #append
             append2File(nucleosomeFilename_wo_dir,AVAILABLE_LIBRARY_FILENAMES_PATH)
         else:

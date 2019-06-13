@@ -325,6 +325,17 @@ def downloadFromWeb(url,filepath_to_be_saved):
 #     wget.download(url,filepath_to_be_saved)
 # ##################################################################
 
+###########################################################
+import psutil
+
+def memory_usage():
+    pid = os.getpid()
+    process = psutil.Process(pid)
+    memoryUse1 = process.memory_info()[0]/2.**30  #memory use in GB
+    print('************** Current Memory Use: '+ str(round(memoryUse1,2))+" GB *****************\n")
+###########################################################
+
+
 
 ########################################################################################
 def getShortNames(chromNamesList):

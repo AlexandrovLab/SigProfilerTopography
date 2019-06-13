@@ -81,75 +81,6 @@ def computeSignalArrayAndCountArray(chromSize,chrBased_nucleosome_df):
 
 
 ######################################################################
-#Does not work, they sleeps do not run
-def  writeChrBasedNucleosomeOccupancySignalCountArrays(chrLong, chromSize, chrBasedNuclesomeDF,nucleosomeFilename):
-
-    numofProcesses = multiprocessing.cpu_count()
-    modifiedNumofProcesses = int(numofProcesses/2)
-
-    print('for debug chrLong:%s chrSize:%d' %(chrLong,chromSize))
-    os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED), exist_ok=True)
-
-    print('writeChrBasedNucleosome:%s for %s starts' %(nucleosomeFilename,chrLong))
-    nucleosomeFilenameWoExtension = nucleosomeFilename[0:-4]
-
-    signalArrayFilename = '%s_signal_%s' %(chrLong,nucleosomeFilenameWoExtension)
-    countArrayFilename = '%s_count_%s' % (chrLong, nucleosomeFilenameWoExtension)
-
-    chrBasedSignalNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
-    chrBasedCountNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,countArrayFilename)
-
-    accumulatedSignalArray = np.zeros(chromSize,dtype=np.float32)
-    accumulatedCountArray = np.zeros(chromSize, dtype=np.float32)
-
-    ################################
-    # pool = multiprocessing.Pool(numofProcesses)
-    pool = multiprocessing.Pool(modifiedNumofProcesses)
-    chrBasedNucleosomeDFSplits = np.array_split(chrBasedNuclesomeDF, modifiedNumofProcesses)
-    ################################
-
-    poolInputList = []
-    for idx, chrBasedNucleosomeDFSplit in enumerate(chrBasedNucleosomeDFSplits):
-        print('for debug for split %d' %(idx))
-        print('chromSize')
-        print(chromSize)
-        inputList = []
-        inputList.append(chromSize)
-        inputList.append(chrBasedNucleosomeDFSplit)
-        poolInputList.append(inputList)
-
-    allSplits_chrBased_SignalArrayAndCountArray_List = pool.map(computeSignalArrayAndCountArray, poolInputList)
-
-    ################################
-    pool.close()
-    pool.join()
-    ################################
-
-    for split_chrBased_SignalArrayAndCountArray_List in allSplits_chrBased_SignalArrayAndCountArray_List:
-        print('For debug type(split_chrBased_SignalArrayAndCountArray_List)')
-        print(type(split_chrBased_SignalArrayAndCountArray_List))
-        signalArray = split_chrBased_SignalArrayAndCountArray_List[0]
-        countArray = split_chrBased_SignalArrayAndCountArray_List[1]
-        accumulatedSignalArray += signalArray
-        accumulatedCountArray += countArray
-        # singalArray, countArray = computeSignalArrayAndCountArrayForEachSplit(chromSize,chrBasedNucleosomeDFSplit)
-
-    np.seterr(divide='ignore', invalid='ignore')
-    # averageSignalArray = np.divide(accumulatedSignalArray, accumulatedCountArray, dtype=np.float32)
-    # np.nan_to_num(averageSignalArray, copy=False)
-
-    #Save as npy
-    np.save(chrBasedSignalNucleosmeFile, accumulatedSignalArray)
-    np.save(chrBasedCountNucleosmeFile, accumulatedCountArray)
-
-    #Save as txt
-    np.savetxt(chrBasedSignalNucleosmeFile, accumulatedSignalArray)
-    np.save(chrBasedCountNucleosmeFile, accumulatedCountArray)
-
-    print('writeChrBasedNucleosome:%s for %s ends' % (nucleosomeFilename, chrLong))
-######################################################################
-
-######################################################################
 def updateSignalCountArrays(nucleosome_row,signalArray,countArray):
     signalArray[nucleosome_row[start]:nucleosome_row[end]] += nucleosome_row[signal]
     countArray[nucleosome_row[start]:nucleosome_row[end]] += 1
@@ -162,13 +93,16 @@ def updateSignalArrays(nucleosome_row,signalArray):
 
 ######################################################################
 # This is used right now.
-def  writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList):
+def writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList):
+    print('In write for each chromosome function')
+    memory_usage()
+
     chrLong = inputList[0]
     chromSize = inputList[1]
     chrBasedNuclesomeDF = inputList[2]
     nucleosomeFilename = inputList[3]
 
-    print('for debug chrLong:%s chrSize:%d' %(chrLong,chromSize))
+    print('For debug chrLong:%s chrSize:%d' %(chrLong,chromSize))
     os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED), exist_ok=True)
 
     print('writeChrBasedNucleosome:%s for %s starts' %(nucleosomeFilename,chrLong))
@@ -178,12 +112,14 @@ def  writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList
     signalArray = np.zeros(chromSize,dtype=np.float32)
     # countArray = np.zeros(chromSize,dtype=np.int32)
 
-    # chrBasedNuclesomeDF.apply(updateSignalCountArrays,signalArray=signalArray,countArray=countArray,axis=1)
     chrBasedNuclesomeDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
+    # chrBasedNuclesomeDF.apply(updateSignalCountArrays,signalArray=signalArray,countArray=countArray,axis=1)
 
     #############################  Save as npy starts ################################
     signalArrayFilename = '%s_signal_%s' %(chrLong,nucleosomeFilenameWoExtension)
     chrBasedSignalNucleosmeFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
+    print('Debug June 12, 2019 -- current_abs_path:%s' %current_abs_path)
+    print('Debug June 12, 2019 -- chrBasedSignalNucleosmeFile:%s' %chrBasedSignalNucleosmeFile)
     np.save(chrBasedSignalNucleosmeFile, signalArray)
     #############################  Save as npy ends ##################################
 
@@ -329,17 +265,101 @@ def plotChrBasedNucleosomeOccupancyFiguresFromText(genome,nucleosomeFilename):
 
 ######################################################################
 
+
+######################################################################
+def  readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
+
+    column_names = [chrom, start, end, signal]
+    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
+
+    print('After nucleosome occupancy is loaded into memory')
+    memory_usage()
+
+    #########################################################
+    if (quantileValue < 1.0):
+        # remove the outliers
+        q = nucleosome_df[SIGNAL].quantile(quantileValue)
+        print('q:%f' % q)
+        print('before %d' % (nucleosome_df.shape[0]))
+        nucleosome_df = nucleosome_df[nucleosome_df[SIGNAL] < q]
+
+        print('After nucleosome_df is subset')
+        memory_usage()
+    #########################################################
+
+    nucleosome_df_grouped = nucleosome_df.groupby(chrom)
+
+    print('After nucleosome occupancy grouped by')
+    memory_usage()
+
+    return nucleosome_df_grouped
+######################################################################
+
+
+######################################################################
+def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue, nucleosomeFilename):
+    chromSizesDict = getChromSizesDict(genome)
+
+    print('Before nucleosome occupancy is loaded into memory')
+    memory_usage()
+
+    # column_names = [chrom, start, end, signal]
+    if os.path.exists(nucleosomeFilename):
+
+        nucleosome_df_grouped = readNucleosomeOccupancyData(quantileValue,nucleosomeFilename)
+
+        # nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
+        #
+        # print('After nucleosome occupancy is loaded into memory')
+        # memory_usage()
+        #
+        # if (quantileValue<1.0):
+        #     #remove the outliers
+        #     q = nucleosome_df[SIGNAL].quantile(quantileValue)
+        #     print('q:%f' % q)
+        #     print('before %d' % (nucleosome_df.shape[0]))
+        #     nucleosome_df = nucleosome_df[nucleosome_df[SIGNAL] < q]
+        #
+        #     print('After nucleosome_df is subset')
+        #     memory_usage()
+        #
+        #     nucleosome_df_grouped = nucleosome_df.groupby(chrom)
+
+        print('After nucleosome occupancy grouped by')
+        memory_usage()
+
+        for chrLong, chromBasedNucleosomeDF in nucleosome_df_grouped:
+            print('Debug June 13, 2019 For %s write nucleosome signal and count array' %(chrLong))
+            chromSize = chromSizesDict[chrLong]
+            inputList = []
+            inputList.append(chrLong)
+            inputList.append(chromSize)
+            inputList.append(chromBasedNucleosomeDF)
+            inputList.append(nucleosomeFilename)
+            writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList)
+
+        print('After all chr based files are written')
+        memory_usage()
+######################################################################
+
+
 ######################################################################
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 
     # Start the pool
     numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
+    print('Number of processors:%d' %(numofProcesses))
+
+    print('Before nucleosome occupancy is loaded into memory')
+    memory_usage()
 
     column_names = [chrom, start, end, signal]
     if os.path.exists(nucleosomeFilename):
         nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
+
+        print('After nucleosome occupancy is loaded into memory')
+        memory_usage()
 
         if (quantileValue<1.0):
             #remove the outliers
@@ -348,19 +368,27 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
             print('before %d' % (nucleosome_df.shape[0]))
             nucleosome_df = nucleosome_df[nucleosome_df[SIGNAL] < q]
 
+            print('After nucleosome_df is subset')
+            memory_usage()
+
             nucleosome_df_grouped = nucleosome_df.groupby(chrom)
+
+            pool = multiprocessing.Pool(numofProcesses)
+
+            print('After pool is initialized')
+            memory_usage()
 
             poolInputList = []
 
             for chrLong, chromBasedNucleosomeDF in nucleosome_df_grouped:
-                    print('for %s write nucleosome signal and count arrats' %(chrLong))
-                    chromSize = chromSizesDict[chrLong]
-                    inputList = []
-                    inputList.append(chrLong)
-                    inputList.append(chromSize)
-                    inputList.append(chromBasedNucleosomeDF)
-                    inputList.append(nucleosomeFilename)
-                    poolInputList.append(inputList)
+                print('for %s write nucleosome signal and count array' %(chrLong))
+                chromSize = chromSizesDict[chrLong]
+                inputList = []
+                inputList.append(chrLong)
+                inputList.append(chromSize)
+                inputList.append(chromBasedNucleosomeDF)
+                inputList.append(nucleosomeFilename)
+                poolInputList.append(inputList)
 
             pool.map(writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel, poolInputList)
 
@@ -368,6 +396,9 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
             pool.close()
             pool.join()
             ################################
+
+            print('After pool is closed and joined')
+            memory_usage()
 
 ######################################################################
 

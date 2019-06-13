@@ -59,7 +59,7 @@ This call also plots topography output figures.
 >> inputDir = '.../from/googledrive/you/can/download/sample/input/under/matrixgenerator/'
 >> outputDir = '.../as/you/wish/output/'
 >> jobname = 'BreastCancer560'
->> numofSimulations = 2
+>> numberofSimulations = 2
 >> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
 >> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
 topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutation_types_contexts=['96','DBS'])
