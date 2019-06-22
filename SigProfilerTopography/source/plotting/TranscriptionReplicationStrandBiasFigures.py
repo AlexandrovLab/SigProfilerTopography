@@ -436,12 +436,21 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     # print('fdr_bh_adjusted_pvalues: %s' %(fdr_bh_adjusted_pvalues))
     # print('############# for debug ends Nov 12, 2018 ################')
 
+
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
 
-    ind = np.arange(N)  # the x locations for the groups
+    # the x locations for the groups
+    ind = np.arange(N)
 
     fig, ax = plt.subplots(figsize=(16,10),dpi=300)
+
+    ##############################
+    #To make the bar width not too wide
+    if len(ind)<6:
+        maxn = 6
+        ax.set_xlim(-0.5, maxn - 0.5)
+    ##############################
 
     ax.get_yaxis().set_major_formatter(mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
@@ -1847,17 +1856,16 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #######################################################
     ################# Plot mutations starts ###############
     #######################################################
+    width = 0.20
+
     # Transcription
     x_axis_labels = sixMutationTypes
     N = len(x_axis_labels)
-
-    width = 0.20
     plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,isKeySample,None,N, x_axis_labels, mutationtypes_transcribed_list, mutationtypes_untranscribed_list,simulations_mutationtypes_transcribed_medians_list, simulations_mutationtypes_untranscribed_medians_list,mutationtype_transcription_FDR_BH_adjusted_pvalues, 'Transcribed','Untranscribed', 'All Mutations', 'royalblue', 'yellowgreen','mutationtypes_transcription_strand_bias', width)
 
     # Replication
     x_axis_labels = sixMutationTypes
     N = len(x_axis_labels)
-
     plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,None,isKeySample,None,N, x_axis_labels, mutationtypes_lagging_list, mutationtypes_leading_list,simulations_mutationtypes_lagging_medians_list, simulations_mutationtypes_leading_medians_list,mutationtype_replication_FDR_BH_adjusted_pvalues, 'Lagging', 'Leading','All Mutations', 'indianred', 'goldenrod', 'mutationtypes_replication_strand_bias',width)
     #######################################################
     ################# Plot mutations ends #################

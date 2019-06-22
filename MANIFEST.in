@@ -9,7 +9,6 @@ include SigProfilerTopography/source/transcriptionstrandbias/*
 include SigProfilerTopography/lib/ucscgenome/hg19ChromSizesDict.txt
 include SigProfilerTopography/lib/ucscgenome/hg38ChromSizesDict.txt
 include SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
-include SigProfilerTopography/lib/AvailableLibraryFiles.txt
 include SigProfilerTopography/lib/nucleosome/bigWigToWig
 include SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
 include SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed

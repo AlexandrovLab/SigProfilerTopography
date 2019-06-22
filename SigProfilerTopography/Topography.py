@@ -156,7 +156,7 @@ def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
 #######################################################
 
 #######################################################
-def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList,computation_type):
+def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type):
     #############################################
     # NUCLEOSOMEOCCUPANCYANALYSIS
     # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
@@ -170,21 +170,23 @@ def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nuc
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    nucleosomeFilename_wo_dir = os.path.basename(nucleosomeFilename)
+    #Check whether nucleosomeFilename_wo_dir is downloaded
+    if (os.path.exists(nucleosomeFilename)):
+        quantileValue = round(float(0.97), 2)
+        package_lib_nucleosome_directory_path = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED)
 
-    if (nucleosomeFilename_wo_dir not in availableLibraryFilenamesList):
-
-        #Check whether nucleosomeFilename_wo_dir is downloaded
-        if (os.path.exists(nucleosomeFilename)):
-            quantileValue = round(float(0.97), 2)
-            # PartitionNucleosomeOccupancyData.partitionNucleosomeOccupancyData(jobname,nucleosomeFilename,quantileValue)
-            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+        if (not os.path.exists(package_lib_nucleosome_directory_path)):
+            print('%s does not exists' %(package_lib_nucleosome_directory_path))
             readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename)
-            #append
-            append2File(nucleosomeFilename_wo_dir,AVAILABLE_LIBRARY_FILENAMES_PATH)
-        else:
-            download_nucleosome_command = 'download_nucleosome_occupancy_convert_bigWig2wig(cellLine) command'
-            print('You need to download %s using %s' %(nucleosomeFilename_wo_dir,download_nucleosome_command))
+            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+        elif (not os.listdir(package_lib_nucleosome_directory_path)):
+            print('There is no file under: %s' %(package_lib_nucleosome_directory_path))
+            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename)
+            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+    else:
+        nucleosomeFilename_wo_dir = os.path.basename(nucleosomeFilename)
+        download_nucleosome_command = 'download_nucleosome_occupancy_convert_bigWig2wig(cellLine) command'
+        print('You need to download %s using %s' %(nucleosomeFilename_wo_dir,download_nucleosome_command))
 
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
@@ -341,7 +343,6 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabi
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
     chromShortNamesList=getShortNames(chromNamesList)
-    availableLibraryFilenamesList = getAvailableLibraryFilenamesList()
 
     print('##################### SigProfilerTopography parameters ##########################')
     print('Genome: %s' %(genome))
@@ -541,7 +542,7 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabi
     ####################################################################################################################
     print('################# Run SigProfilerTopography Analysis starts ###########')
     start_time = time.time()
-    runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,availableLibraryFilenamesList,computation_type)
+    runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type)
     print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
     print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
 

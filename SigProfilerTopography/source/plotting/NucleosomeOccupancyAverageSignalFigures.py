@@ -194,7 +194,9 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
                 listofLegends.append(original[0])
 
 
-        plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white', facecolor='white')
+        # plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white', facecolor='white')
+        plt.legend(loc='lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white',facecolor='white', ncol=5, fancybox=True)
+
 
         # text = '%d subs' %(numberofMutations)
         # plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
