@@ -17,5 +17,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Debugging" />
     <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
+    <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
   </component>
 </module>

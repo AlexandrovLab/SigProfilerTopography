@@ -352,6 +352,9 @@ def searchMutations(inputList):
     indelsSignature2NumberofMutationsDict = inputList[5]
     dinucsSignature2NumberofMutationsDict = inputList[6]
     numofSimulations = inputList[7]
+    subs_sig_prob=inputList[8]
+    indels_sig_prob = inputList[9]
+    dinuc_sig_prob = inputList[10]
 
     #legacy code
     # type2TranscriptionStrand2CountDict= {}
@@ -379,7 +382,7 @@ def searchMutations(inputList):
                                     simNum2Type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict,
                                     simNum2Signature2MutationType2TranscriptionStrand2CountDict = simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                    mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                    mutationProbabilityThreshold=subs_sig_prob,
                                     type=SUBS,
                                     axis=1)
 
@@ -391,7 +394,7 @@ def searchMutations(inputList):
                                     simNum2Type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict,
                                     simNum2Signature2MutationType2TranscriptionStrand2CountDict =simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                    mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                    mutationProbabilityThreshold=indels_sig_prob,
                                     type= INDELS,
                                     axis=1)
 
@@ -404,7 +407,7 @@ def searchMutations(inputList):
                                     simNum2Type2Sample2TranscriptionStrand2CountDict= simNum2Type2Sample2TranscriptionStrand2CountDict,
                                     simNum2Signature2MutationType2TranscriptionStrand2CountDict = simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                     signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
-                                    mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                    mutationProbabilityThreshold=dinuc_sig_prob,
                                     type=DINUCS,
                                     axis=1)
 
@@ -416,7 +419,7 @@ def searchMutations(inputList):
                                          simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
                                          simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                          signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                         mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                         mutationProbabilityThreshold=subs_sig_prob,
                                          type=SUBS,
                                          axis=1)
 
@@ -427,7 +430,7 @@ def searchMutations(inputList):
                                            simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
                                            simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                            signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                           mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                           mutationProbabilityThreshold=indels_sig_prob,
                                            type=INDELS,
                                            axis=1)
 
@@ -438,7 +441,7 @@ def searchMutations(inputList):
                                            simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
                                            simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
                                            signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
-                                           mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                           mutationProbabilityThreshold=dinuc_sig_prob,
                                            type=DINUCS,
                                            axis=1)
 
@@ -451,7 +454,7 @@ def searchMutations(inputList):
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations):
+def transcriptionStrandBiasAnalysis(computationType,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
 
     print('########################## TranscriptionStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -543,6 +546,9 @@ def transcriptionStrandBiasAnalysis(computationType,useTranscriptionStrandColumn
             inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
             inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
             inputList.append(numofSimulations)
+            inputList.append(subs_sig_prob)
+            inputList.append(indels_sig_prob)
+            inputList.append(dinuc_sig_prob)
             poolInputList.append(inputList)
 
         listofTuples = pool.map(searchMutations, poolInputList)
@@ -590,6 +596,9 @@ def transcriptionStrandBiasAnalysis(computationType,useTranscriptionStrandColumn
                 inputList.append(indelsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(dinucsSignature2NumberofMutationsDict)  # same for all
                 inputList.append(numofSimulations)
+                inputList.append(subs_sig_prob)
+                inputList.append(indels_sig_prob)
+                inputList.append(dinuc_sig_prob)
                 poolInputList.append(inputList)
             ####################################################################
 

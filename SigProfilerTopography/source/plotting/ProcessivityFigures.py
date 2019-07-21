@@ -510,7 +510,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     ##################################################################################
     #Put a title
-    plt.title('%s with %s' %(pValueCalculation,multipleTestingCorrection), fontsize=30, y=1.1)
+    # plt.title('%s with %s' %(pValueCalculation,multipleTestingCorrection), fontsize=30, y=1.1)
     ##################################################################################
 
     ##################################################################################
@@ -523,7 +523,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     print(len(mticks))
 
     ax.set_xticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='x', which='minor', length=0,labelsize=20)
+    ax.tick_params(axis='x', which='minor', length=0,labelsize=30)
     ax.set_xticklabels(xlabels, minor=True)
 
     ax.xaxis.set_ticks_position('top')
@@ -540,7 +540,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     ax.set_yticklabels([])
     mticks = ax.get_yticks()
     ax.set_yticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='y', which='minor', length=0,labelsize=20)
+    ax.tick_params(axis='y', which='minor', length=0,labelsize=30)
     ax.set_yticklabels(ylabels, minor=True) # fontsize
 
     plt.tick_params(

@@ -195,7 +195,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
 
 
         # plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white', facecolor='white')
-        plt.legend(loc='lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white',facecolor='white', ncol=5, fancybox=True)
+        plt.legend(loc='lower left', handles=listofLegends, prop={'size': 10}, shadow=False, edgecolor='white',facecolor='white', ncol=8, fancybox=True)
 
 
         # text = '%d subs' %(numberofMutations)
@@ -244,6 +244,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
+#Called by plotSignatureBasedFigures
 def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname, isFigureAugmentation,numberofSimulations,color,fillcolor):
 
     simulationsSignatureBasedMedians = None
@@ -322,8 +323,9 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
 
         #put the number of snps
-        text = '%d %s' %(numberofMutations,text)
-        plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
+        tobeWrittenText = "{:,}".format(numberofMutations)
+        tobeWrittenText=tobeWrittenText + " " + text
+        plt.text(0.99, 0.99, tobeWrittenText, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
         #Put vertical line at x=0
         # plt.axvline(x=0, ymin=0, ymax=1, color='gray', linestyle='--')
@@ -411,7 +413,7 @@ def takeAverage(listofSimulationsAggregatedMutations):
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSPMs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes):
+def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes):
     realAggregatedSubstitutions = None
     realAggregatedIndels = None
     realAggregatedDinucs = None
@@ -518,10 +520,30 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
     plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
 
-    # put the number of snps and indels
-    if sample is not None:
-        text = '%d subs, %d indels %d dinucs' %(numberofSPMs,numberofIndels,numberofDinucs)
-        plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
+    # put the number of subs, indels and dinucs
+    text=""
+
+    #Subs
+    if numberofSubs>0:
+        subs_text="{:,} subs".format(numberofSubs)
+        text=subs_text
+
+    #Indels
+    if numberofIndels>0:
+        indels_text = "{:,} indels".format(numberofIndels)
+        if len(text)>0:
+            text= text + ', ' + indels_text
+        else:
+            text= indels_text
+    #Dinucs
+    if numberofDinucs>0:
+        dinucs_text = "{:,} dinucs".format(numberofDinucs)
+        if len(text)>0:
+            text= text + ', ' + dinucs_text
+        else:
+            text= dinucs_text
+
+    plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
     #Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
@@ -549,7 +571,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         plt.title(sample, fontsize=40, fontweight='bold')
     else:
         plt.title(jobname, fontsize=40, fontweight='bold')
-
 
     plt.xlabel(xlabel, fontsize=30)
     plt.ylabel(ylabel, fontsize=30)
@@ -649,6 +670,8 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
         isFigureAugmentation = True
 
     ############## Read necessary dictionaries starts ########################################
+    mutationType2NumberofMutationsDict = getDictionary(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
+
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
     sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
     sample2NumberofDinucsDict = getDictionary(outputDir,jobname,Sample2NumberofDinucsDictFilename)
@@ -663,49 +686,64 @@ def nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation
     ############## Read necessary dictionaries ends ##########################################
 
     ##############################################################
+    #ALL SAMPLES IN ONE
     #Plot "all samples pooled" and "sample based" signature based in one figure
     plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)','Average nucleosome signal')
-    plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)','Average nucleosome signal')
-    plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)','Average nucleosome signal')
+    # Later on uncomment
+    # plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)','Average nucleosome signal')
+    # plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)','Average nucleosome signal')
     ##############################################################
 
-    ##############################################################
-    plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',None,outputDir,jobname,0,0,0,numberofSimulations,mutationTypes)
-    ##############################################################
+    # Later on uncomment
+    # ##############################################################
+    # numberofSubs=0
+    # numberofIndels=0
+    # numberofDinucs=0
+    #
+    # if (SUBS in mutationType2NumberofMutationsDict):
+    #     numberofSubs=mutationType2NumberofMutationsDict[SUBS]
+    # if (INDELS in mutationType2NumberofMutationsDict):
+    #     numberofIndels = mutationType2NumberofMutationsDict[INDELS]
+    # if (DINUCS in mutationType2NumberofMutationsDict):
+    #     numberofDinucs = mutationType2NumberofMutationsDict[DINUCS]
+    #
+    # plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes)
+    # ##############################################################
 
-    ##############################################################
-    #Arrays are filled w.r.t. sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
-    samplesfromSubs  = sample2NumberofSubsDict.keys()
-    samplesfromIndels = sample2NumberofIndelsDict.keys()
-    samplesfromDinucs = sample2NumberofDinucsDict.keys()
+    # Later on uncomment
+    # ##############################################################
+    # #Arrays are filled w.r.t. sample2SignaturesWithAtLeast10KEligibleMutations2NumberofMutationsDict
+    # samplesfromSubs  = sample2NumberofSubsDict.keys()
+    # samplesfromIndels = sample2NumberofIndelsDict.keys()
+    # samplesfromDinucs = sample2NumberofDinucsDict.keys()
+    #
+    # for sample in (samplesfromSubs | samplesfromIndels | samplesfromDinucs):
+    #     numberofSubs = 0
+    #     numberofIndels = 0
+    #     numberofDinucs = 0
+    #     if sample in sample2NumberofSubsDict:
+    #         numberofSubs = sample2NumberofSubsDict[sample]
+    #     if sample in sample2NumberofIndelsDict:
+    #         numberofIndels = sample2NumberofIndelsDict[sample]
+    #     if sample in sample2NumberofDinucsDict:
+    #         numberofDinucs = sample2NumberofDinucsDict[sample]
+    #
+    #         plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',sample,outputDir,jobname,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationTypes)
+    # ##############################################################
 
-    for sample in (samplesfromSubs | samplesfromIndels | samplesfromDinucs):
-        numberofSubs = 0
-        numberofIndels = 0
-        numberofDinucs = 0
-        if sample in sample2NumberofSubsDict:
-            numberofSubs = sample2NumberofSubsDict[sample]
-        if sample in sample2NumberofIndelsDict:
-            numberofIndels = sample2NumberofIndelsDict[sample]
-        if sample in sample2NumberofDinucsDict:
-            numberofDinucs = sample2NumberofDinucsDict[sample]
 
-            plotAllMutationsPooledWithSimulations('Interval around variant (bp)','Average nucleosome signal',sample,outputDir,jobname,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationTypes)
-    ##############################################################
-
-
-
-    #############################################################################################################################################
-    #Plot Signature Based
-    #ncomms11383 Fig3b signature based average nucleosome occupancy figures
-    if checkValidness(SIGNATUREBASED,outputDir,jobname):
-        if (SUBS in mutationTypes):
-            #Subs Signatures
-            plotSignatureBasedFigures(SUBS,subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
-        if (INDELS in mutationTypes):
-            #Indels Signatures
-            plotSignatureBasedFigures(INDELS,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
-        if (DINUCS in mutationTypes):
-            # Dinucs Signatures
-            plotSignatureBasedFigures(DINUCS,dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
-    #############################################################################################################################################
+    # Later on uncomment
+    # #############################################################################################################################################
+    # #Plot Signature Based
+    # #ncomms11383 Fig3b signature based average nucleosome occupancy figures
+    # if checkValidness(SIGNATUREBASED,outputDir,jobname):
+    #     if (SUBS in mutationTypes):
+    #         #Subs Signatures
+    #         plotSignatureBasedFigures(SUBS,subsSignature2NumberofMutationsDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
+    #     if (INDELS in mutationTypes):
+    #         #Indels Signatures
+    #         plotSignatureBasedFigures(INDELS,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
+    #     if (DINUCS in mutationTypes):
+    #         # Dinucs Signatures
+    #         plotSignatureBasedFigures(DINUCS,dinucsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations)
+    # #############################################################################################################################################

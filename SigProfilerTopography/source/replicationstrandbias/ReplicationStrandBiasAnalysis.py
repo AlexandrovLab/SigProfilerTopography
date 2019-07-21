@@ -375,6 +375,10 @@ def  searchMutationsOnReplicationStrandArray(inputList):
     dinucsSignature2NumberofMutationsDict = inputList[6]
     numofSimulations = inputList[7]
 
+    subs_sig_prob = inputList[8]
+    indels_sig_prob = inputList[9]
+    dinuc_sig_prob = inputList[10]
+
     #LEGACY CODE
     # type2ReplicationStrand2CountDict= {}
     # sample2Type2ReplicationStrand2CountDict= {}
@@ -401,7 +405,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                mutationProbabilityThreshold=subs_sig_prob,
                                 type=SUBS,
                                 axis=1)
     ##############################  Fill dictionaries for subs  ends ######################
@@ -416,7 +420,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                mutationProbabilityThreshold=indels_sig_prob,
                                 type=INDELS,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
@@ -430,7 +434,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                 signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                mutationProbabilityThreshold=dinuc_sig_prob,
                                 type=DINUCS,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
@@ -534,7 +538,7 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename):
+def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
 
     print('########################## ReplicationStrandBias Analysis starts ##########################')
     numofProcesses = multiprocessing.cpu_count()
@@ -719,6 +723,10 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
                     inputList.append(indelsSignature2NumberofMutationsDict)
                     inputList.append(dinucsSignature2NumberofMutationsDict)
                     inputList.append(numofSimulations)
+                    inputList.append(subs_sig_prob)
+                    inputList.append(indels_sig_prob)
+                    inputList.append(dinuc_sig_prob)
+
                     poolInputList.append(inputList)
                 ################################################################################
 

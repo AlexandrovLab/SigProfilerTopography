@@ -65,9 +65,12 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
         for col in range(cols):
             colwise_array = stackedSimulations[:, col]
             sorted_colwise_array = np.sort(colwise_array)
-            simulationsLows.append(sorted_colwise_array[CI_indexLow])
+
+            if (CI_indexLow < sorted_colwise_array.shape[0]):
+                simulationsLows.append(sorted_colwise_array[CI_indexLow])
             simulationsMedians.append(np.median(sorted_colwise_array))
-            simulationsHighs.append(sorted_colwise_array[CI_indexHigh])
+            if (CI_indexHigh < sorted_colwise_array.shape[0]):
+                simulationsHighs.append(sorted_colwise_array[CI_indexHigh])
         #################################################################################
         ############################# For Simulations ends ##############################
         #################################################################################
@@ -107,7 +110,8 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     plt.bar(x, normalizedMutationDensityList, width, color=barcolor, edgecolor="black", linewidth=3, zorder=1)
     if simulationsMedians is not None:
         plt.plot(x, simulationsMedians, 'o--', color='navy', label='Average Simulations Aggregated indels', linewidth=1.0, zorder =2)
-        plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor='lightblue', zorder =2)
+        if (len(simulationsLows)==len(simulationsHighs)):
+            plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor='lightblue', zorder =2)
 
     # This code puts some extra space below 0 and above 1.0
     plt.ylim(-0.01, 1.01)

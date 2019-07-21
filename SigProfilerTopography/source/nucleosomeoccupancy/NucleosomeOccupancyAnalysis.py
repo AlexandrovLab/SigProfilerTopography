@@ -25,12 +25,12 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 
 ##############################################################################################################
 #main function
-def nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename):
+def nucleosomeOccupancyAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
     print('########################## NucleosomeOccupancyAnalysis starts ##########################')
     if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict, chromNamesList, outputDir,jobname,numofSimulations,nucleosomeFilename)
     elif  (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
-        nucleosome_occupancy_analysis_eachChrSequential_allSimsParallel(chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename)
+        nucleosome_occupancy_analysis_eachChrSequential_allSimsParallel(chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL):
         nucleosome_occupancy_analysis_eachChrSequential_eachSimSequential(chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename)
     print('########################## NucleosomeOccupancyAnalysis ends ############################')
@@ -53,6 +53,9 @@ def fillSignalArrayAndCountArrays(inputList):
     sample2SubsSignature2NumberofMutationsDict =  inputList[11]
     sample2IndelsSignature2NumberofMutationsDict = inputList[12]
     sample2DinucsSignature2NumberofMutationsDict = inputList[13]
+    subs_sig_prob = inputList[14]
+    indels_sig_prob = inputList[15]
+    dinuc_sig_prob = inputList[16]
 
     ##############################################################
     simNum2Type2SignalArrayDict = {}
@@ -76,7 +79,7 @@ def fillSignalArrayAndCountArrays(inputList):
                             simNum2Type2CountArrayDict = simNum2Type2CountArrayDict,
                             simNum2Sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict,
                             simNum2Sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict,
-                            MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                            MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = subs_sig_prob,
                            type = AGGREGATEDSUBSTITUTIONS,
                            axis=1)
 
@@ -92,7 +95,7 @@ def fillSignalArrayAndCountArrays(inputList):
                                   simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
                                   simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
                                   simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
-                                  MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                  MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=indels_sig_prob,
                                  type=AGGREGATEDINDELS,
                                  axis=1)
 
@@ -108,7 +111,7 @@ def fillSignalArrayAndCountArrays(inputList):
           simNum2Type2CountArrayDict=simNum2Type2CountArrayDict,
           simNum2Sample2Type2SignalArrayDict=simNum2Sample2Type2SignalArrayDict,
           simNum2Sample2Type2CountArrayDict=simNum2Sample2Type2CountArrayDict,
-          MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+          MUTATION_SIGNATURE_PROBABILITY_THRESHOLD=dinuc_sig_prob,
             type=AGGREGATEDDINUCS,
             axis=1)
     ###############################################################################
@@ -281,7 +284,7 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesL
 
 ########################################################################################
 #For all chromosome parallel starts
-def nucleosome_occupancy_analysis_eachChrSequential_allSimsParallel(chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename):
+def nucleosome_occupancy_analysis_eachChrSequential_allSimsParallel(chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
 
     ##########################################################################
     sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
@@ -368,6 +371,9 @@ def nucleosome_occupancy_analysis_eachChrSequential_allSimsParallel(chromSizesDi
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
+                inputList.append(subs_sig_prob)
+                inputList.append(indels_sig_prob)
+                inputList.append(dinuc_sig_prob)
                 poolInputList.append(inputList)
             ###################################################################################
             ##################  For all simulations in parallel ends ##########################

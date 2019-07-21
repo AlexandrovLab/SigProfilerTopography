@@ -37,14 +37,18 @@ MINUS = '-'
 MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1000000000
 
+
+############################################################
 #Constraints , Thresholds
 SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 5000
 INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
 DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
 
+PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
 SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
 INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
 DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
+############################################################
 
 SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
 INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
@@ -126,6 +130,9 @@ MM10 = 'mm10'
 
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
+
+
+MutationType2NumberofMutatiosDictFilename='MutationType2NumberofMutatiosDict.txt'
 
 #For Subs
 Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
@@ -538,7 +545,8 @@ def getSignatures(chrBased_mutation_df):
 ##################################################################
 
 ##################################################################
-def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type):
+def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type,mutationType2NumberofMutationsDict,mutation_signature_probability_threshold):
+
     sample2NumberofMutationsDict = {}
     signature2NumberofMutationsDict = {}
     sample2Signature2NumberofMutationsDict = {}
@@ -549,19 +557,16 @@ def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type):
         Signature2NumberofMutationsDictFilename = SubsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2SubsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
     elif (type==INDELS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
         Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
     elif (type==DINUCS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofDinucsDictFilename
         Signature2NumberofMutationsDictFilename = DinucsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD
 
     #######################################################################
     for chrLong in chromNamesList:
@@ -586,8 +591,13 @@ def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type):
                 else:
                     sample2NumberofMutationsDict[sample] = number_of_mutations
 
+                if type in mutationType2NumberofMutationsDict:
+                    mutationType2NumberofMutationsDict[type] += number_of_mutations
+                else:
+                    mutationType2NumberofMutationsDict[type] = number_of_mutations
+
                 for signature in signatures:
-                    number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=MUTATION_SIGNATURE_PROBABILITY_THRESHOLD])
+                    number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=mutation_signature_probability_threshold])
                     if signature in signature2NumberofMutationsDict:
                         signature2NumberofMutationsDict[signature] += number_of_mutations
                     else:
@@ -890,7 +900,6 @@ def writeChrBasedMutationDF(inputList):
 ##########################################################################################
 
 ########################################################################################
-#TODO To be tested
 #We will accumulate signature2SplitArrayDict in signature2AccumulatedSplitsChrBasedArrayDict
 def accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSplitsChrBasedArrayDict, simNum2Type2SplitArrayDict):
     for simNum in simNum2Type2SplitArrayDict:
@@ -910,7 +919,6 @@ def accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSplitsChrBas
 ########################################################################################
 
 ########################################################################################
-#TODO To be tested
 def accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSplitsChrBasedArrayDict,simNum2Sample2Type2SplitArrayDict):
     for simNum in simNum2Sample2Type2SplitArrayDict:
         sample2Type2SplitArrayDict = simNum2Sample2Type2SplitArrayDict[simNum]
@@ -944,7 +952,6 @@ def accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedSplitsC
 
 
 ########################################################################################
-#TODO To be tested
 #Original data and simulations data
 #SimNum 0 means original
 #SimNum 1 means sim1
@@ -2349,6 +2356,23 @@ def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
             signature2StdErrorDict[signature] = stderr
 
     return signature2WeightedAverageRatioDict,signature2StdErrorDict, signature2SumofMutationProbabilitiesDict
+########################################################################
+
+########################################################################
+def createFiles(outputDir,jobname,filename):
+    os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
+    filePath = os.path.join(outputDir, jobname, DATA, filename)
+    open(filePath,'w+')
+########################################################################
+
+########################################################################
+#To write samples with signatures with at least 10K eligible mutations
+def appendDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
+    os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
+    filePath = os.path.join(outputDir,jobname,DATA,filename)
+
+    with open(filePath, 'a') as file:
+        file.write(json.dumps(dictionary))
 ########################################################################
 
 

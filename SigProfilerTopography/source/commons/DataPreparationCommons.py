@@ -201,12 +201,31 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context)
 
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
+
+        ############################################################################
+        #Mutations comes from simulated data
         if(simNum>0):
             #Convert PD10014a_DBS_1 ==> PD10014a
             #Convert PD10010a_96_1 --> PD1001a
             #Conevrt CMDI-UK_SP116871_96_1 --> CMDI-UK_SP116871
             # chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_',expand=True)[0]
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 2, expand=True)[0]
+        ############################################################################
+
+        ######################################################################
+        #To work with PCAWG_Matlab
+        #To get rid of inconsistent cancer type names in sample column of chrbased mutation files and probabilities files
+        #This behaviour can be parameterized
+        print('Before str.split(\'_\', 1, expand=True)[1]')
+        print('chr_based_mutation_df.head()')
+        print(chr_based_mutation_df.head())
+
+        chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', 1, expand=True)[1]
+
+        print('After str.split(\'_\', 1, expand=True)[1]')
+        print('chr_based_mutation_df.head()')
+        print(chr_based_mutation_df.head())
+        ######################################################################
 
         print('Before merge -- sim%d mutation_type_context:%s for chr%s chr_based_mutation_filepath:%s' %(simNum,mutation_type_context,chrShort,chr_based_mutation_filepath))
         print('chr_based_mutation_df.shape')

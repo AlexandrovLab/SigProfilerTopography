@@ -73,6 +73,14 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         # dinucs_probabilities_df.columns.names [Sample    Mutation   DBS2    DBS4    DBS6    DBS7    DBS11]
         mutations_probabilities_df.rename(columns={'Sample Names': 'Sample', 'MutationTypes': 'Mutation'}, inplace=True)
 
+        # To work with PCAWG_Matlab
+        # To get rid of inconsistent cancer type names in sample column of chrbased mutation files and probabilities files
+        # This behaviour can be parameterized
+        mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',1,expand=True)[1]
+
+        print('After renaming and split --- mutations_probabilities_df.head()')
+        print(mutations_probabilities_df.head())
+
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(numofProcesses)
 
@@ -156,7 +164,7 @@ def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
 #######################################################
 
 #######################################################
-def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type):
+def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
     #############################################
     # NUCLEOSOMEOCCUPANCYANALYSIS
     # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
@@ -192,13 +200,13 @@ def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nuc
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
     # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
     print('Nucleosome Occupancy Computation Type:%s' %(computation_type))
-    nucleosomeOccupancyAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename)
+    nucleosomeOccupancyAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     ###############################################
 #######################################################
 
 
 #######################################################
-def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type):
+def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
     #############################################
     # REPLICATIONTIME
     # Delete the output/jobname/DATA/REPLICATIONTIME if exists
@@ -227,14 +235,14 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replica
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
     print('Replication Time Analyis Computation Type:%s' %(computation_type))
-    replicationTimeAnalysis(computation_type,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename)
+    replicationTimeAnalysis(computation_type,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     ###############################################
 
 #######################################################
 
 
 #######################################################
-def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type):
+def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
 
     ###############################################
     # REPLICATIONSTRANDBIAS
@@ -257,13 +265,13 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicat
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
-    replicationStrandBiasAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
+    replicationStrandBiasAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     ###############################################
 
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type):
+def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -283,7 +291,7 @@ def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,
     # computation_type = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
     # useTranscriptionStrandColumn = False
     useTranscriptionStrandColumn = True
-    transcriptionStrandBiasAnalysis(computation_type,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations)
+    transcriptionStrandBiasAnalysis(computation_type,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     ###############################################
 #######################################################
 
@@ -305,6 +313,7 @@ def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimul
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True
+    # considerProbabilityInProcessivityAnalysis = False
 
     processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis)
     ###############################################
@@ -326,7 +335,19 @@ def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimul
 # subs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/SBS96/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # indels_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/ID83/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabilities_file_path=None,indels_probabilities_file_path= None,dinucs_probabilities_file_path=None,nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,mutation_types_contexts=[SBS96,ID,DBS],computation_type=COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
+                subs_probabilities_file_path=None,
+                indels_probabilities_file_path= None,
+                dinucs_probabilities_file_path=None,
+                nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,
+                replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,
+                replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,
+                replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,
+                mutation_types_contexts=[SBS96,ID,DBS],
+                computation_type=COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL,
+                subs_sig_prob=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                indels_sig_prob=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                dinuc_sig_prob=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -364,6 +385,11 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabi
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
     print('current_abs_path: %s ' % current_abs_path)
     print('#################################################################################')
+    #################################################################################
+
+    #################################################################################
+    #Please note that if you have chr based subs, indels, dinucs mutations combined with probabilities under data directory
+    #You can comment the code below till ---Fill dictioaries using original data---.
     #################################################################################
 
     ###################################################################################################
@@ -512,11 +538,24 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabi
     ####################################################################################################################
 
     #################################################################################
+    #Please note that if you have chr based subs, indels, dinucs mutations combined with probabilities under data directory
+    #You can comment the above code and run the rest of the code below.
+    #################################################################################
+
+    #################################################################################
     print('####### Fill dictioaries using original data starts ###################')
+    #Create files
+    createFiles(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
+
+    #Initialize
+    mutationType2NumberofMutationsDict = {}
+
     #Using original data
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,SUBS)
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,INDELS)
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,DINUCS)
+    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,SUBS,mutationType2NumberofMutationsDict,subs_sig_prob)
+    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,INDELS,mutationType2NumberofMutationsDict,indels_sig_prob)
+    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,DINUCS,mutationType2NumberofMutationsDict,dinuc_sig_prob)
+
+    appendDictionaryUnderDataDirectory(mutationType2NumberofMutationsDict, outputDir, jobname,MutationType2NumberofMutatiosDictFilename)
     print('#######################################################################')
     #################################################################################
 
@@ -541,30 +580,37 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,subs_probabi
     ################################### Run SigProfilerTopography Analysis starts ######################################
     ####################################################################################################################
     print('################# Run SigProfilerTopography Analysis starts ###########')
+
+    #Nucleosome Occupancy
     start_time = time.time()
-    runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type)
+    runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
     print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
 
+    # Replication Time
     start_time = time.time()
-    runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type)
+    runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
     print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
 
+    # Replication Strand Bias
     start_time = time.time()
-    runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type)
+    runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
     print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
 
+    # Transcription Strand Bias
     start_time = time.time()
-    runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type)
+    runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
     print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
     print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
 
+    # Processivity
     start_time = time.time()
     runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList)
     print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
     print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
+
     print('#######################################################################')
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis ends ########################################

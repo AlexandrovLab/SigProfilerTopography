@@ -445,6 +445,12 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
 
     fig, ax = plt.subplots(figsize=(16,10),dpi=300)
 
+    legend=None
+    rects1=None
+    rects2=None
+    rects3=None
+    rects4=None
+
     ##############################
     #To make the bar width not too wide
     if len(ind)<6:
@@ -497,14 +503,19 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
         #                    (strand1Name, strand2Name, simulationsStrand1Name, simulationsStrand2Name),
         #                    prop={'size': 25}, bbox_to_anchor = (0, 1.21), ncol = 2, loc = 'upper left')
 
-        legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
+        if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
+            if ((len(rects1)>0) and (len(rects2)>0) and (len(rects3)>0) and (len(rects4)>0)):
+                legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
                            (strand1Name, strand2Name, simulationsStrand1Name, simulationsStrand2Name),
                            prop={'size': 20}, ncol = 2, loc = 'best')
 
     else:
         #Old way with no simulations
         ax.set_xticks(ind + width/2)
-        legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, loc='upper right')
+
+        if ((rects1 is not None) and (rects2 is not None)):
+            if ((len(rects1)>0) and (len(rects2)>0)):
+                legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, loc='upper right')
 
     #Set the ylabel
     plt.ylabel('Number of single point mutations', fontsize=35, fontweight='normal')
@@ -519,9 +530,10 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     ax.spines["top"].set_color('black')
     ax.spines["right"].set_color('black')
 
-    frame = legend.get_frame()
-    frame.set_facecolor('white')
-    frame.set_edgecolor('black')
+    if (legend is not None):
+        frame = legend.get_frame()
+        frame.set_facecolor('white')
+        frame.set_edgecolor('black')
 
     #########################################################################################################
     #Add star above the bars for significant differences between the number of mutations on each strand starts
@@ -619,7 +631,6 @@ def fillDictWRTReferenceTypes(types,strands,type2Strand2CountDict):
 ##################################################################
 
 ##################################################################
-#TODO To be updated w.r.t new output
 def fillSimulationsType2StrandCountList(
         simNum2Type2Strand2CountDict,
         existingTypesList,
@@ -650,8 +661,10 @@ def fillSimulationsType2StrandCountList(
                 simulation_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
                 simulation_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
 
-            all_simulations_types_strand1_list.append(simulation_types_strand1_list)
-            all_simulations_types_strand2_list.append(simulation_types_strand2_list)
+            if simulation_types_strand1_list:
+                all_simulations_types_strand1_list.append(simulation_types_strand1_list)
+            if simulation_types_strand2_list:
+                all_simulations_types_strand2_list.append(simulation_types_strand2_list)
     ##############################################################
 
     ##################################################################
@@ -681,7 +694,6 @@ def fillSimulationsType2StrandCountList(
 
 
 ##################################################################
-#TODO To be updated w.r.t. new SigProfilerSimulator
 def fillSimulationsSample2Type2StrandCountList(
         simNum2Sample2Type2Strand2CountDict,
         existingTypesList,
@@ -718,8 +730,10 @@ def fillSimulationsSample2Type2StrandCountList(
                     sampleBased_types_strand1_list = strand2TypeStrandCountList_Dict[LAGGING]
                     sampleBased_types_strand2_list = strand2TypeStrandCountList_Dict[LEADING]
 
-                sample2AllSimulationsTypesStrand1ListDict[sample].append(sampleBased_types_strand1_list)
-                sample2AllSimulationsTypesStrand2ListDict[sample].append(sampleBased_types_strand2_list)
+                if (sampleBased_types_strand1_list):
+                    sample2AllSimulationsTypesStrand1ListDict[sample].append(sampleBased_types_strand1_list)
+                if (sampleBased_types_strand2_list):
+                    sample2AllSimulationsTypesStrand2ListDict[sample].append(sampleBased_types_strand2_list)
             ##############################################################
         #################################################################################
 
@@ -789,20 +803,6 @@ def calculate_p_values(types_strand1_list,simulations_types_strand1_list,types_s
 
     return types_strandbias_pvalues
 ##################################################################
-
-
-
-# ##################################################################
-# #TODO To be deleted
-# def convert(firstType2SecondType2Strand2CountDict, secondType2FirstType2Strand2CountDict):
-#     for firstType, secondType2Strand2CountDict in firstType2SecondType2Strand2CountDict.items():
-#         for secondType, strand2CountDict in secondType2Strand2CountDict.items():
-#             if secondType not in secondType2FirstType2Strand2CountDict:
-#                 secondType2FirstType2Strand2CountDict[secondType] = {}
-#                 secondType2FirstType2Strand2CountDict[secondType][firstType] = strand2CountDict
-#             else:
-#                 secondType2FirstType2Strand2CountDict[secondType][firstType] = strand2CountDict
-# ##################################################################
 
 
 ##################################################################
@@ -1154,7 +1154,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #######
 
     #######
-    #TODO Fill these dictionaries
     subsSignature2SimulationsMutationTypesTranscribedMediansListDict = None
     subsSignature2SimulationsMutationTypesUntranscribedMediansListDict = None
     subsSignature2SimulationsMutationTypesLaggingMediansListDict = None

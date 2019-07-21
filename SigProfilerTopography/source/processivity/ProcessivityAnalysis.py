@@ -26,6 +26,7 @@ class ProcessiveGroupStruct(JSONEncoder):
 
 
 #########################################################################
+#Return these columns  ['ProcessiveGroupLength', 'Distance', 'Signature', 'Probability']
 def myfuncUpdated(x):
     return (x.shape[0], x['Start'].iloc[-1] - x['Start'].iloc[0],  x['Signature'].iloc[0], x['Probability'].agg(max))
 #########################################################################
@@ -39,7 +40,7 @@ def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbabi
     signature = x['Signature']
     probability = x['Probability']
 
-    if (considerProbability and (probability >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
+    if (considerProbability and (probability >= PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
         if signature in signature2ProcessiveGroupLength2DistanceListDict:
             if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
                 signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
@@ -79,9 +80,13 @@ def findProcessiveGroupsForInputList(inputList):
 def findProcessiveGroups(sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis):
     signature2ProcessiveGroupLength2DistanceListDict = {}
 
+    #They must be same type of mutation e.g.: T>A
+    #They must be resulted from same signature
+    #They must be on the same strand
     if (sorted_sampleBased_chrBased_spms_df is not None):
         sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION] != sorted_sampleBased_chrBased_spms_df[MUTATION].shift(1)) |
-                                                           (sorted_sampleBased_chrBased_spms_df['Signature'] != sorted_sampleBased_chrBased_spms_df['Signature'].shift(1))) .cumsum()
+                                                           (sorted_sampleBased_chrBased_spms_df['Signature'] != sorted_sampleBased_chrBased_spms_df['Signature'].shift(1)) |
+                                                           (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND] != sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift(1))) .cumsum()
 
 
         series_new = sorted_sampleBased_chrBased_spms_df.groupby('subgroup', as_index=False).apply(myfuncUpdated)
@@ -176,7 +181,8 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                     # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        SBS1    SBS2    SBS3    SBS13   SBS26   SBS40   SBS44
 
                     # delete unnecessary columns
-                    chrBased_spms_df.drop([CHROM, MUTATIONLONG, PYRAMIDINESTRAND, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
+                    # chrBased_spms_df.drop([CHROM, MUTATIONLONG, PYRAMIDINESTRAND, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
+                    chrBased_spms_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
 
                     # df['Max'] = df.idxmax(axis=1).
                     # left here
