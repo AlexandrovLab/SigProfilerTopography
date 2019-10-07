@@ -33,22 +33,14 @@ $ python
 >> from SigProfilerTopography import Topography as topography
 ```
 
-6. Within a python session, you can download nucleosome occupancy data for 'GM12878' and 'K562' as follows:
-The command below will download 'wgEncodeSydhNsomeGm12878Sig.bigWig' and convert  into 'wgEncodeSydhNsomeGm12878Sig.wig'.
-Please notice that converter bigWigToWig runs in linux 64 bit environment.
-If you want to download nucleosome occupancy data for 'K562' cell line, just pass 'K562' instead of 'GM12878'.
-```
->> topography.download_nucleosome_occupancy_convert_bigWig2wig('GM12878')
-```
-
-7. Within a python session, you need to download corresponding 2bit file for your genome.
+6. Within a python session, you need to download corresponding 2bit file for your genome.
 Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 ```
 >> genome= 'GRCh37'
 >> topography.download_2bit_file(genome)
 ```
 
-8. Within a python session, you can run the topography analyses as follows:
+7. Within a python session, you can run the topography analyses as follows:
 You must provide the mutation types that you want to carry out topography analyses for in mutationTypes list.
 You must provide the corresponding probabilities files in subs_probabilities_file_path, indels_probabilities_file_path and dinucs_probabilities_file_path accordingly.
 For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutation_types_contexts=['96', 'DBS'].
@@ -76,14 +68,14 @@ https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
 **LIBRARY**
 
 This tool uses ENCODE provided files for topography analysis such as nucleosome occupancy and replcation time.
-You can also provide your local nucleosome occupancy (.wig format) and replication time (WaveSignal in .wig and Pk and Valleys in bed formats) files with their paths.
+You can also provide your local nucleosome occupancy (.bigWig or .bigBed format) and replication time (WaveSignal in .wig and Pk and Valleys in bed formats) files with their paths.
 
-**LIBRARY NUCLEOSOME OCCUPANCY**
+**NUCLEOSOME OCCUPANCY**
 
-Within a python session you can download nucleosome occupancy data for 'GM12878' and 'K562' cell lines.
-Or you can provide your nucleosome occupancy data file as follows.
+You can provide your nucleosome occupancy data file as follows.
 ```
->> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.wig'
+>> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigWig'
+>> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigBed'
 
 >> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosomeFilename=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'])
 ```
