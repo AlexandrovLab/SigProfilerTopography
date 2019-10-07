@@ -29,7 +29,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 
 from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays
 from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
-from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import nucleosomeOccupancyAnalysis
+from SigProfilerTopography.source.epigenomics.EpigenomicsAnalysis import readAllEpigenomicsDataAndWriteChrBasedSignalArraysSequentially
+from SigProfilerTopography.source.epigenomics.EpigenomicsAnalysis import readAllEpigenomicsDataAndWriteChrBasedSignalArraysInParallel
+
+from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import readReplicationTimeDataAndWriteChrBasedReplicationTimeNPArrays
 
@@ -38,55 +41,59 @@ from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAna
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
-from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import nucleosomeOccupancyAverageSignalFigures
+from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import occupancyAverageSignalFigures
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 
 import subprocess
 import shutil
-
+import logging
 
 ############################################################
 #CAn be move to DataPreparationCommons under /source/commons
 #read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
-def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,numofSimulations,partialDirname):
+def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,startSimNum, endSimNum,partialDirname,logger):
 
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/ID
 
-    #new
     #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
     #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
     #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
-    for simNum in range(1,numofSimulations+1):
+    for simNum in range(1,endSimNum+1):
         simName = 'sim%d' % (simNum)
         os.makedirs(os.path.join(outputDir, jobname, DATA,CHRBASED,simName), exist_ok=True)
 
     if (os.path.exists(mutations_probabilities_file_path)):
-        print('For mutation_type_context:%s mutations_probabilities_file_path:%s' %(mutation_type_context,mutations_probabilities_file_path))
-        mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path)
+        mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path,logger)
         # dinucs_probabilities_df.columns.names [Sample Names    MutationTypes   DBS2    DBS4    DBS6    DBS7    DBS11]
         # dinucs_probabilities_df.columns.names [Sample    Mutation   DBS2    DBS4    DBS6    DBS7    DBS11]
-        mutations_probabilities_df.rename(columns={'Sample Names': 'Sample', 'MutationTypes': 'Mutation'}, inplace=True)
+        mutations_probabilities_df.rename(columns={'Sample Names':'Sample','MutationTypes': 'Mutation'}, inplace=True)
 
-        # To work with PCAWG_Matlab
+        # print('mutations_probabilities_df.head()')
+        # print(mutations_probabilities_df.head())
+
+        # print('mutations_probabilities_df.columns.values')
+        # print(mutations_probabilities_df.columns.values)
+
+        #TODO In release we will use SAMPLE as it is.
+        # This statement below will be unnecessary
+        # This is customized for  PCAWG_Matlab
         # To get rid of inconsistent cancer type names in sample column of chrbased mutation files and probabilities files
         # This behaviour can be parameterized
-        mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',1,expand=True)[1]
-
-        print('After renaming and split --- mutations_probabilities_df.head()')
-        print(mutations_probabilities_df.head())
+        # Breast-LobularCA_SP124191
+        mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',expand=True)[1]
 
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(numofProcesses)
 
         poolInputList = []
 
-        for simNum in range(0,numofSimulations+1):
+        for simNum in range(startSimNum,endSimNum+1):
             simName = 'sim%d' %(simNum)
             for chrShort in chromShortNamesList:
                 chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
@@ -163,50 +170,39 @@ def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
         subprocess.call([bigWig2Wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
 #######################################################
 
+
 #######################################################
-def runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
-    #############################################
-    # NUCLEOSOMEOCCUPANCYANALYSIS
-    # Delete the output/jobname/DATA/NUCLEOSOMEOCCUPANCY if exists
-    jobnamePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY)
+def runOccupancyAnalyses(outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus):
 
-    ################################################
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    ################################################
+    # Check whether nucleosomeFilename_wo_dir is downloaded
+    # if (os.path.exists(nucleosomeFilename_with_dir)):
+    #     quantileValue = round(float(0.97), 2)
+    #     package_lib_nucleosome_directory_path = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED)
+    #
+    #     if (not os.path.exists(package_lib_nucleosome_directory_path)):
+    #         print('%s does not exists' %(package_lib_nucleosome_directory_path))
+    #         readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename_with_dir)
+    #         # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
+    #     elif (not os.listdir(package_lib_nucleosome_directory_path)):
+    #         print('There is no file under: %s' %(package_lib_nucleosome_directory_path))
+    #         readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename_with_dir)
+    #         # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
 
-    #Check whether nucleosomeFilename_wo_dir is downloaded
-    if (os.path.exists(nucleosomeFilename)):
-        quantileValue = round(float(0.97), 2)
-        package_lib_nucleosome_directory_path = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED)
-
-        if (not os.path.exists(package_lib_nucleosome_directory_path)):
-            print('%s does not exists' %(package_lib_nucleosome_directory_path))
-            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename)
-            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
-        elif (not os.listdir(package_lib_nucleosome_directory_path)):
-            print('There is no file under: %s' %(package_lib_nucleosome_directory_path))
-            readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome,quantileValue,nucleosomeFilename)
-            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome,quantileValue,nucleosomeFilename)
-    else:
-        nucleosomeFilename_wo_dir = os.path.basename(nucleosomeFilename)
-        download_nucleosome_command = 'download_nucleosome_occupancy_convert_bigWig2wig(cellLine) command'
-        print('You need to download %s using %s' %(nucleosomeFilename_wo_dir,download_nucleosome_command))
+    if (not os.path.exists(library_file_with_path)):
+        # nucleosomeFilename_wo_dir = os.path.basename(nucleosomeFilename_with_dir)
+        # download_nucleosome_command = 'download_nucleosome_occupancy_convert_bigWig2wig(cellLine) command'
+        print('There is no such file under %s' %(library_file_with_path))
 
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
     # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
-    print('Nucleosome Occupancy Computation Type:%s' %(computation_type))
-    nucleosomeOccupancyAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,nucleosomeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
+    occupancyAnalysis(computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
     ###############################################
 #######################################################
 
 
 #######################################################
-def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
+def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
     #############################################
     # REPLICATIONTIME
     # Delete the output/jobname/DATA/REPLICATIONTIME if exists
@@ -234,15 +230,14 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replica
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-    print('Replication Time Analyis Computation Type:%s' %(computation_type))
-    replicationTimeAnalysis(computation_type,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
+    replicationTimeAnalysis(computation_type,sample_based,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
     ###############################################
 
 #######################################################
 
 
 #######################################################
-def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
+def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
 
     ###############################################
     # REPLICATIONSTRANDBIAS
@@ -265,13 +260,13 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicat
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
     # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
-    replicationStrandBiasAnalysis(computation_type,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
+    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
     ###############################################
 
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
+def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -291,13 +286,13 @@ def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,
     # computation_type = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
     # useTranscriptionStrandColumn = False
     useTranscriptionStrandColumn = True
-    transcriptionStrandBiasAnalysis(computation_type,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
+    transcriptionStrandBiasAnalysis(computation_type,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
     ###############################################
 #######################################################
 
 
 #######################################################
-def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList):
+def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,signature2PropertiesListDict):
     ###############################################
     # PROCESSIVITY
     # Delete the output/jobname/DATA/PROCESSIVITY if exists
@@ -315,11 +310,40 @@ def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimul
     considerProbabilityInProcessivityAnalysis = True
     # considerProbabilityInProcessivityAnalysis = False
 
-    processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis)
+    processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict)
     ###############################################
-
 #######################################################
 
+
+#######################################################
+def deleteOldData(outputDir,jobname,occupancy_type):
+    #############################################
+    # Delete the output/jobname/DATA/occupancy_type if exists
+    jobnamePath = os.path.join(outputDir,jobname,DATA,occupancy_type)
+
+    ################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ################################################
+#######################################################
+
+#######################################################
+def deleteOldFigures(outputDir, jobname, occupancy_type):
+
+    jobnamePath = os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type)
+    print('Topography.py jobnamePath:%s ' %jobnamePath)
+
+    ############################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ############################################################
+#######################################################
 
 #######################################################
 # inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
@@ -335,19 +359,30 @@ def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimul
 # subs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/SBS96/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # indels_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/ID83/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 # dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
-                subs_probabilities_file_path=None,
-                indels_probabilities_file_path= None,
-                dinucs_probabilities_file_path=None,
-                nucleosomeFilename=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,
-                replicationTimeFilename=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,
-                replicationTimeValleyFilename=DEFAULT_REPLICATION_TIME_VALLEY_FILE,
-                replicationTimePeakFilename=DEFAULT_REPLICATION_TIME_PEAK_FILE,
+def runAnalyses(genome,
+                inputDir,
+                outputDir,
+                jobname,
+                numofSimulations,
+                sbs_probabilities_file_path=None,
+                id_probabilities_file_path= None,
+                dbs_probabilities_file_path=None,
+                epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE],
+                epigenomics_files_memos=['Liver_H3K9me3'],
+                nucleosome_file=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE,
+                replication_time_file=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,
+                replication_time_valley_file=DEFAULT_REPLICATION_TIME_VALLEY_FILE,
+                replication_time_peak_file=DEFAULT_REPLICATION_TIME_PEAK_FILE,
                 mutation_types_contexts=[SBS96,ID,DBS],
                 computation_type=COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL,
-                subs_sig_prob=SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                indels_sig_prob=INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                dinuc_sig_prob=DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
+                epigenomics=False,
+                nucleosome=False,
+                replication_time=False,
+                strand_bias=False,
+                processivity=False,
+                sample_based=False,
+                new_simulations_enforced=False,
+                plot_figures=True):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -365,26 +400,85 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
     chromNamesList = list(chromSizesDict.keys())
     chromShortNamesList=getShortNames(chromNamesList)
 
-    print('##################### SigProfilerTopography parameters ##########################')
-    print('Genome: %s' %(genome))
-    print('inputDir:%s' %inputDir)
-    print('outputDir:%s' %outputDir)
-    print('jobname:%s' %jobname)
-    print('nucleosomeFilename:%s' %nucleosomeFilename)
-    print('replicationTimeFilename:%s' % replicationTimeFilename)
-    print('replicationTimeValleyFilename:%s' % replicationTimeValleyFilename)
-    print('replicationTimePeakFilename:%s' % replicationTimePeakFilename)
-    print('mutation_types_contexts:%s' %mutation_types_contexts)
-    print('computation_type:%s' %computation_type)
-    print('#################################################################################')
+    ############################################################################################
+    os.makedirs(os.path.join(outputDir,jobname),exist_ok=True)
+    log_file=os.path.join(outputDir,jobname,'SigProfilerTopography.log')
+
+    # set up logging to file - see previous section for more details
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename=log_file,
+                        filemode='w')
+
+    # define a Handler which writes INFO messages or higher to the sys.stderr
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+
+    # set a format which is simpler for console use
+    # formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    formatter = logging.Formatter('%(message)s')
+
+    # tell the handler to use this format
+    console.setFormatter(formatter)
+    # add the handler to the root logger
+    logging.getLogger('').addHandler(console)
+
+    logger = logging.getLogger('SigProfilerTopography')
+    ############################################################################################
+
+    logger.info('#################################################################################')
+    logger.info("--- SigProfilerTopography starts")
+    logger.info('#################################################################################\n')
+
+    logger.info('#################################################################################')
+    logger.info('--- SigProfilerTopography parameters')
+    logger.info('--- Genome: %s' %(genome))
+    logger.info('--- inputDir:%s' %inputDir)
+    logger.info('--- outputDir:%s' %outputDir)
+    logger.info('--- jobname:%s' %jobname)
+    logger.info('--- epigenomics_files:%s' %epigenomics_files)
+    logger.info('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
+    logger.info('--- nucleosome_file:%s' %nucleosome_file)
+    logger.info('--- replication_time_file:%s' % replication_time_file)
+    logger.info('--- replication_time_valley_file:%s' % replication_time_valley_file)
+    logger.info('--- replication_time_peak_file:%s' % replication_time_peak_file)
+    logger.info('--- mutation_types_contexts:%s' %mutation_types_contexts)
+    logger.info('--- computation_type:%s' %computation_type)
+    if sample_based:
+        if epigenomics:
+            logger.info('--- Epigenomics Sample Based Analysis.')
+        if nucleosome:
+            logger.info('--- Nucleosome Sample Based Analysis.')
+        if replication_time:
+            logger.info('--- Replication Time Sample Based Analysis.')
+        if strand_bias:
+            logger.info('--- Strand Bias Sample Based Analysis.')
+        if processivity:
+            logger.info('--- Processivity Analysis.')
+    else:
+        if epigenomics:
+            logger.info('--- Epigenomics Analysis.')
+        if nucleosome:
+            logger.info('--- Nucleosome Analysis.')
+        if replication_time:
+            logger.info('--- Replication Time Analysis.')
+        if strand_bias:
+            print('--- Strand Bias Analysis.')
+        if processivity:
+            logger.info('--- Processivity Analysis.')
+    logger.info('--- new_simulations_enforced:%s' %new_simulations_enforced)
+    logger.info('--- plot_figures:%s' %plot_figures)
+    logger.info('#################################################################################\n')
 
     #################################################################################
-    print('#################################################################################')
-    print('Chromosome names: %s' %(chromNamesList))
-    print('Chromosome short names: %s' % (chromShortNamesList))
+    logger.info('#################################################################################')
+    logger.info('--- For Genome: %s' %(genome))
+    logger.info('--- Chromosome names: %s' %(chromNamesList))
+    logger.info('--- Chromosome short names: %s' % (chromShortNamesList))
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
-    print('current_abs_path: %s ' % current_abs_path)
-    print('#################################################################################')
+    logger.info('--- current_abs_path: %s ' % current_abs_path)
+    logger.info('#################################################################################\n')
     #################################################################################
 
     #################################################################################
@@ -395,11 +489,12 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
     ###################################################################################################
     #######################  SigProfilerMatrixGenerator for original data starts ######################
     ###################################################################################################
-    #Run MatrixGenerator for original data: this call prepares chrBased input files for original data
-    print('################## SigProfilerMatrixGenerator for original data #################')
+    #Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
+    logger.info('#################################################################################')
+    logger.info('--- SigProfilerMatrixGenerator for original data')
     start_time = time.time()
 
-    print('For original data inputDir:%s' % (inputDir))
+    logger.info('For original data inputDir:%s' % (inputDir))
     matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,inputDir,plot=False, seqInfo=True)
     # print('matrices')
     # print(matrices)
@@ -408,142 +503,229 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
     # original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
     # original matrix generator chrbased data will be under inputDir/output/vcf_files/ID
 
-    print("--- SigProfilerMatrixGenerator for original data: %s seconds ---" % (time.time() -  start_time))
-    print("--- SigProfilerMatrixGenerator for original data: %f minutess ---" %float((time.time() - start_time)/60))
-    print('#################################################################################')
+    logger.info("--- SigProfilerMatrixGenerator for original data: %s seconds ---" % (time.time() -  start_time))
+    logger.info("--- SigProfilerMatrixGenerator for original data: %f minutess ---" %float((time.time() - start_time)/60))
+    logger.info('#################################################################################\n')
     ###################################################################################################
     #######################  SigProfilerMatrixGenerator for original data ends ########################
     ###################################################################################################
 
-    ###################################################################################################
-    ############################  SigProfilerSimulator for n simulations starts #######################
-    ###################################################################################################
-    print('################## SigProfilerSimulator starts for %d simulations ###############' %(numofSimulations))
+    ####################################################################################################################
+    ##################  Merge original chr based files with Mutation Probabilities starts ##############################
+    ####################################################################################################################
+    logger.info('#################################################################################')
+    logger.info('--- Merge original chr based files with Mutation Probabilities starts')
+    logger.info('#################################################################################')
+    startSimNum = 0
+    endSimNum = 0
     start_time = time.time()
-    #Call SigProfilerSimulator separately for each mutation type context otherwise it counts DBS mutations also in SBS mutations
-    # Topography uses same mutation types with Simulator
-    # '96' or '384' for single base substitutions (Simulator 1536, or 3072)
-    # 'DBS' for double base substitutions
-    # 'ID' for indels
+    # SBS
     for mutation_type_context in mutation_types_contexts:
-        mutation_type_context_for_simulator = []
-        mutation_type_context_for_simulator.append(mutation_type_context)
-        # Please notice that Simulator reverse the given input mutationTypes_for_simulator
-        print('SigProfilerSimulator is running for %s' %(mutation_type_context))
-        simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,simulations=numofSimulations)
-    print("--- SigProfilerSimulator for %d simulations: %s seconds ---" %(numofSimulations,(time.time() -  start_time)))
-    print("--- SigProfilerSimulator for %d simulations: %f minutes ---" %(numofSimulations,float((time.time()-start_time)/60)))
-    print('#################################################################################')
-    ###################################################################################################
-    ############################  SigProfilerSimulator for n simulations ends #########################
-    ###################################################################################################
+        if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities_file_path is not None):
+            logger.info('--- Merge %s mutations with probabilities for %s' %(mutation_type_context, sbs_probabilities_file_path))
+            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
+                                                                               jobname, mutation_type_context,
+                                                                               sbs_probabilities_file_path, startSimNum,
+                                                                               endSimNum, 'SNV',logger)
 
-    ###################################################################################################
-    ########################### Create simN directories for MatrixGenerator starts ####################
-    ###################################################################################################
-    print('################## Create directories for sim1 to sim%d under inputDir/output/simulations/ #################' %(numofSimulations))
-    start_time = time.time()
-    #Create directories sim1 to SimN under inputDir/output/simulations/
-    access_rights = 0o755
-    for simNum in range(1,numofSimulations+1):
-        try:
-            simName = 'sim%d' %(simNum)
-            simDir = os.path.join(inputDir,'output','simulations',simName)
-            if (not os.path.exists(simDir)):
-                os.mkdir(simDir, access_rights)
-            for mutation_type_context in mutation_types_contexts:
-                simDir = os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+    # ID
+    if ((ID in mutation_types_contexts) and (id_probabilities_file_path is not None)):
+        logger.info('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities_file_path))
+        prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
+                                                                           jobname, 'ID', id_probabilities_file_path,
+                                                                           startSimNum, endSimNum, 'ID',logger)
+
+    # DBS
+    if ((DBS in mutation_types_contexts) and (dbs_probabilities_file_path is not None)):
+        logger.info('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities_file_path))
+        prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
+                                                                           jobname, 'DBS', dbs_probabilities_file_path,
+                                                                           startSimNum, endSimNum, 'DBS',logger)
+
+    logger.info("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))
+    logger.info("--- Merge original chr based files with Mutation Probabilities: %f minutes" % (float((time.time() - start_time) / 60)))
+    logger.info('--- Merge original chr based files with Mutation Probabilities ends')
+    logger.info('#################################################################################\n')
+    ####################################################################################################################
+    ##################  Merge original chr based files with Mutation Probabilities ends ################################
+    ####################################################################################################################
+
+    ###################################################################################################################
+    ###################################################################################################################
+    ###################################################################################################################
+    existsSimulations= doesSimulationsAlreadyExits(outputDir,jobname,numofSimulations)
+
+    if existsSimulations:
+        logger.info('#################################################################################')
+        logger.info('--- %d simulations already exists' %(numofSimulations))
+        if new_simulations_enforced:
+            logger.info('--- new_simulations_enforced:%s' %(new_simulations_enforced))
+            logger.info('--- New simulations will be generated')
+        else:
+            logger.info('--- new_simulations_enforced:%s' %(new_simulations_enforced))
+            logger.info('--- Existing simulations will be used')
+        logger.info('#################################################################################\n')
+
+    if ((numofSimulations>0) and ((new_simulations_enforced) or (not existsSimulations))):
+
+        ###################################################################################################
+        ############################  SigProfilerSimulator for n simulations starts #######################
+        ###################################################################################################
+        logger.info('#################################################################################')
+        logger.info('--- SigProfilerSimulator for %d simulations starts' %(numofSimulations))
+        start_time = time.time()
+        #Call SigProfilerSimulator separately for each mutation type context otherwise it counts DBS mutations also in SBS mutations
+        # Topography uses same mutation types with Simulator
+        # '96' or '384' for single base substitutions (Simulator 1536, or 3072)
+        # 'DBS' for double base substitutions
+        # 'ID' for indels
+        for mutation_type_context in mutation_types_contexts:
+            mutation_type_context_for_simulator = []
+            mutation_type_context_for_simulator.append(mutation_type_context)
+            # Please notice that Simulator reverse the given input mutationTypes_for_simulator
+            logger.info('--- SigProfilerSimulator is running for %s' %(mutation_type_context))
+            simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,simulations=numofSimulations)
+
+        logger.info("--- SigProfilerSimulator for %d simulations: %s seconds" %(numofSimulations,(time.time() -  start_time)))
+        logger.info("--- SigProfilerSimulator for %d simulations: %f minutes" %(numofSimulations,float((time.time()-start_time)/60)))
+        logger.info('--- SigProfilerSimulator for %d simulations ends' %(numofSimulations))
+        logger.info('#################################################################################\n')
+        ###################################################################################################
+        ############################  SigProfilerSimulator for n simulations ends #########################
+        ###################################################################################################
+
+        ###################################################################################################
+        ########################### Create simN directories for MatrixGenerator starts ####################
+        ###################################################################################################
+        logger.info('#################################################################################')
+        logger.info('--- Create directories for %d simulations under inputDir/output/simulations/' %(numofSimulations))
+        start_time = time.time()
+        #Create directories sim1 to SimN under inputDir/output/simulations/
+        access_rights = 0o755
+        for simNum in range(1,numofSimulations+1):
+            try:
+                simName = 'sim%d' %(simNum)
+                simDir = os.path.join(inputDir,'output','simulations',simName)
                 if (not os.path.exists(simDir)):
                     os.mkdir(simDir, access_rights)
-        except OSError:
-            print("Creation of the directory %s failed" %simDir)
-        else:
-            print("Successfully created the directory %s" %simDir)
-    print('#################################################################################')
+                for mutation_type_context in mutation_types_contexts:
+                    simDir = os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+                    if (not os.path.exists(simDir)):
+                        os.mkdir(simDir, access_rights)
+            except OSError:
+                logger.info("Creation of the directory %s failed" %simDir)
+            else:
+                logger.info("Successfully created the directory %s" %simDir)
 
-    print('################### Copy sample files under corresponding simulation directory ######################')
-    #Copy sample files under corresponding simulation directory
-    # simulations sample based directories will be under inputDir/jobname/output/simulations/jobname_simulations_genome_mutationTypes_for_simulator[lastIndex]_..._mutationTypes_for_simulator[firstIndex]
-    for mutation_type_context in mutation_types_contexts:
-        dirName = '%s_simulations_%s' %(jobname, genome)
-        dirName = dirName + '_' + mutation_type_context
-        copyFromDir = os.path.join(inputDir,'output','simulations',dirName)
-        copySampleFilesToCorrespondingSimulationDirectory(inputDir,copyFromDir,mutation_type_context)
-    print("--- Create directories and copy files: %s seconds ---" %(time.time()-start_time))
-    print("--- Create directories and copy files: %f minutes ---" %(float((time.time()-start_time)/60)))
-    print('#################################################################################')
-    ###################################################################################################
-    ########################### Create simN directories for MatrixGenerator ends ######################
-    ###################################################################################################
-
-    ###################################################################################################
-    ####################### Run MatrixGenerator for each simulation starts ############################
-    ###################################################################################################
-    print('################## Run SigProfilerMatrixGenerator for each simulation starts ####################')
-    start_time = time.time()
-    for simNum in range(1,numofSimulations+1):
-        simName = 'sim%d' %(simNum)
-        #For each simulation we are calling matrix generator separately for each mutation type context
-        print('SigProfilerMatrixGenerator is run for %s starts' %(simName))
         for mutation_type_context in mutation_types_contexts:
-            simInputDir=  os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
-            print('For %s: %s simInputDir:%s' %(mutation_type_context,simName,simInputDir))
-            matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=True)
-            # print('matrices')
-            # print(matrices)
-            print('#####################################')
-        print('SigProfilerMatrixGenerator is run for %s ends' % (simName))
-    #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
-    #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
-    #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
+            dirName = '%s_simulations_%s_%s' %(jobname, genome,mutation_type_context)
+            copyFromDir = os.path.join(inputDir,'output','simulations',dirName)
+            copyToMainDir= os.path.join(inputDir,'output','simulations')
+            copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numofSimulations)
+        logger.info("--- Create directories and copy files: %s seconds ---" %(time.time()-start_time))
+        logger.info("--- Create directories and copy files: %f minutes ---" %(float((time.time()-start_time)/60)))
+        logger.info('#################################################################################\n')
+        ###################################################################################################
+        ########################### Create simN directories for MatrixGenerator ends ######################
+        ###################################################################################################
 
-    #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/96/output/vcf_files/SNV
-    #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/ID/output/vcf_files/ID
-    #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/DBS/output/vcf_files/DBS
-    print("--- Run MatrixGenerator for each simulation: %s seconds ---" %(time.time()-start_time))
-    print("--- Run MatrixGenerator for each simulation: %f minutes ---" %(float((time.time()-start_time)/60)))
-    print('#######################################################################')
-    ###################################################################################################
-    ####################### Run MatrixGenerator for each simulation ends ##############################
-    ###################################################################################################
+        ###################################################################################################
+        ####################### Run MatrixGenerator for each simulation starts ############################
+        ###################################################################################################
+        logger.info('#################################################################################')
+        logger.info('--- Run SigProfilerMatrixGenerator for each simulation starts')
+        start_time = time.time()
+        for simNum in range(1,numofSimulations+1):
+            simName = 'sim%d' %(simNum)
+            #For each simulation we are calling matrix generator separately for each mutation type context
 
-    ####################################################################################################################
-    ##################  Merge original and simulations chr based files with Mutation Probabilities starts ##############
-    ####################################################################################################################
-    print('##################  Merge original and simulations chr based files with Mutation Probabilities starts ####################')
-    start_time = time.time()
-    #SBS
-    for mutation_type_context in mutation_types_contexts:
-        if (mutation_type_context in SBS_CONTEXTS) and (subs_probabilities_file_path is not None):
-            print('########## Merge mutations with probabilities for %s ##########' %(subs_probabilities_file_path))
-            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,subs_probabilities_file_path,numofSimulations,'SNV')
-            print('###############################################################')
+            logger.info('--- SigProfilerMatrixGenerator is run for %s starts' %(simName))
+            for mutation_type_context in mutation_types_contexts:
+                simInputDir=  os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+                logger.info('For %s: %s simInputDir:%s' %(mutation_type_context,simName,simInputDir))
+                matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=True)
+                # print('matrices')
+                # print(matrices)
+                logger.info('#####################################')
+            logger.info('--- SigProfilerMatrixGenerator is run for %s ends\n' % (simName))
+        #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
+        #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
+        #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
 
-    #ID
-    if ((ID in mutation_types_contexts) and (indels_probabilities_file_path is not None)):
-        print('Merge mutations with probabilities for %s' % (indels_probabilities_file_path))
-        prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',indels_probabilities_file_path,numofSimulations,'ID')
-        print('###############################################################')
+        #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/96/output/vcf_files/SNV
+        #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/ID/output/vcf_files/ID
+        #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/DBS/output/vcf_files/DBS
+        logger.info("--- Run MatrixGenerator for each simulation: %s seconds" %(time.time()-start_time))
+        logger.info("--- Run MatrixGenerator for each simulation: %f minutes" %(float((time.time()-start_time)/60)))
+        logger.info('--- Run SigProfilerMatrixGenerator for each simulation ends')
+        logger.info('#################################################################################\n')
+        ###################################################################################################
+        ####################### Run MatrixGenerator for each simulation ends ##############################
+        ###################################################################################################
 
-    #DBS
-    if ((DBS in mutation_types_contexts) and (dinucs_probabilities_file_path is not None)):
-        print('Merge mutations with probabilities for %s' % (dinucs_probabilities_file_path))
-        prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dinucs_probabilities_file_path,numofSimulations,'DBS')
-        print('###############################################################')
-    print("--- Merge original and simulations chr based files with Mutation Probabilities: %s seconds ---" %(time.time()-start_time))
-    print("--- Merge original and simulations chr based files with Mutation Probabilities: %f minutes ---" %(float((time.time()-start_time)/60)))
-    print('#######################################################################')
-    ####################################################################################################################
-    ##################  Merge original and simulations chr based files with Mutation Probabilities ends ################
-    ####################################################################################################################
+        ####################################################################################################################
+        ##################  Merge simulations chr based files with Mutation Probabilities starts ###########################
+        ####################################################################################################################
+        logger.info('#################################################################################')
+        logger.info('--- Merge simulations chr based files with Mutation Probabilities starts')
+        logger.info('#################################################################################')
+        startSimNum=1
+        endSimNum=numofSimulations
+        start_time = time.time()
+        #SBS
+        for mutation_type_context in mutation_types_contexts:
+            if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities_file_path is not None):
+                logger.info('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities_file_path))
+                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities_file_path,startSimNum,endSimNum,'SNV',logger)
+
+        #ID
+        if ((ID in mutation_types_contexts) and (id_probabilities_file_path is not None)):
+            logger.info('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities_file_path))
+            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities_file_path,startSimNum,endSimNum,'ID',logger)
+
+        #DBS
+        if ((DBS in mutation_types_contexts) and (dbs_probabilities_file_path is not None)):
+            logger.info('--- Merge %s mutations with probabilities for %s' % (DBS,dbs_probabilities_file_path))
+            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dbs_probabilities_file_path,startSimNum,endSimNum,'DBS',logger)
+
+        logger.info("--- Merge simulations chr based files with Mutation Probabilities: %s seconds" %(time.time()-start_time))
+        logger.info("--- Merge simulations chr based files with Mutation Probabilities: %f minutes" %(float((time.time()-start_time)/60)))
+        logger.info('--- Merge simulations chr based files with Mutation Probabilities ends')
+        logger.info('#################################################################################\n')
+        ####################################################################################################################
+        ##################  Merge simulations chr based files with Mutation Probabilities ends #############################
+        ####################################################################################################################
+
+    ###################################################################################################################
+    ###################################################################################################################
+    ###################################################################################################################
 
     #################################################################################
     #Please note that if you have chr based subs, indels, dinucs mutations combined with probabilities under data directory
     #You can comment the above code and run the rest of the code below.
     #################################################################################
 
+
     #################################################################################
-    print('####### Fill dictioaries using original data starts ###################')
+    logger.info('#################################################################################')
+    logger.info('--- Fill dictioaries using original data starts')
+    # #################################################################################
+    #For each signature we will find a cutoff value for mutations with average probability >=0.9
+    #Our aim is to have at most 10% false positive rate in mutations
+    #number of mutations >= 5K for subs signatures
+    #number of mutations >= 1K for indels signatures
+    #number of mutations >= 200 for dinuc signatures
+    #If we can not satisfy this condition we will discard the signature
+
+    cutoffs=[]
+    for cufoff in np.arange(0.5,0.91,0.01):
+        cutoffs.append("%.2f" %(cufoff))
+
+    subsSignature2PropertiesListDict=fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,SUBS,cutoffs)
+    indelsSignature2PropertiesListDict=fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,INDELS,cutoffs)
+    dinucsSignature2PropertiesListDict=fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,DINUCS,cutoffs)
+    ##################################################################################
+
     #Create files
     createFiles(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
 
@@ -551,67 +733,111 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
     mutationType2NumberofMutationsDict = {}
 
     #Using original data
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,SUBS,mutationType2NumberofMutationsDict,subs_sig_prob)
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,INDELS,mutationType2NumberofMutationsDict,indels_sig_prob)
-    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList,DINUCS,mutationType2NumberofMutationsDict,dinuc_sig_prob)
+    fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,SUBS,mutationType2NumberofMutationsDict,subsSignature2PropertiesListDict)
+    fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,INDELS,mutationType2NumberofMutationsDict,indelsSignature2PropertiesListDict)
+    fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,DINUCS,mutationType2NumberofMutationsDict,dinucsSignature2PropertiesListDict)
 
-    appendDictionaryUnderDataDirectory(mutationType2NumberofMutationsDict, outputDir, jobname,MutationType2NumberofMutatiosDictFilename)
-    print('#######################################################################')
+    #We are writing number of mutations for each mutation type.
+    # e.g.: {"SUBS": 3982196, "INDELS": 234731}
+    appendDictionaryUnderDataDirectory(mutationType2NumberofMutationsDict,outputDir,jobname,MutationType2NumberofMutatiosDictFilename)
+    logger.info('--- Fill dictioaries using original data ends')
+    logger.info('#################################################################################\n')
     #################################################################################
 
     #################################################################################
-    print('############## Set full path library files starts #####################')
+    ################## Set full path library files starts ###########################
     #We need full path of the library files
-    if (nucleosomeFilename == DEFAULT_NUCLEOSOME_OCCUPANCY_FILE):
-        nucleosomeFilename = os.path.join(current_abs_path,LIB,NUCLEOSOME,DEFAULT_NUCLEOSOME_OCCUPANCY_FILE)
+    if ((len(epigenomics_files)==1) and (epigenomics_files[0]==DEFAULT_HISTONE_OCCUPANCY_FILE)):
+        epigenomics_files[0] = os.path.join(current_abs_path,LIB,EPIGENOMICS,DEFAULT_HISTONE_OCCUPANCY_FILE)
 
-    if (replicationTimeFilename == DEFAULT_REPLICATION_TIME_SIGNAL_FILE):
-        replicationTimeFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_SIGNAL_FILE)
+    if (nucleosome_file== DEFAULT_NUCLEOSOME_OCCUPANCY_FILE):
+        nucleosome_file = os.path.join(current_abs_path,LIB,NUCLEOSOME,DEFAULT_NUCLEOSOME_OCCUPANCY_FILE)
 
-    if (replicationTimeValleyFilename == DEFAULT_REPLICATION_TIME_VALLEY_FILE):
-        replicationTimeValleyFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_VALLEY_FILE)
+    if (replication_time_file == DEFAULT_REPLICATION_TIME_SIGNAL_FILE):
+        replication_time_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_SIGNAL_FILE)
 
-    if (replicationTimePeakFilename == DEFAULT_REPLICATION_TIME_PEAK_FILE):
-        replicationTimePeakFilename = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_PEAK_FILE)
-    print('#######################################################################')
+    if (replication_time_valley_file == DEFAULT_REPLICATION_TIME_VALLEY_FILE):
+        replication_time_valley_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_VALLEY_FILE)
+
+    if (replication_time_peak_file == DEFAULT_REPLICATION_TIME_PEAK_FILE):
+        replication_time_peak_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_PEAK_FILE)
+    ################## Set full path library files ends #############################
     #################################################################################
 
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis starts ######################################
     ####################################################################################################################
-    print('################# Run SigProfilerTopography Analysis starts ###########')
+    logger.info('#################################################################################')
+    logger.info('--- Run SigProfilerTopography Analysis starts')
+    plusorMinus_epigenomics = 2000
+    plusorMinus_nucleosome = 1000
 
-    #Nucleosome Occupancy
-    start_time = time.time()
-    runNucleosomeOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,nucleosomeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
-    print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-    print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+    if (epigenomics):
+        #Epigenomics
+        occupancy_type=EPIGENOMICSOCCUPANCY
+        deleteOldData(outputDir,jobname,occupancy_type)
 
-    # Replication Time
-    start_time = time.time()
-    runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
-    print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-    print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            start_time = time.time()
+            if idx<len(epigenomics_files_memos):
+                epigenomics_file_memo= epigenomics_files_memos[idx]
+            else:
+                epigenomics_file_memo= None
+            runOccupancyAnalyses(outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_epigenomics)
+            logger.info('#################################################################################')
+            logger.info("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+            logger.info("--- Run Epigenomics Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+            logger.info('#################################################################################\n')
 
-    # Replication Strand Bias
-    start_time = time.time()
-    runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
-    print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-    print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+    if (nucleosome):
+        #Nucleosome Occupancy
+        occupancy_type = NUCLEOSOMEOCCUPANCY
+        deleteOldData(outputDir,jobname,occupancy_type)
 
-    # Transcription Strand Bias
-    start_time = time.time()
-    runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,chromSizesDict,chromNamesList,computation_type,subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
-    print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-    print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        start_time = time.time()
+        runOccupancyAnalyses(outputDir,jobname,numofSimulations,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_nucleosome)
+        logger.info('#################################################################################')
+        logger.info("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        logger.info("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        logger.info('#################################################################################\n')
 
-    # Processivity
-    start_time = time.time()
-    runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList)
-    print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
-    print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
+    if (replication_time):
+        # Replication Time
+        start_time = time.time()
+        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
+        logger.info('#################################################################################')
+        logger.info("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        logger.info("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        logger.info('#################################################################################\n')
 
-    print('#######################################################################')
+    if (strand_bias):
+        # Replication Strand Bias
+        start_time = time.time()
+        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
+        logger.info('#################################################################################')
+        logger.info("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        logger.info("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        logger.info('#################################################################################\n')
+
+        # Transcription Strand Bias
+        start_time = time.time()
+        runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
+        logger.info('#################################################################################')
+        logger.info("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        logger.info("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        logger.info('#################################################################################\n')
+
+    if (processivity):
+        # Processivity
+        start_time = time.time()
+        #TODO shall we condider only the signatures in subsSignature2PropertiesListDict?
+        runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,subsSignature2PropertiesListDict)
+        logger.info('#################################################################################')
+        logger.info("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
+        logger.info("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
+        logger.info('#################################################################################\n')
+
+    logger.info('#################################################################################\n')
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis ends ########################################
     ####################################################################################################################
@@ -619,17 +845,27 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################
     ####################################################################################################################
-    print('################ Plot figures starts ##################################')
-    start_time = time.time()
-    # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_ONE_SAMPLE_TTEST')
-    # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_NULL_DISTRIBUTION')
-    plotFigures(outputDir, jobname, numofSimulations, 'USING_ZSCORE', 'USING_ZSCORE')
-    print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
-    print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
-    print('#######################################################################')
+    if (plot_figures):
+        logger.info('#################################################################################')
+        logger.info('--- Plot figures starts')
+        start_time = time.time()
+        # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_ONE_SAMPLE_TTEST')
+        # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_NULL_DISTRIBUTION')
+        plotFigures(outputDir, jobname, numofSimulations, sample_based,'USING_ZSCORE', 'USING_ZSCORE',mutation_types_contexts,epigenomics_files,epigenomics_files_memos,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome)
+        logger.info('#################################################################################')
+        logger.info("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
+        logger.info("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
+        logger.info('--- Plot figures ends')
+        logger.info('#################################################################################\n')
     ####################################################################################################################
     ############################################ Plot figures ends #####################################################
     ####################################################################################################################
+
+    logger.info('#################################################################################')
+    logger.info("--- SigProfilerTopography ended successfully")
+    logger.info("--- Thanks for using SigProfilerTopography")
+    logger.info('#################################################################################\n')
+
 
 #######################################################
 
@@ -642,31 +878,46 @@ def runAnalyses(genome,inputDir, outputDir,jobname,numofSimulations,
 # USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 # USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation,mutationTypes=[SUBS, INDELS, DINUCS]):
+def plotFigures(outputDir,jobname,numberofSimulations,sample_based,multipleTesting,probabilityCalculation,mutationTypes,epigenomics_files,epigenomics_files_memos,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome):
 
     #Internally Set
     figureAugmentation = 'noaugmentation'
 
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
-
-    jobnamePath = os.path.join(current_abs_path,OUTPUT,jobname,FIGURE)
-    print('Topography.py jobnamePath:%s ' %jobnamePath)
-    if (os.path.exists(jobnamePath)):
-        print('jobnamePath exists')
+    jobnameSamplesPath = os.path.join(outputDir,jobname,FIGURE,SAMPLES)
+    print('Topography.py jobnameSamplesPath:%s ' %jobnameSamplesPath)
 
     ############################################################
-    if (os.path.exists(jobnamePath)):
+    if (os.path.exists(jobnameSamplesPath)):
         try:
-            shutil.rmtree(jobnamePath)
+            shutil.rmtree(jobnameSamplesPath)
         except OSError as e:
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ############################################################
 
     ############################################################
-    nucleosomeOccupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
-    replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,mutationTypes)
-    transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations)
-    processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
+    if (epigenomics):
+        occupancy_type=EPIGENOMICSOCCUPANCY
+        deleteOldFigures(outputDir, jobname, occupancy_type)
+
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_basename = os.path.basename(epigenomics_file)
+
+            if idx<len(epigenomics_files_memos):
+                epigenomics_file_memo= epigenomics_files_memos[idx]
+            else:
+                epigenomics_file_memo= None
+            occupancyAverageSignalFigures(outputDir, jobname, figureAugmentation, numberofSimulations,sample_based, mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics)
+    if (nucleosome):
+        occupancy_type=NUCLEOSOMEOCCUPANCY
+        deleteOldFigures(outputDir, jobname, occupancy_type)
+        nucleosome_file_basename = os.path.basename(nucleosome_file)
+        occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome)
+    if (replication_time):
+        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes)
+    if (strand_bias):
+        transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
+    if (processivity):
+        processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
     ############################################################
 
 ##############################################################

@@ -93,7 +93,7 @@ def updateSignalArrays(nucleosome_row,signalArray):
 
 ######################################################################
 # This is used right now.
-def writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList):
+def writeChrBasedNucleosomeOccupancySignalArraysAtOnceInParallel(inputList):
     print('In write for each chromosome function')
     memory_usage()
 
@@ -336,7 +336,7 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(
             inputList.append(chromSize)
             inputList.append(chromBasedNucleosomeDF)
             inputList.append(nucleosomeFilename)
-            writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel(inputList)
+            writeChrBasedNucleosomeOccupancySignalArraysAtOnceInParallel(inputList)
 
         print('After all chr based files are written')
         memory_usage()
@@ -390,7 +390,7 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays(genome, quan
                 inputList.append(nucleosomeFilename)
                 poolInputList.append(inputList)
 
-            pool.map(writeChrBasedNucleosomeOccupancySignalCountArraysAtOnceInParallel, poolInputList)
+            pool.map(writeChrBasedNucleosomeOccupancySignalArraysAtOnceInParallel, poolInputList)
 
             ################################
             pool.close()

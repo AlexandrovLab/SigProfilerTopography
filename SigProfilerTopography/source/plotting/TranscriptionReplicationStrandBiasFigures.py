@@ -26,6 +26,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import *
 transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
 replicationStrands = [LAGGING, LEADING]
 
+plt.rcParams.update({'figure.max_open_warning': 0})
+
 ########################################################################
 #For Mutation Types
 def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,outputDir,jobname):
@@ -118,6 +120,7 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
 
     fig.savefig(figureFile)
+    plt.cla()
     plt.close(fig)
 ########################################################################
 
@@ -231,6 +234,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
 
         fig.savefig(figureFile)
+        plt.cla()
         plt.close(fig)
 ########################################################################
 
@@ -327,6 +331,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         figureName = newMutationType + '_MutationType_' + STRANDBIAS + '.png'
         figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
         fig.savefig(figureFile)
+        plt.cla()
         plt.close(fig)
 ########################################################################
 
@@ -419,6 +424,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
             figureName = signature.replace(' ','') + '_Signature_' + STRANDBIAS + '.png'
             figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
             fig.savefig(figureFile)
+            plt.cla()
             plt.close(fig)
 ########################################################################
 
@@ -606,6 +612,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, figureName)
 
     fig.savefig(figureFile)
+    plt.cla()
     plt.close(fig)
 ##################################################################
 
@@ -885,9 +892,64 @@ def plotBarPlots(outputDir,jobname,numberofSimulations,key2NumberofMutationsDict
 
 ##################################################################
 
+##################################################################
+def fillSignificantStrandDict(type2Strand2CountDict,type2FDR_BH_Adjusted_PValue_Dict):
+    type2SignificantStrandDict={}
+
+    for type,fdr_bh_adjusted_pvalue in type2FDR_BH_Adjusted_PValue_Dict.items():
+        strand_saved=None
+        count_saved=0
+        if (fdr_bh_adjusted_pvalue<=0.05):
+            strand2CountDict = type2Strand2CountDict[type]
+            for strand, count in strand2CountDict.items():
+                #We do not consider NonTranscribed for transcription
+                if ((strand!='NonTranscribed') and (count>count_saved)):
+                    count_saved=count
+                    strand_saved=strand
+        type2SignificantStrandDict[type]=strand_saved
+
+    return type2SignificantStrandDict
+##################################################################
+
+
+##################################################################
+def fillMutationTypesSignificantStrandDict(subsSignature2MutationType2Strand2CountDict,subsSignature2MutationType_Strand_FDR_BH_Adjusted_PValues_Dict,sixMutationTypes):
+    subsSignature2MutationTypesSignificantTranscriptionStrandsListDict={}
+
+    for subSignature,FDR_BH_Adjusted_PValues_List in subsSignature2MutationType_Strand_FDR_BH_Adjusted_PValues_Dict.items():
+        subsSignature2MutationTypesSignificantTranscriptionStrandsListDict[subSignature]=[]
+        for i, fdr_bh_adjusted_pvalue in enumerate(FDR_BH_Adjusted_PValues_List,0):
+            mutation_type=sixMutationTypes[i]
+            if  fdr_bh_adjusted_pvalue<=0.05:
+                strand_saved = None
+                count_saved = 0
+                strand2CountDict=subsSignature2MutationType2Strand2CountDict[subSignature][mutation_type]
+                for strand, count in strand2CountDict.items():
+                    if ((strand!='NonTranscribed') and (count>count_saved)):
+                        count_saved=count
+                        strand_saved=strand
+                subsSignature2MutationTypesSignificantTranscriptionStrandsListDict[subSignature].append(strand_saved)
+            else:
+                subsSignature2MutationTypesSignificantTranscriptionStrandsListDict[subSignature].append(None)
+
+    return subsSignature2MutationTypesSignificantTranscriptionStrandsListDict
+##################################################################
+
+
 # ##################################################################
 #main function
-def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations):
+def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based):
+
+    jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS)
+    print('Topography.py jobnamePath:%s ' %jobnamePath)
+
+    ############################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ############################################################
 
     isFigureAugmentation = False
     if (figureAugmentation == 'augmentation'):
@@ -895,43 +957,52 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
 
     #######################################################################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES), exist_ok=True)
     #######################################################################################################################
 
     ##########################################################################################
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples starts  ################################
     ##########################################################################################
-    sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
-    sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
-    sample2NumberofDinucsDict = getDictionary(outputDir,jobname,Sample2NumberofDinucsDictFilename)
 
     subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
     indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
     dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
 
-    sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
-    sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
-    sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname, Sample2DinucsSignature2NumberofMutationsDictFilename)
-
     subsSignatures= subsSignature2NumberofMutationsDict.keys()
     indelsSignatures = indelsSignature2NumberofMutationsDict.keys()
     dinucsSignatures = dinucsSignature2NumberofMutationsDict.keys()
 
-    print('For Information')
-    print('subsSignatures')
-    print(subsSignatures)
-    print('indelsSignatures')
-    print(indelsSignatures)
-    print('dinucsSignatures')
-    print(dinucsSignatures)
+    if sample_based:
+        sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
+        sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir, jobname)
+        sample2NumberofDinucsDict = getDictionary(outputDir, jobname, Sample2NumberofDinucsDictFilename)
+        sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
+        sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
+        sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname, Sample2DinucsSignature2NumberofMutationsDictFilename)
+    else:
+        sample2NumberofSubsDict = {}
+        sample2NumberofIndelsDict = {}
+        sample2NumberofDinucsDict = {}
+        sample2SubsSignature2NumberofMutationsDict = {}
+        sample2IndelsSignature2NumberofMutationsDict = {}
+        sample2DinucsSignature2NumberofMutationsDict = {}
 
-    print('sample2SubsSignature2NumberofMutationsDict.keys()')
-    print(sample2SubsSignature2NumberofMutationsDict.keys())
-    print('sample2IndelsSignature2NumberofMutationsDict.keys()')
-    print(sample2IndelsSignature2NumberofMutationsDict.keys())
-    print('sample2DinucsSignature2NumberofMutationsDict.keys()')
-    print(sample2DinucsSignature2NumberofMutationsDict.keys())
+
+    # print('[Debug] For Information starts')
+    # print('subsSignatures')
+    # print(subsSignatures)
+    # print('indelsSignatures')
+    # print(indelsSignatures)
+    # print('dinucsSignatures')
+    # print(dinucsSignatures)
+    #
+    # print('sample2SubsSignature2NumberofMutationsDict.keys()')
+    # print(sample2SubsSignature2NumberofMutationsDict.keys())
+    # print('sample2IndelsSignature2NumberofMutationsDict.keys()')
+    # print(sample2IndelsSignature2NumberofMutationsDict.keys())
+    # print('sample2DinucsSignature2NumberofMutationsDict.keys()')
+    # print(sample2DinucsSignature2NumberofMutationsDict.keys())
+    # print('[Debug] For Information ends')
 
     ##########################################################################################
     #########################  Read dictionaries related with ################################
@@ -947,37 +1018,40 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     simNum2Type2TranscriptionStrand2CountDict = readDictionary(Type2TranscriptionStrand2CountDict_Filepath)
     type2TranscriptionStrand2CountDict = simNum2Type2TranscriptionStrand2CountDict[str(0)]
 
-    Sample2Type2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Sample2Type2TranscriptionStrand2CountDict_Filename)
-    simNum2Sample2Type2TranscriptionStrand2CountDict = readDictionary(Sample2Type2TranscriptionStrand2CountDict_Filepath)
-    sample2Type2TranscriptionStrand2CountDict = simNum2Sample2Type2TranscriptionStrand2CountDict[str(0)]
-
-    Type2Sample2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Type2Sample2TranscriptionStrand2CountDict_Filename)
-    simNum2Type2Sample2TranscriptionStrand2CountDict = readDictionary(Type2Sample2TranscriptionStrand2CountDict_Filepath)
-    type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict[str(0)]
-
     #These are subs signatures
     Signature2MutationType2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Signature2MutationType2TranscriptionStrand2CountDict_Filename)
     simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict = readDictionary(Signature2MutationType2TranscriptionStrand2CountDict_Filepath)
     subsSignature2MutationType2TranscriptionStrand2CountDict = simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict[str(0)]
-    #########################   Transcription starts   #######################################
+
+    if sample_based:
+        Sample2Type2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Sample2Type2TranscriptionStrand2CountDict_Filename)
+        simNum2Sample2Type2TranscriptionStrand2CountDict = readDictionary(Sample2Type2TranscriptionStrand2CountDict_Filepath)
+        sample2Type2TranscriptionStrand2CountDict = simNum2Sample2Type2TranscriptionStrand2CountDict[str(0)]
+
+        Type2Sample2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Type2Sample2TranscriptionStrand2CountDict_Filename)
+        simNum2Type2Sample2TranscriptionStrand2CountDict = readDictionary(Type2Sample2TranscriptionStrand2CountDict_Filepath)
+        type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict[str(0)]
+
+    #########################   Transcription ends   #########################################
 
     #########################   Replication starts   #########################################
     Type2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Type2ReplicationStrand2CountDict_Filename)
     simNum2Type2ReplicationStrand2CountDict = readDictionary(Type2ReplicationStrand2CountDict_Filepath)
     type2ReplicationStrand2CountDict = simNum2Type2ReplicationStrand2CountDict[str(0)]
 
-    Sample2Type2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Sample2Type2ReplicationStrand2CountDict_Filename)
-    simNum2Sample2Type2ReplicationStrand2CountDict = readDictionary(Sample2Type2ReplicationStrand2CountDict_Filepath)
-    sample2Type2ReplicationStrand2CountDict = simNum2Sample2Type2ReplicationStrand2CountDict[str(0)]
-
-    Type2Sample2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Type2Sample2ReplicationStrand2CountDict_Filename)
-    simNum2Type2Sample2ReplicationStrand2CountDict = readDictionary(Type2Sample2ReplicationStrand2CountDict_Filepath)
-    type2Sample2ReplicationStrand2CountDict =  simNum2Type2Sample2ReplicationStrand2CountDict[str(0)]
-
     #These are subs signatures
     Signature2MutationType2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Signature2MutationType2ReplicationStrand2CountDict_Filename)
     simNum2SubsSignature2MutationType2ReplicationStrand2CountDict = readDictionary(Signature2MutationType2ReplicationStrand2CountDict_Filepath)
     subsSignature2MutationType2ReplicationStrand2CountDict = simNum2SubsSignature2MutationType2ReplicationStrand2CountDict[str(0)]
+
+    if sample_based:
+        Sample2Type2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Sample2Type2ReplicationStrand2CountDict_Filename)
+        simNum2Sample2Type2ReplicationStrand2CountDict = readDictionary(Sample2Type2ReplicationStrand2CountDict_Filepath)
+        sample2Type2ReplicationStrand2CountDict = simNum2Sample2Type2ReplicationStrand2CountDict[str(0)]
+
+        Type2Sample2ReplicationStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,Type2Sample2ReplicationStrand2CountDict_Filename)
+        simNum2Type2Sample2ReplicationStrand2CountDict = readDictionary(Type2Sample2ReplicationStrand2CountDict_Filepath)
+        type2Sample2ReplicationStrand2CountDict =  simNum2Type2Sample2ReplicationStrand2CountDict[str(0)]
     #########################   Replication ends   ###########################################
 
 
@@ -990,31 +1064,32 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     ########### MutationType All Samples Scatter Figures starts ############
     ######## SignatureType All Samples Scatter Figures starts ##############
     ########################################################################
-    # Note: Since these are already in sample based no extra work is required.
-    #MutationType SampleBased Figures --- No numberofMutations
-    if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(type2Sample2TranscriptionStrand2CountDict,type2Sample2ReplicationStrand2CountDict,outputDir,jobname,isFigureAugmentation)
+    if sample_based:
+        # Note: Since these are already in sample based no extra work is required.
+        # MutationType SampleBased Figures --- No numberofMutations
+        if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
+            plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(type2Sample2TranscriptionStrand2CountDict,type2Sample2ReplicationStrand2CountDict,outputDir,jobname,isFigureAugmentation)
 
-    #SubsSignature Sample Based Figures --- No numberofMutations
-    if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
-            type2Sample2TranscriptionStrand2CountDict,
-            type2Sample2ReplicationStrand2CountDict,
-            subsSignatures,outputDir,jobname,isFigureAugmentation)
+        #SubsSignature Sample Based Figures --- No numberofMutations
+        if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
+            plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
+                type2Sample2TranscriptionStrand2CountDict,
+                type2Sample2ReplicationStrand2CountDict,
+                subsSignatures,outputDir,jobname,isFigureAugmentation)
 
-    #IndelsSignature Sample Based Figures --- No numberofMutations
-    if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
-            type2Sample2TranscriptionStrand2CountDict,
-            type2Sample2ReplicationStrand2CountDict,
-            indelsSignatures,outputDir,jobname,isFigureAugmentation)
+        #IndelsSignature Sample Based Figures --- No numberofMutations
+        if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
+            plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
+                type2Sample2TranscriptionStrand2CountDict,
+                type2Sample2ReplicationStrand2CountDict,
+                indelsSignatures,outputDir,jobname,isFigureAugmentation)
 
-    #DinucsSignature Sample Based Figures
-    if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
-        plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
-            type2Sample2TranscriptionStrand2CountDict,
-            type2Sample2ReplicationStrand2CountDict,
-            dinucsSignatures,outputDir,jobname,isFigureAugmentation)
+        #DinucsSignature Sample Based Figures
+        if ((type2Sample2TranscriptionStrand2CountDict is not None) and (type2Sample2ReplicationStrand2CountDict is not None)):
+            plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
+                type2Sample2TranscriptionStrand2CountDict,
+                type2Sample2ReplicationStrand2CountDict,
+                dinucsSignatures,outputDir,jobname,isFigureAugmentation)
     ########################################################################
     ########### MutationType All Samples Scatter Figures ends ##############
     ######## SignatureType All Samples Scatter Figures ends ################
@@ -1051,43 +1126,40 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     ############## MutationType Scatter Plots starts #######################
     ############## Signature Based Scatter Plots starts ####################
     ########################################################################
+    if sample_based:
+        ###############################################################
+        for sample in sample2NumberofSubsDict:
+            if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
+                numberofMutations = sample2NumberofSubsDict[sample]
+                plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample],outputDir,jobname)
+        ###############################################################
 
-    ###############################################################
-    for sample in sample2NumberofSubsDict:
-        if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
-            numberofMutations = sample2NumberofSubsDict[sample]
-            plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample],outputDir,jobname)
-    ###############################################################
+        ###############################################################
+        for sample in sample2NumberofSubsDict:
+            if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
+                numberofMutations = sample2NumberofSubsDict[sample]
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], subsSignature2NumberofMutationsDict, outputDir,jobname)
+        ###############################################################
 
-    ###############################################################
-    for sample in sample2NumberofSubsDict:
-        if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
-            numberofMutations = sample2NumberofSubsDict[sample]
-            plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], subsSignature2NumberofMutationsDict, outputDir,jobname)
-    ###############################################################
+        ###############################################################
+        for sample in sample2NumberofIndelsDict:
+            if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
+                numberofMutations = sample2NumberofIndelsDict[sample]
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], indelsSignature2NumberofMutationsDict, outputDir,jobname)
+        ###############################################################
 
-    ###############################################################
-    for sample in sample2NumberofIndelsDict:
-        if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
-            numberofMutations = sample2NumberofIndelsDict[sample]
-            plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], indelsSignature2NumberofMutationsDict, outputDir,jobname)
-    ###############################################################
-
-    ###############################################################
-    for sample in sample2NumberofDinucsDict:
-        if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
-            numberofMutations = sample2NumberofDinucsDict[sample]
-            plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], dinucsSignature2NumberofMutationsDict, outputDir,jobname)
-    ###############################################################
-
+        ###############################################################
+        for sample in sample2NumberofDinucsDict:
+            if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
+                numberofMutations = sample2NumberofDinucsDict[sample]
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], dinucsSignature2NumberofMutationsDict, outputDir,jobname)
+        ###############################################################
     ########################################################################
     ###################     Sample Based    ################################
     ############## MutationType Scatter Plots ends #########################
     ############## Signature Based Scatter Plots ends ######################
     ##########################  Part 3 ends ################################
     ########################################################################
-
-
 
     ########################################################################
     ##########################  Part 4 starts ##############################
@@ -1242,71 +1314,72 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         #########################################################################################################################
 
         #########################################################################################################################
-        #sample based starts
-        # samplebased --- simulations --- mutation type --- transcription
-        sample2SimulationsMutationTypesTranscribedMediansListDict, sample2SimulationsMutationTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
-                sixMutationTypes,
-                numberofSimulations,
-                sample2NumberofSubsDict,
-                TRANSCRIPTIONSTRANDBIAS)
+        if sample_based:
+            #sample based starts
+            # samplebased --- simulations --- mutation type --- transcription
+            sample2SimulationsMutationTypesTranscribedMediansListDict, sample2SimulationsMutationTypesUntranscribedMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
+                    sixMutationTypes,
+                    numberofSimulations,
+                    sample2NumberofSubsDict,
+                    TRANSCRIPTIONSTRANDBIAS)
 
-        # samplebased --- simulations --- mutation type --- replication
-        sample2SimulationsMutationTypesLaggingMediansListDict, sample2SimulationsMutationTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
-                sixMutationTypes,
-                numberofSimulations,
-                sample2NumberofSubsDict,
-                REPLICATIONSTRANDBIAS)
+            # samplebased --- simulations --- mutation type --- replication
+            sample2SimulationsMutationTypesLaggingMediansListDict, sample2SimulationsMutationTypesLeadingMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
+                    sixMutationTypes,
+                    numberofSimulations,
+                    sample2NumberofSubsDict,
+                    REPLICATIONSTRANDBIAS)
 
-        # samplebased --- simulations --- signature --- transcription
-        sample2SimulationsSubsSignatureTypesTranscribedMediansListDict, sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
-                subsSignatures,
-                numberofSimulations,
-                sample2NumberofSubsDict,
-                TRANSCRIPTIONSTRANDBIAS)
+            # samplebased --- simulations --- signature --- transcription
+            sample2SimulationsSubsSignatureTypesTranscribedMediansListDict, sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
+                    subsSignatures,
+                    numberofSimulations,
+                    sample2NumberofSubsDict,
+                    TRANSCRIPTIONSTRANDBIAS)
 
-        # samplebased --- simulations --- signature --- replication
-        sample2SimulationsSubsSignatureTypesLaggingMediansListDict, sample2SimulationsSubsSignatureTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
-                subsSignatures,
-                numberofSimulations,
-                sample2NumberofSubsDict,
-                REPLICATIONSTRANDBIAS)
+            # samplebased --- simulations --- signature --- replication
+            sample2SimulationsSubsSignatureTypesLaggingMediansListDict, sample2SimulationsSubsSignatureTypesLeadingMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
+                    subsSignatures,
+                    numberofSimulations,
+                    sample2NumberofSubsDict,
+                    REPLICATIONSTRANDBIAS)
 
-        # samplebased --- simulations --- signature --- transcription
-        sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict, sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
-                indelsSignatures,
-                numberofSimulations,
-                sample2NumberofIndelsDict,
-                TRANSCRIPTIONSTRANDBIAS)
+            # samplebased --- simulations --- signature --- transcription
+            sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict, sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
+                    indelsSignatures,
+                    numberofSimulations,
+                    sample2NumberofIndelsDict,
+                    TRANSCRIPTIONSTRANDBIAS)
 
-        # samplebased --- simulations --- signature --- replication
-        sample2SimulationsIndelsSignatureTypesLaggingMediansListDict, sample2SimulationsIndelsSignatureTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
-                indelsSignatures,
-                numberofSimulations,
-                sample2NumberofIndelsDict,
-                REPLICATIONSTRANDBIAS)
-        #sample based ends
+            # samplebased --- simulations --- signature --- replication
+            sample2SimulationsIndelsSignatureTypesLaggingMediansListDict, sample2SimulationsIndelsSignatureTypesLeadingMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
+                    indelsSignatures,
+                    numberofSimulations,
+                    sample2NumberofIndelsDict,
+                    REPLICATIONSTRANDBIAS)
+            #sample based ends
 
-        # samplebased --- simulations --- signature --- transcription
-        sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict, sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
-                dinucsSignatures,
-                numberofSimulations,
-                sample2NumberofDinucsDict,
-                TRANSCRIPTIONSTRANDBIAS)
+            # samplebased --- simulations --- signature --- transcription
+            sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict, sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
+                    dinucsSignatures,
+                    numberofSimulations,
+                    sample2NumberofDinucsDict,
+                    TRANSCRIPTIONSTRANDBIAS)
 
-        # samplebased --- simulations --- signature --- replication
-        sample2SimulationsDinucsSignatureTypesLaggingMediansListDict, sample2SimulationsDinucsSignatureTypesLeadingMediansListDict =\
-            fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
-                dinucsSignatures,
-                numberofSimulations,
-                sample2NumberofDinucsDict,
-                REPLICATIONSTRANDBIAS)
+            # samplebased --- simulations --- signature --- replication
+            sample2SimulationsDinucsSignatureTypesLaggingMediansListDict, sample2SimulationsDinucsSignatureTypesLeadingMediansListDict =\
+                fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
+                    dinucsSignatures,
+                    numberofSimulations,
+                    sample2NumberofDinucsDict,
+                    REPLICATIONSTRANDBIAS)
         #########################################################################################################################
 
     ##########################################################################################################
@@ -1450,93 +1523,94 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     ######################  Calculate p-values for dinucs signatures ends    ################################
     #########################################################################################################
 
-    #########################################################################################################
-    ####################  Calculate p-values for sample based mutation types starts    ######################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-    sample2MutationTypesTranscribedCountListDict, sample2MutationTypesUntranscribedCountListDict, sample2MutationTypesTranscriptionPValuesListDict = fillPValuesDictionaries(transcriptionStrands,sixMutationTypes,sample2Type2TranscriptionStrand2CountDict,sample2SimulationsMutationTypesTranscribedMediansListDict,sample2SimulationsMutationTypesUntranscribedMediansListDict)
-    sample2MutationTypesLaggingCountListDict, sample2MutationTypesLeadingCountListDict, sample2MutationTypesReplicationPValuesListDict = fillPValuesDictionaries(replicationStrands,sixMutationTypes,sample2Type2ReplicationStrand2CountDict,sample2SimulationsMutationTypesLaggingMediansListDict,sample2SimulationsMutationTypesLeadingMediansListDict)
-    #########################################################################################################
-    ####################  Calculate p-values for sample based mutation types ends    ########################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
+    if sample_based:
+        #########################################################################################################
+        ####################  Calculate p-values for sample based mutation types starts    ######################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+        sample2MutationTypesTranscribedCountListDict, sample2MutationTypesUntranscribedCountListDict, sample2MutationTypesTranscriptionPValuesListDict = fillPValuesDictionaries(transcriptionStrands,sixMutationTypes,sample2Type2TranscriptionStrand2CountDict,sample2SimulationsMutationTypesTranscribedMediansListDict,sample2SimulationsMutationTypesUntranscribedMediansListDict)
+        sample2MutationTypesLaggingCountListDict, sample2MutationTypesLeadingCountListDict, sample2MutationTypesReplicationPValuesListDict = fillPValuesDictionaries(replicationStrands,sixMutationTypes,sample2Type2ReplicationStrand2CountDict,sample2SimulationsMutationTypesLaggingMediansListDict,sample2SimulationsMutationTypesLeadingMediansListDict)
+        #########################################################################################################
+        ####################  Calculate p-values for sample based mutation types ends    ########################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
 
 
-    #########################################################################################################
-    ####################  Calculate p-values for sample based subs signature types starts    ################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-    sample2SubsSignatureTypesTranscribedCountListDict, sample2SubsSignatureTypesUntranscribedCountListDict, sample2SubsSignature2TranscriptionPValuesListDict = \
-        fillPValuesDictionaries(transcriptionStrands,
-                                    subsSignatures,
+        #########################################################################################################
+        ####################  Calculate p-values for sample based subs signature types starts    ################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+        sample2SubsSignatureTypesTranscribedCountListDict, sample2SubsSignatureTypesUntranscribedCountListDict, sample2SubsSignature2TranscriptionPValuesListDict = \
+            fillPValuesDictionaries(transcriptionStrands,
+                                        subsSignatures,
+                                        sample2Type2TranscriptionStrand2CountDict,
+                                        sample2SimulationsSubsSignatureTypesTranscribedMediansListDict,
+                                        sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict)
+
+        sample2SubsSignatureTypesLaggingCountListDict, sample2SubsSignatureTypesLeadingCountListDict, sample2SubsSignature2ReplicationPValuesListDict = \
+            fillPValuesDictionaries(replicationStrands,
+                                        subsSignatures,
+                                        sample2Type2ReplicationStrand2CountDict,
+                                        sample2SimulationsSubsSignatureTypesLaggingMediansListDict,
+                                        sample2SimulationsSubsSignatureTypesLeadingMediansListDict)
+        #########################################################################################################
+        ####################  Calculate p-values for sample based subs signature types ends    ##################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+
+
+        #########################################################################################################
+        ####################  Calculate p-values for sample based indels signature types starts    ##############
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+        sample2IndelsSignatureTypesTranscribedCountListDict, sample2IndelsSignatureTypesUntranscribedCountListDict, sample2IndelsSignature2TranscriptionPValuesListDict = \
+            fillPValuesDictionaries(transcriptionStrands,
+                                        indelsSignatures,
+                                        sample2Type2TranscriptionStrand2CountDict,
+                                        sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict,
+                                        sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict)
+
+        sample2IndelsSignatureTypesLaggingCountListDict, sample2IndelsSignatureTypesLeadingCountListDict, sample2IndelsSignature2ReplicationPValuesListDict = \
+            fillPValuesDictionaries(replicationStrands,
+                                        indelsSignatures,
+                                        sample2Type2ReplicationStrand2CountDict,
+                                        sample2SimulationsIndelsSignatureTypesLaggingMediansListDict,
+                                        sample2SimulationsIndelsSignatureTypesLeadingMediansListDict)
+        #########################################################################################################
+        ####################  Calculate p-values for sample based indels signature types ends    ################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+
+
+        #########################################################################################################
+        ####################  Calculate p-values for sample based dinucs signature types starts    ##############
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
+        sample2DinucsSignatureTypesTranscribedCountListDict, sample2DinucsSignatureTypesUntranscribedCountListDict, sample2DinucsSignature2TranscriptionPValuesListDict = \
+            fillPValuesDictionaries(transcriptionStrands,
+                                    dinucsSignatures,
                                     sample2Type2TranscriptionStrand2CountDict,
-                                    sample2SimulationsSubsSignatureTypesTranscribedMediansListDict,
-                                    sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict)
+                                    sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict,
+                                    sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict)
 
-    sample2SubsSignatureTypesLaggingCountListDict, sample2SubsSignatureTypesLeadingCountListDict, sample2SubsSignature2ReplicationPValuesListDict = \
-        fillPValuesDictionaries(replicationStrands,
-                                    subsSignatures,
+        sample2DinucsSignatureTypesLaggingCountListDict, sample2DinucsSignatureTypesLeadingCountListDict, sample2DinucsSignature2ReplicationPValuesListDict = \
+            fillPValuesDictionaries(replicationStrands,
+                                    dinucsSignatures,
                                     sample2Type2ReplicationStrand2CountDict,
-                                    sample2SimulationsSubsSignatureTypesLaggingMediansListDict,
-                                    sample2SimulationsSubsSignatureTypesLeadingMediansListDict)
-    #########################################################################################################
-    ####################  Calculate p-values for sample based subs signature types ends    ##################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-
-
-    #########################################################################################################
-    ####################  Calculate p-values for sample based indels signature types starts    ##############
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-    sample2IndelsSignatureTypesTranscribedCountListDict, sample2IndelsSignatureTypesUntranscribedCountListDict, sample2IndelsSignature2TranscriptionPValuesListDict = \
-        fillPValuesDictionaries(transcriptionStrands,
-                                    indelsSignatures,
-                                    sample2Type2TranscriptionStrand2CountDict,
-                                    sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict,
-                                    sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict)
-
-    sample2IndelsSignatureTypesLaggingCountListDict, sample2IndelsSignatureTypesLeadingCountListDict, sample2IndelsSignature2ReplicationPValuesListDict = \
-        fillPValuesDictionaries(replicationStrands,
-                                    indelsSignatures,
-                                    sample2Type2ReplicationStrand2CountDict,
-                                    sample2SimulationsIndelsSignatureTypesLaggingMediansListDict,
-                                    sample2SimulationsIndelsSignatureTypesLeadingMediansListDict)
-    #########################################################################################################
-    ####################  Calculate p-values for sample based indels signature types ends    ################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-
-
-    #########################################################################################################
-    ####################  Calculate p-values for sample based dinucs signature types starts    ##############
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
-    sample2DinucsSignatureTypesTranscribedCountListDict, sample2DinucsSignatureTypesUntranscribedCountListDict, sample2DinucsSignature2TranscriptionPValuesListDict = \
-        fillPValuesDictionaries(transcriptionStrands,
-                                dinucsSignatures,
-                                sample2Type2TranscriptionStrand2CountDict,
-                                sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict,
-                                sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict)
-
-    sample2DinucsSignatureTypesLaggingCountListDict, sample2DinucsSignatureTypesLeadingCountListDict, sample2DinucsSignature2ReplicationPValuesListDict = \
-        fillPValuesDictionaries(replicationStrands,
-                                dinucsSignatures,
-                                sample2Type2ReplicationStrand2CountDict,
-                                sample2SimulationsDinucsSignatureTypesLaggingMediansListDict,
-                                sample2SimulationsDinucsSignatureTypesLeadingMediansListDict)
-    #########################################################################################################
-    ####################  Calculate p-values for sample based indels signature types ends    ################
-    #########################################    Transcription    ###########################################
-    ###########################################    Replication    ###########################################
-    #########################################################################################################
+                                    sample2SimulationsDinucsSignatureTypesLaggingMediansListDict,
+                                    sample2SimulationsDinucsSignatureTypesLeadingMediansListDict)
+        #########################################################################################################
+        ####################  Calculate p-values for sample based indels signature types ends    ################
+        #########################################    Transcription    ###########################################
+        ###########################################    Replication    ###########################################
+        #########################################################################################################
 
 
     ######################################################
@@ -1562,107 +1636,108 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         if subsSignature in subsSignature2MutationTypesReplicationPValuesListDict:
             all_p_values.extend(subsSignature2MutationTypesReplicationPValuesListDict[subsSignature])
 
-    #############################################################################################
-    ##################################  Sample Based starts  ####################################
-    #############################################################################################
-    sampleMutationTypesTranscriptionList = sample2MutationTypesTranscriptionPValuesListDict.keys()
-    sampleMutationTypesReplicationList = sample2MutationTypesReplicationPValuesListDict.keys()
+    if sample_based:
+        #############################################################################################
+        ##################################  Sample Based starts  ####################################
+        #############################################################################################
+        sampleMutationTypesTranscriptionList = sample2MutationTypesTranscriptionPValuesListDict.keys()
+        sampleMutationTypesReplicationList = sample2MutationTypesReplicationPValuesListDict.keys()
 
-    sampleSubsSignaturesTranscriptionList = sample2SubsSignature2TranscriptionPValuesListDict.keys()
-    sampleSubsSignaturesReplicationList = sample2SubsSignature2ReplicationPValuesListDict.keys()
+        sampleSubsSignaturesTranscriptionList = sample2SubsSignature2TranscriptionPValuesListDict.keys()
+        sampleSubsSignaturesReplicationList = sample2SubsSignature2ReplicationPValuesListDict.keys()
 
-    sampleIndelsSignaturesTranscriptionList = sample2IndelsSignature2TranscriptionPValuesListDict.keys()
-    sampleIndelsSignaturesReplicationList = sample2IndelsSignature2ReplicationPValuesListDict.keys()
+        sampleIndelsSignaturesTranscriptionList = sample2IndelsSignature2TranscriptionPValuesListDict.keys()
+        sampleIndelsSignaturesReplicationList = sample2IndelsSignature2ReplicationPValuesListDict.keys()
 
-    sampleDinucsSignaturesTranscriptionList = sample2DinucsSignature2TranscriptionPValuesListDict.keys()
-    sampleDinucsSignaturesReplicationList = sample2DinucsSignature2ReplicationPValuesListDict.keys()
+        sampleDinucsSignaturesTranscriptionList = sample2DinucsSignature2TranscriptionPValuesListDict.keys()
+        sampleDinucsSignaturesReplicationList = sample2DinucsSignature2ReplicationPValuesListDict.keys()
 
-    for sample in sampleMutationTypesTranscriptionList:
-        all_p_values.extend(sample2MutationTypesTranscriptionPValuesListDict[sample])
+        for sample in sampleMutationTypesTranscriptionList:
+            all_p_values.extend(sample2MutationTypesTranscriptionPValuesListDict[sample])
 
-    for sample in sampleMutationTypesReplicationList:
-        all_p_values.extend(sample2MutationTypesReplicationPValuesListDict[sample])
+        for sample in sampleMutationTypesReplicationList:
+            all_p_values.extend(sample2MutationTypesReplicationPValuesListDict[sample])
 
-    for sample in sampleSubsSignaturesTranscriptionList:
-        all_p_values.extend(sample2SubsSignature2TranscriptionPValuesListDict[sample])
+        for sample in sampleSubsSignaturesTranscriptionList:
+            all_p_values.extend(sample2SubsSignature2TranscriptionPValuesListDict[sample])
 
-    for sample in sampleSubsSignaturesReplicationList:
-        all_p_values.extend(sample2SubsSignature2ReplicationPValuesListDict[sample])
+        for sample in sampleSubsSignaturesReplicationList:
+            all_p_values.extend(sample2SubsSignature2ReplicationPValuesListDict[sample])
 
-    for sample in sampleIndelsSignaturesTranscriptionList:
-        all_p_values.extend(sample2IndelsSignature2TranscriptionPValuesListDict[sample])
+        for sample in sampleIndelsSignaturesTranscriptionList:
+            all_p_values.extend(sample2IndelsSignature2TranscriptionPValuesListDict[sample])
 
-    for sample in sampleIndelsSignaturesReplicationList:
-        all_p_values.extend(sample2IndelsSignature2ReplicationPValuesListDict[sample])
+        for sample in sampleIndelsSignaturesReplicationList:
+            all_p_values.extend(sample2IndelsSignature2ReplicationPValuesListDict[sample])
 
-    for sample in sampleDinucsSignaturesTranscriptionList:
-        all_p_values.extend(sample2DinucsSignature2TranscriptionPValuesListDict[sample])
+        for sample in sampleDinucsSignaturesTranscriptionList:
+            all_p_values.extend(sample2DinucsSignature2TranscriptionPValuesListDict[sample])
 
-    for sample in sampleDinucsSignaturesReplicationList:
-        all_p_values.extend(sample2DinucsSignature2ReplicationPValuesListDict[sample])
-    #############################################################################################
-    ##################################  Sample Based ends  ######################################
-    #############################################################################################
+        for sample in sampleDinucsSignaturesReplicationList:
+            all_p_values.extend(sample2DinucsSignature2ReplicationPValuesListDict[sample])
+        #############################################################################################
+        ##################################  Sample Based ends  ######################################
+        #############################################################################################
 
+    # print('Debug starts')
     print('For information: Number of p values to be used in multiple testing: %d' %(len(all_p_values)))
-    print('######################################################')
-    print('Debug starts April 18, 2019')
-
-    print('sixMutationTypes')
-    print(sixMutationTypes)
-    print('mutationtype_transcription_pvalues')
-    print(mutationtype_transcription_pvalues)
-    print('mutationtype_replication_pvalues')
-    print(mutationtype_replication_pvalues)
-    print('------------------------------------')
-
-    print('subsSignatures')
-    print(subsSignatures)
-    print('number of subsSignatures: %d' %len(subsSignatures))
-    print('subs_signature_transcription_pvalues')
-    print(subs_signature_transcription_pvalues)
-    print('subs_signature_replication_pvalues')
-    print(subs_signature_replication_pvalues)
-    print('------------------------------------')
-
-    print('indelsSignatures')
-    print(indelsSignatures)
-    print('number of indelsSignatures: %d' %len(indelsSignatures))
-    print('indels_signature_transcription_pvalues')
-    print(indels_signature_transcription_pvalues)
-    print('indels_signature_replication_pvalues')
-    print(indels_signature_replication_pvalues)
-    print('------------------------------------')
-
-    print('dinucsSignatures')
-    print(dinucsSignatures)
-    print('number of dinucsSignatures: %d' %len(dinucsSignatures))
-    print('dinucs_signature_transcription_pvalues')
-    print(dinucs_signature_transcription_pvalues)
-    print('dinucs_signature_replication_pvalues')
-    print(dinucs_signature_replication_pvalues)
-    print('------------------------------------')
-
-    for subsSignature in subsSignatures:
-        print(subsSignature)
-        print('Transcription')
-        print(subsSignature2MutationTypesTranscriptionPValuesListDict[subsSignature])
-        print(len(subsSignature2MutationTypesTranscriptionPValuesListDict[subsSignature]))
-        print('- - - - - - - - - - - - - - - - - - ')
-    print('------------------------------------')
-
-    for subsSignature in subsSignatures:
-        print(subsSignature)
-        print('Replication')
-        print(subsSignature2MutationTypesReplicationPValuesListDict[subsSignature])
-        print(len(subsSignature2MutationTypesReplicationPValuesListDict[subsSignature]))
-        print('- - - - - - - - - - - - - - - - - - ')
-    print('------------------------------------')
-
-    print('all_p_values')
-    print(all_p_values)
-    print('Debug ends April 18, 2019')
-    print('######################################################')
+    # print('######################################################')
+    #
+    # print('sixMutationTypes')
+    # print(sixMutationTypes)
+    # print('mutationtype_transcription_pvalues')
+    # print(mutationtype_transcription_pvalues)
+    # print('mutationtype_replication_pvalues')
+    # print(mutationtype_replication_pvalues)
+    # print('------------------------------------')
+    #
+    # print('subsSignatures')
+    # print(subsSignatures)
+    # print('number of subsSignatures: %d' %len(subsSignatures))
+    # print('subs_signature_transcription_pvalues')
+    # print(subs_signature_transcription_pvalues)
+    # print('subs_signature_replication_pvalues')
+    # print(subs_signature_replication_pvalues)
+    # print('------------------------------------')
+    #
+    # print('indelsSignatures')
+    # print(indelsSignatures)
+    # print('number of indelsSignatures: %d' %len(indelsSignatures))
+    # print('indels_signature_transcription_pvalues')
+    # print(indels_signature_transcription_pvalues)
+    # print('indels_signature_replication_pvalues')
+    # print(indels_signature_replication_pvalues)
+    # print('------------------------------------')
+    #
+    # print('dinucsSignatures')
+    # print(dinucsSignatures)
+    # print('number of dinucsSignatures: %d' %len(dinucsSignatures))
+    # print('dinucs_signature_transcription_pvalues')
+    # print(dinucs_signature_transcription_pvalues)
+    # print('dinucs_signature_replication_pvalues')
+    # print(dinucs_signature_replication_pvalues)
+    # print('------------------------------------')
+    #
+    # for subsSignature in subsSignatures:
+    #     print(subsSignature)
+    #     print('Transcription')
+    #     print(subsSignature2MutationTypesTranscriptionPValuesListDict[subsSignature])
+    #     print(len(subsSignature2MutationTypesTranscriptionPValuesListDict[subsSignature]))
+    #     print('- - - - - - - - - - - - - - - - - - ')
+    # print('------------------------------------')
+    #
+    # for subsSignature in subsSignatures:
+    #     print(subsSignature)
+    #     print('Replication')
+    #     print(subsSignature2MutationTypesReplicationPValuesListDict[subsSignature])
+    #     print(len(subsSignature2MutationTypesReplicationPValuesListDict[subsSignature]))
+    #     print('- - - - - - - - - - - - - - - - - - ')
+    # print('------------------------------------')
+    #
+    # print('all_p_values')
+    # print(all_p_values)
+    # print('######################################################')
+    # print('Debug ends')
 
     ####################################################################################
     mutationtype_transcription_FDR_BH_adjusted_pvalues = []
@@ -1674,6 +1749,12 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues = []
     dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues = []
 
+    #These dictionaries will be written
+    type2Transcription_FDR_BH_Adjusted_PValue_Dict={}
+    type2Replication_FDR_BH_Adjusted_PValue_Dict={}
+    subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict = {}
+    subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict = {}
+
     if ((all_p_values is  not None) and all_p_values):
         all_p_values_array = np.asarray(all_p_values)
 
@@ -1681,170 +1762,265 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
         print('For information: Number of all_FDR_BH_adjusted_p_values: %d' % (len(all_FDR_BH_adjusted_p_values)))
 
+        ################################################################
+        #Transcription MutationTypes
         start = 0
         end = len(sixMutationTypes)
-        mutationtype_transcription_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
+        mutationtype_transcription_FDR_BH_adjusted_pvalues = (all_FDR_BH_adjusted_p_values[start:end]).tolist()
 
+        startIndex=start
+        for mutationType in sixMutationTypes:
+            type2Transcription_FDR_BH_Adjusted_PValue_Dict[mutationType]=all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+
+        #Replication MutationTypes
         start = end
         end += len(sixMutationTypes)
-        mutationtype_replication_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
+        mutationtype_replication_FDR_BH_adjusted_pvalues = (all_FDR_BH_adjusted_p_values[start:end]).tolist()
 
+        startIndex=start
+        for mutationType in sixMutationTypes:
+            type2Replication_FDR_BH_Adjusted_PValue_Dict[mutationType]=all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+        ################################################################
+
+        ################################################################
+        #Trancription subsSignatures
         start = end
         end += len(subsSignatures)
         subsSignaturetype_transcription_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
+        startIndex=start
+        for signature in subsSignatures:
+            type2Transcription_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+
+        #Replication subsSignatures
         start = end
         end += len(subsSignatures)
         subsSignaturetype_replication_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
+        startIndex=start
+        for signature in subsSignatures:
+            type2Replication_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+        ################################################################
+
+        ################################################################
+        #Transcription indelsSignatures
         start = end
         end += len(indelsSignatures)
         indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
+        startIndex=start
+        for signature in indelsSignatures:
+            type2Transcription_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+
+        #Replication indelsSignatures
         start = end
         end += len(indelsSignatures)
         indelsSignaturetype_replication_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
+        startIndex=start
+        for signature in indelsSignatures:
+            type2Replication_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+        ################################################################
+
+        ################################################################
+        #Transcription dinucsSignatures
         start = end
         end += len(dinucsSignatures)
         dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
+        startIndex=start
+        for signature in dinucsSignatures:
+            type2Transcription_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+
+        #Replication dinucsSignatures
         start = end
         end += len(dinucsSignatures)
         dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues = all_FDR_BH_adjusted_p_values[start:end]
 
-        subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
+        startIndex=start
+        for signature in dinucsSignatures:
+            type2Replication_FDR_BH_Adjusted_PValue_Dict[signature] = all_FDR_BH_adjusted_p_values[startIndex]
+            startIndex+=1
+        ################################################################
+
+        ################################################################
         for subsSignature in subsSignatures:
             if subsSignature in subsSignature2MutationTypesTranscriptionPValuesListDict:
                 start = end
                 end += len(sixMutationTypes)
-                subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict[subsSignature] = all_FDR_BH_adjusted_p_values[start:end]
+                subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict[subsSignature] = (all_FDR_BH_adjusted_p_values[start:end]).tolist()
 
-        subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
         for subsSignature in subsSignatures:
             if subsSignature in subsSignature2MutationTypesReplicationPValuesListDict:
                 start = end
                 end += len(sixMutationTypes)
-                subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict[subsSignature] = all_FDR_BH_adjusted_p_values[start:end]
+                subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict[subsSignature] = (all_FDR_BH_adjusted_p_values[start:end]).tolist()
+        ################################################################
 
         print('######################################################')
-        print('Debug starts April 18, 2019')
+        path = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS)
 
-        print('sixMutationTypes')
-        print(sixMutationTypes)
-        print('mutationtype_transcription_FDR_BH_adjusted_pvalues')
-        print(mutationtype_transcription_FDR_BH_adjusted_pvalues)
-        print('mutationtype_replication_FDR_BH_adjusted_pvalues')
-        print(mutationtype_replication_FDR_BH_adjusted_pvalues)
-        print('------------------------------------')
+        #type dictionaries
+        filename='type2Transcription_FDR_BH_Adjusted_PValue_Dict.txt'
+        writeDictionarySimple(type2Transcription_FDR_BH_Adjusted_PValue_Dict,path,filename,None)
+        filename = 'type2Replication_FDR_BH_Adjusted_PValue_Dict.txt'
+        writeDictionarySimple(type2Replication_FDR_BH_Adjusted_PValue_Dict, path, filename, None)
 
-        print('subsSignatures')
-        print(subsSignatures)
-        print('number of subsSignatures: %d' % len(subsSignatures))
-        print('subsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
-        print(subsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
-        print('subsSignaturetype_replication_FDR_BH_adjusted_pvalues')
-        print(subsSignaturetype_replication_FDR_BH_adjusted_pvalues)
-        print('------------------------------------')
-
-        print('indelsSignatures')
-        print(indelsSignatures)
-        print('number of indelsSignatures: %d' % len(indelsSignatures))
-        print('indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
-        print(indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
-        print('indelsSignaturetype_replication_FDR_BH_adjusted_pvalues')
-        print(indelsSignaturetype_replication_FDR_BH_adjusted_pvalues)
-        print('------------------------------------')
-
-        print('dinucsSignatures')
-        print(dinucsSignatures)
-        print('number of dinucsSignatures: %d' % len(dinucsSignatures))
-        print('dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
-        print(dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
-        print('dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues')
-        print(dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues)
-        print('------------------------------------')
-
-        for subsSignature in subsSignatures:
-            print(subsSignature)
-            print('Transcription')
-            print(subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict[subsSignature])
-            print(len(subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict[subsSignature]))
-            print('- - - - - - - - - - - - - - - - - - ')
-        print('------------------------------------')
-
-        for subsSignature in subsSignatures:
-            print(subsSignature)
-            print('Replication')
-            print(subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict[subsSignature])
-            print(len(subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict[subsSignature]))
-            print('- - - - - - - - - - - - - - - - - - ')
-        print('------------------------------------')
-
-        print('all_FDR_BH_adjusted_p_values')
-        print(all_FDR_BH_adjusted_p_values)
-        print('Debug ends April 18, 2019')
+        #subsSignatures2MutationTypes dictionaries
+        filename = 'subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict.txt'
+        writeDictionarySimple(subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict, path, filename, None)
+        filename = 'subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict.txt'
+        writeDictionarySimple(subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict, path, filename, None)
         print('######################################################')
 
-        #We must get the BH FDR adjusted p values for each sample as in the order they are put in the all_p_values
-        #Fill these dictionaries
-        sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
-        sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
+        type2SignificantTranscriptionStrandDict=fillSignificantStrandDict(type2TranscriptionStrand2CountDict,type2Transcription_FDR_BH_Adjusted_PValue_Dict)
+        type2SignificantReplicationStrandDict=fillSignificantStrandDict(type2ReplicationStrand2CountDict,type2Replication_FDR_BH_Adjusted_PValue_Dict)
+        subsSignature2MutationTypesSignificantTranscriptionStrandsListDict=fillMutationTypesSignificantStrandDict(subsSignature2MutationType2TranscriptionStrand2CountDict,subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict,sixMutationTypes)
+        subsSignature2MutationTypesSignificantReplicationStrandsListDict=fillMutationTypesSignificantStrandDict(subsSignature2MutationType2ReplicationStrand2CountDict,subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict,sixMutationTypes)
+
+        print('######################################################')
+        path = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS)
+
+        #type dictionaries
+        filename='type2SignificantTranscriptionStrandDict.txt'
+        writeDictionarySimple(type2SignificantTranscriptionStrandDict,path,filename,None)
+        filename = 'type2SignificantReplicationStrandDict.txt'
+        writeDictionarySimple(type2SignificantReplicationStrandDict, path, filename, None)
+
+        #subsSignatures2MutationTypes dictionaries
+        filename = 'subsSignature2MutationTypesSignificantTranscriptionStrandsListDict.txt'
+        writeDictionarySimple(subsSignature2MutationTypesSignificantTranscriptionStrandsListDict, path, filename, None)
+        filename = 'subsSignature2MutationTypesSignificantReplicationStrandsListDict.txt'
+        writeDictionarySimple(subsSignature2MutationTypesSignificantReplicationStrandsListDict, path, filename, None)
+        print('######################################################')
+
+        # print('######################################################')
+        # print('Debug starts April 18, 2019')
+        #
+        # print('sixMutationTypes')
+        # print(sixMutationTypes)
+        # print('mutationtype_transcription_FDR_BH_adjusted_pvalues')
+        # print(mutationtype_transcription_FDR_BH_adjusted_pvalues)
+        # print('mutationtype_replication_FDR_BH_adjusted_pvalues')
+        # print(mutationtype_replication_FDR_BH_adjusted_pvalues)
+        # print('------------------------------------')
+        #
+        # print('subsSignatures')
+        # print(subsSignatures)
+        # print('number of subsSignatures: %d' % len(subsSignatures))
+        # print('subsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
+        # print(subsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
+        # print('subsSignaturetype_replication_FDR_BH_adjusted_pvalues')
+        # print(subsSignaturetype_replication_FDR_BH_adjusted_pvalues)
+        # print('------------------------------------')
+        #
+        # print('indelsSignatures')
+        # print(indelsSignatures)
+        # print('number of indelsSignatures: %d' % len(indelsSignatures))
+        # print('indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
+        # print(indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
+        # print('indelsSignaturetype_replication_FDR_BH_adjusted_pvalues')
+        # print(indelsSignaturetype_replication_FDR_BH_adjusted_pvalues)
+        # print('------------------------------------')
+        #
+        # print('dinucsSignatures')
+        # print(dinucsSignatures)
+        # print('number of dinucsSignatures: %d' % len(dinucsSignatures))
+        # print('dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues')
+        # print(dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
+        # print('dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues')
+        # print(dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues)
+        # print('------------------------------------')
+        #
+        # for subsSignature in subsSignatures:
+        #     print(subsSignature)
+        #     print('Transcription')
+        #     print(subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict[subsSignature])
+        #     print(len(subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict[subsSignature]))
+        #     print('- - - - - - - - - - - - - - - - - - ')
+        # print('------------------------------------')
+        #
+        # for subsSignature in subsSignatures:
+        #     print(subsSignature)
+        #     print('Replication')
+        #     print(subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict[subsSignature])
+        #     print(len(subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict[subsSignature]))
+        #     print('- - - - - - - - - - - - - - - - - - ')
+        # print('------------------------------------')
+        #
+        # print('all_FDR_BH_adjusted_p_values')
+        # print(all_FDR_BH_adjusted_p_values)
+        # print('Debug ends April 18, 2019')
+        # print('######################################################')
 
 
-        # Sample MutationType Transcription
-        for sample in sampleMutationTypesTranscriptionList:
-            start = end
-            end += len(sixMutationTypes)
-            sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+        if sample_based:
+            #We must get the BH FDR adjusted p values for each sample as in the order they are put in the all_p_values
+            #Fill these dictionaries
+            sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict = {}
+            sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict = {}
 
-        # Sample MutationType Replication
-        for sample in sampleMutationTypesReplicationList:
-            start = end
-            end += len(sixMutationTypes)
-            sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Subs SignatureType Transcription
-        for sample in sampleSubsSignaturesTranscriptionList:
-            start = end
-            end += len(subsSignatures)
-            sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample MutationType Transcription
+            for sample in sampleMutationTypesTranscriptionList:
+                start = end
+                end += len(sixMutationTypes)
+                sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Subs SignatureType Replication
-        for sample in sampleSubsSignaturesReplicationList:
-            start = end
-            end += len(subsSignatures)
-            sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample MutationType Replication
+            for sample in sampleMutationTypesReplicationList:
+                start = end
+                end += len(sixMutationTypes)
+                sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Indels SignatureType Transcription
-        for sample in sampleIndelsSignaturesTranscriptionList:
-            start = end
-            end += len(indelsSignatures)
-            sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample Subs SignatureType Transcription
+            for sample in sampleSubsSignaturesTranscriptionList:
+                start = end
+                end += len(subsSignatures)
+                sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Indels SignatureType Replication
-        for sample in sampleIndelsSignaturesReplicationList:
-            start = end
-            end += len(indelsSignatures)
-            sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample Subs SignatureType Replication
+            for sample in sampleSubsSignaturesReplicationList:
+                start = end
+                end += len(subsSignatures)
+                sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Dinucs SignatureType Transcription
-        for sample in sampleDinucsSignaturesTranscriptionList:
-            start = end
-            end += len(dinucsSignatures)
-            sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample Indels SignatureType Transcription
+            for sample in sampleIndelsSignaturesTranscriptionList:
+                start = end
+                end += len(indelsSignatures)
+                sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
 
-        # Sample Dinucs SignatureType Replication
-        for sample in sampleDinucsSignaturesReplicationList:
-            start = end
-            end += len(dinucsSignatures)
-            sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+            # Sample Indels SignatureType Replication
+            for sample in sampleIndelsSignaturesReplicationList:
+                start = end
+                end += len(indelsSignatures)
+                sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+
+            # Sample Dinucs SignatureType Transcription
+            for sample in sampleDinucsSignaturesTranscriptionList:
+                start = end
+                end += len(dinucsSignatures)
+                sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
+
+            # Sample Dinucs SignatureType Replication
+            for sample in sampleDinucsSignaturesReplicationList:
+                start = end
+                end += len(dinucsSignatures)
+                sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict[sample] = all_FDR_BH_adjusted_p_values[start:end]
     ####################################################################################
 
     ######################################################
@@ -1940,7 +2116,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                  subsSignature2MutationType2TranscriptionStrand2CountDict,
                  subsSignature2MutationTypesTranscribedCountListDict,
                  subsSignature2MutationTypesUntranscribedCountListDict,
-                 subsSignature2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
+                 subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict,
                  width,transcriptionStrands,'royalblue', 'yellowgreen', 'All Mutations','mutationtypes_transcription_strand_bias')
 
     plotBarPlots(outputDir,jobname,numberofSimulations,subsSignature2NumberofMutationsDict,isKeySample,sixMutationTypes,
@@ -1949,7 +2125,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                  subsSignature2MutationType2ReplicationStrand2CountDict,
                  subsSignature2MutationTypesLaggingCountListDict,
                  subsSignature2MutationTypesLeadingCountListDict,
-                 subsSignature2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict,
+                 subsSignature2MutationTypesReplication_FDR_BH_Adjusted_PValues_Dict,
                  width,replicationStrands,'indianred', 'goldenrod','All Mutations','mutationtypes_replication_strand_bias')
     #################################################################
     ########### Plot sub signatures mutation types ends #############
@@ -1957,106 +2133,107 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
 
 
     isKeySample=True
-    #######################################################
-    ######### Plot sample based mutations starts ##########
-    #######################################################
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,sixMutationTypes,
-                 sample2SimulationsMutationTypesTranscribedMediansListDict,
-                 sample2SimulationsMutationTypesUntranscribedMediansListDict,
-                 sample2Type2TranscriptionStrand2CountDict,
-                 sample2MutationTypesTranscribedCountListDict,
-                 sample2MutationTypesUntranscribedCountListDict,
-                 sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
-                 width,transcriptionStrands,'royalblue', 'yellowgreen', 'All Mutations','mutationtypes_transcription_strand_bias')
+    if sample_based:
+        #######################################################
+        ######### Plot sample based mutations starts ##########
+        #######################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,sixMutationTypes,
+                     sample2SimulationsMutationTypesTranscribedMediansListDict,
+                     sample2SimulationsMutationTypesUntranscribedMediansListDict,
+                     sample2Type2TranscriptionStrand2CountDict,
+                     sample2MutationTypesTranscribedCountListDict,
+                     sample2MutationTypesUntranscribedCountListDict,
+                     sample2MutationTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
+                     width,transcriptionStrands,'royalblue', 'yellowgreen', 'All Mutations','mutationtypes_transcription_strand_bias')
 
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,sixMutationTypes,
-                 sample2SimulationsMutationTypesLaggingMediansListDict,
-                 sample2SimulationsMutationTypesLeadingMediansListDict,
-                 sample2Type2ReplicationStrand2CountDict,
-                 sample2MutationTypesLaggingCountListDict,
-                 sample2MutationTypesLeadingCountListDict,
-                 sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict,
-                 width,replicationStrands,'indianred', 'goldenrod','All Mutations','mutationtypes_replication_strand_bias')
-    #######################################################
-    ######### Plot sample based mutations ends ############
-    #######################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,sixMutationTypes,
+                     sample2SimulationsMutationTypesLaggingMediansListDict,
+                     sample2SimulationsMutationTypesLeadingMediansListDict,
+                     sample2Type2ReplicationStrand2CountDict,
+                     sample2MutationTypesLaggingCountListDict,
+                     sample2MutationTypesLeadingCountListDict,
+                     sample2MutationTypesReplication_BH_FDR_Adjusted_PValues_Dict,
+                     width,replicationStrands,'indianred', 'goldenrod','All Mutations','mutationtypes_replication_strand_bias')
+        #######################################################
+        ######### Plot sample based mutations ends ############
+        #######################################################
 
 
-    ############################################################
-    #### Plot sample based subs signatures bar plot starts #####
-    ############################################################
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,subsSignatures,
-                 sample2SimulationsSubsSignatureTypesTranscribedMediansListDict,
-                 sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict,
-                 sample2Type2TranscriptionStrand2CountDict,
-                 sample2SubsSignatureTypesTranscribedCountListDict,
-                 sample2SubsSignatureTypesUntranscribedCountListDict,
-                 sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
-                 width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures','subs_signatures_transcription_strand_bias')
+        ############################################################
+        #### Plot sample based subs signatures bar plot starts #####
+        ############################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,subsSignatures,
+                     sample2SimulationsSubsSignatureTypesTranscribedMediansListDict,
+                     sample2SimulationsSubsSignatureTypesUntranscribedMediansListDict,
+                     sample2Type2TranscriptionStrand2CountDict,
+                     sample2SubsSignatureTypesTranscribedCountListDict,
+                     sample2SubsSignatureTypesUntranscribedCountListDict,
+                     sample2SubsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
+                     width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures','subs_signatures_transcription_strand_bias')
 
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,subsSignatures,
-                 sample2SimulationsSubsSignatureTypesLaggingMediansListDict,
-                 sample2SimulationsSubsSignatureTypesLeadingMediansListDict,
-                 sample2Type2ReplicationStrand2CountDict,
-                 sample2SubsSignatureTypesLaggingCountListDict,
-                 sample2SubsSignatureTypesLeadingCountListDict,
-                 sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
-                 width,replicationStrands,'indianred', 'goldenrod','All Signatures','subs_signatures_replication_strand_bias')
-    ############################################################
-    #### Plot sample based subs signatures bar plot ends #######
-    ############################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofSubsDict,isKeySample,subsSignatures,
+                     sample2SimulationsSubsSignatureTypesLaggingMediansListDict,
+                     sample2SimulationsSubsSignatureTypesLeadingMediansListDict,
+                     sample2Type2ReplicationStrand2CountDict,
+                     sample2SubsSignatureTypesLaggingCountListDict,
+                     sample2SubsSignatureTypesLeadingCountListDict,
+                     sample2SubsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
+                     width,replicationStrands,'indianred', 'goldenrod','All Signatures','subs_signatures_replication_strand_bias')
+        ############################################################
+        #### Plot sample based subs signatures bar plot ends #######
+        ############################################################
 
-    ########################################################## New Part starts ##################################################################33
-    ##############################################################
-    #### Plot sample based indels signatures bar plot starts #####
-    ##############################################################
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofIndelsDict,isKeySample,indelsSignatures,
-                 sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict,
-                 sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict,
-                 sample2Type2TranscriptionStrand2CountDict,
-                 sample2IndelsSignatureTypesTranscribedCountListDict,
-                 sample2IndelsSignatureTypesUntranscribedCountListDict,
-                 sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
-                 width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures', 'indels_signatures_transcription_strand_bias')
+        ########################################################## New Part starts ##################################################################33
+        ##############################################################
+        #### Plot sample based indels signatures bar plot starts #####
+        ##############################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofIndelsDict,isKeySample,indelsSignatures,
+                     sample2SimulationsIndelsSignatureTypesTranscribedMediansListDict,
+                     sample2SimulationsIndelsSignatureTypesUntranscribedMediansListDict,
+                     sample2Type2TranscriptionStrand2CountDict,
+                     sample2IndelsSignatureTypesTranscribedCountListDict,
+                     sample2IndelsSignatureTypesUntranscribedCountListDict,
+                     sample2IndelsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
+                     width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures', 'indels_signatures_transcription_strand_bias')
 
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofIndelsDict,isKeySample,indelsSignatures,
-                 sample2SimulationsIndelsSignatureTypesLaggingMediansListDict,
-                 sample2SimulationsIndelsSignatureTypesLeadingMediansListDict,
-                 sample2Type2ReplicationStrand2CountDict,
-                 sample2IndelsSignatureTypesLaggingCountListDict,
-                 sample2IndelsSignatureTypesLeadingCountListDict,
-                 sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
-                 width,replicationStrands,'indianred', 'goldenrod','All Signatures', 'indels_signatures_replication_strand_bias')
-    ############################################################
-    #### Plot sample based indels signatures bar plot ends #####
-    ############################################################
-    ########################################################## New Part ends ####################################################################33
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofIndelsDict,isKeySample,indelsSignatures,
+                     sample2SimulationsIndelsSignatureTypesLaggingMediansListDict,
+                     sample2SimulationsIndelsSignatureTypesLeadingMediansListDict,
+                     sample2Type2ReplicationStrand2CountDict,
+                     sample2IndelsSignatureTypesLaggingCountListDict,
+                     sample2IndelsSignatureTypesLeadingCountListDict,
+                     sample2IndelsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
+                     width,replicationStrands,'indianred', 'goldenrod','All Signatures', 'indels_signatures_replication_strand_bias')
+        ############################################################
+        #### Plot sample based indels signatures bar plot ends #####
+        ############################################################
+        ########################################################## New Part ends ####################################################################33
 
-    ########################################################## New Part starts ##################################################################33
-    ##############################################################
-    #### Plot sample based dinucs signatures bar plot starts #####
-    ##############################################################
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofDinucsDict,isKeySample,dinucsSignatures,
-                 sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict,
-                 sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict,
-                 sample2Type2TranscriptionStrand2CountDict,
-                 sample2DinucsSignatureTypesTranscribedCountListDict,
-                 sample2DinucsSignatureTypesUntranscribedCountListDict,
-                 sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
-                 width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures', 'dinucs_signatures_transcription_strand_bias')
+        ########################################################## New Part starts ##################################################################33
+        ##############################################################
+        #### Plot sample based dinucs signatures bar plot starts #####
+        ##############################################################
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofDinucsDict,isKeySample,dinucsSignatures,
+                     sample2SimulationsDinucsSignatureTypesTranscribedMediansListDict,
+                     sample2SimulationsDinucsSignatureTypesUntranscribedMediansListDict,
+                     sample2Type2TranscriptionStrand2CountDict,
+                     sample2DinucsSignatureTypesTranscribedCountListDict,
+                     sample2DinucsSignatureTypesUntranscribedCountListDict,
+                     sample2DinucsSignatureTypesTranscription_BH_FDR_Adjusted_PValues_Dict,
+                     width,transcriptionStrands,'royalblue', 'yellowgreen','All Signatures', 'dinucs_signatures_transcription_strand_bias')
 
-    plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofDinucsDict,isKeySample,dinucsSignatures,
-                 sample2SimulationsDinucsSignatureTypesLaggingMediansListDict,
-                 sample2SimulationsDinucsSignatureTypesLeadingMediansListDict,
-                 sample2Type2ReplicationStrand2CountDict,
-                 sample2DinucsSignatureTypesLaggingCountListDict,
-                 sample2DinucsSignatureTypesLeadingCountListDict,
-                 sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
-                 width,replicationStrands,'indianred', 'goldenrod','All Signatures', 'dinucs_signatures_replication_strand_bias')
-    ############################################################
-    #### Plot sample based dinucs signatures bar plot ends #####
-    ############################################################
-    ########################################################## New Part ends ####################################################################33
+        plotBarPlots(outputDir,jobname,numberofSimulations,sample2NumberofDinucsDict,isKeySample,dinucsSignatures,
+                     sample2SimulationsDinucsSignatureTypesLaggingMediansListDict,
+                     sample2SimulationsDinucsSignatureTypesLeadingMediansListDict,
+                     sample2Type2ReplicationStrand2CountDict,
+                     sample2DinucsSignatureTypesLaggingCountListDict,
+                     sample2DinucsSignatureTypesLeadingCountListDict,
+                     sample2DinucsSignatureTypesReplication_BH_FDR_Adjusted_PValues_Dict,
+                     width,replicationStrands,'indianred', 'goldenrod','All Signatures', 'dinucs_signatures_replication_strand_bias')
+        ############################################################
+        #### Plot sample based dinucs signatures bar plot ends #####
+        ############################################################
+        ########################################################## New Part ends ####################################################################33
 
 
     ########################################################################

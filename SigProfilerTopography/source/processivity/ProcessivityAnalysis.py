@@ -33,31 +33,37 @@ def myfuncUpdated(x):
 
 
 #########################################################################
-def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbability):
+def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbability,signature2PropertiesListDict):
 
     processiveGroupLength = x['ProcessiveGroupLength']
     distance = x['Distance']
     signature = x['Signature']
     probability = x['Probability']
 
-    if (considerProbability and (probability >= PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
-        if signature in signature2ProcessiveGroupLength2DistanceListDict:
-            if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
-                signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
+    #Old way
+    # if (considerProbability and (probability >= PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
+
+    #New way
+    #We require signature to be in signature2PropertiesListDict
+    if (signature in signature2PropertiesListDict):
+        if (considerProbability and (probability>=float(signature2PropertiesListDict[signature][0]))):
+            if signature in signature2ProcessiveGroupLength2DistanceListDict:
+                if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
+                    signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
+                else:
+                    signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
             else:
+                signature2ProcessiveGroupLength2DistanceListDict[signature]= {}
                 signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
-        else:
-            signature2ProcessiveGroupLength2DistanceListDict[signature]= {}
-            signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
-    elif (not considerProbability):
-        if signature in signature2ProcessiveGroupLength2DistanceListDict:
-            if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
-                signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
+        elif (not considerProbability):
+            if signature in signature2ProcessiveGroupLength2DistanceListDict:
+                if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
+                    signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
+                else:
+                    signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
             else:
+                signature2ProcessiveGroupLength2DistanceListDict[signature] = {}
                 signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
-        else:
-            signature2ProcessiveGroupLength2DistanceListDict[signature] = {}
-            signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = [distance]
 #########################################################################
 
 
@@ -67,17 +73,18 @@ def findProcessiveGroupsForInputList(inputList):
 
     sampleBased_chrBased_spms_df = inputList[0]
     considerProbabilityInProcessivityAnalysis = inputList[1]
+    signature2PropertiesListDict=inputList[2]
 
     #Sort it
     sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
 
-    return findProcessiveGroups(sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis)
+    return findProcessiveGroups(sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict)
 ####################################################################################
 
 
 
 ####################################################################################
-def findProcessiveGroups(sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis):
+def findProcessiveGroups(sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict):
     signature2ProcessiveGroupLength2DistanceListDict = {}
 
     #They must be same type of mutation e.g.: T>A
@@ -95,7 +102,11 @@ def findProcessiveGroups(sorted_sampleBased_chrBased_spms_df,considerProbability
         df.columns = columns
         df = df[df['ProcessiveGroupLength'].ne(1)]
 
-        df.apply(fillDict,signature2ProcessiveGroupLength2DistanceListDict=signature2ProcessiveGroupLength2DistanceListDict, considerProbability=considerProbabilityInProcessivityAnalysis , axis=1)
+        df.apply(fillDict,
+                 signature2ProcessiveGroupLength2DistanceListDict=signature2ProcessiveGroupLength2DistanceListDict,
+                 considerProbability=considerProbabilityInProcessivityAnalysis,
+                 signature2PropertiesListDict=signature2PropertiesListDict,
+                 axis=1)
 
     return signature2ProcessiveGroupLength2DistanceListDict
 ####################################################################################
@@ -151,7 +162,7 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
@@ -209,6 +220,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                         # inputList.append(signatures)
                         inputList.append(sampleBased_chrBased_spms_df)
                         inputList.append(considerProbabilityInProcessivityAnalysis)
+                        inputList.append(signature2PropertiesListDict)
                         poolInputList.append(inputList)
 
                     # Call the function findProcessiveGroups
@@ -225,9 +237,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
             filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' %(simNum)
 
-            if (simNum==0):
-                print('For original data signature2ProcessiveGroupLength2PropertiesDict')
-                print(signature2ProcessiveGroupLength2PropertiesDict)
+            # #For information
+            # if (simNum==0):
+            #     print('For original data signature2ProcessiveGroupLength2PropertiesDict')
+            #     print(signature2ProcessiveGroupLength2PropertiesDict)
 
             writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname,filename, PROCESSIVITY,ProcessiveGroupStructEncoder)
 
@@ -237,8 +250,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
 
 ##################################################################################
-def processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis):
-    print('########################## ProcessivityAnalysis starts ###########################')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis)
-    print('########################## ProcessivityAnalysis ends #############################')
+def processivityAnalysis(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict):
+    print('\n#################################################################################')
+    print('--- ProcessivityAnalysis starts')
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict)
+    print('--- ProcessivityAnalysis ends')
+    print('#################################################################################\n')
 ##################################################################################

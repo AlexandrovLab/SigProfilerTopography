@@ -291,16 +291,14 @@ def addNumofAttributableBasesColumn(inputList):
 
 
 ##################################################################
-#TODO left here
 #Simulations
 def searchMutation_simulations_integrated(mutation_row,
     sample2NumberofMutationsDict,
-    signature2NumberofMutationsDict,
     sample2Signature2NumberofMutationsDict,
     chrBasedReplicationTimeDataArrayWithDecileIndex,
     simNum2Type2DecileIndex2NumberofMutationsDict,
     simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
-    MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+    signature2PropertiesListDict,
     type):
 
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
@@ -356,8 +354,8 @@ def searchMutation_simulations_integrated(mutation_row,
             ################### AGGREGATED ends #######################
 
             ########################### Signatures start ###########################
-            for signature in signature2NumberofMutationsDict:
-                if mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+            for signature in signature2PropertiesListDict:
+                if mutation_row[signature] >= float(signature2PropertiesListDict[signature][0]):
                     if decileIndexNum in type2DecileIndex2NumberofMutationsDict[signature]:
                         type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] += 1
                     else:
@@ -388,7 +386,7 @@ def searchMutation_simulations_integrated(mutation_row,
 
             if sample in sample2Signature2NumberofMutationsDict:
                 for signature in sample2Signature2NumberofMutationsDict[sample]:
-                    if mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD:
+                    if mutation_row[signature] >= float(signature2PropertiesListDict[signature][0]):
                         if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
                             sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
                         else:
@@ -396,7 +394,6 @@ def searchMutation_simulations_integrated(mutation_row,
                 ############## Sample Based Signatures ends ############################
 
             ############################# Sample Based ends ############################
-
 
 ##################################################################
 
@@ -506,11 +503,10 @@ def searchMutation(mutation_row,
 
 ##################################################################
 def searchforMutations(sample2NumberofMutationsDict,
-        signature2NumberofMutationsDict,
         sample2Signature2NumberofMutationsDict,
         chrBased_mutations_df_split,
         chrBasedReplicationTimeDataArrayWithDecileIndex,
-        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+        signature2PropertiesListDict,
         type,
         numofSimulations):
 
@@ -533,7 +529,7 @@ def searchforMutations(sample2NumberofMutationsDict,
             type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
             type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
 
-        for signature in signature2NumberofMutationsDict:
+        for signature in signature2PropertiesListDict:
             type2DecileIndex2NumberofMutationsDict[signature] = {}
         ############################################################
 
@@ -556,12 +552,11 @@ def searchforMutations(sample2NumberofMutationsDict,
 
     chrBased_mutations_df_split.apply(searchMutation_simulations_integrated,
                                 sample2NumberofMutationsDict = sample2NumberofMutationsDict,
-                                signature2NumberofMutationsDict=signature2NumberofMutationsDict,
                                 sample2Signature2NumberofMutationsDict= sample2Signature2NumberofMutationsDict,
                                 chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex,
                                 simNum2Type2DecileIndex2NumberofMutationsDict=simNum2Type2DecileIndex2NumberofMutationsDict,
                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict=simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
-                                MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
+                                signature2PropertiesListDict = signature2PropertiesListDict,
                                 type= type,
                                 axis=1)
 
@@ -602,7 +597,7 @@ def  fillChrBasedReplicationTimeNPArrayNewVersion(chrLong,chromSize,decile_df_li
 
 ##################################################################
 def  fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list):
-    #We can set the starring index as 1 in builtin function enumerate
+    #We can set the starting index as 1 in builtin function enumerate
     #First chrBased_grouped_decile has index of 1
     #Last chrBased_grouped_decile has index of 10
 
@@ -625,9 +620,6 @@ def  fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decil
 def fillDictionaries(sample2NumberofSubsDict,
                     sample2NumberofIndelsDict,
                     sample2NumberofDinucsDict,
-                    subsSignature2NumberofMutationsDict,
-                    indelsSignature2NumberofMutationsDict,
-                    dinucsSignature2NumberofMutationsDict,
                     sample2SubsSignature2NumberofMutationsDict,
                     sample2IndelsSignature2NumberofMutationsDict,
                     sample2DinucsSignature2NumberofMutationsDict,
@@ -636,7 +628,9 @@ def fillDictionaries(sample2NumberofSubsDict,
                     chrBased_indels_df_split,
                     chrBased_dinucs_df_split,
                     numofSimulations,
-                    subs_sig_prob, indels_sig_prob, dinuc_sig_prob):
+                    subsSignature2PropertiesListDict,
+                    indelsSignature2PropertiesListDict,
+                    dinucsSignature2PropertiesListDict):
 
     simNum2Type2DecileIndex2NumberofMutationsDict = {}
     simNum2Sample2Type2DecileIndex2NumberofMutationsDict = {}
@@ -645,11 +639,10 @@ def fillDictionaries(sample2NumberofSubsDict,
     if ((chrBased_subs_df_split is not None) and (not chrBased_subs_df_split.empty)):
         simNum2SubsType2DecileIndex2NumberofMutationsDict, simNum2Sample2SubsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofSubsDict,
-            subsSignature2NumberofMutationsDict,
             sample2SubsSignature2NumberofMutationsDict,
             chrBased_subs_df_split,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            subs_sig_prob,
+            subsSignature2PropertiesListDict,
             AGGREGATEDSUBSTITUTIONS,
             numofSimulations)
 
@@ -661,11 +654,10 @@ def fillDictionaries(sample2NumberofSubsDict,
     if ((chrBased_indels_df_split is not None) and (not chrBased_indels_df_split.empty)):
         simNum2IndelType2DecileIndex2NumberofMutationsDict, simNum2Sample2IndelsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofIndelsDict,
-            indelsSignature2NumberofMutationsDict,
             sample2IndelsSignature2NumberofMutationsDict,
             chrBased_indels_df_split,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            indels_sig_prob,
+            indelsSignature2PropertiesListDict,
             AGGREGATEDINDELS,
             numofSimulations)
 
@@ -676,11 +668,10 @@ def fillDictionaries(sample2NumberofSubsDict,
     if ((chrBased_dinucs_df_split is not None) and (not chrBased_dinucs_df_split.empty)):
         simNum2DinucType2DecileIndex2NumberofMutationsDict, simNum2Sample2DinucsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofDinucsDict,
-            dinucsSignature2NumberofMutationsDict,
             sample2DinucsSignature2NumberofMutationsDict,
             chrBased_dinucs_df_split,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            dinuc_sig_prob,
+            dinucsSignature2PropertiesListDict,
             AGGREGATEDDINUCS,
             numofSimulations)
 
@@ -696,23 +687,33 @@ def searchMutationsOnReplicationTimeNPArray(inputList):
     sample2NumberofSubsDict = inputList[0]
     sample2NumberofIndelsDict = inputList[1]
     sample2NumberofDinucsDict = inputList[2]
-    subsSignature2NumberofMutationsDict = inputList[3]
-    indelsSignature2NumberofMutationsDict = inputList[4]
-    dinucsSignature2NumberofMutationsDict = inputList[5]
-    sample2SubsSignature2NumberofMutationsDict = inputList[6]
-    sample2IndelsSignature2NumberofMutationsDict = inputList[7]
-    sample2DinucsSignature2NumberofMutationsDict = inputList[8]
-    chrBased_subs_df_split = inputList[9]
-    chrBased_indels_df_split = inputList[10]
-    chrBased_dinucs_df_split = inputList[11]
-    chrBased_replication_time_np_array = inputList[12]
+    sample2SubsSignature2NumberofMutationsDict = inputList[3]
+    sample2IndelsSignature2NumberofMutationsDict = inputList[4]
+    sample2DinucsSignature2NumberofMutationsDict = inputList[5]
+    chrBased_subs_df_split = inputList[6]
+    chrBased_indels_df_split = inputList[7]
+    chrBased_dinucs_df_split = inputList[8]
+    chrBased_replication_time_np_array = inputList[9]
+    numofSimulations=inputList[10]
+    subsSignature2PropertiesListDict = inputList[11]
+    indelsSignature2PropertiesListDict = inputList[12]
+    dinucsSignature2PropertiesListDict = inputList[13]
 
-
-    type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries(sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
-                    subsSignature2NumberofMutationsDict,indelsSignature2NumberofMutationsDict,dinucsSignature2NumberofMutationsDict,
-                    sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    chrBased_replication_time_np_array,
-                    chrBased_subs_df_split,chrBased_indels_df_split,chrBased_dinucs_df_split)
+    type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries(
+        sample2NumberofSubsDict,
+        sample2NumberofIndelsDict,
+        sample2NumberofDinucsDict,
+        sample2SubsSignature2NumberofMutationsDict,
+        sample2IndelsSignature2NumberofMutationsDict,
+        sample2DinucsSignature2NumberofMutationsDict,
+        chrBased_replication_time_np_array,
+        chrBased_subs_df_split,
+        chrBased_indels_df_split,
+        chrBased_dinucs_df_split,
+        numofSimulations,
+        subsSignature2PropertiesListDict,
+        indelsSignature2PropertiesListDict,
+        dinucsSignature2PropertiesListDict)
 
     return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
@@ -723,39 +724,39 @@ def searchMutationsOnReplicationTimeNPArray(inputList):
 def generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList):
     chrLong = inputList[0]
     chromSize = inputList[1]
-
     sample2NumberofSubsDict = inputList[2]
     sample2NumberofIndelsDict = inputList[3]
     sample2NumberofDinucsDict = inputList[4]
-
-    subsSignature2NumberofMutationsDict = inputList[5]
-    indelsSignature2NumberofMutationsDict = inputList[6]
-    dinucsSignature2NumberofMutationsDict = inputList[7]
-
-    sample2SubsSignature2NumberofMutationsDict = inputList[8]
-    sample2IndelsSignature2NumberofMutationsDict = inputList[9]
-    sample2DinucsSignature2NumberofMutationsDict = inputList[10]
-
-    chrBased_subs_df_split = inputList[11]
-    chrBased_indels_df_split = inputList[12]
-    chrBased_dinucs_df_split = inputList[13]
-
-    chrBased_grouped_decile_df_list = inputList[14]
-    numofSimulations = inputList[15]
-
-    subs_sig_prob=inputList[16]
-    indels_sig_prob=inputList[17]
-    dinuc_sig_prob=inputList[18]
+    sample2SubsSignature2NumberofMutationsDict = inputList[5]
+    sample2IndelsSignature2NumberofMutationsDict = inputList[6]
+    sample2DinucsSignature2NumberofMutationsDict = inputList[7]
+    chrBased_subs_df_split = inputList[8]
+    chrBased_indels_df_split = inputList[9]
+    chrBased_dinucs_df_split = inputList[10]
+    chrBased_grouped_decile_df_list = inputList[11]
+    numofSimulations = inputList[12]
+    subsSignature2PropertiesListDict=inputList[13]
+    indelsSignature2PropertiesListDict=inputList[14]
+    dinucsSignature2PropertiesListDict=inputList[15]
 
     #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list)
 
-    simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries(sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
-                    subsSignature2NumberofMutationsDict,indelsSignature2NumberofMutationsDict,dinucsSignature2NumberofMutationsDict,
-                    sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    chrBasedReplicationTimeDataArrayWithDecileIndex,
-                    chrBased_subs_df_split,chrBased_indels_df_split,chrBased_dinucs_df_split,numofSimulations,
-                    subs_sig_prob,indels_sig_prob,dinuc_sig_prob)
+    simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries(
+        sample2NumberofSubsDict,
+        sample2NumberofIndelsDict,
+        sample2NumberofDinucsDict,
+        sample2SubsSignature2NumberofMutationsDict,
+        sample2IndelsSignature2NumberofMutationsDict,
+        sample2DinucsSignature2NumberofMutationsDict,
+        chrBasedReplicationTimeDataArrayWithDecileIndex,
+        chrBased_subs_df_split,
+        chrBased_indels_df_split,
+        chrBased_dinucs_df_split,
+        numofSimulations,
+        subsSignature2PropertiesListDict,
+        indelsSignature2PropertiesListDict,
+        dinucsSignature2PropertiesListDict)
 
     return simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
@@ -954,18 +955,18 @@ def loadChrBasedReplicationTimeNPArray(chrLong,replicationTimeDataFilename):
 ##################################################################
 
 ##################################################################
-def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outputDir,jobname,numofProcesses,pool,
+def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outputDir,jobname,numofSimulations,numofProcesses,pool,
                                     sample2NumberofSubsDict,
                                     sample2NumberofIndelsDict,
                                     sample2NumberofDinucsDict,
-                                    subsSignature2NumberofMutationsDict,
-                                    indelsSignature2NumberofMutationsDict,
-                                    dinucsSignature2NumberofMutationsDict,
                                     sample2SubsSignature2NumberofMutationsDict,
                                     sample2IndelsSignature2NumberofMutationsDict,
                                     sample2DinucsSignature2NumberofMutationsDict,
                                     replicationTimeDataFilename,
-                                    chromNamesList):
+                                    chromNamesList,
+                                    subsSignature2PropertiesListDict,
+                                    indelsSignature2PropertiesListDict,
+                                    dinucsSignature2PropertiesListDict):
 
     type2DecileBasedAllChrAccumulatedCountDict = {}
     sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
@@ -986,17 +987,18 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outpu
             inputList.append(sample2NumberofSubsDict)
             inputList.append(sample2NumberofIndelsDict)
             inputList.append(sample2NumberofDinucsDict)
-            inputList.append(subsSignature2NumberofMutationsDict)
-            inputList.append(indelsSignature2NumberofMutationsDict)
-            inputList.append(dinucsSignature2NumberofMutationsDict)
             inputList.append(sample2SubsSignature2NumberofMutationsDict)
             inputList.append(sample2IndelsSignature2NumberofMutationsDict)
             inputList.append(sample2DinucsSignature2NumberofMutationsDict)
             inputList.append(chrBased_subs_df) #Different
             inputList.append(chrBased_indels_df) #Different
             inputList.append(chrBased_dinucs_df)  # Different
-
             inputList.append(chrBased_replication_time_np_array)  #Same
+            inputList.append(numofSimulations)
+            inputList.append(subsSignature2PropertiesListDict)
+            inputList.append(indelsSignature2PropertiesListDict)
+            inputList.append(dinucsSignature2PropertiesListDict)
+
             poolInputList.append(inputList)
         ###################################################################################################################################################
 
@@ -1050,9 +1052,6 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outpu
                 inputList.append(sample2NumberofSubsDict)
                 inputList.append(sample2NumberofIndelsDict)
                 inputList.append(sample2NumberofDinucsDict)
-                inputList.append(subsSignature2NumberofMutationsDict)
-                inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(dinucsSignature2NumberofMutationsDict)
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1060,6 +1059,10 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outpu
                 inputList.append(chrBased_indels_df_split_array) #Different
                 inputList.append(chrBased_dinucs_df_split_array)  # Different
                 inputList.append(chrBased_replication_time_np_array)  #Same
+                inputList.append(numofSimulations)
+                inputList.append(subsSignature2PropertiesListDict)
+                inputList.append(indelsSignature2PropertiesListDict)
+                inputList.append(dinucsSignature2PropertiesListDict)
                 poolInputList.append(inputList)
             ###################################################################################################################################################
 
@@ -1085,9 +1088,6 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outpu
             inputList.append(sample2NumberofSubsDict)
             inputList.append(sample2NumberofIndelsDict)
             inputList.append(sample2NumberofDinucsDict)
-            inputList.append(subsSignature2NumberofMutationsDict)
-            inputList.append(indelsSignature2NumberofMutationsDict)
-            inputList.append(dinucsSignature2NumberofMutationsDict)
             inputList.append(sample2SubsSignature2NumberofMutationsDict)
             inputList.append(sample2IndelsSignature2NumberofMutationsDict)
             inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1095,6 +1095,10 @@ def calculateCountsForMutationsUsingReplicationTimeNPArray(computationType,outpu
             inputList.append(chrBased_indels_df) #Different
             inputList.append(chrBased_dinucs_df)  # Different
             inputList.append(chrBased_replication_time_np_array)  #Same
+            inputList.append(numofSimulations)
+            inputList.append(subsSignature2PropertiesListDict)
+            inputList.append(indelsSignature2PropertiesListDict)
+            inputList.append(dinucsSignature2PropertiesListDict)
             ###################################################################################################################################################
 
             type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchMutationsOnReplicationTimeNPArray(inputList)
@@ -1112,18 +1116,15 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                                     sample2NumberofSubsDict,
                                     sample2NumberofIndelsDict,
                                     sample2NumberofDinucsDict,
-                                    subsSignature2NumberofMutationsDict,
-                                    indelsSignature2NumberofMutationsDict,
-                                    dinucsSignature2NumberofMutationsDict,
                                     sample2SubsSignature2NumberofMutationsDict,
                                     sample2IndelsSignature2NumberofMutationsDict,
                                     sample2DinucsSignature2NumberofMutationsDict,
                                     chromSizesDict,
                                     decile_df_list,
                                     chrNamesList,
-                                    subs_sig_prob,
-                                    indels_sig_prob,
-                                    dinuc_sig_prob):
+                                    subsSignature2PropertiesListDict,
+                                    indelsSignature2PropertiesListDict,
+                                    dinucsSignature2PropertiesListDict):
 
     simNum2Type2DecileBasedAllChrAccumulatedCountDict = {}
     simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
@@ -1161,9 +1162,6 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             inputList.append(sample2NumberofSubsDict)
             inputList.append(sample2NumberofIndelsDict)
             inputList.append(sample2NumberofDinucsDict)
-            inputList.append(subsSignature2NumberofMutationsDict)
-            inputList.append(indelsSignature2NumberofMutationsDict)
-            inputList.append(dinucsSignature2NumberofMutationsDict)
             inputList.append(sample2SubsSignature2NumberofMutationsDict)
             inputList.append(sample2IndelsSignature2NumberofMutationsDict)
             inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1172,6 +1170,9 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             inputList.append(combined_chrBased_dinucs_df)  # Different
             inputList.append(chrBased_grouped_decile_df_list)  # Same
             inputList.append(numofSimulations)
+            inputList.append(subsSignature2PropertiesListDict)
+            inputList.append(indelsSignature2PropertiesListDict)
+            inputList.append(dinucsSignature2PropertiesListDict)
             poolInputList.append(inputList)
 
         # Call the parallel code for poolInputList
@@ -1202,9 +1203,6 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(sample2NumberofSubsDict)
                 inputList.append(sample2NumberofIndelsDict)
                 inputList.append(sample2NumberofDinucsDict)
-                inputList.append(subsSignature2NumberofMutationsDict)
-                inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(dinucsSignature2NumberofMutationsDict)
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1213,6 +1211,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(dinucs_df)  # Different
                 inputList.append(chrBased_grouped_decile_df_list)  # Same
                 inputList.append(numofSimulations)
+                inputList.append(subsSignature2PropertiesListDict)
+                inputList.append(indelsSignature2PropertiesListDict)
+                inputList.append(dinucsSignature2PropertiesListDict)
+
                 simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList)
                 accumulate(simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
         ###################################################################################################################################################
@@ -1235,9 +1237,6 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(sample2NumberofSubsDict)
                 inputList.append(sample2NumberofIndelsDict)
                 inputList.append(sample2NumberofDinucsDict)
-                inputList.append(subsSignature2NumberofMutationsDict)
-                inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(dinucsSignature2NumberofMutationsDict)
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1246,9 +1245,9 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(dinucs_df)  # Different
                 inputList.append(chrBased_grouped_decile_df_list)  # Same
                 inputList.append(numofSimulations)
-                inputList.append(subs_sig_prob)
-                inputList.append(indels_sig_prob)
-                inputList.append(dinuc_sig_prob)
+                inputList.append(subsSignature2PropertiesListDict)
+                inputList.append(indelsSignature2PropertiesListDict)
+                inputList.append(dinucsSignature2PropertiesListDict)
                 poolInputList.append(inputList)
 
             # Call the parallel code for poolInputList
@@ -1312,9 +1311,6 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(sample2NumberofSubsDict)
                 inputList.append(sample2NumberofIndelsDict)
                 inputList.append(sample2NumberofDinucsDict)
-                inputList.append(subsSignature2NumberofMutationsDict)
-                inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(dinucsSignature2NumberofMutationsDict)
                 inputList.append(sample2SubsSignature2NumberofMutationsDict)
                 inputList.append(sample2IndelsSignature2NumberofMutationsDict)
                 inputList.append(sample2DinucsSignature2NumberofMutationsDict)
@@ -1323,6 +1319,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(chrBased_combined_dinucs_df_split_array)  # Different
                 inputList.append(chrBased_grouped_decile_df_list)  #Same
                 inputList.append(numofSimulations)
+                inputList.append(subsSignature2PropertiesListDict)
+                inputList.append(indelsSignature2PropertiesListDict)
+                inputList.append(dinucsSignature2PropertiesListDict)
+
                 poolInputList.append(inputList)
 
             # Call the parallel code for poolInputList
@@ -1387,7 +1387,7 @@ def augment(genome,pool,wavelet_processed_df):
 
 
 ##################################################################
-def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2NumberofAttributableBasesDict,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict):
+def writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,decileIndex2NumberofAttributableBasesDict,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict):
     os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME), exist_ok=True)
 
     ##############################################################
@@ -1405,9 +1405,16 @@ def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2Number
                 numberofMutationsFilename = '%s_sim%d_NumberofMutations.txt' %(type,simNum)
                 numberofAttributabelBasesFilename = '%s_sim%d_NumberofAttributableBases.txt' %(type,simNum)
 
-            normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,normalizedMutationDensityFilename)
-            numberofMutationsFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,numberofMutationsFilename)
-            numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,numberofAttributabelBasesFilename)
+            if (type==AGGREGATEDSUBSTITUTIONS) or (type==AGGREGATEDINDELS) or (type==AGGREGATEDDINUCS) or (type==MICROHOMOLOGY) or (type==REPEAT):
+                os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,type), exist_ok=True)
+                normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,type,normalizedMutationDensityFilename)
+                numberofMutationsFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,type,numberofMutationsFilename)
+                numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,type,numberofAttributabelBasesFilename)
+            else:
+                os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED), exist_ok=True)
+                normalizedMutationDensityFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,normalizedMutationDensityFilename)
+                numberofMutationsFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,numberofMutationsFilename)
+                numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,numberofAttributabelBasesFilename)
 
             # If decileBasedAllChrAccumulatedCountDict is not empty
             if (decileBasedAllChrAccumulatedCountDict):
@@ -1436,36 +1443,43 @@ def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2Number
                     for numberofAttributabelBases in numberofAttributableBasesList:
                         file.write(str(numberofAttributabelBases) + ' ')
                     file.write('\n')
-
     ##############################################################
 
 
     ######################### Sample Based starts #####################
-    for simNum in simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict:
-        sample2Type2DecileBasedAllChrAccumulatedCountDict= simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[simNum]
-        for sample in sample2Type2DecileBasedAllChrAccumulatedCountDict:
-            for type in sample2Type2DecileBasedAllChrAccumulatedCountDict[sample]:
-                decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
+    if sample_based:
+        for simNum in simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict:
+            sample2Type2DecileBasedAllChrAccumulatedCountDict= simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[simNum]
+            for sample in sample2Type2DecileBasedAllChrAccumulatedCountDict:
+                os.makedirs(os.path.join(outputDir, jobname, DATA, SAMPLES, sample, REPLICATIONTIME), exist_ok=True)
 
-                if (simNum==0):
-                    normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
-                else:
-                    normalizedMutationDensityFilename = '%s_%s_sim%d_NormalizedMutationDensity.txt' %(sample,type,simNum)
+                for type in sample2Type2DecileBasedAllChrAccumulatedCountDict[sample]:
+                    decileBasedAllChrAccumulatedCountDict = sample2Type2DecileBasedAllChrAccumulatedCountDict[sample][type]
 
-                normalizedMutationDensityFilePath = os.path.join(outputDir,jobname, DATA, REPLICATIONTIME,normalizedMutationDensityFilename)
+                    if (simNum==0):
+                        normalizedMutationDensityFilename = '%s_%s_NormalizedMutationDensity.txt' %(sample,type)
+                    else:
+                        normalizedMutationDensityFilename = '%s_%s_sim%d_NormalizedMutationDensity.txt' %(sample,type,simNum)
 
-                #If decileBasedAllChrAccumulatedCountDict is not empty
-                if (decileBasedAllChrAccumulatedCountDict):
-                    if (decile_df_list is not None):
-                        numberofMutations, mutationDensityDict, numberofMutationsList, numberofAttributableBasesList = getMutationDensityDict(decile_df_list, decileBasedAllChrAccumulatedCountDict)
-                    elif (decileIndex2NumberofAttributableBasesDict is not None):
-                        numberofMutations, mutationDensityDict, numberofMutationsList, numberofAttributableBasesList = getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict, decileBasedAllChrAccumulatedCountDict)
-                    normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
+                    if (type == AGGREGATEDSUBSTITUTIONS) or (type == AGGREGATEDINDELS) or (type == AGGREGATEDDINUCS) or (type == MICROHOMOLOGY) or (type == REPEAT):
+                        os.makedirs(os.path.join(outputDir, jobname, DATA,SAMPLES,sample, REPLICATIONTIME, type), exist_ok=True)
+                        normalizedMutationDensityFilePath = os.path.join(outputDir, jobname, DATA, SAMPLES, sample,REPLICATIONTIME,type, normalizedMutationDensityFilename)
+                    else:
+                        os.makedirs(os.path.join(outputDir, jobname, DATA,SAMPLES,sample, REPLICATIONTIME, SIGNATUREBASED), exist_ok=True)
+                        normalizedMutationDensityFilePath = os.path.join(outputDir, jobname, DATA, SAMPLES, sample,REPLICATIONTIME,SIGNATUREBASED, normalizedMutationDensityFilename)
 
-                    with open(normalizedMutationDensityFilePath, 'w') as file:
-                        for normalizedMutationDensity in normalizedMutationDensityList:
-                            file.write(str(normalizedMutationDensity) + ' ')
-                        file.write('\n')
+                    #If decileBasedAllChrAccumulatedCountDict is not empty
+                    if (decileBasedAllChrAccumulatedCountDict):
+                        if (decile_df_list is not None):
+                            numberofMutations, mutationDensityDict, numberofMutationsList, numberofAttributableBasesList = getMutationDensityDict(decile_df_list, decileBasedAllChrAccumulatedCountDict)
+                        elif (decileIndex2NumberofAttributableBasesDict is not None):
+                            numberofMutations, mutationDensityDict, numberofMutationsList, numberofAttributableBasesList = getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict, decileBasedAllChrAccumulatedCountDict)
+                        normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
+
+                        with open(normalizedMutationDensityFilePath, 'w') as file:
+                            for normalizedMutationDensity in normalizedMutationDensityList:
+                                file.write(str(normalizedMutationDensity) + ' ')
+                            file.write('\n')
     ######################### Sample Based ends #######################
 
 ##################################################################
@@ -1473,9 +1487,11 @@ def writeReplicationTimeData(outputDir,jobname,decile_df_list,decileIndex2Number
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
+def replicationTimeAnalysis(computationType,sample_based,replication_time_np_arrays_fill_runtime,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
+    print('\n#################################################################################')
+    print('--- ReplicationTimeAnalysis starts')
+    print('--- Replication Time Analyis Computation Type:%s' % (computationType))
 
-    print('########################## ReplicationTimeAnalysis starts #########################')
     #########################################################################
     # Analysis Type can be
     # AggregatedSubstitutions: All in one
@@ -1493,17 +1509,22 @@ def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runt
     pool = multiprocessing.Pool(numofProcesses)
 
     ##########################################################################################
-    sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
-    sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
-    sample2NumberofDinucsDict = getDictionary(outputDir,jobname,Sample2NumberofDinucsDictFilename)
+    if (sample_based):
+        sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
+        sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
+        sample2NumberofDinucsDict = getDictionary(outputDir,jobname,Sample2NumberofDinucsDictFilename)
 
-    subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
-    indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
-    dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
+        sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
+        sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
+        sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
+    else:
+        sample2NumberofSubsDict = {}
+        sample2NumberofIndelsDict = {}
+        sample2NumberofDinucsDict = {}
 
-    sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
-    sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
-    sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
+        sample2SubsSignature2NumberofMutationsDict = {}
+        sample2IndelsSignature2NumberofMutationsDict = {}
+        sample2DinucsSignature2NumberofMutationsDict = {}
     ##########################################################################################
 
     # Fill replication np arrays during runtime
@@ -1514,7 +1535,7 @@ def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runt
         ###################################################################
         # Fist decile_df in decile_df_list contains the intervals that are replicated the earliest.
         # Last decile_df in decile_df_list contains the intervals that are replicated the latest.
-        # Please note that each decile_df contains intervasl from all chroms (mixed chroms)
+        # Please note that each decile_df contains intervals from all chroms (mixed chroms)
         #What is the type of deciles? Deciles is a list of dataframes.
         chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,pool,repliseqDataFilename)
 
@@ -1524,20 +1545,17 @@ def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runt
                                                                                                                                 sample2NumberofSubsDict,
                                                                                                                                 sample2NumberofIndelsDict,
                                                                                                                                 sample2NumberofDinucsDict,
-                                                                                                                                subsSignature2NumberofMutationsDict,
-                                                                                                                                indelsSignature2NumberofMutationsDict,
-                                                                                                                                dinucsSignature2NumberofMutationsDict,
                                                                                                                                 sample2SubsSignature2NumberofMutationsDict,
                                                                                                                                 sample2IndelsSignature2NumberofMutationsDict,
                                                                                                                                 sample2DinucsSignature2NumberofMutationsDict,
                                                                                                                                 chromSizesDict,
                                                                                                                                 decile_df_list,
                                                                                                                                 chromNamesList,
-                                                                                                                                subs_sig_prob,
-                                                                                                                                indels_sig_prob,
-                                                                                                                                dinuc_sig_prob)
+                                                                                                                                subsSignature2PropertiesListDict,
+                                                                                                                                indelsSignature2PropertiesListDict,
+                                                                                                                                dinucsSignature2PropertiesListDict)
 
-        writeReplicationTimeData(outputDir,jobname,decile_df_list,None,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+        writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,None,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
         ###################################################################
         ############### Read MCF-7 RepliSeq Time data ends ################
         ###################################################################
@@ -1551,19 +1569,20 @@ def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runt
         #loading offline prepared numpy array
         type2DecileBasedAllChrAccumulatedCountDict , sample2Type2DecileBasedAllChrAccumulatedCountDict = calculateCountsForMutationsUsingReplicationTimeNPArray(
                                                                                                                                 computationType,
-                                                                                                                                outputDir,jobname,numofProcesses,pool,
+                                                                                                                                outputDir,jobname,numofSimulations,numofProcesses,pool,
                                                                                                                                 sample2NumberofSubsDict,
                                                                                                                                 sample2NumberofIndelsDict,
                                                                                                                                 sample2NumberofDinucsDict,
-                                                                                                                                subsSignature2NumberofMutationsDict,
-                                                                                                                                indelsSignature2NumberofMutationsDict,
-                                                                                                                                dinucsSignature2NumberofMutationsDict,
                                                                                                                                 sample2SubsSignature2NumberofMutationsDict,
                                                                                                                                 sample2IndelsSignature2NumberofMutationsDict,
                                                                                                                                 sample2DinucsSignature2NumberofMutationsDict,
                                                                                                                                 repliseqDataFilename,
-                                                                                                                                chromNamesList)
-        writeReplicationTimeData(outputDir,jobname,None,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
+                                                                                                                                chromNamesList,
+                                                                                                                                subsSignature2PropertiesListDict,
+                                                                                                                                indelsSignature2PropertiesListDict,
+                                                                                                                                dinucsSignature2PropertiesListDict)
+
+        writeReplicationTimeData(outputDir,jobname,sample_based,None,decileIndex2NumberofAttributableBasesDict,type2DecileBasedAllChrAccumulatedCountDict,sample2Type2DecileBasedAllChrAccumulatedCountDict)
 
     #######################################################################################################
     ############### Carry out Replication Time Data Analysis for each analysis type starts ################
@@ -1574,6 +1593,7 @@ def replicationTimeAnalysis(computationType,replication_time_np_arrays_fill_runt
     pool.join()
     ################################
 
-    print('########################## ReplicationTimeAnalysis ends ############################')
+    print('--- ReplicationTimeAnalysis ends')
+    print('#################################################################################\n')
 
 ##################################################################

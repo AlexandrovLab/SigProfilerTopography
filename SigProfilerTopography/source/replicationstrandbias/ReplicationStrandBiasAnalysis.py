@@ -166,14 +166,13 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
         simNum2Sample2Type2ReplicationStrand2CountDict,
         simNum2Type2Sample2ReplicationStrand2CountDict,
         simNum2Signature2MutationType2ReplicationStrand2CountDict,
-        signature2NumberofMutationsDict,
-        mutationProbabilityThreshold,
-        type):
+        signature2PropertiesListDict,
+        type,
+        sample_based):
 
     start = mutation_row[START]
     mutationType = None
 
-    #TODO for indels pyrimidine strand that comes from MatrixGenerator is wrong
     pyramidineStrand = mutation_row[PYRAMIDINESTRAND]
     sample = mutation_row[SAMPLE]
 
@@ -203,24 +202,24 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
             updateDictionaries_simulations_integrated(mutation_row,
                                         mutationType,
                                         sample,
+                                        sample_based,
                                         simNum2Type2ReplicationStrand2CountDict,
                                         simNum2Sample2Type2ReplicationStrand2CountDict,
                                         simNum2Type2Sample2ReplicationStrand2CountDict,
                                         simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                         LAGGING,
-                                        signature2NumberofMutationsDict,
-                                        mutationProbabilityThreshold)
+                                        signature2PropertiesListDict)
 
             updateDictionaries_simulations_integrated(mutation_row,
                                         mutationType,
                                         sample,
+                                        sample_based,
                                         simNum2Type2ReplicationStrand2CountDict,
                                         simNum2Sample2Type2ReplicationStrand2CountDict,
                                         simNum2Type2Sample2ReplicationStrand2CountDict,
                                         simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                         LEADING,
-                                        signature2NumberofMutationsDict,
-                                        mutationProbabilityThreshold)
+                                        signature2PropertiesListDict)
 
 
         # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
@@ -234,26 +233,26 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
                     updateDictionaries_simulations_integrated(mutation_row,
                                             mutationType,
                                             sample,
+                                            sample_based,
                                             simNum2Type2ReplicationStrand2CountDict,
                                             simNum2Sample2Type2ReplicationStrand2CountDict,
                                             simNum2Type2Sample2ReplicationStrand2CountDict,
                                             simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                             LEADING,
-                                            signature2NumberofMutationsDict,
-                                            mutationProbabilityThreshold)
+                                            signature2PropertiesListDict)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
                 elif (slope*pyramidineStrand < 0):
                     updateDictionaries_simulations_integrated(mutation_row,
                                             mutationType,
                                             sample,
+                                            sample_based,
                                             simNum2Type2ReplicationStrand2CountDict,
                                             simNum2Sample2Type2ReplicationStrand2CountDict,
                                             simNum2Type2Sample2ReplicationStrand2CountDict,
                                             simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                             LAGGING,
-                                            signature2NumberofMutationsDict,
-                                            mutationProbabilityThreshold)
+                                            signature2PropertiesListDict)
         else:
             print('There is a situation!!!')
     #############################################################################################################
@@ -370,20 +369,11 @@ def  searchMutationsOnReplicationStrandArray(inputList):
     chrBased_subs_split_df = inputList[1]
     chrBased_indels_split_df = inputList[2]
     chrBased_dinucs_split_df = inputList[3]
-    subsSignature2NumberofMutationsDict = inputList[4]
-    indelsSignature2NumberofMutationsDict = inputList[5]
-    dinucsSignature2NumberofMutationsDict = inputList[6]
-    numofSimulations = inputList[7]
-
-    subs_sig_prob = inputList[8]
-    indels_sig_prob = inputList[9]
-    dinuc_sig_prob = inputList[10]
-
-    #LEGACY CODE
-    # type2ReplicationStrand2CountDict= {}
-    # sample2Type2ReplicationStrand2CountDict= {}
-    # type2Sample2ReplicationStrand2CountDict = {}
-    # signature2MutationType2ReplicationStrand2CountDict = {}
+    numofSimulations = inputList[4]
+    sample_based = inputList[5]
+    subsSignature2PropertiesListDict = inputList[6]
+    indelsSignature2PropertiesListDict = inputList[7]
+    dinucsSignature2PropertiesListDict = inputList[8]
 
     simNum2Type2ReplicationStrand2CountDict= {}
     simNum2Sample2Type2ReplicationStrand2CountDict= {}
@@ -404,9 +394,9 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2NumberofMutationsDict=subsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=subs_sig_prob,
+                                signature2PropertiesListDict=subsSignature2PropertiesListDict,
                                 type=SUBS,
+                                sample_based=sample_based,
                                 axis=1)
     ##############################  Fill dictionaries for subs  ends ######################
 
@@ -419,9 +409,9 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2NumberofMutationsDict=indelsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=indels_sig_prob,
+                                signature2PropertiesListDict=indelsSignature2PropertiesListDict,
                                 type=INDELS,
+                                sample_based=sample_based,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
@@ -433,9 +423,9 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2NumberofMutationsDict=dinucsSignature2NumberofMutationsDict,
-                                mutationProbabilityThreshold=dinuc_sig_prob,
+                                signature2PropertiesListDict=dinucsSignature2PropertiesListDict,
                                 type=DINUCS,
+                                sample_based=sample_based,
                                 axis=1)
     ##############################  Fill dictionaries for indels  ends ######################
 
@@ -538,9 +528,10 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subs_sig_prob,indels_sig_prob,dinuc_sig_prob):
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
 
-    print('########################## ReplicationStrandBias Analysis starts ##########################')
+    print('\n#################################################################################')
+    print('--- ReplicationStrandBias Analysis starts')
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
 
@@ -560,9 +551,6 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
     accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict = {}
     accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict = {}
     accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict = {}
-
-    writeDictionaryForDebug(accumulatedAllChromosomesType2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2ReplicationStrand2CountDict.txt', strandBias, None)
-    writeDictionaryForDebug(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict, outputDir, jobname,'Debug_Type2Sample2ReplicationStrand2CountDict.txt', strandBias, None)
 
     if (computationType == COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
         ############################################################################################################
@@ -719,13 +707,11 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
                     inputList.append(chrBased_subs_df) # different split each time
                     inputList.append(chrBased_indels_df)  # different split each time
                     inputList.append(chrBased_dinucs_df)  # different split each time
-                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
-                    inputList.append(indelsSignature2NumberofMutationsDict)
-                    inputList.append(dinucsSignature2NumberofMutationsDict)
                     inputList.append(numofSimulations)
-                    inputList.append(subs_sig_prob)
-                    inputList.append(indels_sig_prob)
-                    inputList.append(dinuc_sig_prob)
+                    inputList.append(sample_based)
+                    inputList.append(subsSignature2PropertiesListDict)
+                    inputList.append(indelsSignature2PropertiesListDict)
+                    inputList.append(dinucsSignature2PropertiesListDict)
 
                     poolInputList.append(inputList)
                 ################################################################################
@@ -847,9 +833,11 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
     #####################################       Output starts      #############################################
     ############################################################################################################
     writeDictionary(accumulatedAllChromosomesType2ReplicationStrand2CountDict,outputDir,jobname,Type2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict,outputDir,jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict, outputDir, jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename, strandBias, None)
+
+    if sample_based:
+        writeDictionary(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
+        writeDictionary(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
@@ -859,6 +847,6 @@ def replicationStrandBiasAnalysis(computationType,chromSizesDict,chromNamesList,
     pool.join()
     ################################
 
-    print('########################## ReplicationStrandBias Analysis ends ############################')
-
+    print('--- ReplicationStrandBias Analysis ends')
+    print('#################################################################################\n')
 ########################################################################

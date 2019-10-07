@@ -18,9 +18,10 @@ import pickle
 import twobitreader
 import urllib.request
 import shutil
-# import wget
 
-from multiprocessing import Lock
+#To handle warnings as errors
+# import warnings
+# warnings.filterwarnings("error")
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -37,6 +38,15 @@ MINUS = '-'
 MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1000000000
 
+BIGWIG='BIGWIG'
+BIGBED='BIGBED'
+WIG='WIG'
+BED='BED'
+NARROWPEAK='narrowpeak'
+LIBRARY_FILE_TYPE_OTHER='LIBRARY_FILE_TYPE_OTHER'
+
+BED_6PLUS4='BED6+4'
+BED_9PLUS2='BED9+2'
 
 ############################################################
 #Constraints , Thresholds
@@ -58,8 +68,8 @@ SAMPLE_MMR_DEFICIENT_THRESHOLD = 10000
 SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD = 1000
 
 #Global Constants for Nucleosome Occupancy Analysis
-plusOrMinus = 2000
-windowSize = plusOrMinus*2+1
+# plusOrMinus = 2000
+# windowSize = plusOrMinus*2+1
 
 NOTSET = 'notSet'
 
@@ -81,6 +91,9 @@ TRANSCRIPTS = 'transcripts'
 NUCLEOSOME = 'nucleosome'
 REPLICATION = 'replication'
 UCSCGENOME = 'ucscgenome'
+
+HISTONE_MODIFICATION= "histone modification"
+TRANSCRIPTION_FACTOR= "transcription factor"
 
 NCBI = 'ncbi'
 ENSEMBL = 'ensembl'
@@ -131,7 +144,6 @@ MM10 = 'mm10'
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
 
-
 MutationType2NumberofMutatiosDictFilename='MutationType2NumberofMutatiosDict.txt'
 
 #For Subs
@@ -151,7 +163,6 @@ Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2N
 
 #For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
-
 
 ONE_DIRECTORY_UP = '..'
 AVAILABLE_LIBRARY_FILENAMES = 'AvailableLibraryFiles.txt'
@@ -175,7 +186,10 @@ AGGREGATEDSUBSTITUTIONS = 'aggregatedsubstitutions'
 
 SOURCE = 'source'
 COMMONS = 'commons'
+EPIGENOMICS = 'epigenomics'
 NUCLEOSOMEOCCUPANCY = 'nucleosome_occupancy'
+EPIGENOMICSOCCUPANCY = 'epigenomics_occupancy'
+TRANSCRIPTIONFACTOROCCUPANCY='tf_occupancy'
 REPLICATIONTIME = 'replication_time'
 PROCESSIVITY = 'processivity'
 STRANDBIAS = 'strand_bias'
@@ -273,7 +287,19 @@ chrom= 'chrom'
 start= 'start'
 end= 'end'
 signal= 'signal'
+
+#Roadmap Epigenomics Data Columns
+name='name'
+score='score'
+strand='strand'
 ############################################
+
+# ############################################
+# #data_type
+# AVERAGE_SIGNAL='AVERAGE_SIGNAL'
+# ACCUMULATED_SIGNAL='ACCUMULATED_SIGNAL'
+# ACCUMULATED_COUNT='ACCUMULATED_COUNT'
+# ############################################
 
 #For double check purposes
 OriginalPaperSignature2Sample2ReplicationStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2ReplicationStrand2CountDict.txt'
@@ -308,12 +334,14 @@ ID = 'ID'
 DBS= 'DBS'
 SBS_CONTEXTS = [SBS96,SBS192,SBS384,SBS1536,SBS3072]
 
-#TODO old way: to be deleted
+# Used for dictionaries
+# MutationType2NumberofMutationsDict keys
 SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
 
-DEFAULT_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.wig'
+DEFAULT_HISTONE_OCCUPANCY_FILE = 'ENCFF530PJF_liver_H3K9me3-human.bigBed'
+DEFAULT_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
 DEFAULT_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 DEFAULT_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
 DEFAULT_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
@@ -341,8 +369,6 @@ def memory_usage():
     memoryUse1 = process.memory_info()[0]/2.**30  #memory use in GB
     print('************** Current Memory Use: '+ str(round(memoryUse1,2))+" GB *****************\n")
 ###########################################################
-
-
 
 ########################################################################################
 def getShortNames(chromNamesList):
@@ -395,6 +421,8 @@ def getDecileIndex2NumberofAttributableBasesDict(replicationTimeFilename_wo_exte
 
 
 ########################################################################################
+#Comment this function
+#Get signature2PropertiesListDict
 def getSubsSignature2NumberofMutationsDict(outputDir,jobname):
     #Load signaturesWithAtLeast10KEligibleMutations
     subsSignature2NumberofMutationsDict = {}
@@ -540,13 +568,151 @@ def getSignatures(chrBased_mutation_df):
     # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
     columnNamesList = list(chrBased_mutation_df.columns.values)
     mutationIndex = columnNamesList.index(MUTATION)
-    signatures = columnNamesList[(mutationIndex+1):]
+    #Exclude the last one because it contains simulation_number column at the end.
+    if (SIMULATION_NUMBER==columnNamesList[-1]):
+        signatures = columnNamesList[(mutationIndex+1):-1]
+    else:
+        signatures = columnNamesList[(mutationIndex+1):]
+
     return signatures
 ##################################################################
 
 ##################################################################
-def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type,mutationType2NumberofMutationsDict,mutation_signature_probability_threshold):
+def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,type,cutoffs):
+    #Filled in the first part
+    #PrpertiesList consists of [number of mutations, sum of probabilities]
+    cutoff2Signature2PropertiesListDict={}
 
+    #Filled in the second part
+    cutoff2Signature2NumberofMutationsAverageProbabilityListDict={}
+
+    #Filled in the third part
+    #PropertiesList=[CufoffProbability NumberofMutations AverageMutationProbability]
+    signature2PropertiesListDict={}
+
+    for chrLong in chromNamesList:
+        if (type==SUBS):
+            chrBased_mutation_df = readChrBasedSubsDF(outputDir,jobname,chrLong,type,0)
+        elif (type == INDELS):
+            chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,type,0)
+        elif (type== DINUCS):
+            chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,type,0)
+
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+            # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
+            # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
+            signatures = getSignatures(chrBased_mutation_df)
+
+
+            # First part starts
+            # First accumulate number of mutations and sum of probabilities with mutations with probability >= cutoff probability
+            for cutoff in cutoffs:
+                for signature in signatures:
+                    # chrBased_mutation_df[signature]=chrBased_mutation_df[signature].astype(np.float64)
+                    number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])
+                    # This results in infinity
+                    # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature]).values,dtype=np.float64)
+
+                    if cutoff not in cutoff2Signature2PropertiesListDict:
+                        cutoff2Signature2PropertiesListDict[cutoff]={}
+                        cutoff2Signature2PropertiesListDict[cutoff][signature]=[]
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
+                    elif signature not in cutoff2Signature2PropertiesListDict[cutoff]:
+                        cutoff2Signature2PropertiesListDict[cutoff][signature]=[]
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
+                    else:
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
+        #Fisrt part ends
+        #Accumulation ended for each chromosome
+
+    # print('Part1 Results cutoff2Signature2PropertiesListDict')
+    # print(cutoff2Signature2PropertiesListDict)
+
+    #Second part starts
+    #Second find average cutoff
+    for cutoff in cutoff2Signature2PropertiesListDict:
+        for signature in cutoff2Signature2PropertiesListDict[cutoff]:
+            if (cutoff2Signature2PropertiesListDict[cutoff][signature][0]>0):
+                if cutoff not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict:
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]={}
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                elif signature not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                else:
+                    print('There is a situation in fillCutoff2Signature2PropertiesListDictionary method.')
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+    #Second part ends
+
+
+    # print('Part2 Results cutoff2Signature2NumberofMutationsAverageProbabilityListDict')
+    # print(cutoff2Signature2NumberofMutationsAverageProbabilityListDict)
+
+    #Set the filenames and number of required mutations
+    if (type==SUBS):
+        number_of_required_mutations=SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2SubsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+        signature2PropertiesList_filename = "SubsSignature2PropertiesListDict.txt"
+    elif (type == INDELS):
+        number_of_required_mutations=INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2IndelsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+        signature2PropertiesList_filename = "IndelsSignature2PropertiesListDict.txt"
+    elif (type== DINUCS):
+        number_of_required_mutations=DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2DinucsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+        signature2PropertiesList_filename = "DinucsSignature2PropertiesListDict.txt"
+
+    #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=0.9
+    sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
+    for cutoff in sorted_cutoffs:
+        for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
+            if signature not in signature2PropertiesListDict:
+                if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]>=number_of_required_mutations) and (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]>=0.9):
+                    signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
+    #Third part ends
+
+    # print('Part3 Results signature2PropertiesListDict')
+    # print(signature2PropertiesListDict)
+
+    #Write the dictionaries
+    os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
+
+    # TypeError: Object of type int64 is not JSON serializable
+    # filePath = os.path.join(outputDir,jobname,DATA,cutoff2Signature2PropertiesListDict_filename)
+    # json.dump(cutoff2Signature2PropertiesListDict,open(filePath,'w'))
+
+    # filePath = os.path.join(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename)
+    # json.dump(cutoff2Signature2NumberofMutationsAverageProbabilityListDict,open(filePath,'w'))
+
+    filePath = os.path.join(outputDir,jobname,DATA,signature2PropertiesList_filename)
+    json.dump(signature2PropertiesListDict,open(filePath,'w'))
+
+    return signature2PropertiesListDict
+##################################################################
+
+
+##################################################################
+# We are filling and writing
+# Sample2NumberofMutationsDictFilename
+# Signature2NumberofMutationsDictFilename
+# Sample2Signature2NumberofMutationsDictFilename
+
+# We are writing Signature2NumberofMutationsDictFilename for the signatures in signature2PropertiesListDict using chrBased_mutation_df
+# At the end, Signature2NumberofMutationsDictFilename and signature2PropertiesListDict must match
+# It is like double check
+def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, mutationType2NumberofMutationsDict,signature2PropertiesListDict):
     sample2NumberofMutationsDict = {}
     signature2NumberofMutationsDict = {}
     sample2Signature2NumberofMutationsDict = {}
@@ -577,11 +743,11 @@ def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type,muta
         elif (type== DINUCS):
             chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,type,0)
 
-
         if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
             # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
             # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
-            signatures = getSignatures(chrBased_mutation_df)
+            #old way
+            # signatures = getSignatures(chrBased_mutation_df)
             chrBased_mutation_df_sample_grouped = chrBased_mutation_df.groupby('Sample')
 
             for sample, chrBased_mutation_df_sample_group_df in chrBased_mutation_df_sample_grouped:
@@ -596,13 +762,13 @@ def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type,muta
                 else:
                     mutationType2NumberofMutationsDict[type] = number_of_mutations
 
-                for signature in signatures:
-                    number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=mutation_signature_probability_threshold])
+                #new way
+                for signature in signature2PropertiesListDict:
+                    number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=float(signature2PropertiesListDict[signature][0])])
                     if signature in signature2NumberofMutationsDict:
                         signature2NumberofMutationsDict[signature] += number_of_mutations
                     else:
                         signature2NumberofMutationsDict[signature] = number_of_mutations
-
                     if sample in sample2Signature2NumberofMutationsDict:
                         if signature in sample2Signature2NumberofMutationsDict[sample]:
                             sample2Signature2NumberofMutationsDict[sample][signature] += number_of_mutations
@@ -611,8 +777,8 @@ def fill_mutations_dictionaries_write(outputDir,jobname,chromNamesList,type,muta
                     else:
                         sample2Signature2NumberofMutationsDict[sample] = {}
                         sample2Signature2NumberofMutationsDict[sample][signature] = number_of_mutations
-    #######################################################################
 
+    #######################################################################
 
     new_sample2NumberofMutatiosDict = {k: v for k, v in sample2NumberofMutationsDict.items() if sample2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
     new_signature2NumberofMutationsDict = {k: v for k, v in signature2NumberofMutationsDict.items() if signature2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
@@ -654,6 +820,23 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber):
     #############################################
 
     return chrBased_mutation_df
+##################################################################
+
+##################################################################
+def doesSimulationsAlreadyExits(outputDir,jobname,numofSimulations):
+    if (numofSimulations>0):
+        for simNum in range(1,numofSimulations+1):
+            sim='sim%d' %(simNum)
+            simDir=os.path.join(outputDir,jobname,DATA,CHRBASED,sim)
+            if os.path.exists(simDir):
+                numberoffiles=len([name for name in os.listdir(simDir) if os.path.isfile(os.path.join(simDir,name))])
+                if numberoffiles==0:
+                    return False
+            else:
+                return False
+        return True
+    else:
+        return False
 ##################################################################
 
 ##################################################################
@@ -721,6 +904,8 @@ def readChrBasedSubsDF(outputDir,jobname,chrLong,type,simulationNumber):
         mydtypes[TRANSCRIPTIONSTRAND] = str
         mydtypes[MUTATION] = str
         #################################################
+    else:
+        print('%s does not exist' %(chrBasedMutationDFFilePath))
     ##########################################################################################
 
     #############################################
@@ -952,37 +1137,475 @@ def accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedSplitsC
 
 
 ########################################################################################
+def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_row_start,plusOrMinus):
+    max_start=max(entry_start,mutation_row_start-plusOrMinus)
+    min_end=min(entry_end,mutation_row_start+plusOrMinus)
+    window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1]+=entry_signal
+    # print('window_array[%d:%d]+=%f' %(max_start-(mutation_row_start-plusOrMinus),min_end-(mutation_row_start-plusOrMinus),entry_signal))
+########################################################################################
+
+
+########################################################################################
+#Using list comprehension
+#September 18, 2019
+#You need to send mutation_row[START], mutation_row[SAMPLE], mutation_row[SIMULATION_NUMBER], and mutation_row[signature]
+def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+        row,
+        chrLong,
+        library_file,
+        chrBasedSignalArray,
+        library_file_type,
+        signal_index,
+        my_upperBound,
+        maximum_chrom_size,
+        sample2NumberofMutationsDict,
+        sample2Signature2NumberofMutationsDict,
+        simNum2Type2SignalArrayDict,
+        simNum2Type2CountArrayDict,
+        simNum2Sample2Type2SignalArrayDict,
+        simNum2Sample2Type2CountArrayDict,
+        signature2PropertiesListDict,
+        my_type,
+        plusOrMinus,
+        mycolumns):
+
+    window_array=None
+    windowSize=plusOrMinus*2+1
+
+    # mycolumns = [SAMPLE, START, SIMULATION_NUMBER]
+    mutation_row_sample=row[0]
+    mutation_row_start=row[1]
+    mutation_row_simulation_number=row[2]
+
+    #Get or fill window_array using Case1, Case2, and Case3
+    # Case 1: start is very close to the chromosome start
+    if (mutation_row_start<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row_start))
+        if ((library_file_type==BED) or (library_file_type==NARROWPEAK)):
+            window_array = chrBasedSignalArray[0:(mutation_row_start + plusOrMinus + 1)]
+            window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant', constant_values=(0, 0))
+
+        elif (library_file_type==BIGWIG):
+            #Important: The bigWig format does not support overlapping intervals.
+            window_array=library_file.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
+            # How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+            window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant',constant_values=(0, 0))
+
+        elif (library_file_type==BIGBED):
+            #We assume that in the 7th column there is signal data
+            list_of_entries=library_file.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
+            if list_of_entries is not None:
+                window_array = np.zeros((windowSize,),dtype=np.float32)
+                # We did not handle outliers for BigBed files.
+
+                #From DNA methylation get the 7th
+                # library_file_bed_format==BED_6PLUS4):
+                # (713235, 713435, 'Peak_40281\t15\t.\t3.48949\t5.67543\t3.79089\t158')
+                #signal_index=3
+                #library_file_bed_format==BED_9PLUS2):
+                #[(10810, 10811, 'MCF7_NoStarve_B1__GC_\t3\t+\t10810\t10811\t255,0,0\t3\t100'), (10812, 10813, 'MCF7_NoStarve_B1__GC_\t3\t+\t10812\t10813\t255,0,0\t3\t100'), (10815, 10816, 'MCF7_NoStarve_B1__GC_\t3\t+\t10815\t10816\t0,255,0\t3\t0')]
+                #signal_index=7
+                [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start, plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1], 1, mutation_row_start, plusOrMinus))) for entry in list_of_entries]
+
+    # Case 2: start is very close to the chromosome end
+    elif (mutation_row_start+plusOrMinus > maximum_chrom_size):
+        print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row_start))
+
+        if ((library_file_type==BED) or (library_file_type==NARROWPEAK)):
+            window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):maximum_chrom_size]
+            window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
+
+        elif (library_file_type==BIGWIG):
+            #Important: The bigWig format does not support overlapping intervals.
+            window_array = library_file.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
+            # How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+            window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
+
+        elif (library_file_type==BIGBED):
+            # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
+            if ((mutation_row_start-plusOrMinus)<maximum_chrom_size):
+                list_of_entries=library_file.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
+                if list_of_entries is not None:
+                    window_array = np.zeros((windowSize,),dtype=np.float32)
+                    # We did not handle outliers for BigBed files.
+                    [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusOrMinus))) for entry in list_of_entries]
+
+
+    #Case 3: No problem
+    else:
+        if ((library_file_type==BED) or (library_file_type==NARROWPEAK)):
+            window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
+
+        elif (library_file_type==BIGWIG):
+            #Important: You have to go over intervals if there are overlapping intervals.
+            window_array = library_file.values(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1),numpy=True)
+            #How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+
+        elif (library_file_type==BIGBED):
+            # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
+            if ((mutation_row_start+plusOrMinus+1)<=maximum_chrom_size):
+                list_of_entries=library_file.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
+                if list_of_entries is not None:
+                    window_array = np.zeros((windowSize,),dtype=np.float32)
+                    # We did not handle outliers for BigBed files.
+                    [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusOrMinus))) for entry in list_of_entries]
+
+    ##########################################################
+
+    #Get the sample at this mutation_row
+    sample = mutation_row_sample
+    simulationNumber= mutation_row_simulation_number
+
+    #####################################################
+    if simulationNumber not in simNum2Type2SignalArrayDict:
+        simNum2Type2SignalArrayDict[simulationNumber] = {}
+        simNum2Type2CountArrayDict[simulationNumber] = {}
+
+    type2SignalArrayDict = simNum2Type2SignalArrayDict[simulationNumber]
+    type2CountArrayDict =  simNum2Type2CountArrayDict[simulationNumber]
+    #####################################################
+
+    #####################################################
+    if simulationNumber not in simNum2Sample2Type2SignalArrayDict:
+        simNum2Sample2Type2SignalArrayDict[simulationNumber] = {}
+        simNum2Sample2Type2CountArrayDict[simulationNumber] = {}
+    sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict[simulationNumber]
+    sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict[simulationNumber]
+    #####################################################
+
+    #Fill dictionaries uisng window_array
+    if (window_array is not None) and (np.any(window_array)):
+        #TODO: Is there a faster way than using for loop?
+        ################# Signatures starts #######################
+        #mutation_row[signature] mutation probability for that signature
+        #signature2PropertiesListDict[signature][0] cutoff probability for that signature
+        for signature in signature2PropertiesListDict:
+            indexofSignature = mycolumns.index(signature)
+            mutation_row_signature = row[indexofSignature]
+            if (mutation_row_signature >= float(signature2PropertiesListDict[signature][0])):
+                if (signature in type2SignalArrayDict):
+                    type2SignalArrayDict[signature] += window_array
+                    type2CountArrayDict[signature] += (window_array>0)
+                else:
+                    type2SignalArrayDict[signature] = np.zeros(windowSize)
+                    type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
+                    type2SignalArrayDict[signature] += window_array
+                    type2CountArrayDict[signature] += (window_array>0)
+
+                ####################################################
+                if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
+                    if sample in sample2Type2SignalArrayDict:
+                        if signature in sample2Type2SignalArrayDict[sample]:
+                            sample2Type2SignalArrayDict[sample][signature] += window_array
+                            sample2Type2CountArrayDict[sample][signature] += (window_array>0)
+                        else:
+                            sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
+                            sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+                            sample2Type2SignalArrayDict[sample][signature] += window_array
+                            sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
+
+                    else:
+                        sample2Type2SignalArrayDict[sample] = {}
+                        sample2Type2CountArrayDict[sample] = {}
+                        sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
+                        sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+                        sample2Type2SignalArrayDict[sample][signature] += window_array
+                        sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
+                ####################################################
+        ################# Signatures ends #########################
+
+        ######################################################################
+        if my_type in type2SignalArrayDict:
+            type2SignalArrayDict[my_type] += window_array
+            type2CountArrayDict[my_type] += (window_array > 0)
+        else:
+            type2SignalArrayDict[my_type] = np.zeros(windowSize)
+            type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
+            type2SignalArrayDict[my_type] += window_array
+            type2CountArrayDict[my_type] += (window_array > 0)
+
+        if (sample in sample2NumberofMutationsDict):
+            if sample in sample2Type2SignalArrayDict:
+                if my_type in sample2Type2SignalArrayDict[sample]:
+                    sample2Type2SignalArrayDict[sample][my_type] += window_array
+                    sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+                else:
+                    sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+                    sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+                    sample2Type2SignalArrayDict[sample][my_type] += window_array
+                    sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+            else:
+                sample2Type2SignalArrayDict[sample] = {}
+                sample2Type2CountArrayDict[sample] = {}
+                sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+                sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+                sample2Type2SignalArrayDict[sample][my_type] += window_array
+                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+        ######################################################################
+
+
+########################################################################################
+
+
+
+########################################################################################
+#Using pyBigWig for bigBed and bigWig files starts
+#Using bed files prepared on the fly starts
 #Original data and simulations data
 #SimNum 0 means original
 #SimNum 1 means sim1
-#type can be AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS and AGGREGATEDDINUCS
+#my_type can be AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS and AGGREGATEDDINUCS
 #Signatures are also treated as a type
-def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(mutation_row,
-                        nucleosome_array,
+def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig(mutation_row,
+                        chrLong,
+                        library_file,
+                        chrBasedSignalArray,
+                        library_file_type,
+                        my_upperBound,
                         maximum_chrom_size,
                         sample2NumberofMutationsDict,
-                        signature2NumberofMutationsDict,
                         sample2Signature2NumberofMutationsDict,
                         simNum2Type2SignalArrayDict,
                         simNum2Type2CountArrayDict,
                         simNum2Sample2Type2SignalArrayDict,
                         simNum2Sample2Type2CountArrayDict,
-                        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                        type):
+                        signature2PropertiesListDict,
+                        my_type,
+                        plusOrMinus):
+
+    #signature2PropertiesListDict PropertiesList[ cutoff_probability, number_of_mutations_with_probability_ge_cutoff_probability, average_probability]
+    window_array=None
+    windowSize=plusOrMinus*2+1
+
+    #Get or fill window_array using Case1, Case2, and Case3
+    # Case 1: start is very close to the chromosome start
+    if (mutation_row[START]<plusOrMinus):
+        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row[START]))
+
+        if (library_file_type==BED):
+            window_array = chrBasedSignalArray[0:(mutation_row[START] + plusOrMinus + 1)]
+            window_array = np.pad(window_array, (plusOrMinus - mutation_row[START], 0), 'constant', constant_values=(0, 0))
+
+        elif (library_file_type==BIGWIG):
+            #Important: The bigWig format does not support overlapping intervals.
+            window_array=library_file.values(chrLong,0,(mutation_row[START]+plusOrMinus+1),numpy=True)
+            # How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+            window_array = np.pad(window_array, (plusOrMinus - mutation_row[START], 0), 'constant',constant_values=(0, 0))
+
+        elif (library_file_type==BIGBED):
+            # print('Case1 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]+plusOrMinus+1))
+            list_of_tuples=library_file.entries(chrLong,0,(mutation_row[START]+plusOrMinus+1))
+            if list_of_tuples is not None:
+                window_array = np.zeros((windowSize,),dtype=np.float32)
+                window_array_start = mutation_row[START] - plusOrMinus
+
+                for i in list_of_tuples:
+                    #In each tuple there is start end  and space separated string column
+                    if len(i)>=3:
+                        window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
+                    else:
+                        window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
+                # We did not handle outliers for BigBed files.
+
+    # Case 2: start is very close to the chromosome end
+    elif (mutation_row[START]+plusOrMinus > maximum_chrom_size):
+        print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row[START]))
+
+        if (library_file_type==BED):
+            window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
+            window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
+
+        elif (library_file_type==BIGWIG):
+            #Important: The bigWig format does not support overlapping intervals.
+            window_array = library_file.values(chrLong,(mutation_row[START]-plusOrMinus),maximum_chrom_size,numpy=True)
+            # How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+            window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
+
+        elif (library_file_type==BIGBED):
+            # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
+            if ((mutation_row[START]-plusOrMinus)<maximum_chrom_size):
+                list_of_tuples=library_file.entries(chrLong,(mutation_row[START]-plusOrMinus),maximum_chrom_size)
+                if list_of_tuples is not None:
+                    window_array = np.zeros((windowSize,),dtype=np.float32)
+                    window_array_start = mutation_row[START] - plusOrMinus
+                    for i in list_of_tuples:
+                        #In each tuple there is start end  and space separated string column
+                        if len(i)>=3:
+                            window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
+                        else:
+                            window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
+                    # We did not handle outliers for BigBed files.
+
+    #Case 3: No problem
+    else:
+        if (library_file_type==BED):
+            window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
+
+        elif (library_file_type==BIGWIG):
+            #Important: You have to go over intervals if there are overlapping intervals.
+            window_array = library_file.values(chrLong, (mutation_row[START]-plusOrMinus), (mutation_row[START]+plusOrMinus+1),numpy=True)
+            #How do you handle outliers?
+            window_array[np.isnan(window_array)] = 0
+            window_array[window_array>my_upperBound]=my_upperBound
+
+        elif (library_file_type==BIGBED):
+            # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
+            if ((mutation_row[START]+plusOrMinus+1)<=maximum_chrom_size):
+                list_of_tuples=library_file.entries(chrLong, (mutation_row[START]-plusOrMinus), (mutation_row[START]+plusOrMinus+1))
+                if list_of_tuples is not None:
+                    window_array = np.zeros((windowSize,),dtype=np.float32)
+                    window_array_start=mutation_row[START] - plusOrMinus
+                    for i in list_of_tuples:
+                        #In each tuple there is start end  and space separated string column
+                        if len(i)>=3:
+                            window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
+                        else:
+                            window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
+                    # We did not handle outliers for BigBed files.
+
+    ##########################################################
+
+    #Get the sample at this mutation_row
+    sample = mutation_row[SAMPLE]
+    simulationNumber= mutation_row[SIMULATION_NUMBER]
+
+    #####################################################
+    if simulationNumber not in simNum2Type2SignalArrayDict:
+        simNum2Type2SignalArrayDict[simulationNumber] = {}
+        simNum2Type2CountArrayDict[simulationNumber] = {}
+
+    type2SignalArrayDict = simNum2Type2SignalArrayDict[simulationNumber]
+    type2CountArrayDict =  simNum2Type2CountArrayDict[simulationNumber]
+    #####################################################
+
+    #####################################################
+    if simulationNumber not in simNum2Sample2Type2SignalArrayDict:
+        simNum2Sample2Type2SignalArrayDict[simulationNumber] = {}
+        simNum2Sample2Type2CountArrayDict[simulationNumber] = {}
+    sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict[simulationNumber]
+    sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict[simulationNumber]
+    #####################################################
+
+    #Fill dictionaries uisng window_array
+    if (window_array is not None) and (np.any(window_array)):
+        #TODO: Is there a faster way than using for loop?
+        ################# Signatures starts #######################
+        #mutation_row[signature] mutation probability for that signature
+        #signature2PropertiesListDict[signature][0] cutoff probability for that signature
+        for signature in signature2PropertiesListDict:
+            if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
+                if (signature in type2SignalArrayDict):
+                    type2SignalArrayDict[signature] += window_array
+                    type2CountArrayDict[signature] += (window_array>0)
+                else:
+                    type2SignalArrayDict[signature] = np.zeros(windowSize)
+                    type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
+                    type2SignalArrayDict[signature] += window_array
+                    type2CountArrayDict[signature] += (window_array>0)
+
+                ####################################################
+                if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
+                    if sample in sample2Type2SignalArrayDict:
+                        if signature in sample2Type2SignalArrayDict[sample]:
+                            sample2Type2SignalArrayDict[sample][signature] += window_array
+                            sample2Type2CountArrayDict[sample][signature] += (window_array>0)
+                        else:
+                            sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
+                            sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+                            sample2Type2SignalArrayDict[sample][signature] += window_array
+                            sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
+
+                    else:
+                        sample2Type2SignalArrayDict[sample] = {}
+                        sample2Type2CountArrayDict[sample] = {}
+                        sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
+                        sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
+                        sample2Type2SignalArrayDict[sample][signature] += window_array
+                        sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
+                ####################################################
+        ################# Signatures ends #########################
+
+        ######################################################################
+        if my_type in type2SignalArrayDict:
+            type2SignalArrayDict[my_type] += window_array
+            type2CountArrayDict[my_type] += (window_array > 0)
+        else:
+            type2SignalArrayDict[my_type] = np.zeros(windowSize)
+            type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
+            type2SignalArrayDict[my_type] += window_array
+            type2CountArrayDict[my_type] += (window_array > 0)
+
+        if (sample in sample2NumberofMutationsDict):
+            if sample in sample2Type2SignalArrayDict:
+                if my_type in sample2Type2SignalArrayDict[sample]:
+                    sample2Type2SignalArrayDict[sample][my_type] += window_array
+                    sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+                else:
+                    sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+                    sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+                    sample2Type2SignalArrayDict[sample][my_type] += window_array
+                    sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+            else:
+                sample2Type2SignalArrayDict[sample] = {}
+                sample2Type2CountArrayDict[sample] = {}
+                sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+                sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+                sample2Type2SignalArrayDict[sample][my_type] += window_array
+                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
+        ######################################################################
+
+#Using pyBigWig for bigBed and bigWig files ends
+#Using bed files prepared on the fly ends
+########################################################################################
+
+
+########################################################################################
+#Depreceated. Now using fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
+#Original data and simulations data
+#SimNum 0 means original
+#SimNum 1 means sim1
+#my_type can be AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS and AGGREGATEDDINUCS
+#Signatures are also treated as a type
+def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(mutation_row,
+                        chrBasedSignalArray,
+                        maximum_chrom_size,
+                        sample2NumberofMutationsDict,
+                        sample2Signature2NumberofMutationsDict,
+                        simNum2Type2SignalArrayDict,
+                        simNum2Type2CountArrayDict,
+                        simNum2Sample2Type2SignalArrayDict,
+                        simNum2Sample2Type2CountArrayDict,
+                        signature2PropertiesListDict,
+                        my_type,
+                        plusOrMinus):
+
+
+    windowSize=plusOrMinus*2+1
+    #signature2PropertiesListDict PropertiesList[ cutoff_probability, number_of_mutations_with_probability_ge_cutoff_probability, average_probability]
 
     # Case 1: start is very close to the chromosome start
     if (mutation_row[START]<plusOrMinus):
         print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row[START]))
-        window_array = nucleosome_array[0:(mutation_row[START]+plusOrMinus+1)]
+        window_array = chrBasedSignalArray[0:(mutation_row[START]+plusOrMinus+1)]
         window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant',constant_values=(0,0))
     # Case 2: start is very close to the chromosome end
     elif (mutation_row[START]+plusOrMinus > maximum_chrom_size):
         print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row[START]))
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
+        window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
         window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
     #Case 3: No problem
     else:
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
+        window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
     ##########################################################
 
     #Get the sample at this mutation_row
@@ -1008,8 +1631,10 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(mutation_row,
 
     #TODO: Is there a faster way than using for loop?
     ################# Signatures starts #######################
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
+    #mutation_row[signature] mutation probability for that signature
+    #signature2PropertiesListDict[signature][0] cutoff probability for that signature
+    for signature in signature2PropertiesListDict:
+        if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
             if (signature in type2SignalArrayDict):
                 type2SignalArrayDict[signature] += window_array
                 type2CountArrayDict[signature] += (window_array>0)
@@ -1042,32 +1667,32 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(mutation_row,
     ################# Signatures ends #########################
 
     ######################################################################
-    if type in type2SignalArrayDict:
-        type2SignalArrayDict[type] += window_array
-        type2CountArrayDict[type] += (window_array > 0)
+    if my_type in type2SignalArrayDict:
+        type2SignalArrayDict[my_type] += window_array
+        type2CountArrayDict[my_type] += (window_array > 0)
     else:
-        type2SignalArrayDict[type] = np.zeros(windowSize)
-        type2CountArrayDict[type] = np.zeros(windowSize, dtype=int)
-        type2SignalArrayDict[type] += window_array
-        type2CountArrayDict[type] += (window_array > 0)
+        type2SignalArrayDict[my_type] = np.zeros(windowSize)
+        type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
+        type2SignalArrayDict[my_type] += window_array
+        type2CountArrayDict[my_type] += (window_array > 0)
 
     if (sample in sample2NumberofMutationsDict):
         if sample in sample2Type2SignalArrayDict:
-            if type in sample2Type2SignalArrayDict[sample]:
-                sample2Type2SignalArrayDict[sample][type] += window_array
-                sample2Type2CountArrayDict[sample][type] += (window_array > 0)
+            if my_type in sample2Type2SignalArrayDict[sample]:
+                sample2Type2SignalArrayDict[sample][my_type] += window_array
+                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
             else:
-                sample2Type2SignalArrayDict[sample][type] = np.zeros(windowSize)
-                sample2Type2CountArrayDict[sample][type] = np.zeros(windowSize, dtype=int)
-                sample2Type2SignalArrayDict[sample][type] += window_array
-                sample2Type2CountArrayDict[sample][type] += (window_array > 0)
+                sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+                sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+                sample2Type2SignalArrayDict[sample][my_type] += window_array
+                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
         else:
             sample2Type2SignalArrayDict[sample] = {}
             sample2Type2CountArrayDict[sample] = {}
-            sample2Type2SignalArrayDict[sample][type] = np.zeros(windowSize)
-            sample2Type2CountArrayDict[sample][type] = np.zeros(windowSize, dtype=int)
-            sample2Type2SignalArrayDict[sample][type] += window_array
-            sample2Type2CountArrayDict[sample][type] += (window_array > 0)
+            sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
+            sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
+            sample2Type2SignalArrayDict[sample][my_type] += window_array
+            sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
     ######################################################################
 
 
@@ -1087,7 +1712,10 @@ def fillSignalArrayAndCountArrayForMutations(mutation_row,
                         sample2Type2SignalArrayDict,
                         sample2Type2CountArrayDict,
                         MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                        type):
+                        type,
+                        plusOrMinus):
+
+    windowSize=plusOrMinus*2+1
 
     # Case 1: start is very close to the chromosome start
     if (mutation_row[START]<plusOrMinus):
@@ -1176,7 +1804,8 @@ def fillSignalArrayAndCountArrayForMutations(mutation_row,
 
 
 ########################################################################################
-def computeAverageNucleosomeOccupancyArray(signalArray,countArray):
+def computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray):
+    windowSize=plusorMinus*2+1
     averageArray =  np.zeros(windowSize)
 
     np.seterr(divide='ignore', invalid='ignore')
@@ -1189,35 +1818,44 @@ def computeAverageNucleosomeOccupancyArray(signalArray,countArray):
 
 ########################################################################################
 def writeSimulationBasedAverageNucleosomeOccupancy(
+        occupancy_type,
+        sample_based,
+        plusorMinus,
         simNum2Type2AccumulatedSignalArrayDict,
         simNum2Type2AccumulatedCountArrayDict,
         simNum2Sample2Type2AccumulatedSignalArrayDict,
         simNum2Sample2Type2AccumulatedCountArrayDict,
         outputDir,
-        jobname):
+        jobname,
+        library_file_memo):
+
+
+    os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type),exist_ok=True)
 
     ####################################################################################
     for simNum in simNum2Type2AccumulatedSignalArrayDict:
         type2AccumulatedSignalArrayDict= simNum2Type2AccumulatedSignalArrayDict[simNum]
         type2AccumulatedCountArrayDict = simNum2Type2AccumulatedCountArrayDict[simNum]
         if (AGGREGATEDSUBSTITUTIONS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDSUBSTITUTIONS],type2AccumulatedCountArrayDict[AGGREGATEDSUBSTITUTIONS],outputDir, jobname, AGGREGATEDSUBSTITUTIONS,simNum)
+            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDSUBSTITUTIONS],type2AccumulatedCountArrayDict[AGGREGATEDSUBSTITUTIONS],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
         if (AGGREGATEDINDELS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDINDELS],type2AccumulatedCountArrayDict[AGGREGATEDINDELS], outputDir,jobname, AGGREGATEDINDELS,simNum)
+            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDINDELS],type2AccumulatedCountArrayDict[AGGREGATEDINDELS], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
         if (AGGREGATEDDINUCS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict[AGGREGATEDDINUCS],type2AccumulatedCountArrayDict[AGGREGATEDDINUCS], outputDir,jobname, AGGREGATEDDINUCS,simNum)
-        writeSignatureBasedAverageNucleosomeOccupancyFiles(type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,outputDir,jobname,simNum)
+            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDDINUCS],type2AccumulatedCountArrayDict[AGGREGATEDDINUCS], outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
+        writeSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,simNum)
     ####################################################################################
 
+
     ####################################################################################
-    for simNum in simNum2Sample2Type2AccumulatedSignalArrayDict:
-        sample2Type2AccumulatedSignalArrayDict = simNum2Sample2Type2AccumulatedSignalArrayDict[simNum]
-        sample2Type2AccumulatedCountArrayDict = simNum2Sample2Type2AccumulatedCountArrayDict[simNum]
-        ####################################################################################
-        writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,AGGREGATEDSUBSTITUTIONS,simNum)
-        writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,AGGREGATEDINDELS,simNum)
-        writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict, outputDir,jobname, AGGREGATEDDINUCS,simNum)
-        writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,simNum)
+    if sample_based:
+        for simNum in simNum2Sample2Type2AccumulatedSignalArrayDict:
+            sample2Type2AccumulatedSignalArrayDict = simNum2Sample2Type2AccumulatedSignalArrayDict[simNum]
+            sample2Type2AccumulatedCountArrayDict = simNum2Sample2Type2AccumulatedCountArrayDict[simNum]
+            ####################################################################################
+            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,AGGREGATEDSUBSTITUTIONS,simNum)
+            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,AGGREGATEDINDELS,simNum)
+            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict, outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
+            writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,simNum)
     ####################################################################################
 
 ########################################################################################
@@ -1228,22 +1866,34 @@ def writeSimulationBasedAverageNucleosomeOccupancy(
 #Both "all single point mutations" and "all indels" use this function
 #simulationNumber == 0 means original data
 #simulationNumber > 0 means simulation data
-def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,outputDir,jobname,nucleosomeOccupancyAnalysisType,simulationNumber):
-    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
-    averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(allMutationsAccumulatedAllChromsSignalArray, allMutationsAccumulatedAllChromsCountArray)
+def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,outputDir,jobname,library_file_memo,nucleosomeOccupancyAnalysisType,simulationNumber):
+
+    os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, nucleosomeOccupancyAnalysisType),exist_ok=True)
+    averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,allMutationsAccumulatedAllChromsSignalArray, allMutationsAccumulatedAllChromsCountArray)
 
     if (simulationNumber==0):
-        accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(jobname)
-        accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(jobname)
-        averageNucleosomeSignalFilename = '%s_AverageNucleosomeSignalArray.txt' %(jobname)
+        if library_file_memo is not None:
+            accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (jobname,library_file_memo)
+            accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (jobname,library_file_memo)
+            averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' % (jobname,library_file_memo)
+        else:
+            accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(jobname)
+            accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(jobname)
+            averageNucleosomeSignalFilename = '%s_AverageSignalArray.txt' %(jobname)
     else:
-        accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(jobname,simulationNumber)
-        accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(jobname,simulationNumber)
-        averageNucleosomeSignalFilename = '%s_sim%d_AverageNucleosomeSignalArray.txt' %(jobname,simulationNumber)
+        if library_file_memo is not None:
+            accumulatedSignalFilename = '%s_sim%d_%s_AccumulatedSignalArray.txt' %(jobname,simulationNumber,library_file_memo)
+            accumulatedCountFilename = '%s_sim%d_%s_AccumulatedCountArray.txt' %(jobname,simulationNumber,library_file_memo)
+            averageNucleosomeSignalFilename = '%s_sim%d_%s_AverageSignalArray.txt' %(jobname,simulationNumber,library_file_memo)
 
-    accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
-    accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
-    averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
+        else:
+            accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(jobname,simulationNumber)
+            accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(jobname,simulationNumber)
+            averageNucleosomeSignalFilename = '%s_sim%d_AverageSignalArray.txt' %(jobname,simulationNumber)
+
+    accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, occupancy_type, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
+    accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA,occupancy_type, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
+    averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, occupancy_type, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
 
     allMutationsAccumulatedAllChromsSignalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
     allMutationsAccumulatedAllChromsCountArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -1251,30 +1901,41 @@ def writeAverageNucleosomeOccupancyFiles(allMutationsAccumulatedAllChromsSignalA
 ########################################################################################
 
 ########################################################################################
-def writeSignatureBasedAverageNucleosomeOccupancyFiles(type2AccumulatedAllChromsSignalArrayDict,type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,simulationNumber):
-    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
+def writeSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedAllChromsSignalArrayDict,type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,library_file_memo,simulationNumber):
+
+    os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED), exist_ok=True)
 
     for type in type2AccumulatedAllChromsSignalArrayDict.keys():
-        if ((type!=AGGREGATEDSUBSTITUTIONS) or (type!=AGGREGATEDINDELS) or (type!=AGGREGATEDDINUCS)):
+        if ((type!=AGGREGATEDSUBSTITUTIONS) and (type!=AGGREGATEDINDELS) and (type!=AGGREGATEDDINUCS)):
             signalArray = type2AccumulatedAllChromsSignalArrayDict[type]
             countArray = type2AccumulatedAllChromsCountArrayDict[type]
-            averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(signalArray,countArray)
+            averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray)
 
             #To provide filename with no space in signature name
             #signatureWithNoSpace = signature.replace(' ','')
 
             if (simulationNumber==0):
-                accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(type)
-                accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(type)
-                averageNucleosomeSignalFilename = '%s_AverageNucleosomeSignalArray.txt' %(type)
+                if library_file_memo is not None:
+                    accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (type,library_file_memo)
+                    accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (type,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' % (type,library_file_memo)
+                else:
+                    accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(type)
+                    accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(type)
+                    averageNucleosomeSignalFilename = '%s_AverageSignalArray.txt' %(type)
             else:
-                accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(type,simulationNumber)
-                accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(type,simulationNumber)
-                averageNucleosomeSignalFilename = '%s_sim%d_AverageNucleosomeSignalArray.txt' %(type,simulationNumber)
+                if library_file_memo is not None:
+                    accumulatedSignalFilename = '%s_sim%d_%s_AccumulatedSignalArray.txt' % (type, simulationNumber,library_file_memo)
+                    accumulatedCountFilename = '%s_sim%d_%s_AccumulatedCountArray.txt' % (type, simulationNumber,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_sim%d_%s_AverageSignalArray.txt' % (type, simulationNumber,library_file_memo)
+                else:
+                    accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(type,simulationNumber)
+                    accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(type,simulationNumber)
+                    averageNucleosomeSignalFilename = '%s_sim%d_AverageSignalArray.txt' %(type,simulationNumber)
 
-            accumulatedSignalFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedSignalFilename)
-            accumulatedCountFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,accumulatedCountFilename)
-            averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED,averageNucleosomeSignalFilename)
+            accumulatedSignalFilePath = os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED,accumulatedSignalFilename)
+            accumulatedCountFilePath = os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED,accumulatedCountFilename)
+            averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED,averageNucleosomeSignalFilename)
 
             signalArray.tofile(file=accumulatedSignalFilePath, sep="\t",format="%s")
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -1283,31 +1944,42 @@ def writeSignatureBasedAverageNucleosomeOccupancyFiles(type2AccumulatedAllChroms
 
 
 ########################################################################################
-def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Type2AccumulatedAllChromsSignalArrayDict,
-                                                                sample2Type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,simulationNumber):
+def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedAllChromsSignalArrayDict,
+                                                                sample2Type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,library_file_memo,simulationNumber):
 
-    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,SIGNATUREBASED), exist_ok=True)
 
     for sample in sample2Type2AccumulatedAllChromsSignalArrayDict:
         for type in sample2Type2AccumulatedAllChromsSignalArrayDict[sample]:
-            if ((type!=AGGREGATEDSUBSTITUTIONS) or (type!=AGGREGATEDINDELS) or (type!=AGGREGATEDDINUCS)):
+            if ((type!=AGGREGATEDSUBSTITUTIONS) and (type!=AGGREGATEDINDELS) and (type!=AGGREGATEDDINUCS)):
                 signalArray = sample2Type2AccumulatedAllChromsSignalArrayDict[sample][type]
                 countArray = sample2Type2AccumulatedAllChromsCountArrayDict[sample][type]
-                averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(signalArray, countArray)
+                averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray, countArray)
 
                 if (simulationNumber==0):
-                    accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' %(type,sample)
-                    accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' %(type,sample)
-                    averageNucleosomeSignalFilename = '%s_%s_AverageNucleosomeSignalArray.txt' %(type,sample)
+                    if (library_file_memo is not None):
+                        accumulatedSignalFilename = '%s_%s_%s_AccumulatedSignalArray.txt' %(type,sample,library_file_memo)
+                        accumulatedCountFilename = '%s_%s_%s_AccumulatedCountArray.txt' %(type,sample,library_file_memo)
+                        averageNucleosomeSignalFilename = '%s_%s_%s_AverageSignalArray.txt' %(type,sample,library_file_memo)
+                    else:
+                        accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (type, sample)
+                        accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (type, sample)
+                        averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' % (type, sample)
                 else:
-                    accumulatedSignalFilename = '%s_%s_sim%d_AccumulatedSignalArray.txt' %(type,sample,simulationNumber)
-                    accumulatedCountFilename = '%s_%s_sim%d_AccumulatedCountArray.txt' %(type,sample,simulationNumber)
-                    averageNucleosomeSignalFilename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' %(type,sample,simulationNumber)
+                    if (library_file_memo is not None):
+                        accumulatedSignalFilename = '%s_%s_sim%d_%s_AccumulatedSignalArray.txt' %(type,sample,simulationNumber,library_file_memo)
+                        accumulatedCountFilename = '%s_%s_sim%d_%s_AccumulatedCountArray.txt' %(type,sample,simulationNumber,library_file_memo)
+                        averageNucleosomeSignalFilename = '%s_%s_sim%d_%s_AverageSignalArray.txt' %(type,sample,simulationNumber,library_file_memo)
 
+                    else:
+                        accumulatedSignalFilename = '%s_%s_sim%d_AccumulatedSignalArray.txt' %(type,sample,simulationNumber)
+                        accumulatedCountFilename = '%s_%s_sim%d_AccumulatedCountArray.txt' %(type,sample,simulationNumber)
+                        averageNucleosomeSignalFilename = '%s_%s_sim%d_AverageSignalArray.txt' %(type,sample,simulationNumber)
 
-                accumulatedSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedSignalFilename)
-                accumulatedCountFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,accumulatedCountFilename)
-                averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, SIGNATUREBASED,averageNucleosomeSignalFilename)
+                os.makedirs(os.path.join(outputDir, jobname, DATA, SAMPLES, sample, occupancy_type,SIGNATUREBASED), exist_ok=True)
+
+                accumulatedSignalFilePath = os.path.join(outputDir,jobname, DATA, SAMPLES, sample, occupancy_type, SIGNATUREBASED,accumulatedSignalFilename)
+                accumulatedCountFilePath = os.path.join(outputDir,jobname, DATA, SAMPLES, sample, occupancy_type, SIGNATUREBASED,accumulatedCountFilename)
+                averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, SAMPLES, sample,  occupancy_type, SIGNATUREBASED,averageNucleosomeSignalFilename)
 
                 signalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
                 countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -1317,14 +1989,16 @@ def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(sample2Type2Ac
 
 ########################################################################################
 #All Mutations can be single point mutations or indels
-def writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2SignalArrayDict,
+def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
+                                                    plusorMinus,
+                                                    sample2Type2SignalArrayDict,
                                                     sample2Types2CountArrayDict,
                                                     outputDir,
                                                     jobname,
+                                                    library_file_memo,
                                                     nucleosomeOccupancyAnalysisType,
                                                     simulationNumber):
 
-    os.makedirs(os.path.join(outputDir,jobname,DATA,NUCLEOSOMEOCCUPANCY,nucleosomeOccupancyAnalysisType), exist_ok=True)
 
     for sample in sample2Type2SignalArrayDict:
         type2SignalArray = sample2Type2SignalArrayDict[sample]
@@ -1334,20 +2008,32 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(sample2Type2SignalArrayDict,
             signalArray = type2SignalArray[nucleosomeOccupancyAnalysisType]
             countArray = type2CountArray[nucleosomeOccupancyAnalysisType]
 
-            averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(signalArray,countArray)
+            averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray)
 
             if (simulationNumber==0):
-                accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' %(sample,jobname)
-                accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' %(sample,jobname)
-                averageNucleosomeSignalFilename = '%s_%s_AverageNucleosomeSignalArray.txt' %(sample,jobname)
+                if library_file_memo is not None:
+                    accumulatedSignalFilename = '%s_%s_%s_ccumulatedSignalArray.txt' % (sample, jobname,library_file_memo)
+                    accumulatedCountFilename = '%s_%s_%s_AccumulatedCountArray.txt' % (sample, jobname,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_%s_%s_AverageSignalArray.txt' % (sample, jobname,library_file_memo)
+                else:
+                    accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' %(sample,jobname)
+                    accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' %(sample,jobname)
+                    averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' %(sample,jobname)
             else:
-                accumulatedSignalFilename = '%s_%s_sim%d_AccumulatedSignalArray.txt' %(sample,jobname,simulationNumber)
-                accumulatedCountFilename = '%s_%s_sim%d_AccumulatedCountArray.txt' %(sample,jobname,simulationNumber)
-                averageNucleosomeSignalFilename = '%s_%s_sim%d_AverageNucleosomeSignalArray.txt' %(sample,jobname,simulationNumber)
+                if (library_file_memo is not None):
+                    accumulatedSignalFilename = '%s_%s_sim%d_%s_AccumulatedSignalArray.txt' %(sample,jobname,simulationNumber,library_file_memo)
+                    accumulatedCountFilename = '%s_%s_sim%d_%s_AccumulatedCountArray.txt' %(sample,jobname,simulationNumber,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_%s_sim%d_%s_AverageSignalArray.txt' %(sample,jobname,simulationNumber,library_file_memo)
+                else:
+                    accumulatedSignalFilename = '%s_%s_sim%d_AccumulatedSignalArray.txt' %(sample,jobname,simulationNumber)
+                    accumulatedCountFilename = '%s_%s_sim%d_AccumulatedCountArray.txt' %(sample,jobname,simulationNumber)
+                    averageNucleosomeSignalFilename = '%s_%s_sim%d_AverageSignalArray.txt' %(sample,jobname,simulationNumber)
 
-            accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
-            accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA,NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
-            averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, NUCLEOSOMEOCCUPANCY, nucleosomeOccupancyAnalysisType,averageNucleosomeSignalFilename)
+            os.makedirs(os.path.join(outputDir, jobname, DATA, SAMPLES, sample, occupancy_type, nucleosomeOccupancyAnalysisType), exist_ok=True)
+
+            accumulatedSignalFilePath = os.path.join(outputDir, jobname, DATA, SAMPLES, sample, occupancy_type, nucleosomeOccupancyAnalysisType, accumulatedSignalFilename)
+            accumulatedCountFilePath = os.path.join(outputDir, jobname, DATA, SAMPLES, sample, occupancy_type, nucleosomeOccupancyAnalysisType, accumulatedCountFilename)
+            averageNucleosomeSignalFilePath = os.path.join(outputDir,jobname, DATA, SAMPLES, sample, occupancy_type, nucleosomeOccupancyAnalysisType, averageNucleosomeSignalFilename)
 
             signalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
@@ -1705,6 +2391,75 @@ def readIndels(allIndelsFileName):
 ##################################################################
 
 
+######################################################################
+#BED files: end is not inclusive
+#BED files: score - A score between 0 and 1000. See track lines, below, for ways to configure the display style of scored data.
+def updateChrBasedSignalArray(data_row,chrBasedSignalArray):
+    chrBasedSignalArray[data_row[start]:data_row[end]] += data_row[signal]
+######################################################################
+
+
+######################################################################
+def fillNumpyArray(start,end,signal,chrBasedSignalArray):
+    chrBasedSignalArray[start:end]+=signal
+######################################################################
+
+
+##################################################################
+#Make signal from bed files and signal from wig files have the same type np.float32
+#No outlier elimination in bed files
+def readFileInBEDFormat(file_with_path):
+    file_df=None
+
+    if os.path.exists(file_with_path):
+        file_df = pd.read_table(file_with_path, nrows=1)  # 2.25 GB
+        ncols=file_df.shape[1]
+
+        if (ncols<=3):
+            print('There is no enough columns in this bed file')
+        elif (ncols==4):
+            print('SigProfilerTopogarphy assumes that score column is in the 4th column of this bed file and there is no header')
+            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [chrom,start,end,signal],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32})
+        elif (ncols>=5):
+            print('SigProfilerTopogarphy assumes that score column is in the 5th column of this bed file and there is no header')
+            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [chrom,start,end,signal], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32})
+
+        # print("file_df.dtypes")
+        # print(file_df.dtypes)
+
+        # print('file_df.columns.values')
+        # print(file_df.columns.values)
+
+    return file_df
+##################################################################
+
+
+##################################################################
+#Make signal from narrowPeak files type np.float32
+#No outlier elimination in bed files
+def readFileInNarrowPeakFormat(file_with_path):
+#ENCODE narrowPeak: Narrow (or Point-Source) Peaks format
+#This format is used to provide called peaks of signal enrichment based on pooled, normalized (interpreted) data. It is a BED6+4 format
+
+#Discrad any line that starts with
+# track type=narrowPeak visibility=3 db=hg19 name="nPk" description="ENCODE narrowPeak Example"
+# browser position chr1:9356000-9365000
+
+    file_df = None
+
+    if os.path.exists(file_with_path):
+        file_df = pd.read_table(file_with_path, nrows=1)  # 2.25 GB
+        ncols = file_df.shape[1]
+
+        if (ncols == 10):
+            print('SigProfilerTopogarphy assumes that signal column is in the 7th column of this bed file and there is no header')
+            file_df = pd.read_table(file_with_path, header=None, usecols=[0,1,2,3,4,5,6],
+                                    names=[chrom, start, end, name,score,strand,signal],
+                                    dtype={0: 'category', 1: np.int32, 2: np.int32, 3:str,4:np.int32, 5:'category', 6:np.float32})
+
+            file_df.drop([3,4,5], inplace=True, axis=1)
+    return file_df
+##################################################################
 
 
 ##################################################################
@@ -1923,13 +2678,13 @@ def updateTypeBasedDictionary(type2Sample2Strand2CountDict,type,mutationSample,s
 def updateDictionaries_simulations_integrated(mutation_row,
                         mutationType,
                         mutationSample,
+                        sample_based,
                         simNum2Type2Strand2CountDict,
                         simNum2Sample2Type2Strand2CountDict,
                         simNum2Type2Sample2Strand2CountDict,
                         simNum2Signature2MutationType2Strand2CountDict,
                         strand,
-                        signature2NumberofMutationsDict,
-                        mutationProbability):
+                        signature2PropertiesListDict):
 
     simNum = mutation_row[SIMULATION_NUMBER]
     type2Strand2CountDict = simNum2Type2Strand2CountDict[simNum]
@@ -1945,8 +2700,8 @@ def updateDictionaries_simulations_integrated(mutation_row,
 
     #################################################################################################
     # Update2: signature in type2Strand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
+    for signature in signature2PropertiesListDict:
+        if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
             if signature in type2Strand2CountDict:
                 if strand in type2Strand2CountDict[signature]:
                     type2Strand2CountDict[signature][strand] += 1
@@ -1960,10 +2715,9 @@ def updateDictionaries_simulations_integrated(mutation_row,
 
     #################################################################################################
     #Update3 signature2MutationType2Strand2CountDict
-
     if (mutationType is not None):
-        for signature in signature2NumberofMutationsDict:
-            if (mutation_row[signature] >= mutationProbability):
+        for signature in signature2PropertiesListDict:
+            if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
                 if signature in signature2MutationType2Strand2CountDict:
                     if mutationType in signature2MutationType2Strand2CountDict[signature]:
                         if strand in signature2MutationType2Strand2CountDict[signature][mutationType]:
@@ -1982,31 +2736,33 @@ def updateDictionaries_simulations_integrated(mutation_row,
 
     #################################################################################################
     # Update4: sample and mutationType in sample2Type2Strand2CountDict
-
-    if (mutationType is not None):
-        updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand)
+    if sample_based:
+        if (mutationType is not None):
+            updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand)
     #################################################################################################
 
     #################################################################################################
     # Update5: sample and signature in sample2Type2Strand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            updateSampleBasedDictionary(sample2Type2Strand2CountDict, signature, mutationSample, strand)
+    if sample_based:
+        for signature in signature2PropertiesListDict:
+            if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
+                updateSampleBasedDictionary(sample2Type2Strand2CountDict, signature, mutationSample, strand)
     #################################################################################################
 
     #################################################################################################
     #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
-
-    if (type2Sample2Strand2CountDict is not None) and (mutationType is not None):
-        updateTypeBasedDictionary(type2Sample2Strand2CountDict,mutationType,mutationSample,strand)
+    if sample_based:
+        if (type2Sample2Strand2CountDict is not None) and (mutationType is not None):
+            updateTypeBasedDictionary(type2Sample2Strand2CountDict,mutationType,mutationSample,strand)
     #################################################################################################
 
     #################################################################################################
     #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            if (type2Sample2Strand2CountDict is not None):
-                updateTypeBasedDictionary(type2Sample2Strand2CountDict,signature,mutationSample,strand)
+    if sample_based:
+        for signature in signature2PropertiesListDict:
+            if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
+                if (type2Sample2Strand2CountDict is not None):
+                    updateTypeBasedDictionary(type2Sample2Strand2CountDict,signature,mutationSample,strand)
     #################################################################################################
 
 
@@ -2412,13 +3168,12 @@ def writeDictionaryUsingPickle(dictionary,filepath):
 
 
 ########################################################################
-def writeDictionaryForDebug(dictionary,outputDir,jobname,filename,subDirectory,customJSONEncoder):
-    os.makedirs(os.path.join(outputDir,jobname,DATA,subDirectory), exist_ok=True)
+def writeDictionarySimple(dictionary,path,filename,customJSONEncoder):
+    os.makedirs(os.path.join(path), exist_ok=True)
 
-    filePath = os.path.join(outputDir,jobname,DATA,subDirectory,filename)
-    with open(filePath, 'a') as file:
+    filePath = os.path.join(path,filename)
+    with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
-        file.write('########################################################')
 ########################################################################
 
 
@@ -2481,31 +3236,32 @@ def readDictionary(filePath):
 ########################################################################
 
 
-########################################################################
-def copySampleFilesToCorrespondingSimulationDirectory(inputDir,copyFromDir,subDirName):
-    print('copyFromDir')
-    print(copyFromDir)
+#########################################################################
+# copy file 1.maf from inputDir/output/simulations/jobname_simulations_genome_96/1.maf to inputDir/output/simulations/sim1/96/1.maf
+# copy file 2.maf from inputDir/output/simulations/jobname_simulations_genome_96/2.maf to inputDir/output/simulations/sim2/96/2.maf
+# copy file N.maf from inputDir/output/simulations/jobname_simulations_genome_96/N.maf to inputDir/output/simulations/simN/96/N.maf
 
-    # Go to this directory
-    os.chdir(copyFromDir)
+# copy file 1.maf from inputDir/output/simulations/jobname_simulations_genome_ID/1.maf to inputDir/output/simulations/sim1/ID/1.maf
+# copy file 2.maf from inputDir/output/simulations/jobname_simulations_genome_ID/2.maf to inputDir/output/simulations/sim2/ID/2.maf
+# copy file N.maf from inputDir/output/simulations/jobname_simulations_genome_ID/N.maf to inputDir/output/simulations/simN/ID/N.maf
 
-    # Traverse this directory
-    # for sample in directory
-    # copy file with end _1.vcf under inputDir/jobname/output/simulations/sim1/
-    # copy file with end _2.vcf under inputDir/jobname/output/simulations/sim2/
-    # ...
-    # copy file with end _N.vcf under inputDir/jobname/output/simulations/simN/
+# copy file 1.maf from inputDir/output/simulations/jobname_simulations_genome_DBS/1.maf to inputDir/output/simulations/sim1/DBS/1.maf
+# copy file 2.maf from inputDir/output/simulations/jobname_simulations_genome_DBS/2.maf to inputDir/output/simulations/sim2/DBS/2.maf
+# copy file N.maf from inputDir/output/simulations/jobname_simulations_genome_DBS/N.maf to inputDir/output/simulations/simN/DBS/N.maf
+def copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numberofSimulations):
+    # copyFromDir = os.path.join(inputDir, 'output', 'simulations', dirName)
+    # copyToMainDir = os.path.join(inputDir, 'output', 'simulations')
 
-    for dirName, subdirList, fileList in os.walk('.'):
-        for fname in fileList:
-            lastIndexUnderscore = fname.rfind('_')
-            indexDot = fname.rfind('.')
-            simNum = fname[lastIndexUnderscore+1:indexDot]
-            simName = 'sim%s' %(simNum)
-            copyDir = os.path.join(inputDir,'output','simulations',simName,subDirName,'.')
-            fileDir = os.path.join(dirName,fname)
-            shutil.copy(fileDir, copyDir)
-########################################################################
+    # No need to  go to this directory
+    # os.chdir(copyFromDir)
+
+    for simNum in range(1,numberofSimulations+1):
+        simDir= 'sim%d' %(simNum)
+        fname='%d.maf' %(simNum)
+        fileDir=os.path.join(copyFromDir,fname)
+        copyToDir = os.path.join(copyToMainDir, simDir, mutation_type_context)
+        shutil.copy(fileDir, copyToDir)
+#########################################################################
 
 
 ########################################################################

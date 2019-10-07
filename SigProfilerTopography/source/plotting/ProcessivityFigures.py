@@ -30,6 +30,8 @@ from scipy.stats import poisson
 from scipy.stats import ttest_1samp
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
+plt.rcParams.update({'figure.max_open_warning': 0})
+
 ###################################################################
 def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = {}
@@ -151,11 +153,12 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     print('len(sortedProcessiveGroupLengthList)')
     print(len(sortedProcessiveGroupLengthList))
 
-    #Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
-    index = sortedProcessiveGroupLengthList.index(str(maxProcessiveGroupLength))
-
-    print('sortedProcessiveGroupLengthList[index]')
-    print(sortedProcessiveGroupLengthList[index])
+    index=None
+    if ((len(sortedProcessiveGroupLengthList)>0) and (maxProcessiveGroupLength>0)):
+        #Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
+        index = sortedProcessiveGroupLengthList.index(str(maxProcessiveGroupLength))
+        print('sortedProcessiveGroupLengthList[index]')
+        print(sortedProcessiveGroupLengthList[index])
 
     ####################################################
     #Are these dummy variables? Yes.
@@ -170,7 +173,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     #######################################################################
     #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
-
     if (len(sortedProcessiveGroupLengthList)>1):
         # plt.xlim([1, len(sortedProcessiveGroupLengthList)])
         plt.xlim([1,index+1])
@@ -189,7 +191,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     else:
         plt.ylim([0, len(sortedSignatureList)])
     #######################################################################
-
 
     ax.set_yticks(np.arange(0, len(sortedSignatureList) + 1, 1))
 
@@ -241,11 +242,11 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                                 expectedValues.append(0)
                         ########################## Fill expected values ############################
 
-                        print('##################Signature:%s processiveGroupLength:%s#################' %(signature,processiveGroupLength))
-                        print('observedValue')
-                        print(observedValue)
-                        print('expectedValues')
-                        print(expectedValues)
+                        # print('[Debug] ##################Signature:%s processiveGroupLength:%s#################' %(signature,processiveGroupLength))
+                        # print('[Debug] observedValue')
+                        # print(observedValue)
+                        # print('[Debug] expectedValues')
+                        # print(expectedValues)
 
                         if (pValueCalculation == USING_ONE_SAMPLE_TTEST):
                             #################################################
@@ -254,8 +255,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                                 pval=pval
                             else:
                                 pval=1
-                            print('p-value')
-                            print(pval)
+
+                            # print('[Debug] p-value')
+                            # print(pval)
+
                             all_p_values.append(pval)
                             #################################################
 
@@ -264,8 +267,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                             #Using Null Distribution
                             numberofExpectedValuesGreaterThanObservedValue = sum(expectedValue >= observedValue for expectedValue in expectedValues)
                             pval = numberofExpectedValuesGreaterThanObservedValue / len(expectedValues)
-                            print('p-value')
-                            print(pval)
+
+                            # print('[Debug] p-value')
+                            # print(pval)
+
                             all_p_values.append(pval)
                             #################################################
 
@@ -282,8 +287,9 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                                 print('Check this. ValueError')
                                 pval = 1
 
-                            print('p-value')
-                            print(pval)
+                            # print('[Debug] p-value')
+                            # print(pval)
+
                             all_p_values.append(pval)
                             #################################################
                         elif (pValueCalculation == USING_ZSCORE):
@@ -293,41 +299,48 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                                 zScore = (observedValue-mean)/std
                             else:
                                 #What to do when std is zero?
-                                print('Standard deviation is zero. std:%f' %(std))
+                                print('Standard deviation is %f for signature:%s processiveGroupLength:%s' %(std,signature,processiveGroupLength))
+                                print('observedValue: %s' %observedValue)
+                                print('expectedValues: %s' %(expectedValues))
+
                                 #Let's not draw any circle  by setting the radius=0
                                 # When zscore is undefined do not draw any circle
                                 zScore = 0
                                 signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]= 0
                             zScores.append(zScore)
-                            print('zScore')
-                            print(zScore)
+                            # print('[Debug] zScore')
+                            # print(zScore)
                     ##########################################################################
     ##########################################################################################
     ############################# Calculate p-values ends ####################################
     ##########################################################################################
 
-    print('all_p_values')
-    print(all_p_values)
-    print('len(all_p_values)')
-    print(len(all_p_values))
+    # print('[Debug] all_p_values')
+    # print(all_p_values)
+    # print('[Debug] len(all_p_values)')
+    # print(len(all_p_values))
 
-    print('zScores')
-    print(zScores)
-    print('len(zScores)')
-    print(len(zScores))
+    # print('[Debug] zScores')
+    # print(zScores)
+    # print('[Debug] len(zScores)')
+    # print(len(zScores))
 
-    min_zScore = min(zScores)
-    max_zScore = max(zScores)
-    print('min_zScore:%f max_zScore:%f ' %(min_zScore,max_zScore))
-    # norm = Normalize(0, max_zScore, clip=True)
-    norm = Normalize(min_zScore, max_zScore, clip=True)
+    if (len(zScores)>0):
+        min_zScore = min(zScores)
+        max_zScore = max(zScores)
+        print('min_zScore:%f max_zScore:%f ' %(min_zScore,max_zScore))
+        # norm = Normalize(0, max_zScore, clip=True)
+        # norm = Normalize(min_zScore, max_zScore, clip=True)
+    else:
+        #zScores is empty
+        min_zScore=0
+        max_zScore=0
 
     numofPval= 0
     for pval in all_p_values:
         if pval <= 0.05:
             numofPval=numofPval+1
-
-    print('Number of pvalues less than 0.05: %d' %(numofPval))
+    # print('[Debug] Number of pvalues less than 0.05: %d' %(numofPval))
 
     ####################################################################################
     ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None ######
@@ -341,10 +354,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
             #FDR BH Multiple Testing Correction
             try:
                 rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
-                print('all_FDR_BH_adjusted_p_values')
-                print(all_FDR_BH_adjusted_p_values)
-                print('len(all_FDR_BH_adjusted_p_values)')
-                print(len(all_FDR_BH_adjusted_p_values))
+                # print('[Debug] all_FDR_BH_adjusted_p_values')
+                # print(all_FDR_BH_adjusted_p_values)
+                # print('[Debug] len(all_FDR_BH_adjusted_p_values)')
+                # print(len(all_FDR_BH_adjusted_p_values))
             except ZeroDivisionError:
                 print('ZeroDivisionError during statsmodels.stats.multitest.multipletests')
                 print('for debug ZeroDivisionError, all_p_values_array:')
@@ -353,16 +366,16 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
             #Bonferroni Corrected P Values
             all_Bonferroni_corrected_p_values = all_p_values_array * numberofMultipleTests
             all_Bonferroni_corrected_p_values =[1 if correctedPValue>1 else correctedPValue for correctedPValue in all_Bonferroni_corrected_p_values]
-            print('all_Bonferroni_corrected_p_values')
-            print(all_Bonferroni_corrected_p_values)
-            print('len(all_Bonferroni_corrected_p_values)')
-            print(len(all_Bonferroni_corrected_p_values))
+            # print('[Debug] all_Bonferroni_corrected_p_values')
+            # print(all_Bonferroni_corrected_p_values)
+            # print('[Debug] len(all_Bonferroni_corrected_p_values)')
+            # print(len(all_Bonferroni_corrected_p_values))
 
             numofPval = 0
             for pval in all_Bonferroni_corrected_p_values:
                 if pval <= 0.05:
                     numofPval = numofPval + 1
-            print('Number of all_Bonferroni_corrected_p_values less than 0.05: %d' % (numofPval))
+            # print('[Debug] Number of all_Bonferroni_corrected_p_values less than 0.05: %d' % (numofPval))
             ##########################################################################################
 
 
@@ -394,7 +407,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                             # else:
                             #     color=math.log2(zScore)
 
-                            print('------------------')
+                            # print('[Debug] ------------------')
                             # print('signature')
                             # print(type(signature))
                             # print(signature)
@@ -404,28 +417,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                             # print('color')
                             # print(type(color))
                             # print(color)
-                            print('June 7, 2019 --- Signature:%s processiveGroupLength:%s zScore:%f color:%f' %(signature,processiveGroupLength,zScore,color))
-                            print('cmap(color)')
-                            print(cmap(color))
-                            print('------------------')
+
+                            # print('[Debug] --- Signature:%s processiveGroupLength:%s zScore:%f color:%f' %(signature,processiveGroupLength,zScore,color))
+                            # print('[Debug] cmap(color)')
+                            # print(cmap(color))
+                            # print('[Debug] ------------------')
 
                         correctedPValueIndex +=1
-
-                        # print('correctedPValue: %f' % (correctedPValue))
-                        # if (correctedPValue > 0):
-                        #     color = -1 * math.log10(correctedPValue)
-                        #     numberofCorrectedPValuesGreaterThanZero += 1
-                        # elif (correctedPValue < 0):
-                        #     print('There is a situation')
-                        #     color = 0
-                        #     numberofCorrectedPValuesLessThanZero += 1
-                        # elif (correctedPValue==0):
-                        #     color = 7
-                        #     numberofCorrectedPValuesEqualsToZero += 1
-
-                        # color = norm(color) * vmax
-                        # print('color')
-                        # print(color)
 
                         if (radius>0):
                             circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(color), fill=True)
@@ -481,11 +479,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
         spine.set_visible(True)
         spine.set_color('black')
 
-    xlabels = sortedProcessiveGroupLengthList[0:index+1]
-    print('xlabels')
-    print(xlabels)
-    print('len(xlabels)')
-    print(len(xlabels))
+    xlabels=None
+    if (index is not None):
+        xlabels = sortedProcessiveGroupLengthList[0:index+1]
+        # print('[Debug] xlabels')
+        # print(xlabels)
+        # print('[Debug] len(xlabels)')
+        # print(len(xlabels))
     ylabels = sortedSignatureList
     ##########################################################################################
 
@@ -507,24 +507,20 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     ################### Put the color bar if there are simulations ends #####################
 
-
-    ##################################################################################
-    #Put a title
-    # plt.title('%s with %s' %(pValueCalculation,multipleTestingCorrection), fontsize=30, y=1.1)
-    ##################################################################################
-
     ##################################################################################
     # CODE GOES HERE TO CENTER X-AXIS LABELS...
     ax.set_xticklabels([])
     mticks = ax.get_xticks()
-    print('mticks')
-    print(mticks)
-    print('len(mticks)')
-    print(len(mticks))
+    # print('[Debug] mticks')
+    # print(mticks)
+    # print('[Debug] len(mticks)')
+    # print(len(mticks))
 
     ax.set_xticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
     ax.tick_params(axis='x', which='minor', length=0,labelsize=30)
-    ax.set_xticklabels(xlabels, minor=True)
+
+    if xlabels is not None:
+        ax.set_xticklabels(xlabels, minor=True)
 
     ax.xaxis.set_ticks_position('top')
 
@@ -557,6 +553,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     figFile = os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY, filename)
     fig.savefig(figFile)
+    plt.cla()
     plt.close(fig)
     ##################################################################################
 
@@ -567,6 +564,17 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 ###################################################################
 def processivityFigures(outputDir,jobname,numberofSimulations,multipleTestingCorrection,probabilityCalculation):
 
+    jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
+    print('Topography.py jobnamePath:%s ' %jobnamePath)
+
+    ############################################################
+    if (os.path.exists(jobnamePath)):
+        try:
+            shutil.rmtree(jobnamePath)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+    ############################################################
+
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
 
     ############################################################
@@ -574,9 +582,8 @@ def processivityFigures(outputDir,jobname,numberofSimulations,multipleTestingCor
         simulation2Signature2ProcessiveGroupLength2PropertiesDict = readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations)
     ############################################################
 
-    print('Debug May 13, 2019 starts')
-    print('#######simulation2Signature2ProcessiveGroupLength2PropertiesDict######')
-    print(simulation2Signature2ProcessiveGroupLength2PropertiesDict)
+    # print('[Debug] #######simulation2Signature2ProcessiveGroupLength2PropertiesDict######')
+    # print(simulation2Signature2ProcessiveGroupLength2PropertiesDict)
 
     ############################################################
     filename = 'Sim0_Signature2ProcessiveGroupLength2PropertiesDict.txt'
@@ -584,9 +591,8 @@ def processivityFigures(outputDir,jobname,numberofSimulations,multipleTestingCor
     originalSignature2ProcessiveGroupLength2PropertiesDict = readDictionary(originalSignature2ProcessiveGroupLength2PropertiesDictFilePath)
     ############################################################
 
-    print('originalSignature2ProcessiveGroupLength2PropertiesDict')
-    print(originalSignature2ProcessiveGroupLength2PropertiesDict)
-    print('Debug May 13, 2019 ends')
+    # print('[Debug] originalSignature2ProcessiveGroupLength2PropertiesDict')
+    # print(originalSignature2ProcessiveGroupLength2PropertiesDict)
 
     ############################################################
     if (numberofSimulations > 0):
