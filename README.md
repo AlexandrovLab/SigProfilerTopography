@@ -54,7 +54,8 @@ This call also plots topography output figures.
 >> numberofSimulations = 2
 >> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
 >> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
-topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,mutation_types_contexts=['96','DBS'])
+>> GM12878_nucleosome_file = '.../downloaded/from/ENCODE/wgEncodeSydhNsomeGm12878Sig.bigWig'
+topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosome_file=GM12878_nucleosome_file,mutation_types_contexts=['96','DBS'],nucleosome=True,replication_time=True,strand_bias=True,processivity=True,sample_based=False)
 ```
 
 **INPUT FILE FORMAT**
@@ -67,17 +68,18 @@ https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
 
 **LIBRARY**
 
-This tool uses ENCODE provided files for topography analysis such as nucleosome occupancy and replcation time.
-You can also provide your local nucleosome occupancy (.bigWig or .bigBed format) and replication time (WaveSignal in .wig and Pk and Valleys in bed formats) files with their paths.
+This tool uses ENCODE provided files for topography analysis such as histone modifications narrow peaks, nucleosome occupancy and replcation time.
+You can provide your local histone modifications and nucleosome occupancy files in .bigWig or .bigBed formats and replication time files: WaveSignal in .wig and Peaks and Valleys in bed formats with their paths.
 
 **NUCLEOSOME OCCUPANCY**
 
 You can provide your nucleosome occupancy data file as follows.
 ```
+
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigWig'
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigBed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosomeFilename=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'])
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosome_file=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'],nucleosome=True)
 ```
 
 **LIBRARY REPLICATION TIME**
@@ -95,7 +97,7 @@ You can provide your replication data file as follows.
 >> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
 >> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replicationTimeFilename=user_provided_replication_time_file_path, replicationTimeValleyFilename=user_provided_replication_time_valley_file_path, replicationTimePeakFilename=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'])
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replication_time_file=user_provided_replication_time_file_path, replication_time_valley_file=user_provided_replication_time_valley_file_path, replication_time_peak_file=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)
 ```
 
 **LIBRARY TRANSCRIPTS**
@@ -104,7 +106,6 @@ When you install SigProfilerTopography python package, SigProfilerTopography dow
 ```
 SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
 ```
-
 
 **COPYRIGHT**
 
