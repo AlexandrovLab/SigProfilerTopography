@@ -29,27 +29,23 @@ $ python
 This will install the human 37 assembly as a reference genome. You may install as many genomes as you wish. If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash, 
 use bash=False.
 ```
-
 5. Import SigProfilerTopography as follows:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 ```
-
 6. Download default nucleosome occupancy bigWig file as follows:
 ```
 >> cell_line='GM12878'
 >> topography.download_nucleosome_occupancy(cell_line)
 ```
-
 7. Within a python session, you need to download corresponding 2bit file for your genome.
 Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 ```
 >> genome= 'GRCh37'
 >> topography.download_2bit_file(genome)
 ```
-
-7. Within a python session, you can run the topography analyses as follows:
+8. Within a python session, you can run the topography analyses as follows:
 You must provide the mutation types that you want to carry out topography analyses for in mutation_types_contexts list.
 You must provide the corresponding probabilities files in sbs_probabilities_file_path, id_probabilities_file_path and dbs_probabilities_file_path accordingly.
 For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutation_types_contexts=['96', 'DBS'].
