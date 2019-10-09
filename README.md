@@ -29,11 +29,14 @@ $ python
 This will install the human 37 assembly as a reference genome. You may install as many genomes as you wish. If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash, 
 use bash=False.
 ```
+```
+
 5. Import SigProfilerTopography as follows:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 ```
+
 6. Download default nucleosome occupancy bigWig file as follows:
 ```
 >> cell_line='GM12878'
