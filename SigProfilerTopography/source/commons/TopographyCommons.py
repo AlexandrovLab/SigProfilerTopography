@@ -165,11 +165,9 @@ Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2N
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
 
 ONE_DIRECTORY_UP = '..'
-AVAILABLE_LIBRARY_FILENAMES = 'AvailableLibraryFiles.txt'
-AVAILABLE_LIBRARY_FILENAMES_PATH = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,AVAILABLE_LIBRARY_FILENAMES)
+
 GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
 GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
-
 INDELBASED = 'indelbased'
 SIGNATUREBASED = 'signaturebased'
 SAMPLEBASED = 'samplebased'
@@ -355,10 +353,6 @@ def downloadFromWeb(url,filepath_to_be_saved):
         shutil.copyfileobj(response, out_file)
 ###################################################################
 
-# ###################################################################
-# def downloadFromWebUsingWGET(url,filepath_to_be_saved):
-#     wget.download(url,filepath_to_be_saved)
-# ##################################################################
 
 ###########################################################
 import psutil
@@ -373,16 +367,6 @@ def memory_usage():
 ########################################################################################
 def getShortNames(chromNamesList):
     return [chrName[3:] for chrName in chromNamesList]
-########################################################################################
-
-########################################################################################
-def getAvailableLibraryFilenamesList():
-    availableLibraryFilenamesPath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,AVAILABLE_LIBRARY_FILENAMES)
-
-    if (os.path.exists(availableLibraryFilenamesPath)):
-        availableLibraryFilenamesList = readAsAList(availableLibraryFilenamesPath)
-
-    return availableLibraryFilenamesList
 ########################################################################################
 
 ########################################################################################

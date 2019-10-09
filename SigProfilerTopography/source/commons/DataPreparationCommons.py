@@ -21,7 +21,25 @@ from TopographyCommons import *
 ############################################################
 def readProbabilities(probabilitiesFile,logger):
 
+    #For Release
+    #For PCAWG_Matlab
+    #This is same for Release and PCAWG_Matlab
+    # There is header in the first column
     probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0)
+
+    # Mutation_Probabilities.txt for SBS96
+    # Sample Names    MutationTypes   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40
+    # LUAD-US_SP50518 A[C>A]A 0.005281537126491598    1.091660854697097e-06   0.0     0.0     0.12212513236310162     0.0022549935716281717   0.0     0.0     0.0     0.0     0.8703372452779239
+
+    # Mutation_Probabilities.txt for ID83
+    # Sample Names    MutationTypes   ID1     ID2     ID3     ID4     ID5     ID6     ID8     ID9     ID13
+    # LUAD-US_SP50518 1:Del:C:0       0.002114485363152394    0.0     0.4891560241408412      0.01586903032961574     0.2531175852230711      0.0     0.23974287494331953     0.0     0.0
+
+    # Mutation_Probabilities.txt for DBS78
+    # Sample Names    MutationTypes   DBS2    DBS4    DBS5    DBS6    DBS9    DBS11
+    # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
+
+    probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
 
     logger.info('Probabilities information starts')
     logger.info('probabilities_df.shape')
@@ -29,20 +47,15 @@ def readProbabilities(probabilitiesFile,logger):
     logger.info('probabilities_df.head()')
     logger.info(probabilities_df.head())
 
-    if ('Sample' in probabilities_df.columns.values):
+    if (SAMPLE in probabilities_df.columns.values):
         logger.info('Unique samples in probabilities_df')
-        logger.info(probabilities_df['Sample'].unique())
-        logger.info('# of unique samples in probabilities_df: %d\n' %(len(probabilities_df['Sample'].unique())))
+        logger.info(probabilities_df[SAMPLE].unique())
+        logger.info('# of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
 
-    if ('Mutations' in probabilities_df.columns.values):
-        logger.info('Unique mutations in probabilities_df')
-        logger.info(probabilities_df['Mutations'].unique())
-        logger.info('# of unique mutations in probabilities_df: %d\n' %(len(probabilities_df['Mutations'].unique())))
-
-    if ('MutationTypes' in probabilities_df.columns.values):
+    if (MUTATION in probabilities_df.columns.values):
         logger.info('Unique MutationTypes in probabilities_df')
-        logger.info(probabilities_df['MutationTypes'].unique())
-        logger.info('# of unique MutationTypes in probabilities_df: %d' %(len(probabilities_df['MutationTypes'].unique())))
+        logger.info(probabilities_df[MUTATION].unique())
+        logger.info('# of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
     logger.info('Probabilities information ends')
     logger.info('##############################')
 
@@ -132,8 +145,7 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
 ############################################################
 
 ############################################################
-#This code is customized w.r.t. PCAWG Matlab Probabilities
-#TODO However during release we must be able to use MUTATIONLONG
+#This code is customized for release and PCAWG Matlab Probabilities
 # example line for original data
 #UCEC-US_SP89389 10      2017540 N:AT[T>A]CA     1
 # example line for simulated data
@@ -148,6 +160,11 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
 
         if (not mutations_with_genomic_positions_df.empty):
             if (mutation_type_context==DBS):
+                # For DBS MatrixGenerator provides
+                # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
+                # For DBS Extractor has
+                # Sample Names    MutationTypes   DBS2    DBS4    DBS5    DBS6    DBS9    DBS11
+                # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -160,6 +177,11 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
                 mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
             elif (mutation_type_context==ID):
+                # For ID MatrixGenerator provides
+                # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
+                # For ID Extractor has
+                # Sample Names    MutationTypes   ID1     ID2     ID3     ID4     ID5     ID6     ID8     ID9     ID13
+                # LUAD-US_SP50518 1:Del:C:0       0.002114485363152394    0.0     0.4891560241408412      0.01586903032961574     0.2531175852230711      0.0     0.23974287494331953     0.0     0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -176,6 +198,11 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
                 ordered_column_names = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,LENGTH,PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND,MUTATION]
                 mutations_with_genomic_positions_df = mutations_with_genomic_positions_df[ordered_column_names]
             elif(mutation_type_context in SBS_CONTEXTS):
+                # For SNV MatrixGenerator provides
+                # LUAD-US_SP50263 10      440625  U:GG[C>T]AG     -1
+                # For SNV Extractor has
+                # Sample    Mutation   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40
+                # LUAD-US_SP50518 A[C>A]A 0.005281537126491598    1.091660854697097e-06   0.0     0.0     0.12212513236310162     0.0022549935716281717   0.0     0.0     0.0     0.0     0.8703372452779239
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
                 mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
                 mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
@@ -184,8 +211,8 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 #Add new column
                 # Add Context Column from T:TG[C>T]GC to  G[C>T]G
-                # MatriXGenerator generates T:TG[C>T]GC
-                # PCAWG_Matlab sbs probabilities has G[C>T]G
+                # MatrixGenerator generates T:TG[C>T]GC
+                # Extractor and PCAWG_Matlab sbs probabilities has G[C>T]G
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
                 mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
             return mutations_with_genomic_positions_df
@@ -204,27 +231,36 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     mutation_type_context = inputList[5]
     simNum = inputList[6]
 
+    ###############################################################################################
+    #Step3
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context)
+    ###############################################################################################
 
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
 
         ############################################################################
+        #Step4
         #For PCAWG_Matlab
         #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
         #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
         # chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
 
         #For release
+        # For SNV
+        # LUAD-US_SP50263 10      440625  U:GG[C>T]AG     -1
+        # For ID
+        # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
+        # For DBS
+        # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
         if simNum>=1:
+            #Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
         ############################################################################
 
         ############################################################################
-        #For PCAWG Matlab Probabilities
-        # merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
-
-        # For release
-        merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATIONLONG],right_on=[SAMPLE, MUTATIONLONG])
+        #Step5
+        #For Release and PCAWG Matlab Probabilities
+        merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
         ############################################################################
 
         if ((merged_df is not None) and (chr_based_mutation_df.shape[0]!=merged_df.shape[0])):

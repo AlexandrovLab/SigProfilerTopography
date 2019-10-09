@@ -24,7 +24,10 @@ $ pip install SigProfilerSimulator
 ```
 $ python
 >> from SigProfilerMatrixGenerator import install as genInstall
->> genInstall.install('GRCh37')
+>> genInstall.install('GRCh37', rsync=False, bash=True)
+```
+This will install the human 37 assembly as a reference genome. You may install as many genomes as you wish. If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash, 
+use bash=False.
 ```
 
 5. Import SigProfilerTopography as follows:
@@ -33,7 +36,13 @@ $ python
 >> from SigProfilerTopography import Topography as topography
 ```
 
-6. Within a python session, you need to download corresponding 2bit file for your genome.
+6. Download default nucleosome occupancy bigWig file as follows:
+```
+>> cell_line='GM12878'
+>> topography.download_nucleosome_occupancy(cell_line)
+```
+
+7. Within a python session, you need to download corresponding 2bit file for your genome.
 Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 ```
 >> genome= 'GRCh37'
@@ -41,30 +50,26 @@ Command below will download hg19.2bit for 'GRCh37' and hg38.2bit for 'GRCh38'.
 ```
 
 7. Within a python session, you can run the topography analyses as follows:
-You must provide the mutation types that you want to carry out topography analyses for in mutationTypes list.
-You must provide the corresponding probabilities files in subs_probabilities_file_path, indels_probabilities_file_path and dinucs_probabilities_file_path accordingly.
+You must provide the mutation types that you want to carry out topography analyses for in mutation_types_contexts list.
+You must provide the corresponding probabilities files in sbs_probabilities_file_path, id_probabilities_file_path and dbs_probabilities_file_path accordingly.
 For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply subs_probabilities_file_path and dinucs_probabilities_file_path with mutation_types_contexts=['96', 'DBS'].
 '96' for substitutions and 'DBS' for dinucleotides and 'ID' for indels.
 This call also plots topography output figures.
 ```
 >> genome= 'GRCh37'
->> inputDir = '.../from/googledrive/you/can/download/sample/input/under/matrixgenerator/'
->> outputDir = '.../as/you/wish/output/'
->> jobname = 'BreastCancer560'
->> numberofSimulations = 2
->> subs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/SBS96_Mutation_Probabilities.txt'
->> dinucs_probabilities = '.../from/googledrive/you/can/download/sample/input/under/extractor/DBS78_Mutation_Probabilities.txt'
->> GM12878_nucleosome_file = '.../downloaded/from/ENCODE/wgEncodeSydhNsomeGm12878Sig.bigWig'
-topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosome_file=GM12878_nucleosome_file,mutation_types_contexts=['96','DBS'],nucleosome=True,replication_time=True,strand_bias=True,processivity=True,sample_based=False)
+>> inputDir = '.../your_input_dir/'
+>> outputDir = '.../your_output_dir/'
+>> jobname = 'any_job_name'
+>> numofSimulations = 2
+>> sbs_probabilities = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>> id_probabilities = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>> dbs_probabilities = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,sample_based=False)
 ```
 
 **INPUT FILE FORMAT**
 
-This tool currently supports formats (maf, vcf, simple text file, and ICGC) that are supported by SigProfilerMatrixGenerator. The user must provide input files with their paths.
-
-**SAMPLE INPUT FILES**
-Download sample input files from
-https://drive.google.com/open?id=1CZh_oLPmje5hcpb1x0w-64Nklf9d51ZX
+This tool currently supports formats (maf, vcf, simple text file, and ICGC) that are supported by SigProfilerMatrixGenerator. The user must provide input files under inputDir.
 
 **LIBRARY**
 
@@ -77,9 +82,10 @@ You can provide your nucleosome occupancy data file as follows.
 ```
 
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigWig'
+or
 >> user_provided_nucleosome_data_file_path = '.../user_provided_nucleosome.bigBed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,nucleosome_file=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'],nucleosome=True)
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,dbs_probabilities_file_path=dbs_probabilities,nucleosome_file=user_provided_nucleosome_data_file_path,mutation_types_contexts=['96','DBS'],nucleosome=True)
 ```
 
 **LIBRARY REPLICATION TIME**
@@ -97,15 +103,9 @@ You can provide your replication data file as follows.
 >> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
 >> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
 
->> topography.runAnalyses(genome,inputDir,outputDir,jobname,numberofSimulations,subs_probabilities_file_path=subs_probabilities,dinucs_probabilities_file_path=dinucs_probabilities,replication_time_file=user_provided_replication_time_file_path, replication_time_valley_file=user_provided_replication_time_valley_file_path, replication_time_peak_file=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)
+>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,dbs_probabilities_file_path=dbs_probabilities,replication_time_file=user_provided_replication_time_file_path, replication_time_valley_file=user_provided_replication_time_valley_file_path, replication_time_peak_file=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)
 ```
 
-**LIBRARY TRANSCRIPTS**
-
-When you install SigProfilerTopography python package, SigProfilerTopography downloads transcripts for GRCh37 under
-```
-SigProfilerTopography/lib/transcripts/GRCh37_transcripts.txt
-```
 
 **COPYRIGHT**
 

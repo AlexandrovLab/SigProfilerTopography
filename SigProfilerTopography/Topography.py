@@ -16,26 +16,16 @@
 # #############################################################
 
 import time
-import SigProfilerMatrixGenerator as matgen_package
-# print(matgen_package.__path__[0])
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerSimulator import SigProfilerSimulator as simulator
 
-from SigProfilerTopography.source.commons.DataPreparationCommons import readMutationsWithGenomicPositions
 from SigProfilerTopography.source.commons.DataPreparationCommons import readProbabilities
 from SigProfilerTopography.source.commons.DataPreparationCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
 
 from SigProfilerTopography.source.commons.TopographyCommons import *
 
-from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArrays
-from SigProfilerTopography.source.commons.NucleosomeOccupancySignalCountArraysAndFigures import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
-from SigProfilerTopography.source.epigenomics.EpigenomicsAnalysis import readAllEpigenomicsDataAndWriteChrBasedSignalArraysSequentially
-from SigProfilerTopography.source.epigenomics.EpigenomicsAnalysis import readAllEpigenomicsDataAndWriteChrBasedSignalArraysInParallel
-
 from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
-from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import readReplicationTimeDataAndWriteChrBasedReplicationTimeNPArrays
-
 
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
@@ -51,7 +41,7 @@ import shutil
 import logging
 
 ############################################################
-#CAn be move to DataPreparationCommons under /source/commons
+#Can be move to DataPreparationCommons under /source/commons
 #read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
 def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,startSimNum, endSimNum,partialDirname,logger):
 
@@ -69,10 +59,10 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         os.makedirs(os.path.join(outputDir, jobname, DATA,CHRBASED,simName), exist_ok=True)
 
     if (os.path.exists(mutations_probabilities_file_path)):
+        ##########################################################################################
+        #Step1
         mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path,logger)
-        # dinucs_probabilities_df.columns.names [Sample Names    MutationTypes   DBS2    DBS4    DBS6    DBS7    DBS11]
-        # dinucs_probabilities_df.columns.names [Sample    Mutation   DBS2    DBS4    DBS6    DBS7    DBS11]
-        mutations_probabilities_df.rename(columns={'Sample Names':'Sample','MutationTypes': 'Mutation'}, inplace=True)
+        ##########################################################################################
 
         # print('mutations_probabilities_df.head()')
         # print(mutations_probabilities_df.head())
@@ -80,13 +70,18 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         # print('mutations_probabilities_df.columns.values')
         # print(mutations_probabilities_df.columns.values)
 
-        #TODO In release we will use SAMPLE as it is.
+        ##########################################################################################
+        #Step2
+        #For release we will use SAMPLE as it is, no change in SAMPLE column is needed.
+
+        #For PCAWG_Matlab
         # This statement below will be unnecessary
         # This is customized for  PCAWG_Matlab
         # To get rid of inconsistent cancer type names in sample column of chrbased mutation files and probabilities files
         # This behaviour can be parameterized
         # Breast-LobularCA_SP124191
-        mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',expand=True)[1]
+        # mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',expand=True)[1]
+        ##########################################################################################
 
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(numofProcesses)
@@ -155,19 +150,19 @@ def download_2bit_file(genome):
 # bigWig2Wig executable is for linux/unix
 # https://hgdownload.cse.ucsc.edu/admin/exe/
 # At this address mac version is also provided but not for windows
-def download_nucleosome_occupancy_convert_bigWig2wig(cellLine):
-    bigWig2Wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, BIGWIG2WIG)
-    os.chmod(bigWig2Wig_filepath,0o744)
+def download_nucleosome_occupancy(cellLine):
+    # bigWig2Wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, BIGWIG2WIG)
+    # os.chmod(bigWig2Wig_filepath,0o744)
     if (cellLine==GM12878):
         gm12878_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_GM12878_BIGWIG)
-        gm12878_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ENCODE_NUCLEOSOME_GM12878_WIG)
         downloadFromWeb(ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL, gm12878_bigWig_filepath)
-        subprocess.call([bigWig2Wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
+        # gm12878_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ENCODE_NUCLEOSOME_GM12878_WIG)
+        # subprocess.call([bigWig2Wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
     elif (cellLine==K562):
         K562_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_BIGWIG)
-        K562_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_WIG)
         downloadFromWeb(ENCODE_NUCLEOSOME_K562_BIGWIG_URL, K562_bigWig_filepath)
-        subprocess.call([bigWig2Wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
+        # K562_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_WIG)
+        # subprocess.call([bigWig2Wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
 #######################################################
 
 
@@ -345,6 +340,7 @@ def deleteOldFigures(outputDir, jobname, occupancy_type):
     ############################################################
 #######################################################
 
+
 #######################################################
 # inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
 # outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
@@ -437,6 +433,7 @@ def runAnalyses(genome,
     logger.info('--- inputDir:%s' %inputDir)
     logger.info('--- outputDir:%s' %outputDir)
     logger.info('--- jobname:%s' %jobname)
+    logger.info('--- numofSimulations:%d' %numofSimulations)
     logger.info('--- epigenomics_files:%s' %epigenomics_files)
     logger.info('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
     logger.info('--- nucleosome_file:%s' %nucleosome_file)
@@ -481,10 +478,6 @@ def runAnalyses(genome,
     logger.info('#################################################################################\n')
     #################################################################################
 
-    #################################################################################
-    #Please note that if you have chr based subs, indels, dinucs mutations combined with probabilities under data directory
-    #You can comment the code below till ---Fill dictioaries using original data---.
-    #################################################################################
 
     ###################################################################################################
     #######################  SigProfilerMatrixGenerator for original data starts ######################
@@ -532,15 +525,15 @@ def runAnalyses(genome,
     if ((ID in mutation_types_contexts) and (id_probabilities_file_path is not None)):
         logger.info('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities_file_path))
         prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                           jobname, 'ID', id_probabilities_file_path,
-                                                                           startSimNum, endSimNum, 'ID',logger)
+                                                                           jobname, ID, id_probabilities_file_path,
+                                                                           startSimNum, endSimNum, ID,logger)
 
     # DBS
     if ((DBS in mutation_types_contexts) and (dbs_probabilities_file_path is not None)):
         logger.info('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities_file_path))
         prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                           jobname, 'DBS', dbs_probabilities_file_path,
-                                                                           startSimNum, endSimNum, 'DBS',logger)
+                                                                           jobname, DBS, dbs_probabilities_file_path,
+                                                                           startSimNum, endSimNum, DBS,logger)
 
     logger.info("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))
     logger.info("--- Merge original chr based files with Mutation Probabilities: %f minutes" % (float((time.time() - start_time) / 60)))
