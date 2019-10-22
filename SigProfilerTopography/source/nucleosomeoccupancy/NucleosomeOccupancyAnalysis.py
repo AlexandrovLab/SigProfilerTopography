@@ -78,6 +78,8 @@ def fillSignalArrayAndCountArrays_using_pyBigWig(inputList):
     dinucsSignature2PropertiesListDict = inputList[16]
     plusorMinus=inputList[17]
 
+    # print('Debug We are in fillSignalArrayAndCountArrays_using_pyBigWig for chrLong:%s' %(chrLong))
+
     ##############################################################
     simNum2Type2SignalArrayDict = {}
     simNum2Type2CountArrayDict = {}
@@ -305,6 +307,187 @@ def fillSignalArrayAndCountArrays_using_pyBigWig(inputList):
 #Using bed files prepared on the fly ends
 ########################################################################################
 
+
+########################################################################################
+def fillSignalArrayAndCountArrays_using_pyBigWig_using_apply_async(chrLong,signal_file_with_path,library_file_type,chrBasedSignalArray,
+                                                                   subs_df,indels_df,dinucs_df,maximum_chrom_size,
+                                                                   sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+                                                                   sample2SubsSignature2NumberofMutationsDict,
+                                                                   sample2IndelsSignature2NumberofMutationsDict,
+                                                                   sample2DinucsSignature2NumberofMutationsDict,
+                                                                   subsSignature2PropertiesListDict,
+                                                                   indelsSignature2PropertiesListDict,
+                                                                   dinucsSignature2PropertiesListDict,
+                                                                   plusorMinus):
+    ##############################################################
+    simNum2Type2SignalArrayDict = {}
+    simNum2Type2CountArrayDict = {}
+    simNum2Sample2Type2SignalArrayDict = {}
+    simNum2Sample2Type2CountArrayDict = {}
+    ##############################################################
+
+    library_file = None
+    my_upperBound = None
+    signal_index = None
+    if (library_file_type == BIGWIG):
+        try:
+            library_file = pyBigWig.open(signal_file_with_path)
+            if chrLong in library_file.chroms():
+                maximum_chrom_size = library_file.chroms()[chrLong]
+            # For BigWig Files information in header is correct
+            if ('sumData' in library_file.header()) and ('nBasesCovered' in library_file.header()):
+                my_mean = library_file.header()['sumData'] / library_file.header()['nBasesCovered']
+                std_dev = (library_file.header()['sumSquared'] - 2 * my_mean * library_file.header()['sumData'] +
+                           library_file.header()['nBasesCovered'] * my_mean * my_mean) ** (0.5) / (
+                                      library_file.header()['nBasesCovered'] ** (0.5))
+                # Scientific definition of outlier
+                my_upperBound = std_dev * 3
+            else:
+                # Undefined
+                my_upperBound = np.iinfo(np.int16).max
+        except:
+            print(signal_file_with_path)
+
+    elif (library_file_type == BIGBED):
+        try:
+            library_file = pyBigWig.open(signal_file_with_path)
+            if BED_6PLUS4 in str(library_file.SQL()):
+                signal_index = 3
+            elif BED_9PLUS2 in str(library_file.SQL()):
+                signal_index = 7
+            if chrLong in library_file.chroms():
+                # For BigBed Files information in header is not meaningful
+                maximum_chrom_size = library_file.chroms()[chrLong]
+                my_mean = np.mean([float(entry[2].split('\t')[signal_index]) for entry in
+                                   library_file.entries(chrLong, 0, maximum_chrom_size)])
+                # Not scientific definition of outlier
+                my_upperBound = my_mean * 10
+            else:
+                # Undefined
+                my_upperBound = np.iinfo(np.int16).max
+        except:
+            print(signal_file_with_path)
+
+    ###################################################################################
+    if ((((library_file_type == BIGWIG) or (library_file_type == BIGBED)) and (library_file is not None) and (
+            chrLong in library_file.chroms()))
+            or
+            ((library_file_type == BED) and (chrBasedSignalArray is not None))):
+        ######################################################## #######################
+        ################### Fill signal and count array starts ########################
+        ###############################################################################
+        # Fill for single point mutations
+        if ((subs_df is not None) and (not subs_df.empty)):
+            columnNamesList = list(subs_df.columns.values)
+            # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
+            # Last column is the simulation number
+            mutationtIndex = columnNamesList.index(MUTATION)
+            signatures = columnNamesList[(mutationtIndex + 1):-1]
+            mycolumns = [SAMPLE, START, SIMULATION_NUMBER]
+            mycolumns.extend(signatures)
+            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+                row,
+                chrLong,
+                library_file,
+                chrBasedSignalArray,
+                library_file_type,
+                signal_index,
+                my_upperBound,
+                maximum_chrom_size,
+                sample2NumberofSubsDict,
+                sample2SubsSignature2NumberofMutationsDict,
+                simNum2Type2SignalArrayDict,
+                simNum2Type2CountArrayDict,
+                simNum2Sample2Type2SignalArrayDict,
+                simNum2Sample2Type2CountArrayDict,
+                subsSignature2PropertiesListDict,
+                AGGREGATEDSUBSTITUTIONS,
+                plusorMinus,
+                mycolumns) for row in subs_df[mycolumns].values]
+
+        # Fill for indels
+        if ((indels_df is not None) and (not indels_df.empty)):
+            columnNamesList = list(indels_df.columns.values)
+            # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
+            # Last column is the simulation number
+            mutationtIndex = columnNamesList.index(MUTATION)
+            signatures = columnNamesList[(mutationtIndex + 1):-1]
+            mycolumns = [SAMPLE, START, SIMULATION_NUMBER]
+            mycolumns.extend(signatures)
+            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+                row,
+                chrLong,
+                library_file,
+                chrBasedSignalArray,
+                library_file_type,
+                signal_index,
+                my_upperBound,
+                maximum_chrom_size,
+                sample2NumberofIndelsDict,
+                sample2IndelsSignature2NumberofMutationsDict,
+                simNum2Type2SignalArrayDict,
+                simNum2Type2CountArrayDict,
+                simNum2Sample2Type2SignalArrayDict,
+                simNum2Sample2Type2CountArrayDict,
+                indelsSignature2PropertiesListDict,
+                AGGREGATEDINDELS,
+                plusorMinus,
+                mycolumns) for row in indels_df[mycolumns].values]
+
+        # Fill for dinucs
+        if ((dinucs_df is not None) and (not dinucs_df.empty)):
+            columnNamesList = list(dinucs_df.columns.values)
+            # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
+            # Last column is the simulation number
+            mutationtIndex = columnNamesList.index(MUTATION)
+            signatures = columnNamesList[(mutationtIndex + 1):-1]
+            mycolumns = [SAMPLE, START, SIMULATION_NUMBER]
+            mycolumns.extend(signatures)
+            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+                row,
+                chrLong,
+                library_file,
+                chrBasedSignalArray,
+                library_file_type,
+                signal_index,
+                my_upperBound,
+                maximum_chrom_size,
+                sample2NumberofDinucsDict,
+                sample2DinucsSignature2NumberofMutationsDict,
+                simNum2Type2SignalArrayDict,
+                simNum2Type2CountArrayDict,
+                simNum2Sample2Type2SignalArrayDict,
+                simNum2Sample2Type2CountArrayDict,
+                dinucsSignature2PropertiesListDict,
+                AGGREGATEDDINUCS,
+                plusorMinus,
+                mycolumns) for row in dinucs_df[mycolumns].values]
+            ###############################################################################
+            ################### Fill signal and count array ends ##########################
+            ###############################################################################
+
+    if (library_file is not None):
+        library_file.close()
+
+    ###############################################################################
+    ################### Return  starts ############################################
+    ###############################################################################
+    # Initialzie the list, you will return this list
+    SignalArrayAndCountArray_List = []
+    SignalArrayAndCountArray_List.append(simNum2Type2SignalArrayDict)
+    SignalArrayAndCountArray_List.append(simNum2Type2CountArrayDict)
+    SignalArrayAndCountArray_List.append(simNum2Sample2Type2SignalArrayDict)
+    SignalArrayAndCountArray_List.append(simNum2Sample2Type2CountArrayDict)
+
+    return SignalArrayAndCountArray_List
+    ###############################################################################
+    ################### Return  ends ##############################################
+    ###############################################################################
+
+
+# Using pyBigWig for bigBed and bigWig files ends
+# Using bed files prepared on the fly ends
+########################################################################################
 
 ########################################################################################
 def fillSignalArrayAndCountArrays(inputList):
@@ -541,6 +724,91 @@ def nucleosome_occupancy_analysis_all_chroms_parallel(chromSizesDict,chromNamesL
 #For all chromosome parallel ends
 ########################################################################################
 
+
+########################################################################################
+class Accumulator:
+    def __init__(self):
+        # self.signal = np.zeros((10000,), dtype=float)
+        # self.count = np.zeros((10000,), dtype=int)
+        self.simNum2Type2AccumulatedSignalArrayDict = {}
+        self.simNum2Type2AccumulatedCountArrayDict = {}
+        self.simNum2Sample2Type2AccumulatedSignalArrayDict = {}
+        self.simNum2Sample2Type2AccumulatedCountArrayDict = {}
+
+    def on_result(self, result):
+        # self.signal += result[0]
+        # self.count += result[1]
+        simNum2Type2SignalArrayDict = result[0]
+        simNum2Type2CountArrayDict = result[1]
+        simNum2Sample2Type2SignalArrayDict = result[2]
+        simNum2Sample2Type2CountArrayDict = result[3]
+
+        accumulateSimulationBasedTypeBasedArrays(self.simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
+        accumulateSimulationBasedTypeBasedArrays(self.simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
+        accumulateSimulationBasedSampleBasedTypeBasedArrays(self.simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+        accumulateSimulationBasedSampleBasedTypeBasedArrays(self.simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+########################################################################################
+
+
+
+########################################################################################
+def fillInputList(outputDir, jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df,library_file_df_grouped,
+                  sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+                  sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
+                  subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus):
+
+    # print('Debug We are in fillInputList: chrLong:%s simNum:%d' %(chrLong,simNum))
+
+    inputList=[]
+    chromSize = chromSizesDict[chrLong]
+    chrBasedSignalArray = None
+
+    #################################################################################################################
+    # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
+    if (os.path.exists(library_file_with_path)):
+        # TODO: This is specific to our data right now
+        # Nucleosomes have chrM
+        # SinglePointMutations and Indels have chrMT
+        chrLong_for_mutations_data = chrLong
+        if (chrLong == 'chrM'):
+            chrLong_for_mutations_data = 'chrMT'
+
+        if (((library_file_type == BED) or (library_file_type == NARROWPEAK)) and (library_file_df is not None)):
+            chrom_based_library_df = library_file_df_grouped.get_group(chrLong)
+            # chrBasedSignalArray and library_file_df  signal column is of type np.float32
+            chrBasedSignalArray = np.zeros(chromSize, dtype=np.float32)
+            # TODO Can we fill chrBasedSignalArray faster?
+            # chrom_based_library_df.apply(updateChrBasedSignalArray, chrBasedSignalArray=chrBasedSignalArray, axis=1)
+            [fillNumpyArray(start, end, signal, chrBasedSignalArray) for start, end, signal in
+             zip(chrom_based_library_df['start'], chrom_based_library_df['end'], chrom_based_library_df['signal'])]
+
+        chrBased_spms_df = readChrBasedSubsDF(outputDir, jobname, chrLong_for_mutations_data, SUBS, simNum)
+        chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, INDELS, simNum)
+        chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, DINUCS, simNum)
+
+        inputList.append(chrLong)
+        inputList.append(library_file_with_path)
+        inputList.append(library_file_type)
+        inputList.append(chrBasedSignalArray)
+        inputList.append(chrBased_spms_df)
+        inputList.append(chrBased_indels_df)
+        inputList.append(chrBased_dinucs_df)
+        inputList.append(chromSize)
+        inputList.append(sample2NumberofSubsDict)
+        inputList.append(sample2NumberofIndelsDict)
+        inputList.append(sample2NumberofDinucsDict)
+        inputList.append(sample2SubsSignature2NumberofMutationsDict)
+        inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+        inputList.append(sample2DinucsSignature2NumberofMutationsDict)
+        inputList.append(subsSignature2PropertiesListDict)
+        inputList.append(indelsSignature2PropertiesListDict)
+        inputList.append(dinucsSignature2PropertiesListDict)
+        inputList.append(plusorMinus)
+
+    #################################################################################################################
+    return inputList
+########################################################################################
+
 ########################################################################################
 #Using pyBigWig for bigBed and bigWig files starts
 #Using bed files prepared on the fly starts
@@ -595,6 +863,8 @@ def occupancy_analysis_eachChrSequential_allSimsParallel_using_pyBigWig(occupanc
     file_extension = os.path.basename(library_file_with_path).split('.')[-1]
 
     library_file_df=None
+    library_file_df_grouped=None
+
     if ((file_extension.lower()=='bigwig') or (file_extension.lower()=='bw')):
         library_file_type=BIGWIG
     elif ((file_extension.lower()=='bigbed') or (file_extension.lower()=='bb')):
@@ -613,131 +883,220 @@ def occupancy_analysis_eachChrSequential_allSimsParallel_using_pyBigWig(occupanc
         library_file_type=LIBRARY_FILE_TYPE_OTHER
     ##############################################################
 
+    # using a list
+    # results = []
+
+    #Using pool.apply_async
+    # accumulator = Accumulator()
+
+    # poolInputList = []
+
+    # #October 18, 2019 starts
+    # poolInputList=[fillInputList(outputDir, jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df,library_file_df_grouped,
+    #                             sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+    #                             sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
+    #                             subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus)  for chrLong in chromNamesList for simNum in range(0,numofSimulations+1)]
+    # #October 18, 2019 ends
+
+
     ###################################################################################
     ##################  For all chromsomes sequential starts ##########################
     ###################################################################################
     for chrLong in chromNamesList:
+
+        # print('Debug we are in chrLong: %s' %(chrLong))
         poolInputList = []
-        chromSize = chromSizesDict[chrLong]
 
-        chrBasedSignalArray=None
+        # chromSize = chromSizesDict[chrLong]
+        # chrBasedSignalArray=None
+        #
+        # #################################################################################################################
+        # # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
+        # if (os.path.exists(library_file_with_path)):
+        #     #TODO: This is specific to our data right now
+        #     #Nucleosomes have chrM
+        #     #SinglePointMutations and Indels have chrMT
+        #     chrLong_for_mutations_data = chrLong
+        #     if (chrLong=='chrM'):
+        #         chrLong_for_mutations_data='chrMT'
+        #
+        #     #chrBasedSignalArray will be filled when library_file_type is BED or NARROWPEAK otherwise it will be None
+        #     if (((library_file_type==BED) or (library_file_type==NARROWPEAK)) and (library_file_df is not None)):
+        #          chrom_based_library_df=library_file_df_grouped.get_group(chrLong)
+        #          #chrBasedSignalArray and library_file_df  signal column is of type np.float32
+        #          chrBasedSignalArray = np.zeros(chromSize,dtype=np.float32)
+        #          #TODO Can we fill chrBasedSignalArray faster?
+        #          # chrom_based_library_df.apply(updateChrBasedSignalArray, chrBasedSignalArray=chrBasedSignalArray, axis=1)
+        #          [fillNumpyArray(start,end,signal,chrBasedSignalArray) for start,end,signal in zip(chrom_based_library_df['start'],chrom_based_library_df['end'],chrom_based_library_df['signal'])]
+        #
+        #     ###################################################################################
+        #     ##################  For all simulations in parallel starts ########################
+        #     ###################################################################################
+        #     for simNum in range(0,numofSimulations+1):
+        #         print('simNum: %d' % (simNum))
+        #         inputList = []
+        #
+        #         # READ CHRBASED SINGLE POINT MUTATIONS
+        #         # READ CHRBASED INDELS
+        #         # READ CHRBASED_DINUCS
+        #         chrBased_spms_df = readChrBasedSubsDF(outputDir, jobname, chrLong_for_mutations_data, SUBS, simNum)
+        #         chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, INDELS,simNum)
+        #         chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, DINUCS,simNum)
+        #
+        #         # ########## For information starts ##########
+        #         # if (chrBased_spms_df is not None):
+        #         #     print('For sim%d chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
+        #         #
+        #         # if (chrBased_indels_df is not None):
+        #         #     print('For sim%d chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
+        #         #
+        #         # if (chrBased_dinucs_df is not None):
+        #         #     print('For sim%d chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_dinucs_df), sys.getsizeof(chrBased_dinucs_df)/GIGABYTE_IN_BYTES))
+        #         # ########## For information ends ##########
+        #
+        #         inputList.append(chrLong)
+        #         inputList.append(library_file_with_path)
+        #         inputList.append(library_file_type)
+        #         inputList.append(chrBasedSignalArray)
+        #         inputList.append(chrBased_spms_df)
+        #         inputList.append(chrBased_indels_df)
+        #         inputList.append(chrBased_dinucs_df)
+        #         inputList.append(chromSize)
+        #         inputList.append(sample2NumberofSubsDict)
+        #         inputList.append(sample2NumberofIndelsDict)
+        #         inputList.append(sample2NumberofDinucsDict)
+        #         inputList.append(sample2SubsSignature2NumberofMutationsDict)
+        #         inputList.append(sample2IndelsSignature2NumberofMutationsDict)
+        #         inputList.append(sample2DinucsSignature2NumberofMutationsDict)
+        #         inputList.append(subsSignature2PropertiesListDict)
+        #         inputList.append(indelsSignature2PropertiesListDict)
+        #         inputList.append(dinucsSignature2PropertiesListDict)
+        #         inputList.append(plusorMinus)
+        #         poolInputList.append(inputList)
+        #
+        #         #using a list
+        #         # results.append(pool.apply_async(fillSignalArrayAndCountArrays_using_pyBigWig_using_apply_async,(chrLong,library_file_with_path,library_file_type,chrBasedSignalArray,chrBased_spms_df,chrBased_indels_df,chrBased_dinucs_df,chromSize,sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus,)))
+        #
+        #         #using callback
+        #         # pool.apply_async(fillSignalArrayAndCountArrays_using_pyBigWig_using_apply_async, (chrLong, library_file_with_path, library_file_type, chrBasedSignalArray, chrBased_spms_df, chrBased_indels_df, chrBased_dinucs_df, chromSize, sample2NumberofSubsDict, sample2NumberofIndelsDict,
+        #         # sample2NumberofDinucsDict, sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict, sample2DinucsSignature2NumberofMutationsDict, subsSignature2PropertiesListDict, indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict, plusorMinus,),callback=accumulator.on_result)
+        #     ###################################################################################
+        #     ##################  For all simulations in parallel ends ##########################
+        #     ###################################################################################
 
-        #################################################################################################################
-        # if (os.path.exists(chrBasedSignalNucleosmeFile) and os.path.exists(chrBasedCountNucleosmeFile)):
-        if (os.path.exists(library_file_with_path)):
+        # poolInputList=[fillInputList(outputDir, jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df,library_file_df_grouped,
+        #                             sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+        #                             sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
+        #                             subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus) for simNum in range(0,numofSimulations+1)]
 
-            #TODO: This is specific to our data right now
-            #Nucleosomes have chrM
-            #SinglePointMutations and Indels have chrMT
-            chrLong_for_mutations_data = chrLong
-            if (chrLong=='chrM'):
-                chrLong_for_mutations_data='chrMT'
+        ########################################################################
+        # Provides list of  lists (each sub list comes from a simulation)
+        # allSimulations_SignalArrayAndCountArrayList_List = pool.map(fillSignalArrayAndCountArrays_using_pyBigWig,poolInputList)
 
-            if (((library_file_type==BED) or (library_file_type==NARROWPEAK)) and (library_file_df is not None)):
-                 chrom_based_library_df=library_file_df_grouped.get_group(chrLong)
-                 #chrBasedSignalArray and library_file_df  signal column is of type np.float32
-                 chrBasedSignalArray = np.zeros(chromSize,dtype=np.float32)
-                 #TODO Can we fill chrBasedSignalArray faster?
-                 # chrom_based_library_df.apply(updateChrBasedSignalArray, chrBasedSignalArray=chrBasedSignalArray, axis=1)
-                 [fillNumpyArray(start,end,signal,chrBasedSignalArray) for start,end,signal in zip(chrom_based_library_df['start'],chrom_based_library_df['end'],chrom_based_library_df['signal'])]
+        # chunksize = len(poolInputList) // numofProcesses
+        # if chunksize < 1:
+        #     chunksize = 1
+        # print('chrLong:%s len(poolInputList):%d numofProcesses:%d chunksize:%d' %(chrLong,len(poolInputList),numofProcesses,chunksize))
 
-            ###################################################################################
-            ##################  For all simulations in parallel starts ########################
-            ###################################################################################
-            for simNum in range(0,numofSimulations+1):
-                inputList = []
+        # allSimulations_SignalArrayAndCountArrayList_List = pool.map(fillSignalArrayAndCountArrays_using_pyBigWig,poolInputList, chunksize=chunksize)
+        ########################################################################
 
-                # READ CHRBASED SINGLE POINT MUTATIONS
-                # READ CHRBASED INDELS
-                # READ CHRBASED_DINUCS
-                chrBased_spms_df=readChrBasedSubsDF(outputDir,jobname,chrLong_for_mutations_data,SUBS,simNum)
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, INDELS,simNum)
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data,DINUCS,simNum)
+        ########################################################################
+        chunksize = max(1,(numofSimulations//numofProcesses))
+        # print('Debug we are in chrLong:%s chunkSize:%d' %(chrLong,chunksize))
 
-                # ########## For information starts ##########
-                # if (chrBased_spms_df is not None):
-                #     print('For sim%d chromosome %s  -- chrBased_spms_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_spms_df),sys.getsizeof(chrBased_spms_df)/GIGABYTE_IN_BYTES))
-                #
-                # if (chrBased_indels_df is not None):
-                #     print('For sim%d chromosome %s  -- chrBased_indels_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_indels_df),sys.getsizeof(chrBased_indels_df)/GIGABYTE_IN_BYTES))
-                #
-                # if (chrBased_dinucs_df is not None):
-                #     print('For sim%d chromosome %s  -- chrBased_dinucss_df: %d in Bytes %f in GigaBytes' %(simNum,chrLong_for_mutations_data,sys.getsizeof(chrBased_dinucs_df), sys.getsizeof(chrBased_dinucs_df)/GIGABYTE_IN_BYTES))
-                # ########## For information ends ##########
+        for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(fillSignalArrayAndCountArrays_using_pyBigWig,(fillInputList(outputDir, jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df,library_file_df_grouped,
+                                    sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+                                    sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
+                                    subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus) for simNum in range(0,numofSimulations+1)), chunksize=chunksize):
 
-                inputList.append(chrLong)
-                inputList.append(library_file_with_path)
-                inputList.append(library_file_type)
-                inputList.append(chrBasedSignalArray)
-                inputList.append(chrBased_spms_df)
-                inputList.append(chrBased_indels_df)
-                inputList.append(chrBased_dinucs_df)
-                inputList.append(chromSize)
-                inputList.append(sample2NumberofSubsDict)
-                inputList.append(sample2NumberofIndelsDict)
-                inputList.append(sample2NumberofDinucsDict)
-                inputList.append(sample2SubsSignature2NumberofMutationsDict)
-                inputList.append(sample2IndelsSignature2NumberofMutationsDict)
-                inputList.append(sample2DinucsSignature2NumberofMutationsDict)
-                inputList.append(subsSignature2PropertiesListDict)
-                inputList.append(indelsSignature2PropertiesListDict)
-                inputList.append(dinucsSignature2PropertiesListDict)
-                inputList.append(plusorMinus)
-                poolInputList.append(inputList)
-            ###################################################################################
-            ##################  For all simulations in parallel ends ##########################
-            ###################################################################################
+            # print('Debug We are in accumulate for chrLong:%s' %(chrLong))
 
-            ########################################################################
-            #Provides list of  lists (each sub list comes from a simulation)
-            allSimulations_SignalArrayAndCountArrayList_List = pool.map(fillSignalArrayAndCountArrays_using_pyBigWig,poolInputList)
-            ########################################################################
+            simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
+            simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
+            simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
+            simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
 
-            #####################################################################################################
-            ######################### Accumulate right in the left starts  ######################################
-            #####################################################################################################
-            for simulatonBased_SignalArrayAndCountArrayList in  allSimulations_SignalArrayAndCountArrayList_List:
-                simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
-                simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
-                simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
-                simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
+            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
+            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
+            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+        ########################################################################
 
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict,simNum2Type2SignalArrayDict)
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
 
-            #####################################################################################################
-            ######################### Accumulate right in the left ends  ########################################
-            #####################################################################################################
+        # #####################################################################################################
+        # ######################### Accumulate right in the left starts  ######################################
+        # #####################################################################################################
+        # for simulatonBased_SignalArrayAndCountArrayList in allSimulations_SignalArrayAndCountArrayList_List:
+        #     simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
+        #     simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
+        #     simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
+        #     simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
+        #
+        #     accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
+        #     accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
+        #     accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+        #     accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+        # #####################################################################################################
+        # ######################### Accumulate right in the left ends  ########################################
+        # #####################################################################################################
 
-        ###################################################################################
-        ##################  For all chromsomes sequential ends ############################
-        ###################################################################################
+    ###################################################################################
+    ##################  For all chromsomes sequential ends ############################
+    ###################################################################################
+
+    # using a list
+    # while results:
+    #     for result in results[:]:
+    #         if result.ready():
+    #             # print('{} is ready'.format(r))
+    #             simNum2Type2SignalArrayDict = result.get()[0]
+    #             simNum2Type2CountArrayDict = result.get()[1]
+    #             simNum2Sample2Type2SignalArrayDict = result.get()[2]
+    #             simNum2Sample2Type2CountArrayDict = result.get()[3]
+    #             accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
+    #             accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
+    #             accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+    #             accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+    #             results.remove(result)
+
+
+
+    # ########################################################################
+    # #Provides list of  lists (each sub list comes from a simulation)
+    # # allSimulations_SignalArrayAndCountArrayList_List = pool.map(fillSignalArrayAndCountArrays_using_pyBigWig,poolInputList)
+    # chunksize=len(poolInputList)//numofProcesses
+    # if chunksize<1:
+    #     chunksize=1
+    # allSimulations_SignalArrayAndCountArrayList_List = pool.imap(fillSignalArrayAndCountArrays_using_pyBigWig,poolInputList,chunksize=chunksize)
+    # ########################################################################
+    #
+    # #####################################################################################################
+    # ######################### Accumulate right in the left starts  ######################################
+    # #####################################################################################################
+    # for simulatonBased_SignalArrayAndCountArrayList in  allSimulations_SignalArrayAndCountArrayList_List:
+    #     simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
+    #     simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
+    #     simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
+    #     simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
+    #
+    #     accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict,simNum2Type2SignalArrayDict)
+    #     accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
+    #     accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
+    #     accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+    #
+    # #####################################################################################################
+    # ######################### Accumulate right in the left ends  ########################################
+    # #####################################################################################################
+
+    ###################################################################################
+    ##################  For all chromsomes sequential ends ############################
+    ###################################################################################
 
     ################################
     pool.close()
     pool.join()
     ################################
-
-    # print('For Debugging NucleosomeOccupancyAnalysis Results EachChrSequential_AllSimsParallel starts')
-    # key_for_original_mutations=0
-    # if (key_for_original_mutations in simNum2Type2AccumulatedSignalArrayDict):
-    #     print('simNum2Type2AccumulatedSignalArrayDict[0]')
-    #     print(simNum2Type2AccumulatedSignalArrayDict[key_for_original_mutations])
-    #
-    # if (key_for_original_mutations in simNum2Type2AccumulatedCountArrayDict):
-    #     print('simNum2Type2AccumulatedCountArrayDict[0]')
-    #     print(simNum2Type2AccumulatedCountArrayDict[key_for_original_mutations])
-    #
-    # if (key_for_original_mutations in simNum2Sample2Type2AccumulatedSignalArrayDict):
-    #     print('simNum2Sample2Type2AccumulatedSignalArrayDict[0]')
-    #     print(simNum2Sample2Type2AccumulatedSignalArrayDict[key_for_original_mutations])
-    #
-    # if (key_for_original_mutations in simNum2Sample2Type2AccumulatedCountArrayDict):
-    #     print('simNumSample2Type2AccumulatedCountArrayDict[0]')
-    #     print(simNum2Sample2Type2AccumulatedCountArrayDict[key_for_original_mutations])
-    # print('For Debugging NucleosomeOccupancyAnalysis Results EachChrSequential_AllSimsParallel ends')
 
     writeSimulationBasedAverageNucleosomeOccupancy(occupancy_type,
                                                    sample_based,

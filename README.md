@@ -63,7 +63,7 @@ This call also plots topography output figures.
 >> sbs_probabilities = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
 >> id_probabilities = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
 >> dbs_probabilities = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
-topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,sample_based=False)
+topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,sample_based=False,new_simulations_enforced=True,plot_figures=True,num_of_sbs_required=5000,num_of_id_required=1000,num_of_dbs_required=200,plusorMinus_epigenomics=2000,plusorMinus_nucleosome=1000)
 ```
 
 **INPUT FILE FORMAT**

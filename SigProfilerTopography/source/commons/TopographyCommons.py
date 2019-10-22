@@ -18,6 +18,7 @@ import pickle
 import twobitreader
 import urllib.request
 import shutil
+import psutil
 
 #To handle warnings as errors
 # import warnings
@@ -49,10 +50,10 @@ BED_6PLUS4='BED6+4'
 BED_9PLUS2='BED9+2'
 
 ############################################################
-#Constraints , Thresholds
-SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 5000
-INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
-DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
+#Constraints , Thresholds, They are parametric
+# SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 5000
+# INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
+# DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
 
 PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
 SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
@@ -144,6 +145,16 @@ MM10 = 'mm10'
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
 
+###################################################################################################
+Cutoff2SubsSignature2NumberofMutationsAverageProbabilityListDictFilename = "Cutoff2SubsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+Cutoff2IndelsSignature2NumberofMutationsAverageProbabilityListDictFilename = "Cutoff2IndelsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+Cutoff2DinucsSignature2NumberofMutationsAverageProbabilityListDictFilename = "Cutoff2DinucsSignature2NumberofMutationsAverageProbabilityListDict.txt"
+
+SubsSignature2PropertiesListDictFilename = "SubsSignature2PropertiesListDict.txt"
+IndelsSignature2PropertiesListDictFilename = "IndelsSignature2PropertiesListDict.txt"
+DinucsSignature2PropertiesListDictFilename = "DinucsSignature2PropertiesListDict.txt"
+
+#For mutation types
 MutationType2NumberofMutatiosDictFilename='MutationType2NumberofMutatiosDict.txt'
 
 #For Subs
@@ -160,6 +171,8 @@ Sample2IndelsSignature2NumberofMutationsDictFilename = 'Sample2IndelsSignature2N
 Sample2NumberofDinucsDictFilename = 'Sample2NumberofDinucsDict.txt'
 DinucsSignature2NumberofMutationsDictFilename = 'DinucsSignature2NumberofMutationsDict.txt'
 Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2NumberofMutationsDict.txt'
+###################################################################################################
+
 
 #For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
@@ -328,6 +341,8 @@ SBS192  = '192'
 SBS384  = '384'
 SBS1536 = '1536'
 SBS3072 = '3072'
+
+SNV='SNV'
 ID = 'ID'
 DBS= 'DBS'
 SBS_CONTEXTS = [SBS96,SBS192,SBS384,SBS1536,SBS3072]
@@ -355,8 +370,6 @@ def downloadFromWeb(url,filepath_to_be_saved):
 
 
 ###########################################################
-import psutil
-
 def memory_usage():
     pid = os.getpid()
     process = psutil.Process(pid)
@@ -561,13 +574,29 @@ def getSignatures(chrBased_mutation_df):
     return signatures
 ##################################################################
 
+
 ##################################################################
-def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,type,cutoffs):
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
+##################################################################
+
+
+##################################################################
+def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,type,cutoffs,num_of_sbs_required,num_of_id_required,num_of_dbs_required):
     #Filled in the first part
-    #PrpertiesList consists of [number of mutations, sum of probabilities]
+    #PropertiesList consists of[number of mutations, sum of probabilities]
     cutoff2Signature2PropertiesListDict={}
 
     #Filled in the second part
+    # [number of mutations, average probability]
     cutoff2Signature2NumberofMutationsAverageProbabilityListDict={}
 
     #Filled in the third part
@@ -614,7 +643,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
                     else:
                         cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
                         cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
-        #Fisrt part ends
+        #First part ends
         #Accumulation ended for each chromosome
 
     # print('Part1 Results cutoff2Signature2PropertiesListDict')
@@ -646,17 +675,17 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
 
     #Set the filenames and number of required mutations
     if (type==SUBS):
-        number_of_required_mutations=SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2SubsSignature2NumberofMutationsAverageProbabilityListDict.txt"
-        signature2PropertiesList_filename = "SubsSignature2PropertiesListDict.txt"
+        number_of_required_mutations=num_of_sbs_required
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = Cutoff2SubsSignature2NumberofMutationsAverageProbabilityListDictFilename
+        signature2PropertiesList_filename = SubsSignature2PropertiesListDictFilename
     elif (type == INDELS):
-        number_of_required_mutations=INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2IndelsSignature2NumberofMutationsAverageProbabilityListDict.txt"
-        signature2PropertiesList_filename = "IndelsSignature2PropertiesListDict.txt"
+        number_of_required_mutations=num_of_id_required
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = Cutoff2IndelsSignature2NumberofMutationsAverageProbabilityListDictFilename
+        signature2PropertiesList_filename = IndelsSignature2PropertiesListDictFilename
     elif (type== DINUCS):
-        number_of_required_mutations=DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
-        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = "Cutoff2DinucsSignature2NumberofMutationsAverageProbabilityListDict.txt"
-        signature2PropertiesList_filename = "DinucsSignature2PropertiesListDict.txt"
+        number_of_required_mutations=num_of_dbs_required
+        cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename = Cutoff2DinucsSignature2NumberofMutationsAverageProbabilityListDictFilename
+        signature2PropertiesList_filename = DinucsSignature2PropertiesListDictFilename
 
     #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=0.9
     sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
@@ -674,11 +703,12 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
     os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
 
     # TypeError: Object of type int64 is not JSON serializable
+    # This typeerror has been resolved by using cls=NpEncoder
     # filePath = os.path.join(outputDir,jobname,DATA,cutoff2Signature2PropertiesListDict_filename)
     # json.dump(cutoff2Signature2PropertiesListDict,open(filePath,'w'))
 
-    # filePath = os.path.join(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename)
-    # json.dump(cutoff2Signature2NumberofMutationsAverageProbabilityListDict,open(filePath,'w'))
+    filePath = os.path.join(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict_filename)
+    json.dump(cutoff2Signature2NumberofMutationsAverageProbabilityListDict,open(filePath,'w'),cls=NpEncoder)
 
     filePath = os.path.join(outputDir,jobname,DATA,signature2PropertiesList_filename)
     json.dump(signature2PropertiesListDict,open(filePath,'w'))
@@ -696,7 +726,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
 # We are writing Signature2NumberofMutationsDictFilename for the signatures in signature2PropertiesListDict using chrBased_mutation_df
 # At the end, Signature2NumberofMutationsDictFilename and signature2PropertiesListDict must match
 # It is like double check
-def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, mutationType2NumberofMutationsDict,signature2PropertiesListDict):
+def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, mutationType2NumberofMutationsDict,signature2PropertiesListDict,num_of_sbs_required,num_of_id_required,num_of_dbs_required):
     sample2NumberofMutationsDict = {}
     signature2NumberofMutationsDict = {}
     sample2Signature2NumberofMutationsDict = {}
@@ -706,17 +736,17 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
         Sample2NumberofMutationsDictFilename = Sample2NumberofSubsDictFilename
         Signature2NumberofMutationsDictFilename = SubsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2SubsSignature2NumberofMutationsDictFilename
-        minimum_number_of_mutations_required = SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        minimum_number_of_mutations_required = num_of_sbs_required
     elif (type==INDELS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
         Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
-        minimum_number_of_mutations_required = INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        minimum_number_of_mutations_required = num_of_id_required
     elif (type==DINUCS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofDinucsDictFilename
         Signature2NumberofMutationsDictFilename = DinucsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
-        minimum_number_of_mutations_required = DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS
+        minimum_number_of_mutations_required = num_of_dbs_required
 
     #######################################################################
     for chrLong in chromNamesList:
@@ -905,143 +935,6 @@ def readChrBasedSubsDF(outputDir,jobname,chrLong,type,simulationNumber):
 ##################################################################
 
 
-
-##################################################################
-#mutationsWithSignatureBasedProbabilitiesFileName 'breast_cancer_mutation_probabilities_final.txt'
-def readSubs(subsWithSignatureBasedProbabilitiesFileName):
-
-    subsFilePath = os.path.join(subsWithSignatureBasedProbabilitiesFileName)
-
-    #################################################
-    #First read only first row
-    subs_df = pd.read_table(subsFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
-    columnNamesList = list(subs_df.columns.values)
-
-    contextIndex = columnNamesList.index(CONTEXT)
-
-    # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-    signatures = columnNamesList[(contextIndex + 1):]
-    #################################################
-
-    sample2NumberofSubsDict = {}
-    subsSignature2NumberofMutationsDict = {}
-    sample2SubsSignature2NumberofMutationsDict = {}
-
-    #################################################
-    mydtypes = {}
-    #np.float16 Half precision float: sign bit, 5 bits exponent, 10 bits mantissa
-    #np.int32   Integer (-2147483648 to 2147483647)
-    #np.int8 Byte (-128 to 127)
-
-    for signature in signatures:
-        mydtypes[signature] = np.float32
-
-    mydtypes[SAMPLE] = str
-    mydtypes[CHROM] = str
-    mydtypes[START] = np.int32
-    mydtypes[END] = np.int32
-    mydtypes[PYRAMIDINESTRAND] = np.int8
-    mydtypes[MUTATION] = str
-    mydtypes[CONTEXT] = str
-    #################################################
-
-    #################################################
-    # mutation_df = pd.read_table(mutationFilePath, sep="\t", comment='#',dtype={'Sample':str,'Chromosome': str, 'Start': int, 'End':int, 'PyramidineStrand': int, 'Mutation':str, 'Context':str})
-    subs_df = pd.read_table(subsFilePath, sep="\t", comment='#',dtype=mydtypes)
-    #################################################
-
-    listofSamples = subs_df[SAMPLE].unique()
-    print('Number of samples in single point mutations file: %d' %(len(listofSamples)))
-
-    ##############################################################
-    for sample in listofSamples:
-        numberofSubs =  len(subs_df[subs_df[SAMPLE] == sample])
-        if (numberofSubs>=SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-            sample2NumberofSubsDict[sample] = numberofSubs
-    ##############################################################
-
-    ##############################################################
-    for signature in signatures:
-        signaturebased_df = subs_df[subs_df[signature] >= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
-        numberofSubs = len(signaturebased_df)
-        if (numberofSubs>= SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-            subsSignature2NumberofMutationsDict[signature] = numberofSubs
-    ##############################################################
-
-
-    ##############################################################
-
-    for sample in sample2NumberofSubsDict:
-        for signature in subsSignature2NumberofMutationsDict:
-            #check if there are at least 10K mutations with probability >= 0.5 for this (sample,signature) pair
-            numberofMutations = len(subs_df[ ((subs_df[SAMPLE]==sample) & (subs_df[signature]>= SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
-            if (numberofMutations>= SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-                if sample in sample2SubsSignature2NumberofMutationsDict:
-                    sample2SubsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
-                else:
-                    sample2SubsSignature2NumberofMutationsDict[sample]={}
-                    sample2SubsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
-    ##############################################################
-
-    # print('###########################')
-    # print('size of %s in %d Bytes -- %f in GB ' %(subsWithSignatureBasedProbabilitiesFileName, sys.getsizeof(subs_df),sys.getsizeof(subs_df)/GIGABYTE_IN_BYTES))
-    # print('###########################')
-
-    return signatures, \
-           sample2NumberofSubsDict, \
-           subsSignature2NumberofMutationsDict, \
-           sample2SubsSignature2NumberofMutationsDict, \
-           subs_df
-##################################################################
-
-##################################################################
-def readMutationsAndWriteChrBased(mutationsWithSignatureBasedProbabilitiesFileName):
-    signatures, samplesWithAtLeast10KMutationsList, mutation_df = readSubs(mutationsWithSignatureBasedProbabilitiesFileName)
-
-    mutation_df_grouped= mutation_df.groupby(CHROM)
-
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, CHRBASED),exist_ok=True)
-
-    #########################################################
-    ############### Write signatures starts #################
-    #########################################################
-    signatures_array = np.array(signatures)
-
-    # Write signatures_array to a file
-    filename = 'Signatures_%s' %(mutationsWithSignatureBasedProbabilitiesFileName)
-    SignaturesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, filename)
-
-    np.savetxt(SignaturesFile, signatures_array, delimiter='\t', fmt='%s')
-    #########################################################
-    ############### Write signatures ends ###################
-    #########################################################
-
-
-    #########################################################
-    ############### Write Unique Chrnames starts ############
-    #########################################################
-    # Get the unique chromsome names in mutation_df
-    uniqueChrNames = mutation_df[CHROM].unique()
-    # The unique values are returned as a NumPy array
-
-    # Write uniqueChrNames to a file
-    filename = 'ChrNames_%s' %(mutationsWithSignatureBasedProbabilitiesFileName)
-    ChrNamesFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, filename)
-
-    # chrnames_df = pd.DataFrame(uniqueChrNames)
-    # chrnames_df.to_csv(ChrNamesFile, sep='\t', header=None, index=None)
-    np.savetxt(ChrNamesFile, uniqueChrNames, delimiter='\t', fmt='%s')
-    #########################################################
-    ############### Write Unique Chrnames ends ##############
-    #########################################################
-
-    for chr, chrBased_mutation_df in mutation_df_grouped:
-        chrBasedMutationFileName = 'chr%s_%s' %(chr,mutationsWithSignatureBasedProbabilitiesFileName)
-        chrBasedMutationFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, INPUT, CHRBASED, chrBasedMutationFileName)
-        chrBased_mutation_df.to_csv(chrBasedMutationFile, index=None, sep='\t', mode='w')
-        print('writeChrBasedNucleosome:%s for %s ends' % (type(chrBased_mutation_df), chr))
-##################################################################
-
 ##################################################################
 #For Parallel Writing indels and single point mutations
 def writeChrBasedMutationDF(inputList):
@@ -1194,7 +1087,7 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
                 [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start, plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1], 1, mutation_row_start, plusOrMinus))) for entry in list_of_entries]
 
     # Case 2: start is very close to the chromosome end
-    elif (mutation_row_start+plusOrMinus > maximum_chrom_size):
+    elif (mutation_row_start+plusOrMinus+1 > maximum_chrom_size):
         print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row_start))
 
         if ((library_file_type==BED) or (library_file_type==NARROWPEAK)):
@@ -2103,275 +1996,6 @@ def addPyramidineStrandColumn(mutation_row, genome):
         mutation_row[PYRAMIDINESTRAND] = 0
 
     return mutation_row
-##################################################################
-
-
-##################################################################
-def readIndelsAndWriteChrBasedParallel(genome,outputDir,jobname,indelsFileName):
-    sample2NumberofIndelsDict, \
-    indelsSignatures2NumberofMutationsDict, \
-    sample2IndelsSignatures2NumberofMutationsDict, \
-    indels_df = readIndels(indelsFileName)
-
-    # print('For debugging purposes indels_df.columns.values')
-    # print(indels_df.columns.values)
-
-    ##############################################################################################
-    #Do we have PYRAMIDINESTRAND column? If not add
-    if (PYRAMIDINESTRAND not in indels_df.columns.values):
-        if (genome == GRCh37):
-            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, HG19_2BIT))
-        elif (genome == GRCh38):
-            genome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, UCSCGENOME, HG38_2BIT))
-
-        ###########################################################
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(numofProcesses)
-
-        poolInputList = []
-        indels_df_grouped = indels_df.groupby(CHROM)
-        for chrom, chr_based_indels_df in indels_df_grouped:
-            inputList = []
-            inputList.append(chrom)
-            inputList.append(chr_based_indels_df)
-            inputList.append(genome)
-            poolInputList.append(inputList)
-
-        list_of_chrBased_indels_df = pool.map(addPyramidineStrandColumnToDF,poolInputList)
-
-        pool.close()
-        pool.join()
-        ###########################################################
-
-        indels_df = pd.concat(list_of_chrBased_indels_df, axis=0)
-
-    ##############################################################################################
-
-    indels_df_grouped= indels_df.groupby(CHROM)
-
-    # print('len(indels_df_grouped)')
-    # print(len(indels_df_grouped))
-
-    # print('Debug March 27, 2019 indels_df.head()')
-    # print(indels_df.iloc[0])
-    # print(indels_df.iloc[1])
-    # print(indels_df.iloc[2])
-    # print(indels_df.iloc[3])
-    # print(indels_df.iloc[4])
-    # print(indels_df.iloc[5])
-
-    os.makedirs(os.path.join(outputDir,jobname,DATA, CHRBASED),exist_ok=True)
-
-    #########################################################
-    ############### Write Unique Chrnames starts ############
-    #########################################################
-    uniqueChrNames = indels_df[CHROM].unique()
-    print('Chromosome names in indels data: %s' %(uniqueChrNames))
-    # The unique values are returned as a NumPy array
-
-    # # Write uniqueChrNames to a file
-    # filename = ChrNamesInIndelsFilename
-    # ChrNamesFile = os.path.join(outputDir,jobname,DATA,filename)
-    # np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
-    #########################################################
-    ############### Write Unique Chrnames ends ##############
-    #########################################################
-
-    #############################################################################################################################
-    ####################################################### Write starts ########################################################
-    #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2NumberofIndelsDict,outputDir,jobname,Sample2NumberofIndelsDictFilename)
-    writeDictionaryUnderDataDirectory(indelsSignatures2NumberofMutationsDict,outputDir,jobname,IndelsSignature2NumberofMutationsDictFilename)
-    writeDictionaryUnderDataDirectory(sample2IndelsSignatures2NumberofMutationsDict,outputDir,jobname,Sample2IndelsSignature2NumberofMutationsDictFilename)
-    #############################################################################################################################
-    ####################################################### Write ends ##########################################################
-    #############################################################################################################################
-
-    #########################################################
-    # l = multiprocessing.Lock()
-    numofProcesses = multiprocessing.cpu_count()
-    # pool = multiprocessing.Pool(numofProcesses,initializer=init, initargs=(l,))
-    pool = multiprocessing.Pool(numofProcesses)
-    #########################################################
-
-    print('Number of cores: %d' %(numofProcesses))
-    poolInputList =[]
-
-    #Get the filename at the end of the full path
-    indelsFileName = os.path.basename(indelsFileName)
-
-    #########################################################
-    for chr, chrBased_indels_df in indels_df_grouped:
-        inputList = []
-        inputList.append(chr)
-        inputList.append(indelsFileName)
-        inputList.append(chrBased_indels_df)
-        inputList.append(outputDir)
-        inputList.append(jobname)
-        poolInputList.append(inputList)
-    #########################################################
-
-    pool.map(writeChrBasedMutationDF,poolInputList)
-
-    #########################################################
-    pool.close()
-    pool.join()
-    #########################################################
-
-##################################################################
-
-
-
-##################################################################
-def readSubsAndWriteChrBasedParallel(outputDir,jobname,subsWithSignatureBasedProbabilitiesFileName):
-    signatures, \
-    sample2NumberofSubsDict, \
-    subsSignature2NumberofMutationsDict, \
-    sample2SubsSignature2NumberofMutationsDict, \
-    subs_df = readSubs(subsWithSignatureBasedProbabilitiesFileName)
-
-    print('Substitutions Signatures')
-    print(signatures)
-
-    mutation_df_grouped= subs_df.groupby(CHROM)
-    os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
-
-    #############################################################################################################################
-    ################################################# Write Dictionaries starts #################################################
-    #############################################################################################################################
-    writeDictionaryUnderDataDirectory(sample2NumberofSubsDict,outputDir,jobname,Sample2NumberofSubsDictFilename)
-    writeDictionaryUnderDataDirectory(subsSignature2NumberofMutationsDict,outputDir,jobname,SubsSignature2NumberofMutationsDictFilename)
-    writeDictionaryUnderDataDirectory(sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,Sample2SubsSignature2NumberofMutationsDictFilename)
-    #############################################################################################################################
-    ################################################# Write Dictionaries ends ###################################################
-    #############################################################################################################################
-
-
-    #########################################################
-    ############### Write Unique Chrnames starts ############
-    #########################################################
-    uniqueChrNames = subs_df[CHROM].unique()
-    print('Chromosome names in single point mutations data: %s' %(uniqueChrNames))
-
-    # ChrNamesFile = os.path.join(outputDir,jobname,DATA,ChrNamesInSPMsFilename)
-    # np.savetxt(ChrNamesFile,uniqueChrNames, delimiter='\t', fmt='%s')
-    #########################################################
-    ############### Write Unique Chrnames ends ##############
-    #########################################################
-
-    #########################################################
-    # l = multiprocessing.Lock()
-    numofProcesses = multiprocessing.cpu_count()
-    # pool = multiprocessing.Pool(numofProcesses,initializer=init, initargs=(l,))
-    pool = multiprocessing.Pool(numofProcesses)
-    #########################################################
-
-    poolInputList =[]
-
-    # Get the filename at the end of the full path
-    mutationsWithSignatureBasedProbabilitiesFileName = os.path.basename(subsWithSignatureBasedProbabilitiesFileName)
-
-    #########################################################
-    for chr, chrBased_mutation_df in mutation_df_grouped:
-
-        inputList = []
-        inputList.append(chr)
-        inputList.append(mutationsWithSignatureBasedProbabilitiesFileName)
-        inputList.append(chrBased_mutation_df)
-        inputList.append(outputDir)
-        inputList.append(jobname)
-        poolInputList.append(inputList)
-    #########################################################
-
-    pool.map(writeChrBasedMutationDF,poolInputList)
-
-    #########################################################
-    pool.close()
-    pool.join()
-    #########################################################
-
-##################################################################
-
-
-##################################################################
-#Please note that we add Count and MMR colum in this method
-def readIndels(allIndelsFileName):
-    # Columns: ['Sample', 'Chrom', 'Start', 'End', 'Ref','Alt', 'Type', 'Length', 'Category']
-    # Sample  Chrom      Start   End     Ref    Alt Type    Length  Category
-    allIndelsFilePath = os.path.join(allIndelsFileName)
-
-    #################################################
-    #First read only first row
-    indels_df = pd.read_table(allIndelsFilePath, sep="\t", comment='#', dtype={SAMPLE: str, CHROM: str},nrows=1)
-    columnNamesList = list(indels_df.columns.values)
-
-    contextIndex = columnNamesList.index(CONTEXT)
-
-    # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-    signatures = columnNamesList[(contextIndex + 1):]
-    print('Indels Signatures')
-    print(signatures)
-    #################################################
-
-    # indels_df = pd.read_table(allIndelsFilePath,sep="\t",dtype={'Sample': str, 'Chromosome': str}, header=0)
-    indels_df = pd.read_table(allIndelsFilePath,sep="\t", header=0)
-
-    indels_df[SAMPLE] = indels_df[SAMPLE].astype(str)
-    indels_df[CHROM] = indels_df[CHROM].astype(str)
-    indels_df[START] = indels_df[START].astype(int)
-    indels_df[END] = indels_df[END].astype(int)
-
-    ###########################################################################
-    listofSamples = indels_df[SAMPLE].unique()
-
-    sample2NumberofIndelsDict = {}
-    for sample in listofSamples:
-        numberofIndels =  len(indels_df[indels_df[SAMPLE] == sample])
-        if (numberofIndels>=INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-            sample2NumberofIndelsDict[sample] = numberofIndels
-    ###########################################################################
-
-    print('Number of samples in indels file: %d' %(len(indels_df[SAMPLE].unique())))
-    print('Number of indels: %d' %(indels_df.shape[0]))
-    # print('Indels file shape')
-    # print(indels_df.shape)
-
-    # drop columns 'Reference','Mutation','Type','Length','Category'
-    # Do not drop Length column. If length >= 3bp indel type is Microhomology otherwise < 3bp indel type is repeat-med indel
-    # indels_df.drop([REF,ALT,TYPE,CATEGORY], axis=1, inplace=True, errors='ignore')
-    indels_df.drop([TYPE, CATEGORY], axis=1, inplace=True, errors='ignore')
-
-    #Add a new column called Count
-    grouped_mutation_df_by_sample = indels_df.groupby(SAMPLE)
-    indels_df[COUNT] = indels_df.groupby(SAMPLE)[SAMPLE].transform('count')
-
-    # print('Number of samples in indels file:%s' % len(grouped_mutation_df_by_sample))
-
-    # Add a new column called MMR (Mis Match Repair)
-    if 'Count' in indels_df.columns:
-        indels_df[MMR] = np.where(indels_df[COUNT] >= SAMPLE_MMR_DEFICIENT_THRESHOLD ,DEFICIENT,PROFICIENT)
-    #################################################################################################
-    indelsSignature2NumberofMutationsDict = {}
-    sample2IndelsSignature2NumberofMutationsDict = {}
-
-    for signature in signatures:
-        signaturebased_df = indels_df[indels_df[signature] >= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD]
-        numberofIndels = len(signaturebased_df)
-        if (numberofIndels>INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-            indelsSignature2NumberofMutationsDict[signature] = numberofIndels
-
-    for sample in sample2NumberofIndelsDict:
-        for signature in indelsSignature2NumberofMutationsDict:
-            numberofMutations = len(indels_df[ ((indels_df[SAMPLE]==sample) & (indels_df[signature]>= INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)) ])
-            if (numberofMutations> INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS):
-                if sample in sample2IndelsSignature2NumberofMutationsDict:
-                    sample2IndelsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
-                else:
-                    sample2IndelsSignature2NumberofMutationsDict[sample]={}
-                    sample2IndelsSignature2NumberofMutationsDict[sample][signature] = numberofMutations
-    #################################################################################################
-
-    return sample2NumberofIndelsDict,indelsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,indels_df
 ##################################################################
 
 

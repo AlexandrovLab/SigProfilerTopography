@@ -245,7 +245,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
 
 
         # plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 12}, shadow=False, edgecolor='white', facecolor='white')
-        plt.legend(loc='lower left', handles=listofLegends, prop={'size': 10}, shadow=False, edgecolor='white',facecolor='white', ncol=8, fancybox=True)
+        plt.legend(loc='lower left', handles=listofLegends, prop={'size': 10}, shadow=False, edgecolor='white',facecolor='white', ncol=8, framealpha=0)
 
         # text = '%d subs' %(numberofMutations)
         # plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
@@ -347,7 +347,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Num
 ########################## Plot Figure starts  ##############################
 #############################################################################
 #Called by plotSignatureBasedFigures
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,isFigureAugmentation,numberofSimulations,color,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
+def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,isFigureAugmentation,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         figurenameEnd='_NucleosomeOccupancy.png'
@@ -467,7 +467,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
         if (simulationsSignatureBasedMedians is not None):
             label = 'Average Simulations %s' %(label)
-            simulations = plt.plot(x, simulationsSignatureBasedMedians, color='gray', linestyle='--',  label=label, linewidth=3)
+            simulations = plt.plot(x, simulationsSignatureBasedMedians, color='gray', linestyle=linestyle,  label=label, linewidth=3)
             listofLegends.append(simulations[0])
             if (len(simulationsSignatureBasedLows) == len(simulationsSignatureBasedHighs)):
                 plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor=fillcolor)
@@ -477,7 +477,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         if (simulationsSignatureBasedHighs is not None and simulationsSignatureBasedHighs):
             max_list.append(np.nanmax(simulationsSignatureBasedHighs))
 
-        plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white')
+        plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white',framealpha=0)
 
         #put the number of snps
         tobeWrittenText = "{:,}".format(numberofMutations)
@@ -712,7 +712,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedSubstitutionsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedSubstitutionsHighs))
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='--', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
         listofLegends.append(simsAggSubs[0])
         plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
 
@@ -726,7 +726,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedIndelsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedIndelsHighs))
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dotted',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
         listofLegends.append(simsAggIndels[0])
         plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
 
@@ -740,13 +740,13 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedDinucsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedDinucsHighs))
     if simulationsAggregatedDinucsMedians is not None:
-        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle=':',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
+        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashdot',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
         plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
 
     # old code
     # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
-    plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white')
+    plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white',framealpha=0)
 
     # put the number of subs, indels and dinucs
     text=""
@@ -901,18 +901,21 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
         text = 'subs'
         color = 'royalblue'
         fillcolor = 'lightblue'
+        linestyle='dashed'
     elif (mutationType==ID):
         xlabel = 'Interval around indel (bp)'
         label = 'Aggregated Indels'
         text = 'indels'
         color = 'darkgreen'
         fillcolor = 'lightgreen'
+        linestyle='dotted'
     elif (mutationType==DBS):
         xlabel = 'Interval around dinuc (bp)'
         label = 'Aggregated Dinucs'
         text = 'dinucs'
         color = 'crimson'
         fillcolor = 'lightpink'
+        linestyle='dashdot'
 
     for signature in signature2NumberofMutationsDict:
         signatureBasedNumberofMutations = signature2NumberofMutationsDict[signature]
@@ -920,7 +923,7 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
                                                                           signatureBasedNumberofMutations,
                                                                           xlabel,ylabel,label,text,
                                                                           outputDir, jobname, isFigureAugmentation,
-                                                                          numberofSimulations, color,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+                                                                          numberofSimulations, color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
 
     # SampleBased Subs SignatureBased Nucleosome Occupancy Figures
     for sample in sample2Signature2NumberofMutationsDict:
@@ -930,7 +933,7 @@ def plotSignatureBasedFigures(mutationType,signature2NumberofMutationsDict,sampl
                                                                               sampleBasedSignatureBasedNumberofMutations,
                                                                               xlabel,ylabel,label,text,
                                                                               outputDir, jobname, isFigureAugmentation,
-                                                                              numberofSimulations,color,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+                                                                              numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
 #########################################################
 
 #########################################################

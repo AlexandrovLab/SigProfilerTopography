@@ -19,10 +19,9 @@ sys.path.append(current_abs_path)
 from TopographyCommons import *
 
 ############################################################
-def readProbabilities(probabilitiesFile,logger):
+def readProbabilities(probabilitiesFile):
 
-    #For Release
-    #For PCAWG_Matlab
+    #For Release and PCAWG_Matlab
     #This is same for Release and PCAWG_Matlab
     # There is header in the first column
     probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0)
@@ -41,23 +40,23 @@ def readProbabilities(probabilitiesFile,logger):
 
     probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
 
-    logger.info('Probabilities information starts')
-    logger.info('probabilities_df.shape')
-    logger.info(probabilities_df.shape)
-    logger.info('probabilities_df.head()')
-    logger.info(probabilities_df.head())
+    print('Probabilities information starts')
+    print('probabilities_df.shape')
+    print(probabilities_df.shape)
+    print('probabilities_df.head()')
+    print(probabilities_df.head())
 
     if (SAMPLE in probabilities_df.columns.values):
-        logger.info('Unique samples in probabilities_df')
-        logger.info(probabilities_df[SAMPLE].unique())
-        logger.info('# of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
+        print('Unique samples in probabilities_df')
+        print(probabilities_df[SAMPLE].unique())
+        print('# of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
 
     if (MUTATION in probabilities_df.columns.values):
-        logger.info('Unique MutationTypes in probabilities_df')
-        logger.info(probabilities_df[MUTATION].unique())
-        logger.info('# of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
-    logger.info('Probabilities information ends')
-    logger.info('##############################')
+        print('Unique MutationTypes in probabilities_df')
+        print(probabilities_df[MUTATION].unique())
+        print('# of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
+    print('Probabilities information ends')
+    print('##############################')
 
     return probabilities_df
 ############################################################
@@ -145,7 +144,7 @@ def getMutationInformation(row,hg19_genome, hg38_genome):
 ############################################################
 
 ############################################################
-#This code is customized for release and PCAWG Matlab Probabilities
+#Same for Release and PCAWG Matlab Probabilities
 # example line for original data
 #UCEC-US_SP89389 10      2017540 N:AT[T>A]CA     1
 # example line for simulated data
@@ -232,14 +231,13 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     simNum = inputList[6]
 
     ###############################################################################################
-    #Step3
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context)
     ###############################################################################################
 
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
 
         ############################################################################
-        #Step4
+        #Step2 SigProfilerTopography Python Package
         #For PCAWG_Matlab
         #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
         #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
@@ -258,8 +256,6 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         ############################################################################
 
         ############################################################################
-        #Step5
-        #For Release and PCAWG Matlab Probabilities
         merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
         ############################################################################
 
