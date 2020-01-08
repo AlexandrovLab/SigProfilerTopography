@@ -50,12 +50,14 @@ $ python
 ```
 
 6. Within a python session, you can run the topography analyses as follows:
-You must provide the mutation types in`mutation_types_contexts`  list for the ones you want to carry out topography analyses.
+
+	You must provide the mutation types in`mutation_types_contexts`  list for the ones you want to carry out topography analyses.
 You must provide the corresponding probabilities files in `sbs_probabilities_file_path`, `id_probabilities_file_path` and `dbs_probabilities_file_path` accordingly.
 These probabilities files must be output probabilities files of SigProfilerExtractor.
-For example, if you want to carry out topography analyses only for substitution (one base) and dinucleotide (two base) mutations then you must supply `subs_probabilities_file_path` and `dinucs_probabilities_file_path` with `mutation_types_contexts=['96', 'DBS']`.
-`96` stands for substitutions and `DBS` stand for dinucleotides and `ID` stand for indels.
-This call also plots topography output figures.
+
+	For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply `subs_probabilities_file_path` and `dinucs_probabilities_file_path` with `mutation_types_contexts=['96', 'DBS']`.
+
+	By the way, `96` stands for substitutions and `DBS` stand for dinucleotides and `ID` stand for indels. This call also plots topography output figures.
 ```
 >>> genome= 'GRCh37'
 >>> inputDir = '.../your_input_dir/'
@@ -79,6 +81,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 You can provide your local *Histone DNA binding files* in  **bed** format and replication time files: *signal* in **wig** and *peaks* and *valleys* in **bed** format with their paths.
 
 **HISTONE OCCUPANCY**
+
 By default, SigProfilerTopograpy makes use of these 6 Histone DNA binding files for histone occupancy analyses.
                 
 1. ENCFF291WFP_H3K27me3_breast_epithelium.bed
@@ -103,6 +106,7 @@ Then you need to provide `epigenomics_files_list` in the `runAnalyses` call as f
 `>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
 
 **NUCLEOSOME OCCUPANCY**
+
 We obtained micrococcal nuclease sequencing (MNase-seq) data for GM12878 and K562 cell lines from ENCODE.
 
 By default, SigProfilerTopography makes use of MNase-seq of GM12878 cell line for nucleosome occupancy analysis.
@@ -132,10 +136,8 @@ You can provide your replication data file as follows:
 ```
 **SIGPROFILERTOPOGRAPHY PARAMETERS**
 
-#####num_of_sbs_required 
-#####num_of_id_required
-#####num_of_dbs_required
-#####average probabilty
+`num_of_sbs_required` `num_of_id_required` `num_of_dbs_required` 
+`average probabilty`
 
                 
 
