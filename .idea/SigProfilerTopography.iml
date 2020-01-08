@@ -18,5 +18,8 @@
     <orderEntry type="module" module-name="Debugging" />
     <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
+    <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
+    <orderEntry type="module" module-name="SigProfilerSimulator" />
+    <orderEntry type="module" module-name="SigProfilerSimulator" />
   </component>
 </module>

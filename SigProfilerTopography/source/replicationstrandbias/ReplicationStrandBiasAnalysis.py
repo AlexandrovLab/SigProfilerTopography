@@ -13,7 +13,57 @@
 # Right now replication strand bias analysis works for single point mutations and signatures.
 # This python code analyses the Replication Strand Bias
 
-from SigProfilerTopography.source.commons.TopographyCommons import *
+import multiprocessing
+import numpy as np
+import pandas as pd
+
+from SigProfilerTopography.source.commons.TopographyCommons import START
+from SigProfilerTopography.source.commons.TopographyCommons import PYRAMIDINESTRAND
+from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
+
+from SigProfilerTopography.source.commons.TopographyCommons import SUBS
+from SigProfilerTopography.source.commons.TopographyCommons import INDELS
+from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
+
+from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+from SigProfilerTopography.source.commons.TopographyCommons import LENGTH
+
+from SigProfilerTopography.source.commons.TopographyCommons import LEADING
+from SigProfilerTopography.source.commons.TopographyCommons import LAGGING
+from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
+
+
+from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries_simulations_integrated
+from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries
+
+from SigProfilerTopography.source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
+
+from SigProfilerTopography.source.commons.TopographyCommons import readFileInBEDFormat
+
+
+from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
+from SigProfilerTopography.source.commons.TopographyCommons import getCombinedChrBasedDF
+from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated
+from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
+
+from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
+
+from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import DinucsSignature2PropertiesListDictFilename
+
+from SigProfilerTopography.source.commons.TopographyCommons import Type2ReplicationStrand2CountDict_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Signature2MutationType2ReplicationStrand2CountDict_Filename
+
+from SigProfilerTopography.source.commons.TopographyCommons import Type2Sample2ReplicationStrand2CountDict_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Sample2Type2ReplicationStrand2CountDict_Filename
+
+from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_ALL_CHROMOSOMES_PARALLEL
+from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
+from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
+from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 
 #For Supp Fig2B
 CHR10_THRESHOLD_START = 16400000
@@ -362,6 +412,80 @@ def searchMutationOnReplicationStrandArray(
     #############################################################################################################
 ########################################################################
 
+########################################################################
+def searchMutationsOnReplicationStrandArrayForApplyAsync(
+    chrBased_replication_array,
+    chrBased_simBased_subs_df,
+    chrBased_simBased_indels_df,
+    chrBased_simBased_dinucs_df,
+    numofSimulations,
+    sample_based,
+    subsSignature2PropertiesListDict,
+    indelsSignature2PropertiesListDict,
+    dinucsSignature2PropertiesListDict):
+
+    simNum2Type2ReplicationStrand2CountDict= {}
+    simNum2Sample2Type2ReplicationStrand2CountDict= {}
+    simNum2Type2Sample2ReplicationStrand2CountDict = {}
+    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
+
+    for simNum in range(0,numofSimulations+1):
+        simNum2Type2ReplicationStrand2CountDict[simNum]={}
+        simNum2Sample2Type2ReplicationStrand2CountDict[simNum]={}
+        simNum2Type2Sample2ReplicationStrand2CountDict[simNum]={}
+        simNum2Signature2MutationType2ReplicationStrand2CountDict[simNum]={}
+
+    ##############################  Fill dictionaries for subs  starts ####################
+    if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
+        chrBased_simBased_subs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
+                                chrBasedReplicationArray=chrBased_replication_array,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                signature2PropertiesListDict=subsSignature2PropertiesListDict,
+                                type=SUBS,
+                                sample_based=sample_based,
+                                axis=1)
+    ##############################  Fill dictionaries for subs  ends ######################
+
+
+    ##############################  Fill dictionaries for indels  starts ####################
+    if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
+        chrBased_simBased_indels_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
+                                chrBasedReplicationArray=chrBased_replication_array,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                signature2PropertiesListDict=indelsSignature2PropertiesListDict,
+                                type=INDELS,
+                                sample_based=sample_based,
+                                axis=1)
+    ##############################  Fill dictionaries for indels  ends ######################
+
+    ##############################  Fill dictionaries for indels  starts ####################
+    if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
+        chrBased_simBased_dinucs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
+                                chrBasedReplicationArray=chrBased_replication_array,
+                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                signature2PropertiesListDict=dinucsSignature2PropertiesListDict,
+                                type=DINUCS,
+                                sample_based=sample_based,
+                                axis=1)
+    ##############################  Fill dictionaries for indels  ends ######################
+
+
+    #Fill the type2replicationStranCount dictionaries and return them
+    return (simNum2Type2ReplicationStrand2CountDict,
+            simNum2Sample2Type2ReplicationStrand2CountDict,
+            simNum2Type2Sample2ReplicationStrand2CountDict,
+            simNum2Signature2MutationType2ReplicationStrand2CountDict)
+########################################################################
+
 
 ########################################################################
 def  searchMutationsOnReplicationStrandArray(inputList):
@@ -494,12 +618,18 @@ def fill_chr_based_replication_strand_array(chrLong,
 def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename):
 
     ################### Read the Smoothed Wavelet Replication Time Signal starts ###########################
-    # Do not use sum, GSM923442_hg19_wgEncodeUwRepliSeqMcf7SumSignalRep1.wig contains values greater than 600
-    # Use Smoothed Wavelet Signal, GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
-    unprocessed_df = readRepliSeqSignal(smoothedWaveletRepliseqDataFilename)
+    #new way, JAN 7, 2020
+    repliseq_wavelet_signal_df =readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
 
-    #Process the signal, convert into interval version
-    repliseq_wavelet_signal_df = processSmoothedWaveletSignal(unprocessed_df)
+    # #old way starts
+    # # Do not use sum, GSM923442_hg19_wgEncodeUwRepliSeqMcf7SumSignalRep1.wig contains values greater than 600
+    # # Use Smoothed Wavelet Signal, GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
+    # unprocessed_df = readRepliSeqSignal(smoothedWaveletRepliseqDataFilename)
+    #
+    # #Process the signal, convert into interval version
+    # repliseq_wavelet_signal_df = processSmoothedWaveletSignal(unprocessed_df)
+    # #old way ends
+
     print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df['chr'].unique()))
     # print('repliseq_wavelet_signal_df[chr].unique')
     # print(repliseq_wavelet_signal_df['chr'].unique())
@@ -510,40 +640,58 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
     #read Valleys (local minima) bed file and read Peaks (local maxima) bed file
     # valleysBEDFilename = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
     # peaksBEDFilename = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
-    valleys_df= readBED(valleysBEDFilename)
+
+    # #old way starts
+    # valleys_df= readBED(valleysBEDFilename)
+    # print('Chromosome names in replication time valleys data: %s' % (valleys_df['chr'].unique()))
+    # # print('valleys_df[chr].unique()')
+    # # print(valleys_df['chr'].unique())
+    #
+    # peaks_df = readBED(peaksBEDFilename)
+    # print('Chromosome names in replication time peaks data: %s' % (peaks_df['chr'].unique()))
+    # # print('peaks_df[chr].unique()')
+    # # print(peaks_df['chr'].unique())
+    #
+    # valleys_df.drop(valleys_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
+    # peaks_df.drop(peaks_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
+    # #old way ends
+
+    #new way starts JAN 7, 2020
+    valleys_df= readFileInBEDFormat(valleysBEDFilename)
+    valleys_df['end'] = valleys_df['end'] - 1
     print('Chromosome names in replication time valleys data: %s' % (valleys_df['chr'].unique()))
-    # print('valleys_df[chr].unique()')
-    # print(valleys_df['chr'].unique())
 
-    peaks_df = readBED(peaksBEDFilename)
+    peaks_df = readFileInBEDFormat(peaksBEDFilename)
+    peaks_df['end'] = peaks_df['end'] - 1
     print('Chromosome names in replication time peaks data: %s' % (peaks_df['chr'].unique()))
-    # print('peaks_df[chr].unique()')
-    # print(peaks_df['chr'].unique())
 
-    valleys_df.drop(valleys_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
-    peaks_df.drop(peaks_df.columns[[3,4,5,6,7,8]], axis=1, inplace=True)
+    valleys_df.drop(valleys_df.columns[['signal']], axis=1, inplace=True)
+    peaks_df.drop(peaks_df.columns[['signal']], axis=1, inplace=True)
+    #new way ends JAN 7, 2020
+
+
     ############## Read the Valleys and Peaks ends ########################################
 
     return repliseq_wavelet_signal_df, valleys_df, peaks_df
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
+
+    ###############################################
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
+    ###############################################
 
-    subsSignature2NumberofMutationsDict = getSubsSignature2NumberofMutationsDict(outputDir,jobname)
-    indelsSignature2NumberofMutationsDict = getIndelsSignature2NumberofMutationsDict(outputDir,jobname)
-    dinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,DinucsSignature2NumberofMutationsDictFilename)
-
+    ###############################################
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
+    ###############################################
 
     ############################Chr based parallel code starts ################################################
     #prepare the input for parallel lines starts
-    replicationStrands = [LAGGING, LEADING]
     strandBias = REPLICATIONSTRANDBIAS
 
     #Accumulate chrBased Results
@@ -560,7 +708,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         for chrLong in chromNamesList:
             chromSize = chromSizesDict[chrLong]
 
-            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, 0)
+            original_chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, 0)
             original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
             original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
 
@@ -592,9 +740,9 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                 inputList.append(combined_chrBased_subs_df)  # different split each time
                 inputList.append(combined_chrBased_indels_df)  # different split each time
                 inputList.append(combined_chrBased_dinucs_df)  # different split each time
-                inputList.append(subsSignature2NumberofMutationsDict)  # same for all
-                inputList.append(indelsSignature2NumberofMutationsDict)
-                inputList.append(dinucsSignature2NumberofMutationsDict)
+                inputList.append(subsSignature2PropertiesListDict)  # same for all
+                inputList.append(indelsSignature2PropertiesListDict)
+                inputList.append(dinucsSignature2PropertiesListDict)
                 inputList.append(numofSimulations)
                 poolInputList.append(inputList)
 
@@ -643,7 +791,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
 
                 ################################################################################
                 for simNum in range(0, numofSimulations + 1):
-                    chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                    chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
                     chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
                     chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
 
@@ -652,9 +800,9 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     inputList.append(chrBased_subs_df)  # different split each time
                     inputList.append(chrBased_indels_df)  # different split each time
                     inputList.append(chrBased_dinucs_df)  # different split each time
-                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
-                    inputList.append(indelsSignature2NumberofMutationsDict)
-                    inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(subsSignature2PropertiesListDict)  # same for all
+                    inputList.append(indelsSignature2PropertiesListDict)
+                    inputList.append(dinucsSignature2PropertiesListDict)
                     inputList.append(numofSimulations)
                     simBased_tuple = searchMutationsOnReplicationStrandArray(inputList)
                     tupleList = []
@@ -666,6 +814,69 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                                       accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
                 ################################################################################
             ################################################################################
+
+    elif (computationType == USING_APPLY_ASYNC):
+        ################################################################################
+        for chrLong in chromNamesList:
+            chromSize = chromSizesDict[chrLong]
+
+            #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
+            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df['chr'] == chrLong]
+
+            chrBasedValleysDF = valleys_df[valleys_df['chr'] == chrLong].copy()
+            chrBasedValleysDF['type'] = 'Valley'
+            chrBasedValleysDF.astype(dtype={'start': int, 'end': int})
+
+            chrBasedPeaksDF = peaks_df[peaks_df['chr'] == chrLong].copy()
+            chrBasedPeaksDF['type'] = 'Peak'
+            chrBasedPeaksDF.astype(dtype={'start': int, 'end': int})
+
+            # Concat Peaks and Valleys
+            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+            # Sort Valleys and peaks
+            chrBased_valleys_peaks_df.sort_values('start', inplace=True)
+
+            ################################################################################
+            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+
+                ####################################################################
+                def accumulate_apply_async_result(result_tuple):
+                    chrBased_SimNum2Type2Strand2CountDict = result_tuple[0]
+                    chrBased_SimNum2Sample2Type2Strand2CountDict = result_tuple[1]
+                    chrBased_SimNum2Type2Sample2Strand2CountDict = result_tuple[2]
+                    chrBased_SimNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
+
+                    accumulate_simulations_integrated_for_each_tuple(
+                        chrBased_SimNum2Type2Strand2CountDict,
+                        chrBased_SimNum2Sample2Type2Strand2CountDict,
+                        chrBased_SimNum2Type2Sample2Strand2CountDict,
+                        chrBased_SimNum2Signature2MutationType2Strand2CountDict,
+                        accumulatedAllChromosomesType2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
+                        accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
+                ####################################################################
+
+                ################################################################################
+                for simNum in range(0,numofSimulations+1):
+                    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+                    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+                    pool.apply_async(searchMutationsOnReplicationStrandArrayForApplyAsync,(chrBased_replication_array,
+                                                                              chrBased_simBased_subs_df,
+                                                                              chrBased_simBased_indels_df,
+                                                                              chrBased_simBased_dinucs_df,
+                                                                              numofSimulations,
+                                                                              sample_based,
+                                                                              subsSignature2PropertiesListDict,
+                                                                              indelsSignature2PropertiesListDict,
+                                                                              dinucsSignature2PropertiesListDict),callback=accumulate_apply_async_result)
+                ################################################################################
+
+        ################################################################################
+
 
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
         ################################################################################
@@ -698,7 +909,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
 
                 ################################################################################
                 for simNum in range(0,numofSimulations+1):
-                    chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                    chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
                     chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
                     chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
 
@@ -725,7 +936,6 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                             accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
             ################################################################################
 
-
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
 
         ############################################################################################################
@@ -735,7 +945,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         for chrLong in chromNamesList:
             chromSize = chromSizesDict[chrLong]
 
-            original_chrBased_subs_df = readChrBasedSubsDF(outputDir, jobname, chrLong, SUBS, 0)
+            original_chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, 0)
             original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
             original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
 
@@ -799,9 +1009,9 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     inputList.append(chrBased_subs_split_df) # different split each time
                     inputList.append(chrBased_indels_split_df)  # different split each time
                     inputList.append(chrBased_dinucs_split_df)  # different split each time
-                    inputList.append(subsSignature2NumberofMutationsDict)  # same for all
-                    inputList.append(indelsSignature2NumberofMutationsDict)
-                    inputList.append(dinucsSignature2NumberofMutationsDict)
+                    inputList.append(subsSignature2PropertiesListDict)  # same for all
+                    inputList.append(indelsSignature2PropertiesListDict)
+                    inputList.append(dinucsSignature2PropertiesListDict)
                     inputList.append(numofSimulations)
                     poolInputList.append(inputList)
                 ##########################################################################
@@ -818,16 +1028,21 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         ###############################      All ChrBased Splits in parallel ends    ###############################
         ############################################################################################################
 
-    print('ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
-    print('accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
-    print(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0])
-    print('accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
-    print(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0])
-    print('accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
-    print(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0])
-    print('accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
-    print(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0])
-    print('ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
+    ################################
+    pool.close()
+    pool.join()
+    ################################
+
+    if verbose: print('ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
+    if verbose: print('accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
+    if verbose: print(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0])
+    if verbose: print('accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
+    if verbose: print(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0])
+    if verbose: print('accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
+    if verbose: print(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0])
+    if verbose: print('accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
+    if verbose: print(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0])
+    if verbose: print('ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
 
     ############################################################################################################
     #####################################       Output starts      #############################################
@@ -841,11 +1056,6 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
-
-    ################################
-    pool.close()
-    pool.join()
-    ################################
 
     print('--- ReplicationStrandBias Analysis ends')
     print('#################################################################################\n')

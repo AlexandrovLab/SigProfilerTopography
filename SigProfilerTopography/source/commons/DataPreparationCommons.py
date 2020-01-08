@@ -2,7 +2,7 @@
 
 import os
 import sys
-import twobitreader
+import pandas as pd
 
 complementDict = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
 
@@ -16,7 +16,47 @@ NOTSET= 'notset'
 current_abs_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(current_abs_path)
 
-from TopographyCommons import *
+from TopographyCommons import DATA
+from TopographyCommons import CHRBASED
+
+from TopographyCommons import SAMPLE
+from TopographyCommons import MUTATION
+
+from TopographyCommons import REF
+from TopographyCommons import ALT
+
+from TopographyCommons import GENOME
+from TopographyCommons import GRCh37
+from TopographyCommons import GRCh38
+
+from TopographyCommons import HG19
+from TopographyCommons import HG38
+
+from TopographyCommons import CHROM
+from TopographyCommons import START
+
+from TopographyCommons import MUTATIONS
+from TopographyCommons import PYRAMIDINESTRAND
+from TopographyCommons import CONTEXT
+from TopographyCommons import STRAND
+
+
+from TopographyCommons import SBS_CONTEXTS
+from TopographyCommons import ID
+from TopographyCommons import DBS
+
+from TopographyCommons import SUBS
+from TopographyCommons import DINUCS
+from TopographyCommons import INDELS
+
+from TopographyCommons import MUTATIONLONG
+from TopographyCommons import LENGTH
+from TopographyCommons import TRANSCRIPTIONSTRAND
+
+from TopographyCommons import PROJECT
+from TopographyCommons import TYPE
+
+from TopographyCommons import getNucleotides
 
 ############################################################
 def readProbabilities(probabilitiesFile):
@@ -24,7 +64,8 @@ def readProbabilities(probabilitiesFile):
     #For Release and PCAWG_Matlab
     #This is same for Release and PCAWG_Matlab
     # There is header in the first column
-    probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0)
+    #Sample names can be composed of numbers
+    probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0, dtype={'Sample Names':str,'MutationTypes':str})
 
     # Mutation_Probabilities.txt for SBS96
     # Sample Names    MutationTypes   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40
@@ -39,6 +80,7 @@ def readProbabilities(probabilitiesFile):
     # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
 
     probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
+
 
     print('Probabilities information starts')
     print('probabilities_df.shape')
@@ -229,6 +271,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     mutations_probabilities_df = inputList[4]
     mutation_type_context = inputList[5]
     simNum = inputList[6]
+    PCAWG=inputList[7]
 
     ###############################################################################################
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context)
@@ -238,20 +281,22 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 
         ############################################################################
         #Step2 SigProfilerTopography Python Package
+
         #For PCAWG_Matlab
         #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
         #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
-        # chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
+        if PCAWG:
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
 
-        #For release
+        #For Release SigProfilerTopography Python Package
         # For SNV
         # LUAD-US_SP50263 10      440625  U:GG[C>T]AG     -1
         # For ID
         # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
         # For DBS
         # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
-        if simNum>=1:
-            #Get rid of simulation number at the end
+        elif simNum>=1:
+            # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
         ############################################################################
 
