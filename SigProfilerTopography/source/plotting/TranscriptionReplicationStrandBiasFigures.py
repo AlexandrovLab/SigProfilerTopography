@@ -5,7 +5,7 @@
 # SigProfilerTopography provides the downstream data analysis of
 # mutations and extracted mutational signatures w.r.t.
 # nucleosome occupancy, replication time, strand bias and processivity.
-# Copyright (C) 2018 Burcak Otlu
+# Copyright (C) 2018-2020 Burcak Otlu
 
 import sys
 import os

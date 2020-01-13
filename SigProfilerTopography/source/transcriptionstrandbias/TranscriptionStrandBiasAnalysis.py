@@ -5,7 +5,7 @@
 # SigProfilerTopography provides the downstream data analysis of
 # mutations and extracted mutational signatures w.r.t.
 # nucleosome occupancy, replication time, strand bias and processivity.
-# Copyright (C) 2018 Burcak Otlu
+# Copyright (C) 2018-2020 Burcak Otlu
 
 #############################################################
 # This version use np.arrays
@@ -26,7 +26,6 @@ import numpy as np
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
-
 
 from SigProfilerTopography.source.commons.TopographyCommons import START
 from SigProfilerTopography.source.commons.TopographyCommons import PYRAMIDINESTRAND
@@ -49,15 +48,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTION
 from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries_simulations_integrated
 from SigProfilerTopography.source.commons.TopographyCommons import readTrancriptsENSEMBL
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
-from SigProfilerTopography.source.commons.TopographyCommons import getCombinedChrBasedDF
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
 from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_ALL_CHROMOSOMES_PARALLEL
-from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
 from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
-from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 
 from SigProfilerTopography.source.commons.TopographyCommons import Type2TranscriptionStrand2CountDict_Filename
@@ -174,79 +169,6 @@ def searchMutationUsingTranscriptionStrandColumn_simulations_integrated(
 
 ########################################################################
 
-
-
-# ########################################################################
-# # TODO Consider NONTRANSCRIBED_STRAND
-# #legacy code
-# def searchMutationUsingTranscriptionStrandColumn(
-#         mutation_row,
-#         type2TranscriptionStrand2CountDict,
-#         sample2Type2TranscriptionStrand2CountDict,
-#         type2Sample2TranscriptionStrand2CountDict,
-#         signature2MutationType2TranscriptionStrand2CountDict,
-#         signature2NumberofMutationsDict,
-#         mutationProbabilityThreshold,
-#         type):
-#
-#     mutationType = None
-#     mutationTranscriptionStrand = mutation_row[TRANSCRIPTIONSTRAND]
-#     mutationSample = mutation_row[SAMPLE]
-#
-#     if (type==SUBS):
-#         #e.g.: C>A
-#         mutationType = mutation_row[MUTATION]
-#
-#     #Values on TranscriptionStrand column
-#     # N --> Non-transcribed
-#     # T --> Transcribed
-#     # U --> Untranscribed
-#     # Q --> Question Not known
-#
-#     if (mutationTranscriptionStrand == 'U'):
-#         updateDictionaries(mutation_row,
-#                                 mutationType,
-#                                 mutationSample,
-#                                 type2TranscriptionStrand2CountDict,
-#                                 sample2Type2TranscriptionStrand2CountDict,
-#                                 type2Sample2TranscriptionStrand2CountDict,
-#                                 signature2MutationType2TranscriptionStrand2CountDict,
-#                                 UNTRANSCRIBED_STRAND,
-#                                 signature2NumberofMutationsDict,
-#                                 mutationProbabilityThreshold)
-#     elif (mutationTranscriptionStrand == 'T'):
-#         updateDictionaries(mutation_row,
-#                                 mutationType,
-#                                 mutationSample,
-#                                 type2TranscriptionStrand2CountDict,
-#                                 sample2Type2TranscriptionStrand2CountDict,
-#                                 type2Sample2TranscriptionStrand2CountDict,
-#                                 signature2MutationType2TranscriptionStrand2CountDict,
-#                                 TRANSCRIBED_STRAND,
-#                                 signature2NumberofMutationsDict,
-#                                 mutationProbabilityThreshold)
-#     elif (mutationTranscriptionStrand == 'B'):
-#         updateDictionaries(mutation_row,
-#                                 mutationType,
-#                                 mutationSample,
-#                                 type2TranscriptionStrand2CountDict,
-#                                 sample2Type2TranscriptionStrand2CountDict,
-#                                 type2Sample2TranscriptionStrand2CountDict,
-#                                 signature2MutationType2TranscriptionStrand2CountDict,
-#                                 UNTRANSCRIBED_STRAND,
-#                                 signature2NumberofMutationsDict,
-#                                 mutationProbabilityThreshold)
-#         updateDictionaries(mutation_row,
-#                                 mutationType,
-#                                 mutationSample,
-#                                 type2TranscriptionStrand2CountDict,
-#                                 sample2Type2TranscriptionStrand2CountDict,
-#                                 type2Sample2TranscriptionStrand2CountDict,
-#                                 signature2MutationType2TranscriptionStrand2CountDict,
-#                                 TRANSCRIBED_STRAND,
-#                                 signature2NumberofMutationsDict,
-#                                 mutationProbabilityThreshold)
-# ########################################################################
 
 ########################################################################
 #This code uses transcription strand array
@@ -625,81 +547,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptio
     accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict = {}
     accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict = {}
 
-    if (computationType==COMPUTATION_ALL_CHROMOSOMES_PARALLEL):
-        ############################################################################################################
-        #####################################      Version 1 starts      ###########################################
-        ###############################      All Chromosomes in parallel      ######################################
-        ############################################################################################################
-        poolInputList = []
-        ####################################################################################################
-        for chrLong in chromNamesList:
-            # THEN READ CHRBASED MUTATION
-            chromSize = chromSizesDict[chrLong]
-
-            #legacy code
-            # chrBased_subs_df = readChrBasedSubsDF(outputDir,jobname, chrLong, SUBS,0)
-            # chrBased_indels_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, INDELS,0)
-            # chrBased_dinucs_df = readChrBasedMutationsDF(outputDir,jobname, chrLong, DINUCS,0)
-
-            original_chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, 0)
-            original_chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, 0)
-            original_chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, 0)
-
-            combined_chrBased_subs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong, original_chrBased_subs_df,SUBS, numofSimulations)
-            combined_chrBased_indels_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_indels_df, INDELS, numofSimulations)
-            combined_chrBased_dinucs_df = getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_dinucs_df, DINUCS, numofSimulations)
-
-            if (useTranscriptionStrandColumn):
-                chrBased_gene_array = None
-            else:
-                ################################################################################
-                # Get chrBased ensembl transcripts
-                # For transcripts_df chrShort is needed
-                if (chrLong != 'chrM'):
-                    chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong[3:]]
-                elif (chrLong == 'chrM'):
-                    chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == 'MT']
-
-                chrBased_genes_on_positive_strand = np.zeros(chromSize, dtype=np.int8)
-                chrBased_genes_on_negative_strand = np.zeros(chromSize, dtype=np.int8)
-
-                chrBased_transcripts_df.apply(fillTranscriptionArray,
-                                              chrBased_genes_on_positive_strand = chrBased_genes_on_positive_strand,
-                                              chrBased_genes_on_negative_strand = chrBased_genes_on_negative_strand,
-                                              axis=1)
-
-                #0 means no gene
-                #-1 means gene on both strands: positive and negative
-                #+1 means gene on positive strand
-                #-2 means gene on negative strand
-                chrBased_gene_array = np.add(chrBased_genes_on_positive_strand,chrBased_genes_on_negative_strand)
-                ################################################################################
-
-            inputList = []
-            inputList.append(combined_chrBased_subs_df)  # each time different split
-            inputList.append(combined_chrBased_indels_df)
-            inputList.append(combined_chrBased_dinucs_df)
-            inputList.append(chrBased_gene_array)  # same for all
-            inputList.append(numofSimulations)
-            inputList.append(subsSignature2PropertiesListDict)
-            inputList.append(indelsSignature2PropertiesListDict)
-            inputList.append(dinucsSignature2PropertiesListDict)
-            poolInputList.append(inputList)
-
-        listofTuples = pool.map(searchMutations, poolInputList)
-
-        accumulate_simulations_integrated(listofTuples,
-                   accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
-                   accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
-                   accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
-                   accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
-
-        ############################################################################################################
-        #####################################      Version 1 ends      #############################################
-        ###############################      All Chromosomes in parallel      ######################################
-        ############################################################################################################
-
-    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+    if (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
 
         ####################################################################################################
         for chrLong in chromNamesList:
@@ -792,142 +640,6 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptio
 
 
         ####################################################################################################
-
-    elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL):
-
-        ####################################################################################################
-        for chrLong in chromNamesList:
-
-            chromSize = chromSizesDict[chrLong]
-            poolInputList = []
-
-            # Get chrBased ensembl transcripts
-            chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
-
-            #You need to initialize to None so that you don't use former for loop values accidentally
-            if (useTranscriptionStrandColumn):
-                chrBased_transcription_array = None
-            else:
-                ################################################################################
-                chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
-                chrBased_transcripts_df.apply(fillTranscriptionArray,chrBased_transcription_array=chrBased_transcription_array,axis=1)
-                ################################################################################
-
-            ####################################################################
-            for simNum in range(0,numofSimulations+1):
-                inputList = []
-
-                chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-                chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-                chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-
-                inputList.append(chrBased_subs_df)  # each time different split
-                inputList.append(chrBased_indels_df)
-                inputList.append(chrBased_dinucs_df)
-                inputList.append(chrBased_transcription_array) # same for all
-                inputList.append(numofSimulations)
-                inputList.append(subsSignature2PropertiesListDict)
-                inputList.append(indelsSignature2PropertiesListDict)
-                inputList.append(dinucsSignature2PropertiesListDict)
-                result_tuple = searchMutations(inputList)
-
-                result_tuple_list = []
-                result_tuple_list.append(result_tuple)
-
-                accumulate_simulations_integrated(result_tuple_list,
-                                                  accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
-                                                  accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
-                                                  accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
-                                                  accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
-            ####################################################################
-
-        ####################################################################################################
-
-    elif (computationType==COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL):
-
-        ############################################################################################################
-        #####################################      Version2  starts      ###########################################
-        ###############################       Chromosomes sequentially      ########################################
-        ###############################      All ChrBased Splits sequentially     ##################################
-        ############################################################################################################
-
-        ####################################################################################################
-        for chrLong in chromNamesList:
-
-            chromSize = chromSizesDict[chrLong]
-
-            chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS,0)
-            chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS,0)
-            chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong,DINUCS,0)
-
-            # Get chrBased ensembl transcripts
-            chrBased_transcripts_df = transcripts_df[transcripts_df['chrom'] == chrLong]
-
-            #You need to initialize to None so that you don't use former for loop values accidentally
-            chrBased_subs_df_splits_list = None
-            chrBased_indels_df_splits_list = None
-            chrBased_dinucs_df_splits_list = None
-
-            if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
-                chrBased_subs_df_splits_list = np.array_split(chrBased_subs_df, numofProcesses)
-
-            if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-                chrBased_indels_df_splits_list = np.array_split(chrBased_indels_df, numofProcesses)
-
-            if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-                chrBased_dinucs_df_splits_list = np.array_split(chrBased_dinucs_df, numofProcesses)
-
-
-            if (useTranscriptionStrandColumn):
-                chrBased_transcription_array = None
-            else:
-                ################################################################################
-                chrBased_transcription_array = np.zeros(chromSize, dtype=np.int8)
-                chrBased_transcripts_df.apply(fillTranscriptionArray,
-                                            chrBased_transcription_array=chrBased_transcription_array,
-                                            axis=1)
-                ################################################################################
-
-
-            ####################################################################
-            poolInputList = []
-            for split_index in range(numofProcesses):
-                chrBased_subs_split_df = None
-                chrBased_indels_split_df = None
-                if ((chrBased_subs_df_splits_list is not None) and (len(chrBased_subs_df_splits_list))):
-                    chrBased_subs_split_df = chrBased_subs_df_splits_list[split_index]
-                if ((chrBased_indels_df_splits_list is not None) and (len(chrBased_indels_df_splits_list))):
-                    chrBased_indels_split_df = chrBased_indels_df_splits_list[split_index]
-                if ((chrBased_dinucs_df_splits_list is not None) and (len(chrBased_dinucs_df_splits_list))):
-                    chrBased_dinucs_split_df = chrBased_dinucs_df_splits_list[split_index]
-
-
-                inputList = []
-                inputList.append(chrBased_subs_split_df)  # each time different split
-                inputList.append(chrBased_indels_split_df)
-                inputList.append(chrBased_dinucs_split_df)
-                inputList.append(chrBased_transcription_array) # same for all
-                inputList.append(numofSimulations)
-                inputList.append(subsSignature2PropertiesListDict)
-                inputList.append(indelsSignature2PropertiesListDict)
-                inputList.append(dinucsSignature2PropertiesListDict)
-
-                poolInputList.append(inputList)
-            ####################################################################
-
-            listofTuples = pool.map(searchMutations,poolInputList)
-
-            accumulate_simulations_integrated(listofTuples,
-                                              accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
-                                              accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
-                                              accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
-                                              accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
-
-        ############################################################################################################
-        #####################################      Version2  ends      #############################################
-        ###############################       Chromosomes sequentially      ########################################
-        ###############################      All ChrBased Splits sequentially     ##################################
-        ############################################################################################################
 
     ################################
     pool.close()

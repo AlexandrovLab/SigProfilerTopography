@@ -5,7 +5,7 @@
 # SigProfilerTopography provides the downstream data analysis of
 # mutations and extracted mutational signatures w.r.t.
 # nucleosome occupancy, replication time and strand bias.
-# Copyright (C) 2018 Burcak Otlu
+# Copyright (C) 2018-2020 Burcak Otlu
 
 import os
 import pandas as pd
@@ -13,6 +13,7 @@ import numpy as np
 import math
 import json
 import pickle
+import re
 import twobitreader
 import urllib.request
 import shutil
@@ -22,11 +23,9 @@ import scipy
 from scipy.stats import sem, t
 from scipy import mean
 
-
 #To handle warnings as errors
 # import warnings
 # warnings.filterwarnings("error")
-
 
 LINUX='linux'
 UNIX='unix'
@@ -58,28 +57,8 @@ LIBRARY_FILE_TYPE_OTHER='LIBRARY_FILE_TYPE_OTHER'
 BED_6PLUS4='BED6+4'
 BED_9PLUS2='BED9+2'
 
-############################################################
-#Constraints , Thresholds, They are parametric
-# SUBSTITUTION_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 5000
-# INDEL_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 1000
-# DINUC_NUMBER_OF_MINIMUM_REQUIRED_MUTATIONS = 200
-
-PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
-SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.9,2)
-INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD = round(0.5,2)
-############################################################
-
-SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(SUBSTITUTION_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
-INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(INDEL_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
-DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD_STRING = str(DINUC_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)
-
 SAMPLE_MMR_DEFICIENT_THRESHOLD = 10000
 SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD = 1000
-
-#Global Constants for Nucleosome Occupancy Analysis
-# plusOrMinus = 2000
-# windowSize = plusOrMinus*2+1
 
 NOTSET = 'notSet'
 
@@ -92,7 +71,6 @@ SIMULATION = 'simulation'
 SIMULATIONS = 'simulations'
 SIMULATIONS_FOR_TOPOGRAPHY = 'simulations_for_topography'
 DATA = 'data'
-SIGNAL = 'signal'
 CHRBASED = 'chrbased'
 FIGURE = 'figure'
 
@@ -110,18 +88,88 @@ ENSEMBL = 'ensembl'
 
 GM12878 = 'GM12878'
 K562 = 'K562'
+MCF7='MCF7'
+HEPG2='HEPG2'
+HELAS3='HELAS3'
+SKNSH='SKNSH'
+IMR90='IMR90'
+NHEK='NHEK'
+BJ='BJ'
+HUVEC='HUVEC'
+BG02ES='BG02ES'
+GM06990='GM06990'
+GM12801='GM12801'
+GM12812='GM12812'
+GM12813='GM12813'
 
-ENCODE_NUCLEOSOME_GM12878_BIGWIG = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
-ENCODE_NUCLEOSOME_K562_BIGWIG = 'wgEncodeSydhNsomeK562Sig.bigWig'
+#NUCLEOSOME OCCUPANCY FILES
+GM12878_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
+K562_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeK562Sig.bigWig'
 
-ENCODE_NUCLEOSOME_GM12878_WIG = 'wgEncodeSydhNsomeGm12878Sig.wig'
-ENCODE_NUCLEOSOME_K562_WIG = 'wgEncodeSydhNsomeK562Sig.wig'
+#REPLICATION  TIME FILES
+MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
+MCF7_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
+MCF7_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
 
-BIGWIG2WIG = 'bigWigToWig'
+HEPG2_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHepg2WaveSignalRep1.wig'
+HEPG2_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHepg2ValleysRep1.bed'
+HEPG2_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHepg2PkRep1.bed'
 
-GSM923442_HG19_ENCODE_REPLISEQ_MCF7_WAVELET_SIGNAL_WIG = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-GSM923442_HG19_ENCODE_REPLISEQ_MCF7_VALLEY_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
-GSM923442_HG19_ENCODE_REPLISEQ_MCF7_PEAK_BED = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
+HELAS3_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHelas3WaveSignalRep1.wig'
+HELAS3_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHelas3ValleysRep1.bed'
+HELAS3_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHelas3PkRep1.bed'
+
+SKNSH_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqSknshWaveSignalRep1.wig'
+SKNSH_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqSknshValleysRep1.bed'
+SKNSH_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqSknshPkRep1.bed'
+
+K562_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqK562WaveSignalRep1.wig'
+K562_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqK562ValleysRep1.bed'
+K562_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqK562PkRep1.bed'
+
+IMR90_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqImr90WaveSignalRep1.wig'
+IMR90_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqImr90ValleysRep1.bed'
+IMR90_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqImr90PkRep1.bed'
+
+NHEK_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqNhekWaveSignalRep1.wig'
+NHEK_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqNhekValleysRep1.bed'
+NHEK_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqNhekPkRep1.bed'
+
+BJ_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqBjWaveSignalRep1.wig'
+BJ_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqBjValleysRep1.bed'
+BJ_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqBjPkRep1.bed'
+
+HUVEC_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHuvecWaveSignalRep1.wig'
+HUVEC_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHuvecValleysRep1.bed'
+HUVEC_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHuvecPkRep1.bed'
+
+BG02ES_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqBg02esWaveSignalRep1.wig'
+BG02ES_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqBg02esValleysRep1.bed'
+BG02ES_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqBg02esPkRep1.bed'
+
+GM12878_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12878WaveSignalRep1.wig'
+GM12878_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12878ValleysRep1.bed'
+GM12878_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12878PkRep1.bed'
+
+GM06990_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm06990WaveSignalRep1.wig'
+GM06990_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm06990ValleysRep1.bed'
+GM06990_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm06990PkRep1.bed'
+
+GM12801_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12801WaveSignalRep1.wig'
+GM12801_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12801ValleysRep1.bed'
+GM12801_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12801PkRep1.bed'
+
+GM12812_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12812WaveSignalRep1.wig'
+GM12812_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12812ValleysRep1.bed'
+GM12812_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12812PkRep1.bed'
+
+GM12813_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1.wig'
+GM12813_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813ValleysRep1.bed'
+GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
+
+available_nucleosome_biosamples=[GM12878,K562]
+available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
+
 GRCh37_hg19_NCBIREFSEQCURATED = 'GRCh37_hg19_NCBIRefSeqCurated'
 GRCh37_ENSEMBL = 'GRCh37_transcripts.txt'
 
@@ -130,13 +178,12 @@ HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
 
 HG19_2BIT = 'hg19.2bit'
 HG38_2BIT = 'hg38.2bit'
-
-HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
-HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
-
 MM9_2BIT = 'mm9.2bit'
 MM10_2BIT = 'mm10.2bit'
 
+
+HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
+HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
 MM9_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm9/bigZips/mm9.2bit'
 MM10_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/mm10.2bit'
 
@@ -147,10 +194,8 @@ BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL = 'http://hgdownload.cse.ucsc.edu/admi
 
 HG19 = 'hg19'
 HG38 = 'hg38'
-
 MM9 = 'mm9'
 MM10 = 'mm10'
-
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
 
@@ -184,7 +229,6 @@ Sample2NumberofDinucsDictFilename = 'Sample2NumberofDinucsDict.txt'
 DinucsSignature2NumberofMutationsDictFilename = 'DinucsSignature2NumberofMutationsDict.txt'
 Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2NumberofMutationsDict.txt'
 ###################################################################################################
-
 
 #For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
@@ -251,35 +295,27 @@ sixMutationTypes = [C2A,C2G,C2T,T2A,T2C,T2G]
 SIGNATURE = 'Signature'
 MUTATION = 'Mutation'
 MUTATIONLONG = 'MutationLong'
-CHR = 'chr'
 
-
-COMPUTATION_CHROMOSOMES_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL'
-
-#For small number of samples
-COMPUTATION_ALL_CHROMOSOMES_PARALLEL = 'COMPUTATION_ALL_CHROMOSOMES_PARALLEL'
-#For big number of samples
 COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL'
-COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL'
-COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL'
-
 USING_IMAP_UNORDERED='USING_IMAP_UNORDERED'
 USING_APPLY_ASYNC='USING_APPLY_ASYNC'
-USING_TEST_APPLY_ASYNC='USING_TEST_APPLY_ASYNC'
-
-SIMULATIONS_SEQUENTIAL_CHROMOSOMES_PARALLEL_USING_MAP= 'SIMULATIONS_SEQUENTIAL_CHROMOSOMES_PARALLEL_USING_MAP'
-USING_CHRBASED_SIGNAL_ARRAYS='USING_CHRBASED_SIGNAL_ARRAYS'
 
 ############################################
 #Column Names
 PROJECT = 'Project'
 SAMPLE = 'Sample'
 GENOME = 'Genome'
+
 CHROM = 'Chrom'
-CHROMOSOME = 'Chromosome' # to be depreceated
 START = 'Start'
 END = 'End'
-STRAND = 'Strand'
+SIGNAL = 'Signal'
+NAME='Name'
+SCORE='Score'
+STRAND='Strand'
+
+SIZE='Size'
+
 REF = 'Ref'
 ALT = 'Alt'
 PYRAMIDINESTRAND = 'PyramidineStrand'
@@ -287,9 +323,6 @@ TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
 MUTATION = 'Mutation'
 MUTATIONS = 'Mutations'
 CONTEXT = 'Context'
-
-TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
-
 
 #For Replication Time Data
 NUMOFBASES = 'numofBases'
@@ -310,30 +343,6 @@ DATASOURCE = 'DataSource'
 
 SIMULATION_NUMBER= 'Simulation_Number'
 ############################################
-
-############################################
-#Nucleosome Occupancy Data  Columns
-chrom= 'chrom'
-start= 'start'
-end= 'end'
-signal= 'signal'
-
-#Roadmap Epigenomics Data Columns
-name='name'
-score='score'
-strand='strand'
-############################################
-
-# ############################################
-# #data_type
-# AVERAGE_SIGNAL='AVERAGE_SIGNAL'
-# ACCUMULATED_SIGNAL='ACCUMULATED_SIGNAL'
-# ACCUMULATED_COUNT='ACCUMULATED_COUNT'
-# ############################################
-
-#For double check purposes
-OriginalPaperSignature2Sample2ReplicationStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2ReplicationStrand2CountDict.txt'
-OriginalPaperSignature2Sample2TranscriptionStrand2CountDict_Filename = 'OriginalPaperSignature2Sample2TranscriptionStrand2CountDict.txt'
 
 Type2ReplicationStrand2CountDict_Filename = 'Type2ReplicationStrand2CountDict.txt'
 Sample2Type2ReplicationStrand2CountDict_Filename = 'Sample2Type2ReplicationStrand2CountDict.txt'
@@ -373,7 +382,6 @@ SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
 
-
 DEFAULT_HISTONE_OCCUPANCY_FILE1 = 'ENCFF291WFP_H3K27me3_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE2 = 'ENCFF906MJM_H3K36me3_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE3 = 'ENCFF065FJK_H3K9me3_breast_epithelium.bed'
@@ -383,22 +391,97 @@ DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
 
 BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
 
-DEFAULT_NUCLEOSOME_OCCUPANCY_FILE1 = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
-DEFAULT_NUCLEOSOME_OCCUPANCY_FILE2 = 'wgEncodeSydhNsomeK562Sig.bigWig'
-
-DEFAULT_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-DEFAULT_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
-DEFAULT_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
-
-
-
-import re
-
 ########################################################
 def natural_key(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
 ########################################################
+
+
+#######################################################
+def getNucleosomeFile(nucleosome_biosample):
+    nucleosome_file=None
+
+    if (nucleosome_biosample is not None):
+        if (nucleosome_biosample==GM12878):
+            nucleosome_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,GM12878_NUCLEOSOME_OCCUPANCY_FILE)
+        elif (nucleosome_biosample==K562):
+            nucleosome_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,K562_NUCLEOSOME_OCCUPANCY_FILE)
+
+    return nucleosome_file
+#######################################################
+
+#######################################################
+def getReplicationTimeFiles(replication_time_biosample):
+    replication_time_signal_file=None
+    replication_time_valley_file=None
+    replication_time_peak_file=None
+
+    if replication_time_biosample is not None:
+        if (replication_time_biosample==GM12878):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == K562):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,K562_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,K562_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,K562_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == MCF7):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,MCF7_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,MCF7_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,MCF7_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == HEPG2):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HEPG2_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HEPG2_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HEPG2_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == HELAS3):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HELAS3_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HELAS3_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HELAS3_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == SKNSH):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == IMR90):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,IMR90_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,IMR90_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,IMR90_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == NHEK):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,NHEK_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,NHEK_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,NHEK_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == BJ):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,BJ_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,BJ_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,BJ_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == HUVEC):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HUVEC_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,HUVEC_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == BG02ES):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == GM06990):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM06990_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM06990_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION, GM06990_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == GM12801):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12801_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12801_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12801_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == GM12812):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12812_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12812_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION, GM12812_REPLICATION_TIME_PEAK_FILE)
+        elif (replication_time_biosample == GM12813):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12813_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION,GM12813_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_PEAK_FILE)
+
+    return replication_time_signal_file, replication_time_valley_file, replication_time_peak_file
+#######################################################
+
 
 #############################################################################
 #Modified DEC 9, 2019
@@ -456,16 +539,6 @@ def takeAverage(listofSimulationsAggregatedMutations):
     return  simulationsAggregatedMutationsLows,simulationsAggregatedMutationsMeans,simulationsAggregatedMutationsHighs
 #############################################################################
 
-
-###################################################################
-#Works on tscc on python but not from pbs file
-#urllib.error.URLError: <urlopen error [Errno 101] Network is unreachable>
-def downloadFromWeb(url,filepath_to_be_saved):
-    # Download the file from `url` and save it locally under `file_name`:
-    with urllib.request.urlopen(url) as response, open(filepath_to_be_saved, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-###################################################################
-
 ###################################################################
 def calc_chunksize(n_workers, len_iterable, factor=4):
     """Calculate chunksize argument for Pool-methods.
@@ -488,13 +561,6 @@ def memory_usage():
     # print('************** Current Memory Use: '+ str(round(memoryUse1,2))+" GB *****************\n")
 ###########################################################
 
-
-# ###########################################################
-# #unix specific services
-# #Depreceated
-# def current_mem_usage():
-#     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-# ###########################################################
 
 ########################################################################################
 def getShortNames(chromNamesList):
@@ -524,33 +590,6 @@ def getSample2NumberofIndelsDict(outputDir,jobname):
     return sample2NumberofIndelsDict
 ########################################################################################
 
-########################################################################################
-def getDecileIndex2NumberofAttributableBasesDict(replicationTimeFilename_wo_extension):
-    decileIndex2NumberofAttributableBasesDict = {}
-    decileIndex2NumberofAttributableBasesDictFilePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,REPLICATION,replicationTimeFilename_wo_extension,DecileIndex2NumfAttributableBasesDictFilename)
-
-    if (os.path.exists(decileIndex2NumberofAttributableBasesDictFilePath)):
-        decileIndex2NumberofAttributableBasesDict = readDictionaryUsingPickle(decileIndex2NumberofAttributableBasesDictFilePath)
-
-    return decileIndex2NumberofAttributableBasesDict
-########################################################################################
-
-
-########################################################################################
-#Comment this function
-#Get signature2PropertiesListDict
-def getSubsSignature2NumberofMutationsDict(outputDir,jobname):
-    #Load signaturesWithAtLeast10KEligibleMutations
-    subsSignature2NumberofMutationsDict = {}
-
-    SubsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,SubsSignature2NumberofMutationsDictFilename)
-
-    if (os.path.exists(SubsSignature2NumberofMutationsDictFilePath)):
-        subsSignature2NumberofMutationsDict = readDictionary(SubsSignature2NumberofMutationsDictFilePath)
-
-    return subsSignature2NumberofMutationsDict
-########################################################################################
-
 
 ########################################################################################
 def getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname):
@@ -578,19 +617,6 @@ def getSample2NumberofSubsDict(outputDir,jobname):
     return sample2NumberofSubsDict
 ########################################################################################
 
-
-########################################################################################
-def getIndelsSignature2NumberofMutationsDict(outputDir,jobname):
-    indelsSignature2NumberofMutationsDict = {}
-    indelsSignature2NumberofMutationsDictFilePath = os.path.join(outputDir,jobname,DATA,IndelsSignature2NumberofMutationsDictFilename)
-
-    if (os.path.exists(indelsSignature2NumberofMutationsDictFilePath)):
-        indelsSignature2NumberofMutationsDict = readDictionary(indelsSignature2NumberofMutationsDictFilePath)
-
-    return indelsSignature2NumberofMutationsDict
-########################################################################################
-
-
 ########################################################################################
 def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
     sample2IndelsSignature2NumberofMutationsDict = {}
@@ -603,16 +629,6 @@ def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
     return sample2IndelsSignature2NumberofMutationsDict
 ########################################################################################
 
-
-###################################################################
-def readAsAList(filename):
-    with open(filename) as f:
-        content = f.readlines()
-    # you may also want to remove whitespace characters like `\n` at the end of each line
-    lineList = [x.strip() for x in content]
-
-    return lineList
-###################################################################
 
 ###################################################################
 def getChromSizesDict(genome):
@@ -1012,49 +1028,6 @@ def doesSimulationsAlreadyExists(outputDir,jobname,numofSimulations):
         return False
 ##################################################################
 
-##################################################################
-#TODO To be deleted
-#TODO This was making big dataframe and will be depreceated
-def getCombinedChrBasedDF(outputDir, jobname, chrLong,original_chrBased_mutations_df,mutationType,numofSimulations):
-    # Simulation case
-    # Read also simulated data and append them vertically
-    if (original_chrBased_mutations_df is not None):
-        frames = []
-        frames.append(original_chrBased_mutations_df)
-        for simNumber in range(1, numofSimulations + 1):
-            # Read simulation data and append
-            chrBased_mutation_df= readChrBasedMutationsDF(outputDir,jobname,chrLong,mutationType,simNumber)
-            frames.append(chrBased_mutation_df)
-
-        combined_chrBased_mutations_df = pd.concat(frames, ignore_index=True)
-        return combined_chrBased_mutations_df
-    else:
-        return None
-##################################################################
-
-
-
-##################################################################
-#For Parallel Writing indels and single point mutations
-def writeChrBasedMutationDF(inputList):
-    chr = inputList[0]
-    mutationsFileName = inputList[1]
-    chrBased_mutation_df = inputList[2]
-    outputDir = inputList[3]
-    jobname =  inputList[4]
-
-    chrBasedMutationFileName = 'chr%s_%s' % (chr, mutationsFileName)
-    chrBasedMutationFile = os.path.join(outputDir,jobname,DATA, CHRBASED,chrBasedMutationFileName)
-    # lock.acquire()
-
-    if (chrBased_mutation_df is not None):
-        chrBased_mutation_df.to_csv(chrBasedMutationFile, index=None, sep='\t', mode='w')
-
-    # lock.release()
-    # print('write for %s ends' %(chr))
-##################################################################
-
-
 
 ##########################################################################################
 ############### Common functions for Nucleosome Occupancy Analysis starts ################
@@ -1103,16 +1076,6 @@ def accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2Accum
 
 
 ########################################################################################
-def accumulateSampleBasedArrays(sample2AllSinglePointMutationsAccumulatedSplitsChrBasedArrayDict,sample2AllSinglePointMutationsSplitArrayDict):
-    for sample in sample2AllSinglePointMutationsSplitArrayDict.keys():
-        if sample in sample2AllSinglePointMutationsAccumulatedSplitsChrBasedArrayDict:
-            sample2AllSinglePointMutationsAccumulatedSplitsChrBasedArrayDict[sample] += sample2AllSinglePointMutationsSplitArrayDict[sample]
-        else:
-            sample2AllSinglePointMutationsAccumulatedSplitsChrBasedArrayDict[sample] = sample2AllSinglePointMutationsSplitArrayDict[sample]
-########################################################################################
-
-
-########################################################################################
 #window_array is of size 2*plusOrMinus
 # mutation_row_start will be at position=plusOrMinus of the window_array
 def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_row_start,plusOrMinus):
@@ -1120,638 +1083,6 @@ def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_
     min_end=min(entry_end,mutation_row_start+plusOrMinus)
     window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1]+=entry_signal
     # print('window_array[%d:%d]+=%f' %(max_start-(mutation_row_start-plusOrMinus),min_end-(mutation_row_start-plusOrMinus),entry_signal))
-########################################################################################
-
-
-
-
-
-########################################################################################
-#No more used. Most probably will be depreceated
-#Using pyBigWig for bigBed and bigWig files starts
-#Using bed files prepared on the fly starts
-#Original data and simulations data
-#SimNum 0 means original
-#SimNum 1 means sim1
-#my_type can be AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS and AGGREGATEDDINUCS
-#Signatures are also treated as a type
-def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig(mutation_row,
-                        chrLong,
-                        library_file,
-                        chrBasedSignalArray,
-                        library_file_type,
-                        signal_index,
-                        my_upperBound,
-                        maximum_chrom_size,
-                        sample2NumberofMutationsDict,
-                        sample2Signature2NumberofMutationsDict,
-                        simNum2Type2SignalArrayDict,
-                        simNum2Type2CountArrayDict,
-                        simNum2Sample2Type2SignalArrayDict,
-                        simNum2Sample2Type2CountArrayDict,
-                        signature2PropertiesListDict,
-                        my_type,
-                        plusorMinus,
-                        sample_based):
-
-    #signature2PropertiesListDict PropertiesList[ cutoff_probability, number_of_mutations_with_probability_ge_cutoff_probability, average_probability]
-    window_array=None
-    windowSize=plusorMinus*2+1
-
-    mutation_row_start=mutation_row[START]
-    #Get the sample at this mutation_row
-    sample = mutation_row[SAMPLE]
-    simulationNumber= mutation_row[SIMULATION_NUMBER]
-
-    #Get or fill window_array using Case1, Case2, and Case3
-    # Case 1: start is very close to the chromosome start
-    if (mutation_row_start<plusorMinus):
-        # print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row_start))
-        if ((chrBasedSignalArray is not None) or (library_file_type==BED) or (library_file_type==NARROWPEAK)):
-            window_array = chrBasedSignalArray[0:(mutation_row_start + plusorMinus + 1)]
-            window_array = np.pad(window_array, (plusorMinus - mutation_row_start, 0), 'constant', constant_values=(0, 0))
-
-        elif (library_file_type==BIGWIG):
-            #Important: The bigWig format does not support overlapping intervals.
-            window_array=library_file.values(chrLong,0,(mutation_row_start+plusorMinus+1),numpy=True)
-            # How do you handle outliers?
-            window_array[np.isnan(window_array)] = 0
-            window_array[window_array>my_upperBound]=my_upperBound
-            window_array = np.pad(window_array, (plusorMinus - mutation_row_start, 0), 'constant',constant_values=(0, 0))
-
-        elif (library_file_type==BIGBED):
-            #We assume that in the 7th column there is signal data
-            list_of_entries=library_file.entries(chrLong,0,(mutation_row_start+plusorMinus+1))
-            if list_of_entries is not None:
-                window_array = np.zeros((windowSize,),dtype=np.float32)
-                # We did not handle outliers for BigBed files.
-
-                #From DNA methylation get the 7th
-                # library_file_bed_format==BED_6PLUS4):
-                # (713235, 713435, 'Peak_40281\t15\t.\t3.48949\t5.67543\t3.79089\t158')
-                #signal_index=3
-                #library_file_bed_format==BED_9PLUS2):
-                #[(10810, 10811, 'MCF7_NoStarve_B1__GC_\t3\t+\t10810\t10811\t255,0,0\t3\t100'), (10812, 10813, 'MCF7_NoStarve_B1__GC_\t3\t+\t10812\t10813\t255,0,0\t3\t100'), (10815, 10816, 'MCF7_NoStarve_B1__GC_\t3\t+\t10815\t10816\t0,255,0\t3\t0')]
-                #signal_index=7
-                [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start, plusorMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1], 1, mutation_row_start, plusorMinus))) for entry in list_of_entries]
-
-    # Case 2: start is very close to the chromosome end
-    elif (mutation_row_start+plusorMinus+1 > maximum_chrom_size):
-        # print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row_start))
-
-        if ((chrBasedSignalArray is not None) or (library_file_type==BED) or (library_file_type==NARROWPEAK)):
-            window_array = chrBasedSignalArray[(mutation_row_start-plusorMinus):maximum_chrom_size]
-            window_array = np.pad(window_array, (0,mutation_row_start+plusorMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-
-        elif (library_file_type==BIGWIG):
-            #Important: The bigWig format does not support overlapping intervals.
-            window_array = library_file.values(chrLong,(mutation_row_start-plusorMinus),maximum_chrom_size,numpy=True)
-            # How do you handle outliers?
-            window_array[np.isnan(window_array)] = 0
-            window_array[window_array>my_upperBound]=my_upperBound
-            window_array = np.pad(window_array, (0,mutation_row_start+plusorMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-
-        elif (library_file_type==BIGBED):
-            # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
-            if ((mutation_row_start-plusorMinus)<maximum_chrom_size):
-                list_of_entries=library_file.entries(chrLong,(mutation_row_start-plusorMinus),maximum_chrom_size)
-                if list_of_entries is not None:
-                    window_array = np.zeros((windowSize,),dtype=np.float32)
-                    # We did not handle outliers for BigBed files.
-                    [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusorMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusorMinus))) for entry in list_of_entries]
-
-
-    #Case 3: No problem
-    else:
-        if ((chrBasedSignalArray is not None) or (library_file_type==BED) or (library_file_type==NARROWPEAK)):
-            window_array = chrBasedSignalArray[(mutation_row_start-plusorMinus):(mutation_row_start+plusorMinus+1)]
-
-        elif (library_file_type==BIGWIG):
-            #Important: You have to go over intervals if there are overlapping intervals.
-            window_array = library_file.values(chrLong, (mutation_row_start-plusorMinus), (mutation_row_start+plusorMinus+1),numpy=True)
-            #How do you handle outliers?
-            window_array[np.isnan(window_array)] = 0
-            window_array[window_array>my_upperBound]=my_upperBound
-
-        elif (library_file_type==BIGBED):
-            # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
-            if ((mutation_row_start+plusorMinus+1)<=maximum_chrom_size):
-                list_of_entries=library_file.entries(chrLong, (mutation_row_start-plusorMinus), (mutation_row_start+plusorMinus+1))
-                if list_of_entries is not None:
-                    window_array = np.zeros((windowSize,),dtype=np.float32)
-                    # We did not handle outliers for BigBed files.
-                    [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusorMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusorMinus))) for entry in list_of_entries]
-
-    ##########################################################
-
-    #####################################################
-    if simulationNumber not in simNum2Type2SignalArrayDict:
-        simNum2Type2SignalArrayDict[simulationNumber] = {}
-        simNum2Type2CountArrayDict[simulationNumber] = {}
-
-    type2SignalArrayDict = simNum2Type2SignalArrayDict[simulationNumber]
-    type2CountArrayDict =  simNum2Type2CountArrayDict[simulationNumber]
-    #####################################################
-
-    #####################################################
-    if sample_based:
-        if simulationNumber not in simNum2Sample2Type2SignalArrayDict:
-            simNum2Sample2Type2SignalArrayDict[simulationNumber] = {}
-            simNum2Sample2Type2CountArrayDict[simulationNumber] = {}
-        sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict[simulationNumber]
-        sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict[simulationNumber]
-    #####################################################
-
-    #Fill dictionaries uisng window_array
-    if (window_array is not None) and (np.any(window_array)):
-        #TODO: Is there a faster way than using for loop?
-        ################# Signatures starts #######################
-        #mutation_row[signature] mutation probability for that signature
-        #signature2PropertiesListDict[signature][0] cutoff probability for that signature
-
-        for signature in signature2PropertiesListDict:
-            if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
-                if (signature in type2SignalArrayDict):
-                    type2SignalArrayDict[signature] += window_array
-                    type2CountArrayDict[signature] += (window_array>0)
-                else:
-                    type2SignalArrayDict[signature] = np.zeros(windowSize)
-                    type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
-                    type2SignalArrayDict[signature] += window_array
-                    type2CountArrayDict[signature] += (window_array>0)
-
-                ####################################################
-                if sample_based:
-                    if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
-                        if sample in sample2Type2SignalArrayDict:
-                            if signature in sample2Type2SignalArrayDict[sample]:
-                                sample2Type2SignalArrayDict[sample][signature] += window_array
-                                sample2Type2CountArrayDict[sample][signature] += (window_array>0)
-                            else:
-                                sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                                sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                                sample2Type2SignalArrayDict[sample][signature] += window_array
-                                sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-
-                        else:
-                            sample2Type2SignalArrayDict[sample] = {}
-                            sample2Type2CountArrayDict[sample] = {}
-                            sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                            sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                            sample2Type2SignalArrayDict[sample][signature] += window_array
-                            sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-                ####################################################
-        ################# Signatures ends #########################
-
-        ######################################################################
-        if my_type in type2SignalArrayDict:
-            type2SignalArrayDict[my_type] += window_array
-            type2CountArrayDict[my_type] += (window_array > 0)
-        else:
-            type2SignalArrayDict[my_type] = np.zeros(windowSize)
-            type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
-            type2SignalArrayDict[my_type] += window_array
-            type2CountArrayDict[my_type] += (window_array > 0)
-
-        if sample_based:
-            if (sample in sample2NumberofMutationsDict):
-                if sample in sample2Type2SignalArrayDict:
-                    if my_type in sample2Type2SignalArrayDict[sample]:
-                        sample2Type2SignalArrayDict[sample][my_type] += window_array
-                        sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-                    else:
-                        sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-                        sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-                        sample2Type2SignalArrayDict[sample][my_type] += window_array
-                        sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-                else:
-                    sample2Type2SignalArrayDict[sample] = {}
-                    sample2Type2CountArrayDict[sample] = {}
-                    sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-                    sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-                    sample2Type2SignalArrayDict[sample][my_type] += window_array
-                    sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-        ######################################################################
-
-    # old version October 25, 2019
-    # #Get or fill window_array using Case1, Case2, and Case3
-    # # Case 1: start is very close to the chromosome start
-    # if (mutation_row[START]<plusOrMinus):
-    #     print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row[START]))
-    #
-    #     if (library_file_type==BED):
-    #         window_array = chrBasedSignalArray[0:(mutation_row[START] + plusOrMinus + 1)]
-    #         window_array = np.pad(window_array, (plusOrMinus - mutation_row[START], 0), 'constant', constant_values=(0, 0))
-    #
-    #     elif (library_file_type==BIGWIG):
-    #         #Important: The bigWig format does not support overlapping intervals.
-    #         window_array=library_file.values(chrLong,0,(mutation_row[START]+plusOrMinus+1),numpy=True)
-    #         # How do you handle outliers?
-    #         window_array[np.isnan(window_array)] = 0
-    #         window_array[window_array>my_upperBound]=my_upperBound
-    #         window_array = np.pad(window_array, (plusOrMinus - mutation_row[START], 0), 'constant',constant_values=(0, 0))
-    #
-    #     elif (library_file_type==BIGBED):
-    #         # print('Case1 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]+plusOrMinus+1))
-    #         list_of_tuples=library_file.entries(chrLong,0,(mutation_row[START]+plusOrMinus+1))
-    #         if list_of_tuples is not None:
-    #             window_array = np.zeros((windowSize,),dtype=np.float32)
-    #             window_array_start = mutation_row[START] - plusOrMinus
-    #
-    #             for i in list_of_tuples:
-    #                 #In each tuple there is start end  and space separated string column
-    #                 if len(i)>=3:
-    #                     window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
-    #                 else:
-    #                     window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
-    #             # We did not handle outliers for BigBed files.
-    #
-    # # Case 2: start is very close to the chromosome end
-    # elif (mutation_row[START]+plusOrMinus+1 > maximum_chrom_size):
-    #     print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row[START]))
-    #
-    #     if (library_file_type==BED):
-    #         window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
-    #         window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-    #
-    #     elif (library_file_type==BIGWIG):
-    #         #Important: The bigWig format does not support overlapping intervals.
-    #         window_array = library_file.values(chrLong,(mutation_row[START]-plusOrMinus),maximum_chrom_size,numpy=True)
-    #         # How do you handle outliers?
-    #         window_array[np.isnan(window_array)] = 0
-    #         window_array[window_array>my_upperBound]=my_upperBound
-    #         window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-    #
-    #     elif (library_file_type==BIGBED):
-    #         # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
-    #         if ((mutation_row[START]-plusOrMinus)<maximum_chrom_size):
-    #             list_of_tuples=library_file.entries(chrLong,(mutation_row[START]-plusOrMinus),maximum_chrom_size)
-    #             if list_of_tuples is not None:
-    #                 window_array = np.zeros((windowSize,),dtype=np.float32)
-    #                 window_array_start = mutation_row[START] - plusOrMinus
-    #                 for i in list_of_tuples:
-    #                     #In each tuple there is start end  and space separated string column
-    #                     if len(i)>=3:
-    #                         window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
-    #                     else:
-    #                         window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
-    #                 # We did not handle outliers for BigBed files.
-    #
-    # #Case 3: No problem
-    # else:
-    #     if (library_file_type==BED):
-    #         window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
-    #
-    #     elif (library_file_type==BIGWIG):
-    #         #Important: You have to go over intervals if there are overlapping intervals.
-    #         window_array = library_file.values(chrLong, (mutation_row[START]-plusOrMinus), (mutation_row[START]+plusOrMinus+1),numpy=True)
-    #         #How do you handle outliers?
-    #         window_array[np.isnan(window_array)] = 0
-    #         window_array[window_array>my_upperBound]=my_upperBound
-    #
-    #     elif (library_file_type==BIGBED):
-    #         # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
-    #         if ((mutation_row[START]+plusOrMinus+1)<=maximum_chrom_size):
-    #             list_of_tuples=library_file.entries(chrLong, (mutation_row[START]-plusOrMinus), (mutation_row[START]+plusOrMinus+1))
-    #             if list_of_tuples is not None:
-    #                 window_array = np.zeros((windowSize,),dtype=np.float32)
-    #                 window_array_start=mutation_row[START] - plusOrMinus
-    #                 for i in list_of_tuples:
-    #                     #In each tuple there is start end  and space separated string column
-    #                     if len(i)>=3:
-    #                         window_array[i[0]-window_array_start:i[1]-window_array_start]+=np.float32(i[2].split()[1])
-    #                     else:
-    #                         window_array[i[0]-window_array_start:i[1]-window_array_start]+=1
-    #                 # We did not handle outliers for BigBed files.
-    #
-    # ##########################################################
-    #
-    # #Get the sample at this mutation_row
-    # sample = mutation_row[SAMPLE]
-    # simulationNumber= mutation_row[SIMULATION_NUMBER]
-    #
-    # #####################################################
-    # if simulationNumber not in simNum2Type2SignalArrayDict:
-    #     simNum2Type2SignalArrayDict[simulationNumber] = {}
-    #     simNum2Type2CountArrayDict[simulationNumber] = {}
-    #
-    # type2SignalArrayDict = simNum2Type2SignalArrayDict[simulationNumber]
-    # type2CountArrayDict =  simNum2Type2CountArrayDict[simulationNumber]
-    # #####################################################
-    #
-    # #####################################################
-    # if simulationNumber not in simNum2Sample2Type2SignalArrayDict:
-    #     simNum2Sample2Type2SignalArrayDict[simulationNumber] = {}
-    #     simNum2Sample2Type2CountArrayDict[simulationNumber] = {}
-    # sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict[simulationNumber]
-    # sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict[simulationNumber]
-    # #####################################################
-    #
-    # #Fill dictionaries uisng window_array
-    # if (window_array is not None) and (np.any(window_array)):
-    #     #TODO: Is there a faster way than using for loop?
-    #     ################# Signatures starts #######################
-    #     #mutation_row[signature] mutation probability for that signature
-    #     #signature2PropertiesListDict[signature][0] cutoff probability for that signature
-    #     for signature in signature2PropertiesListDict:
-    #         if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
-    #             if (signature in type2SignalArrayDict):
-    #                 type2SignalArrayDict[signature] += window_array
-    #                 type2CountArrayDict[signature] += (window_array>0)
-    #             else:
-    #                 type2SignalArrayDict[signature] = np.zeros(windowSize)
-    #                 type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
-    #                 type2SignalArrayDict[signature] += window_array
-    #                 type2CountArrayDict[signature] += (window_array>0)
-    #
-    #             ####################################################
-    #             if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
-    #                 if sample in sample2Type2SignalArrayDict:
-    #                     if signature in sample2Type2SignalArrayDict[sample]:
-    #                         sample2Type2SignalArrayDict[sample][signature] += window_array
-    #                         sample2Type2CountArrayDict[sample][signature] += (window_array>0)
-    #                     else:
-    #                         sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-    #                         sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-    #                         sample2Type2SignalArrayDict[sample][signature] += window_array
-    #                         sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-    #
-    #                 else:
-    #                     sample2Type2SignalArrayDict[sample] = {}
-    #                     sample2Type2CountArrayDict[sample] = {}
-    #                     sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-    #                     sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-    #                     sample2Type2SignalArrayDict[sample][signature] += window_array
-    #                     sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-    #             ####################################################
-    #     ################# Signatures ends #########################
-    #
-    #     ######################################################################
-    #     if my_type in type2SignalArrayDict:
-    #         type2SignalArrayDict[my_type] += window_array
-    #         type2CountArrayDict[my_type] += (window_array > 0)
-    #     else:
-    #         type2SignalArrayDict[my_type] = np.zeros(windowSize)
-    #         type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
-    #         type2SignalArrayDict[my_type] += window_array
-    #         type2CountArrayDict[my_type] += (window_array > 0)
-    #
-    #     if (sample in sample2NumberofMutationsDict):
-    #         if sample in sample2Type2SignalArrayDict:
-    #             if my_type in sample2Type2SignalArrayDict[sample]:
-    #                 sample2Type2SignalArrayDict[sample][my_type] += window_array
-    #                 sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-    #             else:
-    #                 sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-    #                 sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-    #                 sample2Type2SignalArrayDict[sample][my_type] += window_array
-    #                 sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-    #         else:
-    #             sample2Type2SignalArrayDict[sample] = {}
-    #             sample2Type2CountArrayDict[sample] = {}
-    #             sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-    #             sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-    #             sample2Type2SignalArrayDict[sample][my_type] += window_array
-    #             sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-    #     ######################################################################
-
-#Using pyBigWig for bigBed and bigWig files ends
-#Using bed files prepared on the fly ends
-########################################################################################
-
-
-########################################################################################
-#Depreceated. Now using fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
-#Original data and simulations data
-#SimNum 0 means original
-#SimNum 1 means sim1
-#my_type can be AGGREGATEDSUBSTITUTIONS,AGGREGATEDINDELS and AGGREGATEDDINUCS
-#Signatures are also treated as a type
-def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated(mutation_row,
-                        chrBasedSignalArray,
-                        maximum_chrom_size,
-                        sample2NumberofMutationsDict,
-                        sample2Signature2NumberofMutationsDict,
-                        simNum2Type2SignalArrayDict,
-                        simNum2Type2CountArrayDict,
-                        simNum2Sample2Type2SignalArrayDict,
-                        simNum2Sample2Type2CountArrayDict,
-                        signature2PropertiesListDict,
-                        my_type,
-                        plusOrMinus):
-
-
-    windowSize=plusOrMinus*2+1
-    #signature2PropertiesListDict PropertiesList[ cutoff_probability, number_of_mutations_with_probability_ge_cutoff_probability, average_probability]
-
-    # Case 1: start is very close to the chromosome start
-    if (mutation_row[START]<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row[START]))
-        window_array = chrBasedSignalArray[0:(mutation_row[START]+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant',constant_values=(0,0))
-    # Case 2: start is very close to the chromosome end
-    elif (mutation_row[START]+plusOrMinus > maximum_chrom_size):
-        print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row[START]))
-        window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
-        window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-    #Case 3: No problem
-    else:
-        window_array = chrBasedSignalArray[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
-    ##########################################################
-
-    #Get the sample at this mutation_row
-    sample = mutation_row[SAMPLE]
-    simulationNumber= mutation_row[SIMULATION_NUMBER]
-
-    #####################################################
-    if simulationNumber not in simNum2Type2SignalArrayDict:
-        simNum2Type2SignalArrayDict[simulationNumber] = {}
-        simNum2Type2CountArrayDict[simulationNumber] = {}
-
-    type2SignalArrayDict = simNum2Type2SignalArrayDict[simulationNumber]
-    type2CountArrayDict =  simNum2Type2CountArrayDict[simulationNumber]
-    #####################################################
-
-    #####################################################
-    if simulationNumber not in simNum2Sample2Type2SignalArrayDict:
-        simNum2Sample2Type2SignalArrayDict[simulationNumber] = {}
-        simNum2Sample2Type2CountArrayDict[simulationNumber] = {}
-    sample2Type2SignalArrayDict = simNum2Sample2Type2SignalArrayDict[simulationNumber]
-    sample2Type2CountArrayDict = simNum2Sample2Type2CountArrayDict[simulationNumber]
-    #####################################################
-
-    #TODO: Is there a faster way than using for loop?
-    ################# Signatures starts #######################
-    #mutation_row[signature] mutation probability for that signature
-    #signature2PropertiesListDict[signature][0] cutoff probability for that signature
-    for signature in signature2PropertiesListDict:
-        if (mutation_row[signature] >= float(signature2PropertiesListDict[signature][0])):
-            if (signature in type2SignalArrayDict):
-                type2SignalArrayDict[signature] += window_array
-                type2CountArrayDict[signature] += (window_array>0)
-            else:
-                type2SignalArrayDict[signature] = np.zeros(windowSize)
-                type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
-                type2SignalArrayDict[signature] += window_array
-                type2CountArrayDict[signature] += (window_array>0)
-
-            ####################################################
-            if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
-                if sample in sample2Type2SignalArrayDict:
-                    if signature in sample2Type2SignalArrayDict[sample]:
-                        sample2Type2SignalArrayDict[sample][signature] += window_array
-                        sample2Type2CountArrayDict[sample][signature] += (window_array>0)
-                    else:
-                        sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                        sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                        sample2Type2SignalArrayDict[sample][signature] += window_array
-                        sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-
-                else:
-                    sample2Type2SignalArrayDict[sample] = {}
-                    sample2Type2CountArrayDict[sample] = {}
-                    sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                    sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                    sample2Type2SignalArrayDict[sample][signature] += window_array
-                    sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-            ####################################################
-    ################# Signatures ends #########################
-
-    ######################################################################
-    if my_type in type2SignalArrayDict:
-        type2SignalArrayDict[my_type] += window_array
-        type2CountArrayDict[my_type] += (window_array > 0)
-    else:
-        type2SignalArrayDict[my_type] = np.zeros(windowSize)
-        type2CountArrayDict[my_type] = np.zeros(windowSize, dtype=int)
-        type2SignalArrayDict[my_type] += window_array
-        type2CountArrayDict[my_type] += (window_array > 0)
-
-    if (sample in sample2NumberofMutationsDict):
-        if sample in sample2Type2SignalArrayDict:
-            if my_type in sample2Type2SignalArrayDict[sample]:
-                sample2Type2SignalArrayDict[sample][my_type] += window_array
-                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-            else:
-                sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-                sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-                sample2Type2SignalArrayDict[sample][my_type] += window_array
-                sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-        else:
-            sample2Type2SignalArrayDict[sample] = {}
-            sample2Type2CountArrayDict[sample] = {}
-            sample2Type2SignalArrayDict[sample][my_type] = np.zeros(windowSize)
-            sample2Type2CountArrayDict[sample][my_type] = np.zeros(windowSize, dtype=int)
-            sample2Type2SignalArrayDict[sample][my_type] += window_array
-            sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
-    ######################################################################
-
-
-########################################################################################
-
-
-########################################################################################
-#Depreceated
-# Use only one fillSignalArrayAndCountArrayForMutations method
-def fillSignalArrayAndCountArrayForMutations(mutation_row,
-                        nucleosome_array,
-                        maximum_chrom_size,
-                        sample2NumberofMutationsDict,
-                        signature2NumberofMutationsDict,
-                        sample2Signature2NumberofMutationsDict,
-                        type2SignalArrayDict,
-                        type2CountArrayDict,
-                        sample2Type2SignalArrayDict,
-                        sample2Type2CountArrayDict,
-                        MUTATION_SIGNATURE_PROBABILITY_THRESHOLD,
-                        type,
-                        plusOrMinus):
-
-    windowSize=plusOrMinus*2+1
-
-    # Case 1: start is very close to the chromosome start
-    if (mutation_row[START]<plusOrMinus):
-        print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row[START]))
-        window_array = nucleosome_array[0:(mutation_row[START]+plusOrMinus+1)]
-        window_array = np.pad(window_array, (plusOrMinus-mutation_row[START],0),'constant',constant_values=(0,0))
-    # Case 2: start is very close to the chromosome end
-    elif (mutation_row[START]+plusOrMinus+1 > maximum_chrom_size):
-        print('Case2: start is very close to the chromosome end ---  mutation[Start]:%d' %(mutation_row[START]))
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):maximum_chrom_size]
-        window_array = np.pad(window_array, (0,mutation_row[START]+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
-    #Case 3: No problem
-    else:
-        window_array = nucleosome_array[(mutation_row[START]-plusOrMinus):(mutation_row[START]+plusOrMinus+1)]
-    ##########################################################
-
-    #Get the sample at this mutation_row
-    sample = mutation_row[SAMPLE]
-
-    #TODO: Is there a faster way than using for loop?
-    ################# Signatures starts #######################
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= MUTATION_SIGNATURE_PROBABILITY_THRESHOLD):
-            if (signature in type2SignalArrayDict):
-                type2SignalArrayDict[signature] += window_array
-                type2CountArrayDict[signature] += (window_array>0)
-            else:
-                type2SignalArrayDict[signature] = np.zeros(windowSize)
-                type2CountArrayDict[signature] = np.zeros(windowSize, dtype=int)
-                type2SignalArrayDict[signature] += window_array
-                type2CountArrayDict[signature] += (window_array>0)
-
-            ####################################################
-            if (sample in sample2Signature2NumberofMutationsDict) and (signature in sample2Signature2NumberofMutationsDict[sample]):
-                if sample in sample2Type2SignalArrayDict:
-                    if signature in sample2Type2SignalArrayDict[sample]:
-                        sample2Type2SignalArrayDict[sample][signature] += window_array
-                        sample2Type2CountArrayDict[sample][signature] += (window_array>0)
-                    else:
-                        sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                        sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                        sample2Type2SignalArrayDict[sample][signature] += window_array
-                        sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-
-                else:
-                    sample2Type2SignalArrayDict[sample] = {}
-                    sample2Type2CountArrayDict[sample] = {}
-                    sample2Type2SignalArrayDict[sample][signature] = np.zeros(windowSize)
-                    sample2Type2CountArrayDict[sample][signature] = np.zeros(windowSize, dtype=int)
-                    sample2Type2SignalArrayDict[sample][signature] += window_array
-                    sample2Type2CountArrayDict[sample][signature] += (window_array > 0)
-            ####################################################
-    ################# Signatures ends #########################
-
-    ######################################################################
-    if type in type2SignalArrayDict:
-        type2SignalArrayDict[type] += window_array
-        type2CountArrayDict[type] += (window_array > 0)
-    else:
-        type2SignalArrayDict[type] = np.zeros(windowSize)
-        type2CountArrayDict[type] = np.zeros(windowSize, dtype=int)
-        type2SignalArrayDict[type] += window_array
-        type2CountArrayDict[type] += (window_array > 0)
-
-
-    if (sample in sample2NumberofMutationsDict):
-        if sample in sample2Type2SignalArrayDict:
-            if type in sample2Type2SignalArrayDict[sample]:
-                sample2Type2SignalArrayDict[sample][type] += window_array
-                sample2Type2CountArrayDict[sample][type] += (window_array > 0)
-            else:
-                sample2Type2SignalArrayDict[sample][type] = np.zeros(windowSize)
-                sample2Type2CountArrayDict[sample][type] = np.zeros(windowSize, dtype=int)
-                sample2Type2SignalArrayDict[sample][type] += window_array
-                sample2Type2CountArrayDict[sample][type] += (window_array > 0)
-        else:
-            sample2Type2SignalArrayDict[sample] = {}
-            sample2Type2CountArrayDict[sample] = {}
-            sample2Type2SignalArrayDict[sample][type] = np.zeros(windowSize)
-            sample2Type2CountArrayDict[sample][type] = np.zeros(windowSize, dtype=int)
-            sample2Type2SignalArrayDict[sample][type] += window_array
-            sample2Type2CountArrayDict[sample][type] += (window_array > 0)
-    ######################################################################
-
 ########################################################################################
 
 
@@ -1789,7 +1120,6 @@ def writeSimulationBasedAverageNucleosomeOccupancy(
         outputDir,
         jobname,
         library_file_memo):
-
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type),exist_ok=True)
 
@@ -2008,13 +1338,6 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
 ############### Common functions for Nucleosome Occupancy Analysis ends ##################
 ##########################################################################################
 
-##################################################################
-def init(l):
-    global lock
-    lock = l
-##################################################################
-
-
 ############################################################
 #Tested works correctly.
 def getNucleotides(chromosomeShort,start,end,humanGenome):
@@ -2088,7 +1411,7 @@ def addPyramidineStrandColumn(mutation_row, genome):
 #BED files: end is not inclusive
 #BED files: score - A score between 0 and 1000. See track lines, below, for ways to configure the display style of scored data.
 def updateChrBasedSignalArray(data_row,chrBasedSignalArray):
-    chrBasedSignalArray[data_row[start]:data_row[end]] += data_row[signal]
+    chrBasedSignalArray[data_row[START]:data_row[END]] += data_row[SIGNAL]
 ######################################################################
 
 
@@ -2098,47 +1421,33 @@ def fillNumpyArray(start,end,signal,chrBasedSignalArray):
 ######################################################################
 
 
-##################################################################
-#TODO Will be depreceated after tests
-#Used by ReplicationStrandBiasAnalysis.py
-def readBED(bedFilename):
-    columns = ['chr', 'start', 'end', 'column4','column5','column6','column7','column8','column9']
-
-    #BED files are seperated by tab
-    bed_df = pd.read_table(bedFilename, sep='\t', comment='#', header=None, names=columns)
-
-    #BED files are end exclusive by default.
-    #Make end inclusive
-    bed_df['end'] =bed_df['end']-1
-
-    # print('debug starts')
-    # print('############## bed_df starts ##############')
-    # print(bed_df.shape)
-    # print(bed_df.head())
-    # print(bed_df.info())
-    # print('############## bed_df ends ##############')
-    # print('debug ends')
-
-    return bed_df
-##################################################################
+######################################################################
+def decideFileType(library_file_with_path):
+    with open(library_file_with_path, "r") as f:
+        for line in f:
+            if 'bedGraph' in line:
+                return True
+            elif ('fixedStep' in line) or ('variableStep' in line):
+                return False
+######################################################################
 
 
 ##################################################################
-#Make signal from bed files and signal from wig files have the same type np.float32
-#No outlier elimination in bed files
-def readFileInBEDFormat(file_with_path):
+#SIGNAL must have type np.float32
+#No Outlier Elimination is done
+def readFileInBEDFormat(file_with_path,discard_signal):
     file_df=None
 
     print('############################################')
     if os.path.exists(file_with_path):
-        file_df = pd.read_table(file_with_path, nrows=1)  # 2.25 GB
+        file_df = pd.read_table(file_with_path, header=None, nrows=1)  # 2.25 GB
         ncols=file_df.shape[1]
 
         if (ncols<=3):
             print('There is no enough columns in this bed file')
         elif (ncols==4):
             print('SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header')
-            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [chrom,start,end,signal],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32})
+            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [CHROM,START,END,SIGNAL],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32})
 
         elif ((ncols==10) or (ncols==9)):
             # ENCODE narrowpeak BED6+4 ncols=10
@@ -2149,17 +1458,25 @@ def readFileInBEDFormat(file_with_path):
             elif (ncols==9):
                 print('ENCODE narrowpeak BED6+3')
 
-            print('SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header')
-            file_df = pd.read_table(file_with_path, header=None, usecols=[0,1,2,3,4,5,6],
-                                    names=[chrom, start, end, name,score,strand,signal],
-                                    dtype={0: 'category', 1: np.int32, 2: np.int32, 3:str,4:np.int32, 5:'category', 6:np.float32})
+            if discard_signal==True:
+                file_df = pd.read_table(file_with_path, header=None, usecols=[0,1,2],
+                                        names=[CHROM,START,END],
+                                        dtype={0: 'category', 1: np.int32, 2: np.int32})
 
-            # file_df.drop([3,4,5], inplace=True, axis=1)
-            file_df.drop([name,score,strand], inplace=True, axis=1)
+            else:
+                print('SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header')
+                file_df = pd.read_table(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
+                                        names=[CHROM, START, END, NAME, SCORE, STRAND, SIGNAL],
+                                        dtype={0: 'category', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
+                                               5: 'category', 6: np.float32})
+
+                # file_df.drop([3,4,5], inplace=True, axis=1)
+                file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
+
 
         elif (ncols>=5):
             print('SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header')
-            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [chrom,start,end,signal], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32})
+            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32})
 
         print("file_df.dtypes")
         print(file_df.dtypes)
@@ -2169,231 +1486,19 @@ def readFileInBEDFormat(file_with_path):
         print('\nfile_df.shape:(%d,%d)' %(file_df.shape[0],file_df.shape[1]))
         # print(file_df.head())
 
-        max_signal=file_df[signal].max()
-        min_signal=file_df[signal].min()
-        print('Max Signal: %f' %max_signal)
-        print('Min Signal: %f' %min_signal)
+        if SIGNAL in file_df.columns.values:
+            max_signal=file_df[SIGNAL].max()
+            min_signal=file_df[SIGNAL].min()
+            print('Max Signal: %f' %max_signal)
+            print('Min Signal: %f' %min_signal)
+            return file_df, max_signal, min_signal
+        else:
+            return file_df
+
         print('############################################')
 
-    return file_df,max_signal,min_signal
+    return file_df
 ##################################################################
-
-
-
-
-#todo which method to use?
-#This is handled sep='\t' will be used
-#readRepliSeqSignal uses * as separator
-#readWaveletSmoothedRepliSeqSignal
-
-# ##################################################################
-# #TODO JAN 7, 2020 Will be depreceated
-# # WaveletSmoothedSignal Filename: 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-# # SumSignal: GSM923442_hg19_wgEncodeUwRepliSeqMcf7SumSignalRep1.wig
-# def readRepliSeqSignal(repliseqDataFilename):
-#     #TODO is there a better/more clean way to handle this?
-#     #This sep='*' is used for reading line by line without different number of columns error for different lines
-#     repliSeq_unprocessed_df = pd.read_table(repliseqDataFilename, sep='*', comment='#', header=None)
-#     # print('debug starts')
-#     # print('############## wavelet_unprocessed_df ##############')
-#     # print(repliSeq_unprocessed_df.shape)
-#     # print(repliSeq_unprocessed_df.head())
-#     # print('############## wavelet_unprocessed_df ##############')
-#     # print('debug ends')
-#
-#     return repliSeq_unprocessed_df
-# ##################################################################
-
-# ##################################################################
-# #TODO JAN 7, 2020, TO be deleted
-# def old_generateIntervalVersion(replication_time_wavelet_signal_unprocessed_df):
-#     #Read the file and generate chr start end signal wavelet_smoothed_signal
-#     columns = [CHROM, START, END,SIGNAL]
-#
-#     #Create an empty dataframe
-#     replication_time_wavelet_signal_interval_version_df = pd.DataFrame(columns=columns)
-#
-#     #dummy initialization
-#     i = 0
-#     chrom = 'chr1'
-#     start = 0
-#     step = 1000
-#
-#     rows_list = []
-#
-#     # e.g. rows
-#     # fixedStep chrom=chr1 start=24500 step=1000 span=1000
-#     # 57.4679
-#     # 57.467
-#     # 57.4651
-#     # 57.4623
-#     # 57.4586
-#     # 57.454
-#     # 57.4484
-#     # 57.442
-#     # 57.4347
-#     # 57.4266
-#     # 57.4176
-#
-#     for row in replication_time_wavelet_signal_unprocessed_df.itertuples(index=True, name='Pandas'):
-#         # row's type is <class 'pandas.core.frame.Pandas'>
-#         # row[0] is the index
-#         # row[1] is fixedStep chrom=chr1 start=24500 step=1000 span=1000 or 57.4679
-#         if (row[1].startswith('fixedStep')):
-#             #This is the information line
-#             chrom = row[1].split()[1].split('=')[1]
-#             start = int(row[1].split()[2].split('=')[1])
-#             step = int(row[1].split()[3].split('=')[1])
-#         else:
-#             signal = float(row[1])
-#             chr = chrom
-#             start = start
-#             end = start + step-1
-#             dict = {CHROM:chr, START:start, END:end, SIGNAL:signal}
-#             rows_list.append(dict)
-#             start += step
-#
-#     # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
-#     #rows_list contain the list of row where each row is a dictionary
-#
-#     replication_time_wavelet_signal_interval_version_df = pd.DataFrame(rows_list, columns=[CHROM,START,END,SIGNAL])
-#
-#     # print('replication_time_wavelet_signal_interval_version_df.dtypes')
-#     # print(replication_time_wavelet_signal_interval_version_df.dtypes)
-#
-#     replication_time_wavelet_signal_interval_version_df[CHROM] = replication_time_wavelet_signal_interval_version_df[CHROM].astype(str)
-#     replication_time_wavelet_signal_interval_version_df[START] = replication_time_wavelet_signal_interval_version_df[START].astype(np.int32)
-#     replication_time_wavelet_signal_interval_version_df[END] = replication_time_wavelet_signal_interval_version_df[END].astype(np.int32)
-#     replication_time_wavelet_signal_interval_version_df[SIGNAL] = replication_time_wavelet_signal_interval_version_df[SIGNAL].astype(np.float32)
-#
-#     # print('replication_time_wavelet_signal_interval_version_df.dtypes')
-#     # print(replication_time_wavelet_signal_interval_version_df.dtypes)
-#
-#     return replication_time_wavelet_signal_interval_version_df
-# ##################################################################
-
-
-# ##################################################################
-# #TODO JAN 7, 2020, Will be depreceated
-# def processSmoothedWaveletSignal(wavelet_unprocessed_df):
-#     #Read the file and generate chr start end signal wavelet_smoothed_signal
-#     #Then sort the data w.r.t. signal in descending order
-#     #Divide the data into 10 equal deciles
-#     #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
-#
-#     columns = ['chr','start','end','signal']
-#
-#     #Create an empty dataframe
-#     wavelet_processed_df = pd.DataFrame(columns=columns)
-#
-#     # print('############### empty wavelet_processed_df starts #################')
-#     # print(wavelet_processed_df.shape)
-#     # print(wavelet_processed_df.head())
-#     # print('############### empty wavelet_processed_df ends #################')
-#
-#     #dummy initialization
-#     i = 0
-#     chrom = 'chr1'
-#     start = 0
-#     step = 1000
-#
-#     rows_list = []
-#
-#     for row in wavelet_unprocessed_df.itertuples(index=True, name='Pandas'):
-#         # row's type is <class 'pandas.core.frame.Pandas'>
-#         # row[0] is the index
-#         # row[1] is fixedStep chrom=chr1 start=24500 step=1000 span=1000 or 57.4679
-#         if (row[1].startswith('fixedStep')):
-#             #This is the information line
-#             chrom = row[1].split()[1].split('=')[1]
-#             start = int(row[1].split()[2].split('=')[1])
-#             step = int(row[1].split()[3].split('=')[1])
-#         else:
-#             signal = float(row[1])
-#             chr = chrom
-#             start = start
-#             end = start + step-1
-#             dict = {'chr':chr, 'start':start, 'end':end, 'signal':signal}
-#             rows_list.append(dict)
-#             start += step
-#
-#     # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
-#
-#     #rows_list contain the list of row where each row is a dictionary
-#     wavelet_processed_df = pd.DataFrame(rows_list, columns=['chr','start','end','signal'])
-#
-#     # print('############### wavelet_processed_df is filled starts #################')
-#     # print(wavelet_processed_df.shape)
-#     # print(wavelet_processed_df.head())
-#     # print('############### wavelet_processed_df is filled ends #################')
-#
-#     return wavelet_processed_df
-# ##################################################################
-
-# ##################################################################
-# #TODO JAN 7, 2020, To be depreceated
-# def processSumSignal(sum_signal_unprocessed_df):
-#     columns = ['chr', 'start', 'end','signal']
-#
-#     #Create an empty dataframe
-#     sum_signal_processed_df = pd.DataFrame(columns=columns)
-#
-#     # print('############### empty sum_signal_processed_df starts #################')
-#     # print(sum_signal_processed_df.shape)
-#     # print(sum_signal_processed_df.head())
-#     # print('############### empty sum_signal_processed_df ends #################')
-#
-#     #dummy initialization
-#     i = 0
-#     chrom = 'chr1'
-#     start = 0
-#     step = 1000
-#
-#     rows_list = []
-#
-#     for row in sum_signal_unprocessed_df.itertuples(index=True, name='Pandas'):
-#         # row's type is <class 'pandas.core.frame.Pandas'>
-#         # row[0] is the index
-#         # row[1] is fixedStep chrom=chr1 start=24500 step=1000 span=1000 or 57.4679
-#         if (row[1].startswith('variableStep')):
-#             # e.g. row[1] variableStep chrom=chr1 span=1000
-#             #This is the information line
-#             chrom = row[1].split()[1].split('=')[1]
-#             step = int(row[1].split()[2].split('=')[1])
-#         else:
-#             # e.g. row[1] '24500\t35'
-#             start= int(row[1].split('\t')[0])
-#             signal = float(row[1].split('\t')[1])
-#             chr = chrom
-#             end = start + step-1
-#
-#             dict = {'chr':chr, 'start':start, 'end':end, 'signal':signal}
-#             rows_list.append(dict)
-#
-#     # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
-#
-#     #rows_list contain the list of row where each row is a dictionary
-#     sum_signal_processed_df = pd.DataFrame(rows_list, columns=['chr','start','end','signal'])
-#
-#     # print('############### wavelet_processed_df is filled starts #################')
-#     # print(sum_signal_processed_df.shape)
-#     # print(sum_signal_processed_df.head())
-#     # print('############### wavelet_processed_df is filled ends #################')
-#
-#     return sum_signal_processed_df
-# ##################################################################
-
-
-# ##################################################################
-# #JAN 7, 2020
-# #TODO No need
-# # Original Filename: GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig
-# # WaveletSmoothedSignal Filename: 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-# def readWaveletSmoothedSignalReplicationTime(repliseqDataFilename):
-#     replication_time_wavelet_signal_unprocessed_df = pd.read_table(repliseqDataFilename, sep="\t", comment='#', header=None)
-#
-#     return replication_time_wavelet_signal_unprocessed_df
-# ##################################################################
 
 ##################################################################
 #JAN 7, 2020
@@ -2470,8 +1575,8 @@ def generateIntervalVersion(wig_unprocessed_df):
                 signal = float(row[1])
                 ##################
                 end = start + span-1
-                dict = {CHROM:chrom, START:start, END:end, SIGNAL:signal}
-                rows_list.append(dict)
+                list = [chrom, start, end, signal]
+                rows_list.append(list)
                 start += step
             elif step_type==VARIABLE_STEP:
                 #We read start and signal
@@ -2480,8 +1585,8 @@ def generateIntervalVersion(wig_unprocessed_df):
                 signal = float(row[1].split()[1])
                 ##################
                 end = start + span-1
-                dict = {CHROM:chrom, START:start, END:end, SIGNAL:signal}
-                rows_list.append(dict)
+                list = [chrom, start, end, signal]
+                rows_list.append(list)
 
     # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
     #rows_list contain the list of row where each row is a dictionary
@@ -2505,6 +1610,7 @@ def generateIntervalVersion(wig_unprocessed_df):
 ##################################################################
 #JAN 7, 2020
 #If file is originally a  wig file use this function
+#No Outlier Elimination is done
 def readWig_with_fixedStep_variableStep(wig_file_path):
 
     #Read the wavelet signal
@@ -2517,75 +1623,13 @@ def readWig_with_fixedStep_variableStep(wig_file_path):
     return wigfile_interval_version_df
 ##################################################################
 
+
 ######################################################################
 def updateSignalArraysForListComprehension(row,signalArrayDict):
-    #row [chrom start end signal]
+    #row [CHROM START END SIGNAL]
     signalArray=signalArrayDict[row[0]]
     signalArray[row[1]:row[2]] += row[3]
 ######################################################################
-
-
-######################################################################
-#JAN 7 2020
-#If original file is bigWig and converted from bigWig to wig and has lines starts with #bedGraph it means that it is now bedGraph format
-#In fact this is bedgraph format
-# There can be wig files prepared from bedGraph which includes many lines start with #bedGraph
-#This code is intended for bigWig nucleosome occupancy files
-# bedGraph section chr1:10111-60880
-# chr1    10111   10112   4.9
-# chr1    10112   10114   5
-# chr1    10114   10116   5.1
-# bedGraph section chrX:155161349-155260605
-# chrX    155161349       155161419       0
-# chrX    155161470       155161530       0
-# chrX    155161597       155161634       0
-#Please note that end is exclusive
-def readWig_write_derived_from_bedgraph(file_path,chromSizesDict,output_path):
-
-    if os.path.exists(file_path):
-        column_names = [CHROM, START, END, SIGNAL]
-
-        #chromSize
-        signalArrayDict={}
-        max_signal=np.finfo(np.float16).min
-        min_signal=np.finfo(np.float16).max
-
-        for chunk_df in  pd.read_table(file_path,chunksize=5000000, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: str, START: np.int32, END: np.int32, SIGNAL: np.float32}):
-            # print(chunk)
-            print(chunk_df[CHROM].unique())
-
-            chrom_list=chunk_df[CHROM].unique()
-            if (chunk_df[SIGNAL].max()>max_signal):
-                max_signal=chunk_df[SIGNAL].max()
-            if (chunk_df[SIGNAL].min()<min_signal):
-                min_signal=chunk_df[SIGNAL].min()
-
-            for chrom in chrom_list:
-                if chrom not in signalArrayDict:
-                    signalArray=np.zeros(chromSizesDict[chrom], dtype=np.float32)
-                    signalArrayDict[chrom]=signalArray
-
-            print(type(chunk_df))
-            print(type(chunk_df[CHROM].unique()))
-
-            # Use list comprehension
-            [updateSignalArraysForListComprehension(row, signalArrayDict) for row in chunk_df.values]
-            print('#################')
-
-        print('\n#####################################################')
-        print('min_signal:%f max_signal:%f' %(min_signal,max_signal))
-        print('#####################################################\n')
-
-        for key in signalArrayDict.keys():
-            signalArray=signalArrayDict[key]
-            print('%s np.sum(signalArray,dtype=np.float32):%f' %(key,np.sum(signalArray,dtype=np.float32)))
-
-            signalArrayFilename = '%s_signal_%s' %(key,'wgEncodeSydhNsomeK562Sig')
-            os.makedirs(output_path,exist_ok=True)
-            chrBasedSignalFile = os.path.join(output_path,signalArrayFilename)
-            np.save(chrBasedSignalFile,signalArray)
-######################################################################
-
 
 
 ##################################################################
@@ -2729,92 +1773,8 @@ def updateDictionaries_simulations_integrated(mutation_row,
                     updateTypeBasedDictionary(type2Sample2Strand2CountDict,signature,mutationSample,strand)
     #################################################################################################
 
-
 ########################################################################
 
-########################################################################
-#legacy code
-def updateDictionaries(mutation_row,
-                        mutationType,
-                        mutationSample,
-                        type2Strand2CountDict,
-                        sample2Type2Strand2CountDict,
-                        type2Sample2Strand2CountDict,
-                        signature2MutationType2Strand2CountDict,
-                        strand,
-                        signature2NumberofMutationsDict,
-                        mutationProbability):
-
-    #################################################################################################
-    # Update1: update mutationType in type2Strand2CountDict
-    if ((type2Strand2CountDict is not None) and (mutationType is not None)):
-        updateDictionary(type2Strand2CountDict,mutationType,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update2: signature in type2Strand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            if signature in type2Strand2CountDict:
-                if strand in type2Strand2CountDict[signature]:
-                    type2Strand2CountDict[signature][strand] += 1
-                else:
-                    type2Strand2CountDict[signature][strand] = 1
-            else:
-                type2Strand2CountDict[signature] = {}
-                type2Strand2CountDict[signature][strand] = 1
-    #################################################################################################
-
-
-    #################################################################################################
-    #Update3 signature2MutationType2Strand2CountDict
-    if ((signature2MutationType2Strand2CountDict is not None) and (mutationType is not None)):
-        for signature in signature2NumberofMutationsDict:
-            if (mutation_row[signature] >= mutationProbability):
-                if signature in signature2MutationType2Strand2CountDict:
-                    if mutationType in signature2MutationType2Strand2CountDict[signature]:
-                        if strand in signature2MutationType2Strand2CountDict[signature][mutationType]:
-                            signature2MutationType2Strand2CountDict[signature][mutationType][strand] +=1
-                        else:
-                            signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
-
-                    else:
-                        signature2MutationType2Strand2CountDict[signature][mutationType] = {}
-                        signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
-                else:
-                    signature2MutationType2Strand2CountDict[signature] = {}
-                    signature2MutationType2Strand2CountDict[signature][mutationType]={}
-                    signature2MutationType2Strand2CountDict[signature][mutationType][strand] = 1
-    #################################################################################################
-
-    #################################################################################################
-    # Update4: sample and mutationType in sample2Type2Strand2CountDict
-    if (sample2Type2Strand2CountDict is not None) and (mutationType is not None):
-        updateSampleBasedDictionary(sample2Type2Strand2CountDict,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update5: sample and signature in sample2Type2Strand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            updateSampleBasedDictionary(sample2Type2Strand2CountDict, signature, mutationSample, strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
-    if (type2Sample2Strand2CountDict is not None) and (mutationType is not None):
-        updateTypeBasedDictionary(type2Sample2Strand2CountDict,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
-    for signature in signature2NumberofMutationsDict:
-        if (mutation_row[signature] >= mutationProbability):
-            if (type2Sample2Strand2CountDict is not None):
-                updateTypeBasedDictionary(type2Sample2Strand2CountDict,signature,mutationSample,strand)
-    #################################################################################################
-
-########################################################################
 
 ########################################################################
 def accumulate_simulations_integrated_for_each_tuple(
@@ -2924,8 +1884,6 @@ def accumulate_simulations_integrated_for_each_tuple(
             else:
                 accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[
                     simNum] = chrBasedSignature2MutationType2Strand2CountDict
-
-
 ########################################################################
 
 
@@ -2951,258 +1909,6 @@ def accumulate_simulations_integrated(listofTuples,
             accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict,
             accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict,
             accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict)
-
-        # # Accumulate1 chrBasedType2Strand2CountDict in accumulatedAllChromosomesType2Strand2CountDict
-        # if (chrBased_SimNum2Type2Strand2CountDict is not None):
-        #     for simNum, chrBasedType2Strand2CountDict in chrBased_SimNum2Type2Strand2CountDict.items():
-        #         if simNum in accumulatedAllChromosomes_SimNum2Type2Strand2CountDict:
-        #             for type, strand2CountDict in chrBasedType2Strand2CountDict.items():
-        #                 if type in accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum]:
-        #                     for strand, count in strand2CountDict.items():
-        #                         if strand in accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum][type]:
-        #                             accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum][type][strand] += count
-        #                         else:
-        #                             accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum][type][strand] = count
-        #                 else:
-        #                     accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum][type] = strand2CountDict
-        #         else:
-        #             accumulatedAllChromosomes_SimNum2Type2Strand2CountDict[simNum] = chrBasedType2Strand2CountDict
-        #
-        #
-        # # Accumulate2 chrBasedSample2Type2ReplicationStrand2CountDict in accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict
-        # if (chrBased_SimNum2Sample2Type2Strand2CountDict is not None):
-        #     for simNum, chrBasedSample2Type2Strand2CountDict in chrBased_SimNum2Sample2Type2Strand2CountDict.items():
-        #         if simNum in accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict:
-        #             for sample, type2Strand2CountDict in chrBasedSample2Type2Strand2CountDict.items():
-        #                 if sample in accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum]:
-        #                     for type, strand2CountDict in type2Strand2CountDict.items():
-        #                         if type in accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample]:
-        #                             for strand, count in strand2CountDict.items():
-        #                                 if strand in accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample][type]:
-        #                                     accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample][type][strand] += count
-        #                                 else:
-        #                                     accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample][type][strand] = count
-        #                         else:
-        #                             accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample][type] = strand2CountDict
-        #                 else:
-        #                     accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum][sample] = type2Strand2CountDict
-        #         else:
-        #             accumulatedAllChromosomes_SimNum2Sample2Type2Strand2CountDict[simNum] = chrBasedSample2Type2Strand2CountDict
-        #
-        #
-        # # Accumulate3 chrBasedType2Sample2Strand2CountDict in accumulatedAllChromosomesType2Sample2Strand2CountDict
-        # if (chrBased_SimNum2Type2Sample2Strand2CountDict is not None):
-        #     for simNum, chrBasedType2Sample2Strand2CountDict in chrBased_SimNum2Type2Sample2Strand2CountDict.items():
-        #         if simNum in accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict:
-        #             for type, sample2Strand2CountDict in chrBasedType2Sample2Strand2CountDict.items():
-        #                 if type in accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum]:
-        #                     for sample, strand2CountDict in sample2Strand2CountDict.items():
-        #                         if sample in accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type]:
-        #                             for strand, count in strand2CountDict.items():
-        #                                 if strand in accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type][sample]:
-        #                                     accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type][sample][strand] += count
-        #                                 else:
-        #                                     accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type][sample][strand] = count
-        #                         else:
-        #                             accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type][sample] = strand2CountDict
-        #                 else:
-        #                     accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum][type] = sample2Strand2CountDict
-        #         else:
-        #             accumulatedAllChromosomes_SimNum2Type2Sample2Strand2CountDict[simNum] = chrBasedType2Sample2Strand2CountDict
-        #
-        #
-        # # Accumulate4 chrBasedSignature2MutationType2Strand2CountDict in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict
-        # if (chrBased_SimNum2Signature2MutationType2Strand2CountDict is not None):
-        #     for simNum, chrBasedSignature2MutationType2Strand2CountDict in chrBased_SimNum2Signature2MutationType2Strand2CountDict.items():
-        #         if simNum in accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict:
-        #             for signature, mutationType2Strand2CountDict in chrBasedSignature2MutationType2Strand2CountDict.items():
-        #                 if signature in accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum]:
-        #                     for mutationType, strand2CountDict in mutationType2Strand2CountDict.items():
-        #                         if mutationType in accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
-        #                             for strand, count in strand2CountDict.items():
-        #                                 if strand in accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
-        #                                     accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] += count
-        #                                 else:
-        #                                     accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = count
-        #                         else:
-        #                             accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = strand2CountDict
-        #                 else:
-        #                     accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum][signature] = mutationType2Strand2CountDict
-        #         else:
-        #             accumulatedAllChromosomes_SimNum2Signature2MutationType2Strand2CountDict[simNum] = chrBasedSignature2MutationType2Strand2CountDict
-########################################################################
-
-########################################################################
-def accumulate(listofTuples,
-               accumulatedAllChromosomesType2Strand2CountDict,
-               accumulatedAllChromosomesSample2Type2Strand2CountDict,
-               accumulatedAllChromosomesType2Sample2Strand2CountDict,
-               accumulatedAllChromosomesSignature2MutationType2Strand2CountDict):
-
-    for mytuple in listofTuples:
-        chrBasedType2Strand2CountDict = mytuple[0]
-        chrBasedSample2Type2Strand2CountDict = mytuple[1]
-        chrBasedType2Sample2Strand2CountDict = mytuple[2]
-        chrBasedSignature2MutationType2Strand2CountDict = mytuple[3]
-
-        #Accumulate1 chrBasedType2Strand2CountDict in accumulatedAllChromosomesType2Strand2CountDict
-        if (chrBasedType2Strand2CountDict is not None):
-            for type,strand2CountDict in chrBasedType2Strand2CountDict.items():
-                if type in accumulatedAllChromosomesType2Strand2CountDict:
-                    for strand, count in strand2CountDict.items():
-                        if strand in accumulatedAllChromosomesType2Strand2CountDict[type]:
-                            accumulatedAllChromosomesType2Strand2CountDict[type][strand] += count
-                        else:
-                            accumulatedAllChromosomesType2Strand2CountDict[type][strand] = count
-                else:
-                    accumulatedAllChromosomesType2Strand2CountDict[type] = strand2CountDict
-
-        #Accumulate2 chrBasedSample2Type2ReplicationStrand2CountDict in accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict
-        if (chrBasedSample2Type2Strand2CountDict is not None):
-            for sample, type2Strand2CountDict in chrBasedSample2Type2Strand2CountDict.items():
-                if sample in accumulatedAllChromosomesSample2Type2Strand2CountDict:
-                    for type,strand2CountDict in chrBasedSample2Type2Strand2CountDict[sample].items():
-                        if type in accumulatedAllChromosomesSample2Type2Strand2CountDict[sample]:
-                            for strand, count in chrBasedSample2Type2Strand2CountDict[sample][type].items():
-                                if strand in accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type]:
-                                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type][strand] += count
-                                else:
-                                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type][strand] = count
-                        else:
-                            accumulatedAllChromosomesSample2Type2Strand2CountDict[sample][type] = strand2CountDict
-                else:
-                    accumulatedAllChromosomesSample2Type2Strand2CountDict[sample] = type2Strand2CountDict
-
-
-        #Accumulate3 chrBasedType2Sample2Strand2CountDict in accumulatedAllChromosomesType2Sample2Strand2CountDict
-        if (chrBasedType2Sample2Strand2CountDict is not None):
-            for type, sample2Strand2CountDict in chrBasedType2Sample2Strand2CountDict.items():
-                if type in accumulatedAllChromosomesType2Sample2Strand2CountDict:
-                    for sample, strand2CountDict in chrBasedType2Sample2Strand2CountDict[type].items():
-                        if sample in accumulatedAllChromosomesType2Sample2Strand2CountDict[type]:
-                            for strand,count in chrBasedType2Sample2Strand2CountDict[type][sample].items():
-                                if strand in accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample]:
-                                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample][strand] += count
-                                else:
-                                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample][strand] = count
-                        else:
-                            accumulatedAllChromosomesType2Sample2Strand2CountDict[type][sample] = strand2CountDict
-                else:
-                    accumulatedAllChromosomesType2Sample2Strand2CountDict[type] = sample2Strand2CountDict
-
-
-        #Accumulate4 chrBasedSignature2MutationType2Strand2CountDict in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict
-        if (chrBasedSignature2MutationType2Strand2CountDict is not None):
-            for signature,mutationType2Strand2CountDict in chrBasedSignature2MutationType2Strand2CountDict.items():
-                if signature in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict:
-                    for mutationType, strand2CountDict in chrBasedSignature2MutationType2Strand2CountDict[signature].items():
-                        if mutationType in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature]:
-                            for strand, count in chrBasedSignature2MutationType2Strand2CountDict[signature][mutationType].items():
-                                if strand in accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType]:
-                                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType][strand] += count
-                                else:
-                                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType][strand] = count
-
-                        else:
-                            accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature][mutationType] = strand2CountDict
-                else:
-                    accumulatedAllChromosomesSignature2MutationType2Strand2CountDict[signature] = mutationType2Strand2CountDict
-
-########################################################################
-
-
-########################################################################
-# A helper function
-# Maybe can be used later
-#accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict is full
-#accumulatedAllChromosomesMutationProbability2Signature2RatioDict is empty, filled in this function
-def calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict,accumulatedAllChromosomesMutationProbability2Signature2RatioDict,strandList):
-    numeratorStrand = strandList[0]
-    denominatorStrand = strandList[1]
-
-    for mutationProbability, signature2StrandCountDict in accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict.items():
-        accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability] = {}
-        for signature, strandCountDict in signature2StrandCountDict.items():
-            if ((numeratorStrand in strandCountDict) and (denominatorStrand in strandCountDict)):
-                if((strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
-                    accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability][signature] = (strandCountDict[numeratorStrand]) / (strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])
-########################################################################
-
-
-########################################################################
-# A helper function
-# Maybe can be used later
-#mutationProbability2Signature2ReplicationStrand2CountDict contains all the accumulated counts for all chromosomes
-#Ratio is laggingCount/(laggingCount + leadingCount)
-#Ratio is the transcribed/ (transcribed + non_transcribed)
-# strandNameList = [LAGGING,LEADING] for replicationStrandAnalysis
-# strandNameList = [TRANSCRIBED_STRAND, NON_TRANSCRIBED_STRAND]    for transcribedStrandAnalysis
-def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
-    signature2SumofMutationProbabilitiesDict = {}
-    signature2MutationProbability2RatioDict = {}
-    signature2WeightedAverageRatioDict = {}
-    signature2StdErrorDict = {}
-
-    numeratorStrand = strandNameList[0]
-    denominatorStrand = strandNameList[1]
-
-    #Fill signature2WeightedAverageRatioDict
-    for mutationProbability, signature2Strand2CountDict in mutationProbability2Signature2Strand2CountDict.items():
-        for signature, strand2CountDict in signature2Strand2CountDict.items():
-            #Only once
-            if signature not in signature2MutationProbability2RatioDict:
-                signature2MutationProbability2RatioDict[signature] = {}
-
-            if ((numeratorStrand in strand2CountDict) and (denominatorStrand in strand2CountDict)):
-                #In order to consider there must be at least ONE_THOUSAND mutations on the leading and lagging strands
-                # In order to consider there must be at least ONE_THOUSAND mutations on the transcribed and non-transcribed strands
-                if (strand2CountDict[numeratorStrand]+strand2CountDict[denominatorStrand] >= SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
-                    if signature in signature2SumofMutationProbabilitiesDict:
-                        signature2SumofMutationProbabilitiesDict[signature] += mutationProbability
-                    else:
-                        signature2SumofMutationProbabilitiesDict[signature] = mutationProbability
-
-                    ratio = (strand2CountDict[numeratorStrand])/(strand2CountDict[numeratorStrand] + strand2CountDict[denominatorStrand])
-                    signature2MutationProbability2RatioDict[signature][mutationProbability]= ratio
-                    #First Accumulate
-                    if signature in signature2WeightedAverageRatioDict:
-                        signature2WeightedAverageRatioDict[signature] += mutationProbability * ratio
-                    else:
-                        signature2WeightedAverageRatioDict[signature] = mutationProbability * ratio
-
-    #Then divide by sumofMutationProbabilities
-    for signature in signature2WeightedAverageRatioDict.keys():
-        if (signature2SumofMutationProbabilitiesDict[signature]!=0):
-            signature2WeightedAverageRatioDict[signature] /= signature2SumofMutationProbabilitiesDict[signature]
-        else:
-            # print('debug starts')
-            # print('For signature: %s signature2SumofMutationProbabilitiesDict[%s] is zero' %(signature,signature))
-            # print('debug ends')
-            signature2WeightedAverageRatioDict[signature] = 0
-
-    #Calculate the signature2StdErrorDict
-    for signature, weightedAverageRatio in signature2WeightedAverageRatioDict.items():
-        variance= 0
-        sampleSize = 0
-        if signature in signature2MutationProbability2RatioDict:
-            mutationProbability2RatioDict = signature2MutationProbability2RatioDict[signature]
-            for mutationProbability,ratio in mutationProbability2RatioDict.items():
-                difference = weightedAverageRatio-ratio
-                variance += difference**2
-                sampleSize +=1
-
-            stddev = math.sqrt(variance/sampleSize)
-            stderr = stddev/math.sqrt(sampleSize)
-            signature2StdErrorDict[signature] = stderr
-
-    return signature2WeightedAverageRatioDict,signature2StdErrorDict, signature2SumofMutationProbabilitiesDict
-########################################################################
-
-########################################################################
-def createFiles(outputDir,jobname,filename):
-    os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
-    filePath = os.path.join(outputDir, jobname, DATA, filename)
-    open(filePath,'w+')
 ########################################################################
 
 ########################################################################
@@ -3250,7 +1956,6 @@ def writeDictionaryUsingPickle(dictionary,filepath):
         pickle.dump(dictionary, file)
 ########################################################################
 
-
 ########################################################################
 def writeDictionarySimple(dictionary,path,filename,customJSONEncoder):
     os.makedirs(os.path.join(path), exist_ok=True)
@@ -3268,36 +1973,6 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
     filePath = os.path.join(outputDir,jobname,DATA,subDirectory,filename)
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
-########################################################################
-
-
-########################################################################
-def writeList2File(list,filePath):
-    with open(filePath, "w") as f:
-        for item in list:
-            f.write("%s\n" % item)
-########################################################################
-
-########################################################################
-def append2File(item,filePath):
-    if (os.path.exists(filePath)):
-        with open(filePath, "a+") as f:
-            f.write("%s\n" % item)
-########################################################################
-
-
-
-########################################################################
-#Will be depreceated
-def readSignatureList(filePath):
-    list = []
-    if (os.path.exists(filePath)):
-        with open(filePath, "r") as f:
-            for line in f:
-                list.append(line.strip())
-        return list
-    else:
-        return list
 ########################################################################
 
 ########################################################################
@@ -3406,18 +2081,89 @@ def checkForSumInMutationProbability2Signature2Strand2CountDict(mutationProbabil
     return True
 ########################################################################
 
+########################################################################
+# A helper function
+# Maybe can be used later
+#accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict is full
+#accumulatedAllChromosomesMutationProbability2Signature2RatioDict is empty, filled in this function
+def calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict,accumulatedAllChromosomesMutationProbability2Signature2RatioDict,strandList):
+    numeratorStrand = strandList[0]
+    denominatorStrand = strandList[1]
+
+    for mutationProbability, signature2StrandCountDict in accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict.items():
+        accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability] = {}
+        for signature, strandCountDict in signature2StrandCountDict.items():
+            if ((numeratorStrand in strandCountDict) and (denominatorStrand in strandCountDict)):
+                if((strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
+                    accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability][signature] = (strandCountDict[numeratorStrand]) / (strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])
+########################################################################
+
 
 ########################################################################
-def readChromSizes(genomeAssemby):
+# A helper function
+# Maybe can be used later
+#mutationProbability2Signature2ReplicationStrand2CountDict contains all the accumulated counts for all chromosomes
+#Ratio is laggingCount/(laggingCount + leadingCount)
+#Ratio is the transcribed/ (transcribed + non_transcribed)
+# strandNameList = [LAGGING,LEADING] for replicationStrandAnalysis
+# strandNameList = [TRANSCRIBED_STRAND, NON_TRANSCRIBED_STRAND]    for transcribedStrandAnalysis
+def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
+    signature2SumofMutationProbabilitiesDict = {}
+    signature2MutationProbability2RatioDict = {}
+    signature2WeightedAverageRatioDict = {}
+    signature2StdErrorDict = {}
 
-    if genomeAssemby==HG19:
-        chromSizesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME, HG19_CHROM_SIZES)
-    elif genomeAssemby==HG38:
-        chromSizesFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME, HG38_CHROM_SIZES)
+    numeratorStrand = strandNameList[0]
+    denominatorStrand = strandNameList[1]
 
-    chrom2size_df = pd.read_table(chromSizesFilePath, sep='\t', header = None, names = {'chrom','size'})
+    #Fill signature2WeightedAverageRatioDict
+    for mutationProbability, signature2Strand2CountDict in mutationProbability2Signature2Strand2CountDict.items():
+        for signature, strand2CountDict in signature2Strand2CountDict.items():
+            #Only once
+            if signature not in signature2MutationProbability2RatioDict:
+                signature2MutationProbability2RatioDict[signature] = {}
 
-    chrom2size_dict = dict(zip(chrom2size_df['chrom'], chrom2size_df['size']))
+            if ((numeratorStrand in strand2CountDict) and (denominatorStrand in strand2CountDict)):
+                #In order to consider there must be at least ONE_THOUSAND mutations on the leading and lagging strands
+                # In order to consider there must be at least ONE_THOUSAND mutations on the transcribed and non-transcribed strands
+                if (strand2CountDict[numeratorStrand]+strand2CountDict[denominatorStrand] >= SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
+                    if signature in signature2SumofMutationProbabilitiesDict:
+                        signature2SumofMutationProbabilitiesDict[signature] += mutationProbability
+                    else:
+                        signature2SumofMutationProbabilitiesDict[signature] = mutationProbability
 
-    return chrom2size_dict
+                    ratio = (strand2CountDict[numeratorStrand])/(strand2CountDict[numeratorStrand] + strand2CountDict[denominatorStrand])
+                    signature2MutationProbability2RatioDict[signature][mutationProbability]= ratio
+                    #First Accumulate
+                    if signature in signature2WeightedAverageRatioDict:
+                        signature2WeightedAverageRatioDict[signature] += mutationProbability * ratio
+                    else:
+                        signature2WeightedAverageRatioDict[signature] = mutationProbability * ratio
+
+    #Then divide by sumofMutationProbabilities
+    for signature in signature2WeightedAverageRatioDict.keys():
+        if (signature2SumofMutationProbabilitiesDict[signature]!=0):
+            signature2WeightedAverageRatioDict[signature] /= signature2SumofMutationProbabilitiesDict[signature]
+        else:
+            # print('debug starts')
+            # print('For signature: %s signature2SumofMutationProbabilitiesDict[%s] is zero' %(signature,signature))
+            # print('debug ends')
+            signature2WeightedAverageRatioDict[signature] = 0
+
+    #Calculate the signature2StdErrorDict
+    for signature, weightedAverageRatio in signature2WeightedAverageRatioDict.items():
+        variance= 0
+        sampleSize = 0
+        if signature in signature2MutationProbability2RatioDict:
+            mutationProbability2RatioDict = signature2MutationProbability2RatioDict[signature]
+            for mutationProbability,ratio in mutationProbability2RatioDict.items():
+                difference = weightedAverageRatio-ratio
+                variance += difference**2
+                sampleSize +=1
+
+            stddev = math.sqrt(variance/sampleSize)
+            stderr = stddev/math.sqrt(sampleSize)
+            signature2StdErrorDict[signature] = stderr
+
+    return signature2WeightedAverageRatioDict,signature2StdErrorDict, signature2SumofMutationProbabilitiesDict
 ########################################################################

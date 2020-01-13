@@ -25,6 +25,7 @@ import time
 import sys
 import multiprocessing
 import os
+import pandas as pd
 import numpy as np
 import math
 
@@ -80,14 +81,15 @@ from SigProfilerTopography.source.commons.TopographyCommons import Sample2Dinucs
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
-from SigProfilerTopography.source.commons.TopographyCommons import SIMULATIONS_SEQUENTIAL_CHROMOSOMES_PARALLEL_USING_MAP
 
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
-
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph
+from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
 
 ##############################################################################################################
 #main function
-def occupancyAnalysis(genome,computationType,occupancy_type,using_pyBigWig,using_chrBasedArray,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
 
     print('\n#################################################################################')
     print('--- %s Analysis starts' %(occupancy_type))
@@ -96,8 +98,8 @@ def occupancyAnalysis(genome,computationType,occupancy_type,using_pyBigWig,using
     print('--- Library file with path: %s\n' %library_file_with_path)
 
     #Using pyBigWig for BigWig and BigBed files if operating system is not Windows and using_pyBigWig is set to True
-    #Using Bed files preparing chr based signal array online
-    occupancy_analysis(genome,computationType,occupancy_type,using_pyBigWig,using_chrBasedArray,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    #Using Bed files preparing chr based signal array runtime
+    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
     print('--- %s Analysis ends' %(occupancy_type))
     print('#################################################################################\n')
 ##############################################################################################################
@@ -107,17 +109,14 @@ def occupancyAnalysis(genome,computationType,occupancy_type,using_pyBigWig,using
 ########################################################################################
 # November 1, 2019
 # Just fill the list
-def fillInputList(occupancy_type,using_pyBigWig,using_chrBasedArray,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df_grouped,sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
+def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                       sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
                       subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus,sample_based,verbose):
-
 
     if verbose: print('FillInputList: Worker pid %s current_mem_usage %.2f (mb) chrLong:%s simNum:%d' % (str(os.getpid()), memory_usage(),chrLong,simNum))
     inputList=[]
 
     inputList.append(occupancy_type)
-    inputList.append(using_pyBigWig)
-    inputList.append(using_chrBasedArray)
     inputList.append(outputDir)
     inputList.append(jobname)
     inputList.append(chrLong)
@@ -125,7 +124,6 @@ def fillInputList(occupancy_type,using_pyBigWig,using_chrBasedArray,outputDir,jo
     inputList.append(chromSizesDict)
     inputList.append(library_file_with_path)
     inputList.append(library_file_type)
-    inputList.append(library_file_df_grouped)
     inputList.append(sample2NumberofSubsDict)
     inputList.append(sample2NumberofIndelsDict)
     inputList.append(sample2NumberofDinucsDict)
@@ -144,11 +142,13 @@ def fillInputList(occupancy_type,using_pyBigWig,using_chrBasedArray,outputDir,jo
 
 
 ########################################################################################
+#Updated JAN 9, 2020
 #November 26 2019
 def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
-        using_pyBigWig,using_chrBasedArray,
-        outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
-        library_file_type, library_file_df_grouped,
+        outputDir,
+        jobname, chrLong, simNum, chromSizesDict,
+        library_file_with_path,
+        library_file_type,
         sample2NumberofSubsDict, sample2NumberofIndelsDict, sample2NumberofDinucsDict,
         sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict,
         sample2DinucsSignature2NumberofMutationsDict,
@@ -167,11 +167,10 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
     ##############################################################
 
     ##############################################################
-    chrBasedSignalArray = None #Will be filled from already existing chrom based files or bed files
-    library_file = None #Will be filled by pyBigWig from bigWig or bigBed
+    chrBasedSignalArray = None #Will be filled from chrBasedSignal files if they exists
+    library_file_opened_by_pyBigWig = None #Will be filled by pyBigWig from bigWig or bigBed
     my_upperBound = None
     signal_index = None
-    chrom_based_library_df=None
     ##############################################################
 
     #################################################################################################################
@@ -199,46 +198,32 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
     if (occupancy_type== EPIGENOMICSOCCUPANCY):
-        #chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, EPIGENOMICS, CHRBASED,signalArrayFilename)
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
 
     elif (occupancy_type==NUCLEOSOMEOCCUPANCY):
         chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED,signalArrayFilename)
 
-    if (using_chrBasedArray and os.path.exists(chrBasedSignalFile)):
+    #Downloaded or created runtime
+    if (os.path.exists(chrBasedSignalFile)):
         chrBasedSignalArray = np.load(chrBasedSignalFile, mmap_mode='r')
         # For testing purposes
         # chrBasedSignalArray = np.load(chrBasedSignalFile,mmap_mode=None)
         # chrBasedSignalArray = np.random.uniform(low=0.0, high=13.3, size=(maximum_chrom_size,))
 
-    #Fill online chrbasedArray To do this for each apply_sync call is very costly.
-    # elif (((library_file_type == BED) or (library_file_type == NARROWPEAK)) and (library_file_df is not None) and (os.path.exists(library_file_with_path))):
-    #     chrom_based_library_df = library_file_df_grouped.get_group(chrLong)
-    #     # chrBasedSignalArray and library_file_df  signal column is of type np.float32
-    #     chrBasedSignalArray = np.zeros(maximum_chrom_size, dtype=np.float32)
-    #     # TODO Can we fill chrBasedSignalArray faster?
-    #     # chrom_based_library_df.apply(updateChrBasedSignalArray, chrBasedSignalArray=chrBasedSignalArray, axis=1)
-    #     [fillNumpyArray(start, end, signal, chrBasedSignalArray) for start, end, signal in
-    #      zip(chrom_based_library_df['start'], chrom_based_library_df['end'], chrom_based_library_df['signal'])]
-
-    #For BED files use chrom based dataframes
-    elif ((library_file_df_grouped is not None) and ((library_file_type == BED) or (library_file_type == NARROWPEAK))):
-        chrom_based_library_df = library_file_df_grouped.get_group(chrLong)
-
     # Comment below to make it run in windows
-    elif (using_pyBigWig):
+    elif ((library_file_type==BIGWIG) or (library_file_type==BIGBED)):
         if (library_file_type == BIGWIG):
             try:
                 import pyBigWig
-                library_file = pyBigWig.open(library_file_with_path)
-                if chrLong in library_file.chroms():
-                    maximum_chrom_size = library_file.chroms()[chrLong]
+                library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
+                if chrLong in library_file_opened_by_pyBigWig.chroms():
+                    maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
                 # For BigWig Files information in header is correct
-                if ('sumData' in library_file.header()) and ('nBasesCovered' in library_file.header()):
-                    my_mean = library_file.header()['sumData'] / library_file.header()['nBasesCovered']
-                    std_dev = (library_file.header()['sumSquared'] - 2 * my_mean * library_file.header()['sumData'] +
-                               library_file.header()['nBasesCovered'] * my_mean * my_mean) ** (0.5) / (
-                                          library_file.header()['nBasesCovered'] ** (0.5))
+                if ('sumData' in library_file_opened_by_pyBigWig.header()) and ('nBasesCovered' in library_file_opened_by_pyBigWig.header()):
+                    my_mean = library_file_opened_by_pyBigWig.header()['sumData'] / library_file_opened_by_pyBigWig.header()['nBasesCovered']
+                    std_dev = (library_file_opened_by_pyBigWig.header()['sumSquared'] - 2 * my_mean * library_file_opened_by_pyBigWig.header()['sumData'] +
+                               library_file_opened_by_pyBigWig.header()['nBasesCovered'] * my_mean * my_mean) ** (0.5) / (
+                            library_file_opened_by_pyBigWig.header()['nBasesCovered'] ** (0.5))
                     # Scientific definition of outlier
                     my_upperBound = std_dev * 3
                 else:
@@ -250,16 +235,16 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
         elif (library_file_type == BIGBED):
             try:
                 import pyBigWig
-                library_file = pyBigWig.open(library_file_with_path)
-                if BED_6PLUS4 in str(library_file.SQL()):
+                library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
+                if BED_6PLUS4 in str(library_file_opened_by_pyBigWig.SQL()):
                     signal_index = 3
-                elif BED_9PLUS2 in str(library_file.SQL()):
+                elif BED_9PLUS2 in str(library_file_opened_by_pyBigWig.SQL()):
                     signal_index = 7
-                if chrLong in library_file.chroms():
+                if chrLong in library_file_opened_by_pyBigWig.chroms():
                     # For BigBed Files information in header is not meaningful
-                    maximum_chrom_size = library_file.chroms()[chrLong]
+                    maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
                     my_mean = np.mean([float(entry[2].split('\t')[signal_index]) for entry in
-                                       library_file.entries(chrLong, 0, maximum_chrom_size)])
+                                       library_file_opened_by_pyBigWig.entries(chrLong, 0, maximum_chrom_size)])
                     # Not scientific definition of outlier
                     my_upperBound = my_mean * 10
                 else:
@@ -271,9 +256,7 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
     #################################################################################################################
 
     #################################################################################################################
-    if ((chrBasedSignalArray is not None) or
-            (((library_file_type == BIGWIG) or (library_file_type == BIGBED)) and (library_file is not None) and (chrLong in library_file.chroms()))
-            or (chrom_based_library_df is not None)):
+    if ((chrBasedSignalArray is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
@@ -285,9 +268,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
             [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
                 row,
                 chrLong,
-                library_file,
+                library_file_opened_by_pyBigWig,
                 chrBasedSignalArray,
-                chrom_based_library_df,
                 library_file_type,
                 signal_index,
                 my_upperBound,
@@ -312,9 +294,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
             [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
                 row,
                 chrLong,
-                library_file,
+                library_file_opened_by_pyBigWig,
                 chrBasedSignalArray,
-                chrom_based_library_df,
                 library_file_type,
                 signal_index,
                 my_upperBound,
@@ -355,9 +336,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
                     [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
                         row,
                         chrLong,
-                        library_file,
+                        library_file_opened_by_pyBigWig,
                         chrBasedSignalArray,
-                        chrom_based_library_df,
                         library_file_type,
                         signal_index,
                         my_upperBound,
@@ -377,9 +357,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
                 [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
                     row,
                     chrLong,
-                    library_file,
+                    library_file_opened_by_pyBigWig,
                     chrBasedSignalArray,
-                    chrom_based_library_df,
                     library_file_type,
                     signal_index,
                     my_upperBound,
@@ -401,8 +380,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
         ################### Fill signal and count array ends ##########################
         ###############################################################################
 
-    if (library_file is not None):
-        library_file.close()
+    if (library_file_opened_by_pyBigWig is not None):
+        library_file_opened_by_pyBigWig.close()
 
     if verbose: print('\tWorker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (str(os.getpid()), memory_usage(), chrLong, simNum))
     if verbose: print('----->\tWorker pid %s took %f seconds chrLong:%s simNum:%d' % (str(os.getpid()), (time.time() - start_time), chrLong, simNum))
@@ -427,9 +406,8 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
 def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
         row,
         chrLong,
-        library_file,
+        library_file_opened_by_pyBigWig,
         chrBasedSignalArray,
-        chrom_based_signal_df,
         library_file_type,
         signal_index,
         my_upperBound,
@@ -448,7 +426,6 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
 
     window_array=None
     windowSize=plusOrMinus*2+1
-
 
     # df_columns: ['Sample', 'Chrom', 'Start', 'MutationLong', 'PyramidineStrand', 'TranscriptionStrand', 'Mutation',
     #              'SBS1', 'SBS2', 'SBS3', 'SBS4', 'SBS5', 'SBS6', 'SBS7a', 'SBS7b', 'SBS7c', 'SBS7d', 'SBS8', 'SBS9',
@@ -479,20 +456,20 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
             window_array = chrBasedSignalArray[0:(mutation_row_start + plusOrMinus + 1)]
             window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant', constant_values=(0, 0))
 
-        #Slower but uses less memory solution
-        elif (chrom_based_signal_df is not None):
-            start=0
-            end=mutation_row_start+plusOrMinus+1
-            overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-            if overlaps_df is not None:
-                window_array = np.zeros((windowSize,), dtype=np.float32)
-                #Overlap
-                #chr1  240106575  240107544  3.78085
-                [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
+        # #Slower but uses less memory solution
+        # elif (chrom_based_signal_df is not None):
+        #     start=0
+        #     end=mutation_row_start+plusOrMinus+1
+        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
+        #     if overlaps_df is not None:
+        #         window_array = np.zeros((windowSize,), dtype=np.float32)
+        #         #Overlap
+        #         #chr1  240106575  240107544  3.78085
+        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
 
         elif (library_file_type==BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
-            window_array=library_file.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
+            window_array=library_file_opened_by_pyBigWig.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
             # How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
@@ -500,7 +477,7 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
 
         elif (library_file_type==BIGBED):
             #We assume that in the 7th column there is signal data
-            list_of_entries=library_file.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
+            list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
             if list_of_entries is not None:
                 window_array = np.zeros((windowSize,),dtype=np.float32)
                 # We did not handle outliers for BigBed files.
@@ -521,19 +498,19 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):maximum_chrom_size]
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        elif (chrom_based_signal_df is not None):
-            start=mutation_row_start-plusOrMinus
-            end=maximum_chrom_size
-            overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-            if overlaps_df is not None:
-                window_array = np.zeros((windowSize,), dtype=np.float32)
-                #Overlap
-                #chr1  240106575  240107544  3.78085
-                [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
+        # elif (chrom_based_signal_df is not None):
+        #     start=mutation_row_start-plusOrMinus
+        #     end=maximum_chrom_size
+        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
+        #     if overlaps_df is not None:
+        #         window_array = np.zeros((windowSize,), dtype=np.float32)
+        #         #Overlap
+        #         #chr1  240106575  240107544  3.78085
+        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
 
         elif (library_file_type==BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
-            window_array = library_file.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
+            window_array = library_file_opened_by_pyBigWig.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
             # How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
@@ -542,7 +519,7 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
         elif (library_file_type==BIGBED):
             # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
             if ((mutation_row_start-plusOrMinus)<maximum_chrom_size):
-                list_of_entries=library_file.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
+                list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
                 if list_of_entries is not None:
                     window_array = np.zeros((windowSize,),dtype=np.float32)
                     # We did not handle outliers for BigBed files.
@@ -554,19 +531,19 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
 
-        elif (chrom_based_signal_df is not None):
-            start=mutation_row_start-plusOrMinus
-            end=mutation_row_start+plusOrMinus+1
-            overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-            if overlaps_df is not None:
-                window_array = np.zeros((windowSize,), dtype=np.float32)
-                #Overlap
-                #chr1  240106575  240107544  3.78085
-                [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
+        # elif (chrom_based_signal_df is not None):
+        #     start=mutation_row_start-plusOrMinus
+        #     end=mutation_row_start+plusOrMinus+1
+        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
+        #     if overlaps_df is not None:
+        #         window_array = np.zeros((windowSize,), dtype=np.float32)
+        #         #Overlap
+        #         #chr1  240106575  240107544  3.78085
+        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
 
         elif (library_file_type==BIGWIG):
             #Important: You have to go over intervals if there are overlapping intervals.
-            window_array = library_file.values(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1),numpy=True)
+            window_array = library_file_opened_by_pyBigWig.values(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1),numpy=True)
             #How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
@@ -574,7 +551,7 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
         elif (library_file_type==BIGBED):
             # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
             if ((mutation_row_start+plusOrMinus+1)<=maximum_chrom_size):
-                list_of_entries=library_file.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
+                list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
                 if list_of_entries is not None:
                     window_array = np.zeros((windowSize,),dtype=np.float32)
                     # We did not handle outliers for BigBed files.
@@ -683,34 +660,33 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
 
 
 ########################################################################################
+#Updated JAN 9, 2020
 # November 1, 2019
 def combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList(inputList):
     occupancy_type=inputList[0]
-    using_pyBigWig=inputList[1]
-    using_chrBasedArray=inputList[2]
-    outputDir=inputList[3]
-    jobname=inputList[4]
-    chrLong=inputList[5]
-    simNum=inputList[6]
-    chromSizesDict=inputList[7]
-    library_file_with_path=inputList[8]
-    library_file_type=inputList[9]
-    library_file_df_grouped=inputList[10]
-    sample2NumberofSubsDict=inputList[11]
-    sample2NumberofIndelsDict=inputList[12]
-    sample2NumberofDinucsDict=inputList[13]
-    sample2SubsSignature2NumberofMutationsDict=inputList[14]
-    sample2IndelsSignature2NumberofMutationsDict=inputList[15]
-    sample2DinucsSignature2NumberofMutationsDict=inputList[16]
-    subsSignature2PropertiesListDict=inputList[17]
-    indelsSignature2PropertiesListDict=inputList[18]
-    dinucsSignature2PropertiesListDict=inputList[19]
-    plusorMinus=inputList[20]
-    sample_based=inputList[21]
-    verbose=inputList[22]
+    outputDir=inputList[1]
+    jobname=inputList[2]
+    chrLong=inputList[3]
+    simNum=inputList[4]
+    chromSizesDict=inputList[5]
+    library_file_with_path=inputList[6]
+    library_file_type=inputList[7]
+    sample2NumberofSubsDict=inputList[8]
+    sample2NumberofIndelsDict=inputList[9]
+    sample2NumberofDinucsDict=inputList[10]
+    sample2SubsSignature2NumberofMutationsDict=inputList[11]
+    sample2IndelsSignature2NumberofMutationsDict=inputList[12]
+    sample2DinucsSignature2NumberofMutationsDict=inputList[13]
+    subsSignature2PropertiesListDict=inputList[14]
+    indelsSignature2PropertiesListDict=inputList[15]
+    dinucsSignature2PropertiesListDict=inputList[16]
+    plusorMinus=inputList[17]
+    sample_based=inputList[18]
+    verbose=inputList[19]
 
-    return combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,using_pyBigWig,using_chrBasedArray,outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
-                                        library_file_type, library_file_df_grouped,
+    return combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,outputDir, jobname, chrLong, simNum, chromSizesDict,
+                                        library_file_with_path,
+                                        library_file_type,
                                         sample2NumberofSubsDict, sample2NumberofIndelsDict, sample2NumberofDinucsDict,
                                         sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
                                         subsSignature2PropertiesListDict, indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,
@@ -725,8 +701,6 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList(inpu
 def occupancy_analysis(genome,
                        computation_type,
                         occupancy_type,
-                        using_pyBigWig,
-                        using_chrBasedArray,
                         sample_based,
                         plusorMinus,
                         chromSizesDict,
@@ -778,40 +752,34 @@ def occupancy_analysis(genome,
     ##############################################################
     #What is the type of the signal_file_with_path?
     #If it is a bed file read signal_file_with_path here
-    file_extension = os.path.basename(library_file_with_path).split('.')[-1]
+    file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
-    #If file type is bigwig or bigbed set the library_file_type only
-    #If file type is bed or narrowpeak read the files and just set library_file_df and library_file_df_grouped
-    library_file_df=None
-    library_file_df_grouped=None
+    quantileValue = 0.97
+    remove_outliers = True
 
-    if ((file_extension.lower()=='bigwig') or (file_extension.lower()=='bw')):
+    if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
         library_file_type=BIGWIG
-    elif ((file_extension.lower()=='bigbed') or (file_extension.lower()=='bb')):
+        #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
+    elif ((file_extension.lower()=='.bigbed') or (file_extension.lower()=='.bb')):
         library_file_type=BIGBED
-    # Converting bed or narrowpeak file into pandas dataframe
-    # elif (file_extension.lower()=='bed'):
-    #     library_file_type=BED
-    #     library_file_df=readFileInBEDFormat(library_file_with_path)
-    #     library_file_df = library_file_df.sort_values(by=['chrom', 'start'])
-    #     library_file_df_grouped=library_file_df.groupby('chrom')
-    # elif (file_extension.lower()=='narrowpeak'):
-    #     library_file_type = NARROWPEAK
-    #     library_file_df = readFileInBEDFormat(library_file_with_path)
-    #     library_file_df = library_file_df.sort_values(by=['chrom', 'start'])
-    #     library_file_df_grouped=library_file_df.groupby('chrom')
-    elif ((file_extension.lower()=='bed') or (file_extension.lower()=='narrowpeak')):
-        if (file_extension.lower()=='bed'):
-            library_file_type = BED
-        elif (file_extension.lower()=='narrowpeak'):
-            library_file_type = NARROWPEAK
-        #Online chr based arrays creation
-        readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type)
-    elif (file_extension.lower()=='wig'):
+        #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
+    elif (file_extension.lower()=='.bed'):
+        library_file_type=BED
+        readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
+    elif ((file_extension.lower()=='.narrowpeak') or (file_extension.lower()=='.np')):
+        library_file_type=NARROWPEAK
+        readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
+    elif (file_extension.lower()=='.wig'):
         library_file_type=WIG
+        BEDGRAPH=decideFileType(library_file_with_path)
+        if BEDGRAPH==True:
+            readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type)
+        else:
+            readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, library_file_with_path,occupancy_type,quantileValue,remove_outliers)
     else:
         library_file_type=LIBRARY_FILE_TYPE_OTHER
     ##############################################################
+
 
     ###################################################################################
     ##################  USING IMAP UNORDERED starts ###################################
@@ -843,7 +811,7 @@ def occupancy_analysis(genome,
         # The (approximate) size of these chunks can be specified by setting chunksize to a positive integer.
         # default chunksize=1
 
-        for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList, (fillInputList(occupancy_type,using_pyBigWig,using_chrBasedArray,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,library_file_df_grouped,
+        for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList, (fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,
                                                             sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
                                                             subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,plusorMinus,sample_based,verbose) for simNum,chrLong in sim_num_chr_tuples),chunksize=1):
 
@@ -872,7 +840,6 @@ def occupancy_analysis(genome,
     ###################################################################################
     ##################  USING APPLY ASYNC starts ######################################
     ###################################################################################
-
     elif (computation_type == USING_APPLY_ASYNC):
 
         sim_nums = range(0, numofSimulations+1)
@@ -898,9 +865,10 @@ def occupancy_analysis(genome,
 
         for simNum, chrLong in sim_num_chr_tuples:
 
-            pool.apply_async(combined_prepare_chrbased_data_fill_signal_count_arrays, (occupancy_type,using_pyBigWig,using_chrBasedArray,
-                          outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
-                          library_file_type, library_file_df_grouped,
+            pool.apply_async(combined_prepare_chrbased_data_fill_signal_count_arrays, (occupancy_type,
+                          outputDir, jobname, chrLong, simNum, chromSizesDict,
+                          library_file_with_path,
+                          library_file_type,
                           sample2NumberofSubsDict, sample2NumberofIndelsDict, sample2NumberofDinucsDict,
                           sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict,
                           sample2DinucsSignature2NumberofMutationsDict,
@@ -912,73 +880,6 @@ def occupancy_analysis(genome,
         pool.join()
     ###################################################################################
     ##################  USING APPLY ASYNC ends ########################################
-    ###################################################################################
-
-
-    ###################################################################################
-    ##########  USING MAP Simulations Sequential Chromosomes Parallel starts ##########
-    ###################################################################################
-    #Not maintained
-    elif (computation_type == SIMULATIONS_SEQUENTIAL_CHROMOSOMES_PARALLEL_USING_MAP):
-        pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1000)
-
-        ##############################################################################
-        for simNum in range(0, numofSimulations + 1):
-
-            poolInputList=[]
-            ##############################################################################
-            for chrLong in chromNamesList:
-                inputList = fillInputList(outputDir,
-                              jobname,
-                              chrLong,
-                              simNum,
-                              chromSizesDict,
-                              library_file_with_path,
-                              library_file_type,
-                              library_file_df,
-                              library_file_df_grouped,
-                              sample2NumberofSubsDict,
-                              sample2NumberofIndelsDict,
-                              sample2NumberofDinucsDict,
-                              sample2SubsSignature2NumberofMutationsDict,
-                              sample2IndelsSignature2NumberofMutationsDict,
-                              sample2DinucsSignature2NumberofMutationsDict,
-                              subsSignature2PropertiesListDict,
-                              indelsSignature2PropertiesListDict,
-                              dinucsSignature2PropertiesListDict,
-                              plusorMinus,
-                              sample_based)
-
-                poolInputList.append(inputList)
-            ##############################################################################
-
-            allChromosomes_SignalArrayAndCountArrayList_List=pool.map(combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList,poolInputList)
-
-            #####################################################################################################
-            ######################### Accumulate right in the left starts  ######################################
-            #####################################################################################################
-            for signalArrayAndCountArrayList in allChromosomes_SignalArrayAndCountArrayList_List:
-                simNum2Type2SignalArrayDict = signalArrayAndCountArrayList[0]
-                simNum2Type2CountArrayDict = signalArrayAndCountArrayList[1]
-                simNum2Sample2Type2SignalArrayDict = signalArrayAndCountArrayList[2]
-                simNum2Sample2Type2CountArrayDict = signalArrayAndCountArrayList[3]
-
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
-            #####################################################################################################
-            ######################### Accumulate right in the left ends  ########################################
-            #####################################################################################################
-        ##############################################################################
-
-        ################################
-        pool.close()
-        pool.join()
-        ################################
-
-    ###################################################################################
-    ##########  USING MAP Simulations Sequential Chromosomes Parallel ends ############
     ###################################################################################
 
     writeSimulationBasedAverageNucleosomeOccupancy(occupancy_type,

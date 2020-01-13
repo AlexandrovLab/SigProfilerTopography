@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/transcriptionstrandbias" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../sigprotopography/sigprotopography/source/datapreparation" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/commons" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/SigProfilerTopography/lib" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
@@ -21,5 +22,11 @@
     <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
     <orderEntry type="module" module-name="SigProfilerSimulator" />
     <orderEntry type="module" module-name="SigProfilerSimulator" />
+    <orderEntry type="module" module-name="OldSigProfilerTopography" />
+    <orderEntry type="module" module-name="SigProfiler" />
+    <orderEntry type="module" module-name="SigProfiler" />
+    <orderEntry type="module" module-name="SigProfiler" />
+    <orderEntry type="module" module-name="SigProfiler" />
+    <orderEntry type="module" module-name="SigProfiler" />
   </component>
 </module>

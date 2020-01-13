@@ -1,12 +1,12 @@
 # SigProfilerTopography
 SigProfilerTopography provides topography analyses for mutations such as
 
-- SBS (Single Base Substitutions)
-- ID (indels)
-- DBS (Double Base Substitutions)
+- Single Base Substitutions (SBS)
+- Insertions and deletions, indels (ID)
+- Double Base Substitutions (DBS)
 
 
-SigProfilerTopography carries out following analyses:
+and carries out following analyses:
 
 - Histone Occupancy
 - Nucleosome Occupancy
@@ -14,6 +14,12 @@ SigProfilerTopography carries out following analyses:
 - Replication Strand Bias
 - Transcription Strand Bias
 - Processivity
+
+**PREREQUISITES**
+
+SigProfilerTopography is written in PYTHON, and it also requires the following software with the given version (or newer):
+
+- WGET version 1.9 or RSYNC if you have a firewall
 
 **QUICK START GUIDE**
 
@@ -51,23 +57,34 @@ $ python
 
 6. Within a python session, you can run the topography analyses as follows:
 
-	You must provide the mutation types in`mutation_types_contexts`  list for the ones you want to carry out topography analyses.
-You must provide the corresponding probabilities files in `sbs_probabilities_file_path`, `id_probabilities_file_path` and `dbs_probabilities_file_path` accordingly.
-These probabilities files must be output probabilities files of SigProfilerExtractor.
+	+ You must provide the mutation types in `mutation_types_contexts`  
+	
+		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply 
+		
+		`mutation_types_contexts=['96', 'DBS']`
+		* Or, if you want to carry out topography analyses for single base substitutions, indels and dinucleotides then you must supply 
+		
+		`mutation_types_contexts=['96', 'ID', 'DBS']`
 
-	For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply `subs_probabilities_file_path` and `dinucs_probabilities_file_path` with `mutation_types_contexts=['96', 'DBS']`.
+	+ You must provide the corresponding probabilities files in `sbs_probabilities`, `id_probabilities` and `dbs_probabilities` accordingly.
+		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply 
+		
+		`sbs_probabilities` and `dbs_probabilities`
 
-	By the way, `96` stands for substitutions and `DBS` stand for dinucleotides and `ID` stand for indels. This call also plots topography output figures.
+	+ These probabilities files must be output probabilities files coming from SigProfilerExtractor.
+
+	+ The run below will also plot the resulting figures.
+
 ```
 >>> genome= 'GRCh37'
 >>> inputDir = '.../your_input_dir/'
 >>> outputDir = '.../your_output_dir/'
 >>> jobname = 'your_job_name'
 >>> numofSimulations = 2
->>> sbs_probabilities = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>> id_probabilities = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>> dbs_probabilities = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+>>> sbs_probabilities_file_path = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>>> id_probabilities_file_path = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>>> dbs_probabilities_file_path = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 ```
 
 **INPUT FILE FORMAT**
@@ -78,79 +95,123 @@ SigProfilerTopography uses formats (maf, vcf, simple text file, and ICGC) that a
 
 SigProfilerTopography uses ENCODE provided files for topography analyses such as histone occupancy, nucleosome occupancy, replication time and replication strand bias.
 
-You can provide your local *Histone DNA binding files* in  **bed** format and replication time files: *signal* in **wig** and *peaks* and *valleys* in **bed** format with their paths.
 
-**HISTONE OCCUPANCY**
++ **HISTONE OCCUPANCY**
 
-By default, SigProfilerTopograpy makes use of these 6 Histone DNA binding files for histone occupancy analyses.
-                
+	By default, SigProfilerTopograpy makes use of these 6 Histone DNA binding files for histone occupancy analyses.
+
 1. ENCFF291WFP_H3K27me3_breast_epithelium.bed
 2. ENCFF906MJM_H3K36me3_breast_epithelium.bed
 3. ENCFF065FJK_H3K9me3_breast_epithelium.bed
 4. ENCFF154XFN_H3K27ac_breast_epithelium.bed
 5. ENCFF336DDM_H3K4me1_breast_epithelium.bed
 6. ENCFF065TIH_H3K4me3_breast_epithelium.bed
-                
 
 
-If you prefer to use other Histone DNA binding files, you have to provide them with their full path and then include them in list `epigenomics_files_list`.
++ **NUCLEOSOME OCCUPANCY**
 
-You can have as many Histone DNA binding files as you want.
+	+ We obtained micrococcal nuclease sequencing (MNase-seq) data for GM12878 and K562 cell lines from ENCODE.
 
-`histone_dna_binding_file1=.../full_path_to/file1.bed`
-`histone_dna_binding_file2=.../full_path_to/file2.bed`
+	+ By default, SigProfilerTopography makes use of MNase-seq of K562 cell line for nucleosome occupancy analysis.
+
+	+ If you want to run SigProfilerTopography using  MNase-seq of GM12878 cell line, you have to include `nucleosome_biosample='GM12878'`  in the `runAnalyses` call as follows:
+
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
+
+	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for nucleosome occupancy analysis which requires ~11 GB of storage for each cell line.
+
++ **REPLICATION TIME** and **REPLICATION STRAND BIAS**
+
+	+ By default, SigProfilerTopography carries out replication time and replication strand bias analyses using Repli-seq of MCF7 cell line.
+
+	+ SigProfilerTopography provides replication time files for the biosamples listed in the table below:
+	
+	+ SigProfilerTopography downloads corresponding replication time files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*   which requires ~25 MB of storage for each biosample.
+
+	+ SigProfilerTopography downloads hg19.2bit from **http://hgdownload.cse.ucsc.edu/goldenPath/**  under *.../SigProfilerTopography/lib/ucscgenome/*   which requires ~797 MB of storage.
+
+
+	+ If you want to run SigProfilerTopography using  Repli-seq of any available biosamples e.g.: NHEK,  then you have to include `replication_time_biosample='NHEK'`  in the `runAnalyses` call as follows:
+
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='NHEK')`
+                    
+| Biosample | Organism  | Tissue | Cell Type | Disease |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| MCF7 | human  | breast  | mammary | cancer |
+| HEPG2 | human  | liver  |  | cancer |
+| HELAS3 | human  | cervix  |  | cancer |
+| SKNSH | human  | brain  |  | cancer |
+| K562 | human  | bone marrow  |  | cancer |
+| IMR90 | human  | lung  | fibroblast | normal |
+| NHEK | human  | skin  | keratinocyte | normal |
+| BJ | human  | skin  | fibroblast | normal |
+| HUVEC | human  | umbilical vein  | endothelial | normal |
+| BG02ES | human  |   | embryonic stem cell | None reported  |
+| GM12878 | human  | blood  | B-Lymphocyte | normal |
+| GM06990 | human  | blood  | B-Lymphocyte | Unknown |
+| GM12801 | human  | blood | B-Lymphocyte | Unknown  |
+| GM12812 | human  | blood | B-Lymphocyte | Unknown |
+| GM12813 | human  | blood | B-Lymphocyte | Unknown |
+                    
+
+
+
+**USER PROVIDED LIBRARY FILES**
++ **HISTONE OCCUPANCY**
+
+	+ If you prefer to use other Histone DNA binding files, you have to provide them with their full path and then include them in `epigenomics_files`
+
+	+ You can have as many Histone DNA binding files as you want.
+
+	`histone_dna_binding_file1=.../path_to/file1.bed`
+`histone_dna_binding_file2=.../path_to/file2.bed`
 `epigenomics_files_list=[histone_dna_binding_file1,histone_dna_binding_file2]`
 
-Then you need to provide `epigenomics_files_list` in the `runAnalyses` call as follows:
+	+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
 
-`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
 
-**NUCLEOSOME OCCUPANCY**
+	
++ **NUCLEOSOME OCCUPANCY**
+	+ SigProfilerTopography enables user to provide `nucleosome_file` to be used in nucleosome occupancy analysis.
 
-We obtained micrococcal nuclease sequencing (MNase-seq) data for GM12878 and K562 cell lines from ENCODE.
+	+ You can provide your nucleosome data file as follows:
+		` user_nucleosome_file = '.../path_to/nucleosome.wig'`
 
-By default, SigProfilerTopography makes use of MNase-seq of GM12878 cell line for nucleosome occupancy analysis.
+	+ Then you need to set `nucleosome_file` in the `runAnalyses` call as follows:
+	
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path, nucleosome_file=user_nucleosome_file,mutation_types_contexts=['96','DBS'],nucleosome=True)`
 
-If you want to run SigProfilerTopography using  MNase-seq of K562 cell line, you have to include
-`nucleosome_file='wgEncodeSydhNsomeK562Sig.bigWig'`  in the `runAnalyses` call as follows:
++ **REPLICATION TIME** and **REPLICATION STRAND BIAS**
+	+ You can provide your replication data files as follows:
+	` user_replication_time_signal_file = '.../path_to/replication_time.wig'`
+	
+	`user_replication_time_valley_file = '.../path_to/replication_time_valley.bed'`
+	
+	`user_replication_time_peak_file = '.../path_to/replication_time_peak.bed'`
 
-`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_file='wgEncodeSydhNsomeK562Sig.bigWig')`
+	+ Then you need to set `replication_time_signal_file`, `replication_time_valley_file`, and `replication_time_peak_file`, in the `runAnalyses` call as follows:
+	
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,replication_time_signal_file=user_replication_time_signal_file, replication_time_valley_file=user_replication_time_valley_file, replication_time_peak_file=user_replication_time_peak_file,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)`
 
 
-**REPLICATION TIME** and **REPLICATION STRAND BIAS**
-
-When you install SigProfilerTopography, SigProfilerTopography downloads replication time data for Mcf7 cell lines under
-```
-SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
-SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
-SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
-```
-Unless you set different files, these installed files are used for replication time and replication strand bias analyses.
-
-You can provide your replication data file as follows:
-```
->>> user_provided_replication_time_file_path = '.../user_provided_replication_time.wig'
->>> user_provided_replication_time_valley_file_path = '.../user_provided_replication_time_valley.bed'
->>> user_provided_replication_time_peak_file_path = '.../user_provided_replication_time_peak.bed'
->>> topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,dbs_probabilities_file_path=dbs_probabilities,replication_time_file=user_provided_replication_time_file_path, replication_time_valley_file=user_provided_replication_time_valley_file_path, replication_time_peak_file=user_provided_replication_time_peak_file_path,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)
-```
 **SIGPROFILERTOPOGRAPHY PARAMETERS**
 
-`num_of_sbs_required` `num_of_id_required` `num_of_dbs_required` 
-`average probabilty`
+                    
+| Parameter | Default Value  |
+| ------------- | ------------- |
+| average probabilty | 0.9  |
+| num_of_sbs_required | 5000  |
+| num_of_id_required | 1000  |
+| num_of_dbs_required | 200  |
+                    
 
-                
 
 + By default, we require at least 5000, 1000, 200 mutations with average probability of 0.9 for a SBS, ID, DBS signature, respectively, to be considered and analysed.
 
-    * `average_probability=0.9`
-    * `num_of_sbs_required=5000`
-    * `num_of_id_required=1000`
-	* `num_of_dbs_required=200`
-
 + However, as an example these parameters can be relaxed in the `runAnalyses` call as follows:
 
-`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
 
 
 **COPYRIGHT**

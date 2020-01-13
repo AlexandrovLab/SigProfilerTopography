@@ -5,7 +5,7 @@
 # SigProfilerTopography provides the downstream data analysis of
 # mutations and extracted mutational signatures w.r.t.
 # nucleosome occupancy, replication time, strand bias and processivity.
-# Copyright (C) 2018 Burcak Otlu
+# Copyright (C) 2018-2020 Burcak Otlu
 
 # #############################################################
 # import sys
@@ -42,19 +42,19 @@ from SigProfilerTopography.source.commons.TopographyCommons import ALL
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
-from SigProfilerTopography.source.commons.TopographyCommons import GM12878
 from SigProfilerTopography.source.commons.TopographyCommons import K562
+from SigProfilerTopography.source.commons.TopographyCommons import MCF7
 
-from SigProfilerTopography.source.commons.TopographyCommons import ENCODE_NUCLEOSOME_GM12878_BIGWIG
-from SigProfilerTopography.source.commons.TopographyCommons import ENCODE_NUCLEOSOME_K562_BIGWIG
+from SigProfilerTopography.source.commons.TopographyCommons import GM12878_NUCLEOSOME_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import K562_NUCLEOSOME_OCCUPANCY_FILE
 
-from SigProfilerTopography.source.commons.TopographyCommons import ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL
-from SigProfilerTopography.source.commons.TopographyCommons import ENCODE_NUCLEOSOME_K562_BIGWIG_URL
+from SigProfilerTopography.source.commons.TopographyCommons import getNucleosomeFile
+from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
 
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUCLEOSOME_OCCUPANCY_FILE1
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUCLEOSOME_OCCUPANCY_FILE2
+from SigProfilerTopography.source.commons.TopographyCommons import available_nucleosome_biosamples
+from SigProfilerTopography.source.commons.TopographyCommons import available_replication_time_biosamples
 
+from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
@@ -74,11 +74,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTO
 
 from SigProfilerTopography.source.commons.TopographyCommons import BIOSAMPLE_UNDECLARED
 
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_REPLICATION_TIME_SIGNAL_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_REPLICATION_TIME_VALLEY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_REPLICATION_TIME_PEAK_FILE
-
-from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
@@ -113,9 +108,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import ONE_DIRECTORY
 from SigProfilerTopography.source.commons.TopographyCommons import LIB
 from SigProfilerTopography.source.commons.TopographyCommons import UCSCGENOME
 
+from SigProfilerTopography.source.commons.TopographyCommons import WIG
+from SigProfilerTopography.source.commons.TopographyCommons import BED
+
 from SigProfilerTopography.source.commons.TopographyCommons import current_abs_path
 
-from SigProfilerTopography.source.commons.TopographyCommons import downloadFromWeb
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
 from SigProfilerTopography.source.commons.TopographyCommons import doesSimulationsAlreadyExists
@@ -126,6 +123,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import appendDiction
 
 from SigProfilerTopography.source.commons.TopographyCommons import MutationType2NumberofMutatiosDictFilename
 from SigProfilerTopography.source.commons.TopographyCommons import readDictionary
+
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 
 from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
 from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
@@ -280,29 +279,133 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
 #JAN 7, 2020
 #Download genome 2bit files if it does not exists
 def check_download_genome_2bit_files(genome):
-    os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
+    current_abs_path = os.path.dirname(os.path.abspath(__file__))
+
+    os.makedirs(os.path.join(current_abs_path, LIB, UCSCGENOME), exist_ok=True)
+    download_file_path = os.path.join(current_abs_path, LIB, UCSCGENOME)
 
     if (genome == GRCh37):
-        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
+        filename_with_extension=HG19_2BIT
+        file_with_path = os.path.join(current_abs_path, LIB, UCSCGENOME, HG19_2BIT)
         url=HG19_URL
     elif (genome == GRCh38):
-        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
+        filename_with_extension=HG38_2BIT
+        file_with_path = os.path.join(current_abs_path, LIB, UCSCGENOME, HG38_2BIT)
         url=HG38_URL
     elif (genome == MM9):
-        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM9_2BIT)
+        filename_with_extension=MM9_2BIT
+        file_with_path = os.path.join(current_abs_path, LIB, UCSCGENOME, MM9_2BIT)
         url=MM9_URL
-    elif (genome == MM10):
-        filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM10_2BIT)
+    elif (genome == MM10_2BIT):
+        filename_with_extension=MM10_2BIT
+        file_with_path = os.path.join(current_abs_path, LIB, UCSCGENOME, MM10_2BIT)
         url=MM10_URL
 
-    if not os.path.exists(filepath):
-        downloadFromWeb(url, filepath)
+    if os.path.isabs(download_file_path):
+        os.chdir(download_file_path)
+
+        if not os.path.exists(file_with_path):
+            print('Does not exists: %s' % (file_with_path))
+            try:
+                # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                print('Downloading %s under %s' % (filename_with_extension, download_file_path))
+
+                # wget -c Continue getting a partially-downloaded file
+                # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ' + url + "'"
+                # print(cmd)
+                os.system(cmd)
+            except:
+                # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                print("The %s is not responding..." %(url))
+
+        os.chdir(current_abs_path)
 #######################################################
 
+#######################################################
+#JAN 9, 2020
+def check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file):
+    current_abs_path = os.path.dirname(os.path.abspath(__file__))
+    # print(current_abs_path)
+
+    #These are currently full path, therefore convert them to filename
+    replication_time_signal_file=os.path.basename(replication_time_signal_file)
+    replication_time_valley_file=os.path.basename(replication_time_valley_file)
+    replication_time_peak_file=os.path.basename(replication_time_peak_file)
+
+    os.makedirs(os.path.join(current_abs_path,'lib','replication'),exist_ok=True)
+    lib_replication_path = os.path.join(current_abs_path,'lib','replication')
+
+    if os.path.isabs(lib_replication_path):
+        # print('%s an absolute path.' %(lib_replication_path))
+        os.chdir(lib_replication_path)
+
+        replication_time_signal_file_path= os.path.join(lib_replication_path,replication_time_signal_file)
+        replication_time_valley_file_path= os.path.join(lib_replication_path,replication_time_valley_file)
+        replication_time_peak_file_path= os.path.join(lib_replication_path,replication_time_peak_file)
+
+        if not os.path.exists(replication_time_signal_file_path):
+            print('Does not exists: %s' %(replication_time_signal_file_path))
+            try:
+                # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                print('Downloading %s under %s' % (replication_time_signal_file, lib_replication_path))
+
+                #wget -c Continue getting a partially-downloaded file
+                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_signal_file + "'"
+                # print(cmd)
+                os.system(cmd)
+            except:
+                # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
+
+        if not os.path.exists(replication_time_valley_file_path):
+            print('Does not exists: %s' %(replication_time_valley_file_path))
+            try:
+                # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                print('Downloading %s under %s' % (replication_time_valley_file, lib_replication_path))
+
+                #wget -c Continue getting a partially-downloaded file
+                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_valley_file + "'"
+                # print(cmd)
+                os.system(cmd)
+            except:
+                # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
+
+        if not os.path.exists(replication_time_peak_file_path):
+            print('Does not exists: %s' %(replication_time_peak_file_path))
+            try:
+                # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                print('Downloading %s under %s' % (replication_time_peak_file, lib_replication_path))
+
+                #wget -c Continue getting a partially-downloaded file
+                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_peak_file + "'"
+                # print(cmd)
+                os.system(cmd)
+            except:
+                # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
+
+    else:
+        #It has to be an absolute path
+        print('%s is not an absolute path.' %(lib_replication_path))
+
+    #go back
+    os.chdir(current_abs_path)
+
+#######################################################
 
 #######################################################
 #Nov25, 2019
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
+# We are using this function if user is using our available nucleosome data for GM12878 adnd K562 cell lines
 def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
 
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
@@ -315,33 +418,37 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
     if os.path.isabs(chrombased_npy_path):
         # print('%s an absolute path.' %(chrombased_npy_path))
         os.chdir(chrombased_npy_path)
+
+        nucleosome_filename_wo_extension = os.path.splitext(os.path.basename(nucleosome_file))[0]
+
+        for chrLong in chromNamesList:
+            # GM12878 and K562 comes from woman samples therefore there is no chrY
+            if chrLong != 'chrY':
+                # filename = '%s_signal_wgEncodeSydhNsome%sSig.npy' %(chrLong,cell_line)
+                filename = '%s_signal_%s.npy' % (chrLong, nucleosome_filename_wo_extension)
+
+                chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
+                if not os.path.exists(chrbased_npy_array_path):
+                    print('Does not exists: %s' % (chrbased_npy_array_path))
+                    try:
+                        # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                        print('Downloading %s_signal_%s.npy under %s' % (
+                        chrLong, nucleosome_filename_wo_extension, chrbased_npy_array_path))
+
+                        # wget -c Continue getting a partially-downloaded file
+                        # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                        # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                        cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                        # print(cmd)
+                        os.system(cmd)
+                    except:
+                        # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                        print("The UCSD ftp site is not responding...")
+
     else:
         #It has to be an absolute path
         print('%s is not an absolute path.' %(chrombased_npy_path))
 
-    if (os.path.basename(nucleosome_file)==DEFAULT_NUCLEOSOME_OCCUPANCY_FILE1):
-        cell_line='Gm12878'
-    elif (os.path.basename(nucleosome_file)==DEFAULT_NUCLEOSOME_OCCUPANCY_FILE2):
-        cell_line='K562'
-
-    for chrLong in chromNamesList:
-        #GM12878 and K562 comes from woman samples therefore there is no chrY
-        if chrLong!='chrY':
-            filename = '%s_signal_wgEncodeSydhNsome%sSig.npy' %(chrLong,cell_line)
-            chrbased_npy_array_path= os.path.join(chrombased_npy_path,filename)
-            if not os.path.exists(chrbased_npy_array_path):
-                print('Does not exists: %s' %(chrbased_npy_array_path))
-                try:
-                    print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
-                    #wget -c Continue getting a partially-downloaded file
-                    #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                    # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                    cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                    # print(cmd)
-                    os.system(cmd)
-                except:
-                    # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
-                    print("The UCSD ftp site is not responding...")
 
     #go back
     os.chdir(current_abs_path)
@@ -351,15 +458,12 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
 #######################################################
 
 #######################################################
-def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus,using_pyBigWig,using_chrBasedArray,verbose):
+def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus,verbose):
 
     if (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
 
-    # computation_type=SIMULATIONS_SEQUENTIAL_CHROMOSOMES_PARALLEL_USING_MAP
-    # computation_type=USING_IMAP_UNORDERED
-    # computation_type=USING_APPLY_ASYNC
-    occupancyAnalysis(genome,computation_type,occupancy_type,using_pyBigWig,using_chrBasedArray,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
 #######################################################
 
 
@@ -380,8 +484,6 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_
 
     #Option2: Load offline prepared np arrays during runtime managby ed by replication_time_np_arrays_fill_runtime=False
     #Option2: Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
-    # computation_type=USING_IMAP_UNORDERED
-    # computation_type =USING_APPLY_ASYNC
     replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
     ###############################################
 
@@ -408,11 +510,6 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
     valleysBEDFilename = replicationTimeValleyFilename
     peaksBEDFilename = replicationTimePeakFilename
 
-    # computationType = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
-    # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-    # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
-    # computationType = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
-    #computation_type=USING_APPLY_ASYNC
     replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
     ###############################################
 
@@ -500,6 +597,7 @@ def deleteOldFigures(outputDir, jobname, occupancy_type):
 #######################################################
 
 
+
 #######################################################
 # inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
 # outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
@@ -519,18 +617,20 @@ def runAnalyses(genome,
                 outputDir,
                 jobname,
                 numofSimulations,
-                sbs_probabilities_file_path=None,
-                id_probabilities_file_path= None,
-                dbs_probabilities_file_path=None,
+                sbs_probabilities=None,
+                id_probabilities= None,
+                dbs_probabilities=None,
                 epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE1,DEFAULT_HISTONE_OCCUPANCY_FILE2,DEFAULT_HISTONE_OCCUPANCY_FILE3,DEFAULT_HISTONE_OCCUPANCY_FILE4,DEFAULT_HISTONE_OCCUPANCY_FILE5,DEFAULT_HISTONE_OCCUPANCY_FILE6],
                 # epigenomics_files_memos=['H3K27me3_Breast_Epithelium','H3K36me3_Breast_Epithelium','H3K9me3_Breast_Epithelium','H3K27ac_Breast_Epithelium','H3K4me1_Breast_Epithelium','H3K4me3_Breast_Epithelium'],
                 # epigenomics_biosamples=['Breast_Epithelium'],
                 epigenomics_files_memos=None,
                 epigenomics_biosamples=None,
-                nucleosome_file=DEFAULT_NUCLEOSOME_OCCUPANCY_FILE1,
-                replication_time_file=DEFAULT_REPLICATION_TIME_SIGNAL_FILE,
-                replication_time_valley_file=DEFAULT_REPLICATION_TIME_VALLEY_FILE,
-                replication_time_peak_file=DEFAULT_REPLICATION_TIME_PEAK_FILE,
+                nucleosome_biosample=K562,
+                nucleosome_file=None,
+                replication_time_biosample=MCF7,
+                replication_time_signal_file=None,
+                replication_time_valley_file=None,
+                replication_time_peak_file=None,
                 mutation_types_contexts=[SBS96,ID,DBS],
                 computation_type=USING_APPLY_ASYNC,
                 epigenomics=False,
@@ -549,8 +649,6 @@ def runAnalyses(genome,
                 num_of_dbs_required=200,
                 plusorMinus_epigenomics=2000,
                 plusorMinus_nucleosome=1000,
-                using_pyBigWig=False,
-                using_chrBasedArray=True,
                 verbose=False,
                 PCAWG=False,
                 DATA_IS_READY_PLOT_FIGURES=False):
@@ -635,10 +733,15 @@ def runAnalyses(genome,
     print('--- epigenomics_files:%s' %epigenomics_files)
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples)
-    print('--- nucleosome_file:%s' %nucleosome_file)
-    print('--- replication_time_file:%s' % replication_time_file)
+
+    print('--- nucleosome_biosample:%s' %nucleosome_biosample)
+    print('--- nucleosome_file:%s' % nucleosome_file)
+
+    print('--- replication_time_biosample:%s' % replication_time_biosample)
+    print('--- replication_time_signal_file:%s' % replication_time_signal_file)
     print('--- replication_time_valley_file:%s' % replication_time_valley_file)
     print('--- replication_time_peak_file:%s' % replication_time_peak_file)
+
     print('--- mutation_types_contexts:%s' %mutation_types_contexts)
     print('--- computation_type:%s' %computation_type)
     if sample_based:
@@ -732,29 +835,29 @@ def runAnalyses(genome,
         start_time = time.time()
         # SBS
         for mutation_type_context in mutation_types_contexts:
-            if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities_file_path is not None):
+            if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
                 print('--- Merge %s mutations with probabilities for %s' % (
-                mutation_type_context, sbs_probabilities_file_path))
+                mutation_type_context, sbs_probabilities))
                 prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir,
                                                                                    outputDir,
                                                                                    jobname, mutation_type_context,
-                                                                                   sbs_probabilities_file_path,
+                                                                                   sbs_probabilities,
                                                                                    startSimNum,
                                                                                    endSimNum, SNV,PCAWG)
 
         # ID
-        if ((ID in mutation_types_contexts) and (id_probabilities_file_path is not None)):
-            print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities_file_path))
+        if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
+            print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
             prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                               jobname, ID, id_probabilities_file_path,
+                                                                               jobname, ID, id_probabilities,
                                                                                startSimNum, endSimNum, ID,PCAWG)
 
         # DBS
-        if ((DBS in mutation_types_contexts) and (dbs_probabilities_file_path is not None)):
-            print('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities_file_path))
+        if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
+            print('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities))
             prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
                                                                                jobname, DBS,
-                                                                               dbs_probabilities_file_path,
+                                                                               dbs_probabilities,
                                                                                startSimNum, endSimNum, DBS,PCAWG)
 
         print("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))
@@ -914,19 +1017,19 @@ def runAnalyses(genome,
             start_time = time.time()
             #SBS
             for mutation_type_context in mutation_types_contexts:
-                if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities_file_path is not None):
-                    print('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities_file_path))
-                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities_file_path,startSimNum,endSimNum,'SNV',PCAWG)
+                if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
+                    print('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities))
+                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities,startSimNum,endSimNum,'SNV',PCAWG)
 
             #ID
-            if ((ID in mutation_types_contexts) and (id_probabilities_file_path is not None)):
-                print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities_file_path))
-                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities_file_path,startSimNum,endSimNum,'ID',PCAWG)
+            if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
+                print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
+                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities,startSimNum,endSimNum,'ID',PCAWG)
 
             #DBS
-            if ((DBS in mutation_types_contexts) and (dbs_probabilities_file_path is not None)):
-                print('--- Merge %s mutations with probabilities for %s' % (DBS,dbs_probabilities_file_path))
-                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dbs_probabilities_file_path,startSimNum,endSimNum,'DBS',PCAWG)
+            if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
+                print('--- Merge %s mutations with probabilities for %s' % (DBS,dbs_probabilities))
+                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dbs_probabilities,startSimNum,endSimNum,'DBS',PCAWG)
 
             print("--- Merge simulations chr based files with Mutation Probabilities: %s seconds" %(time.time()-start_time))
             print("--- Merge simulations chr based files with Mutation Probabilities: %f minutes" %(float((time.time()-start_time)/60)))
@@ -1026,30 +1129,47 @@ def runAnalyses(genome,
 
     #################################################################################
     ################## Set full path library files starts ###########################
+
+    ###############################################
+    # We need full path of the library files
+    default_epigenomics_files = [DEFAULT_HISTONE_OCCUPANCY_FILE1, DEFAULT_HISTONE_OCCUPANCY_FILE2,
+                                 DEFAULT_HISTONE_OCCUPANCY_FILE3, DEFAULT_HISTONE_OCCUPANCY_FILE4,
+                                 DEFAULT_HISTONE_OCCUPANCY_FILE5, DEFAULT_HISTONE_OCCUPANCY_FILE6]
+    if (set(epigenomics_files) == set(default_epigenomics_files)):
+        # Set default
+        # Make the order correctly
+        epigenomics_files = default_epigenomics_files
+        epigenomics_files_memos = ['H3K27me3_Breast_Epithelium', 'H3K36me3_Breast_Epithelium',
+                                   'H3K9me3_Breast_Epithelium', 'H3K27ac_Breast_Epithelium',
+                                   'H3K4me1_Breast_Epithelium', 'H3K4me3_Breast_Epithelium']
+        epigenomics_biosamples = ['Breast_Epithelium']
+        for file_index, filename in enumerate(epigenomics_files):
+            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+    ###############################################
+
+    ###############################################
+    # We need full path of the library files
+    # By default nucleosome_biosample=K562 and nucleosome_file is None
+    # For GM12878 and K562 cell lines
+    if ((nucleosome_file is None)):
+        nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+    #User has provided nucleosome file with full path
+    elif (nucleosome_file is not None):
+        nucleosome_biosample = None
+    ###############################################
+
+    ###############################################
     #We need full path of the library files
+    #By default replication_time_biosample=MCF7 and signal, valley, peak files are None
+    if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None):
+        replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
 
-    default_epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE1,DEFAULT_HISTONE_OCCUPANCY_FILE2,DEFAULT_HISTONE_OCCUPANCY_FILE3,DEFAULT_HISTONE_OCCUPANCY_FILE4,DEFAULT_HISTONE_OCCUPANCY_FILE5,DEFAULT_HISTONE_OCCUPANCY_FILE6]
-    if (set(epigenomics_files)==set(default_epigenomics_files)):
-        #Set default
-        #Make the order correctly
-        epigenomics_files=default_epigenomics_files
-        epigenomics_files_memos=['H3K27me3_Breast_Epithelium','H3K36me3_Breast_Epithelium','H3K9me3_Breast_Epithelium','H3K27ac_Breast_Epithelium','H3K4me1_Breast_Epithelium','H3K4me3_Breast_Epithelium']
-        epigenomics_biosamples=['Breast_Epithelium']
-        for file_index, filename  in enumerate(epigenomics_files):
-            epigenomics_files[file_index] = os.path.join(current_abs_path,LIB,EPIGENOMICS,filename)
+    #User has provided replication time files
+    #User must provide replication files with full paths
+    elif (replication_time_signal_file is not None) and (replication_time_valley_file is not None) and (replication_time_peak_file is not None):
+        replication_time_biosample=None
+    ###############################################
 
-    #For GM12878 and K562 cell lines
-    if ((nucleosome_file== DEFAULT_NUCLEOSOME_OCCUPANCY_FILE1) or (nucleosome_file==DEFAULT_NUCLEOSOME_OCCUPANCY_FILE2)):
-        nucleosome_file = os.path.join(current_abs_path,LIB,NUCLEOSOME,nucleosome_file)
-
-    if (replication_time_file == DEFAULT_REPLICATION_TIME_SIGNAL_FILE):
-        replication_time_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_SIGNAL_FILE)
-
-    if (replication_time_valley_file == DEFAULT_REPLICATION_TIME_VALLEY_FILE):
-        replication_time_valley_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_VALLEY_FILE)
-
-    if (replication_time_peak_file == DEFAULT_REPLICATION_TIME_PEAK_FILE):
-        replication_time_peak_file = os.path.join(current_abs_path,LIB,REPLICATION,DEFAULT_REPLICATION_TIME_PEAK_FILE)
     ################## Set full path library files ends #############################
     #################################################################################
 
@@ -1066,6 +1186,7 @@ def runAnalyses(genome,
         #data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
         epigenomics_file_memos_created=[]
 
+        #Run for each epigenomics file
         for idx, epigenomics_file in enumerate(epigenomics_files):
             start_time = time.time()
             if (epigenomics_files_memos is not None) and (len(epigenomics_files_memos)==len(epigenomics_files)):
@@ -1074,12 +1195,13 @@ def runAnalyses(genome,
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
                 epigenomics_file_memos_created.append(epigenomics_file_memo)
 
-            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_epigenomics,using_pyBigWig,using_chrBasedArray,verbose)
+            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_epigenomics,verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))
             print("--- Run Epigenomics Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),epigenomics_file))
             print('#################################################################################\n')
 
+        #Used for plotting
         if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
             epigenomics_files_memos=epigenomics_file_memos_created
 
@@ -1091,10 +1213,12 @@ def runAnalyses(genome,
         occupancy_type = NUCLEOSOMEOCCUPANCY
         deleteOldData(outputDir,jobname,occupancy_type)
 
-        check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList)
+        #For using SigProfilerTopography Nucleosme Files
+        if nucleosome_biosample in available_nucleosome_biosamples:
+            check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList)
 
         start_time = time.time()
-        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_nucleosome,using_pyBigWig,using_chrBasedArray,verbose)
+        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_nucleosome,verbose)
         print('#################################################################################')
         print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
         print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),nucleosome_file))
@@ -1104,21 +1228,18 @@ def runAnalyses(genome,
         # Replication Time
         check_download_genome_2bit_files(genome)
 
+        #For using SigProfilerTopography Provided Replication Time Files
+        if replication_time_biosample in available_replication_time_biosamples:
+            check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file)
+
         start_time = time.time()
-        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
         print('#################################################################################')
         print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
         print('#################################################################################\n')
 
     if (strand_bias):
-        # Replication Strand Bias
-        start_time = time.time()
-        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
-        print('#################################################################################')
-        print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-        print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
-        print('#################################################################################\n')
 
         # Transcription Strand Bias
         start_time = time.time()
@@ -1126,6 +1247,14 @@ def runAnalyses(genome,
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        print('#################################################################################\n')
+
+        # Replication Strand Bias
+        start_time = time.time()
+        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+        print('#################################################################################')
+        print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
         print('#################################################################################\n')
 
     if (processivity):
@@ -1235,28 +1364,34 @@ if __name__== "__main__":
 
     genome = 'GRCh37'
     jobname = 'Test-Skin-Melanoma'
-    numberofSimulations = 10
+    numberofSimulations = 2
 
     inputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input/PCAWG_Matlab_Clean/Skin-Melanoma/filtered/'
     outputDir = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_test')
 
-    sbs_probabilities = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_sbs96_mutation_probabilities.txt')
-    id_probabilities = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_id83_mutation_probabilities.txt')
-    dbs_probabilities = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_dbs_mutation_probabilities.txt')
+    sbs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_sbs96_mutation_probabilities.txt')
+    id_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_id83_mutation_probabilities.txt')
+    dbs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_dbs_mutation_probabilities.txt')
 
-    user_provided_replication_time_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekWaveSignalRep1.wig')
-    user_provided_replication_time_valley_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekValleysRep1.bed')
-    user_provided_replication_time_peak_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekPkRep1.bed')
+    # user_provided_replication_time_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekWaveSignalRep1.wig')
+    # user_provided_replication_time_valley_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekValleysRep1.bed')
+    # user_provided_replication_time_peak_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekPkRep1.bed')
+
+    user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.wig')
+
+    # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.bigWig')
 
     runAnalyses(genome, inputDir, outputDir, jobname, numberofSimulations,
-                           sbs_probabilities_file_path=sbs_probabilities,
-                          id_probabilities_file_path=id_probabilities,
-                           dbs_probabilities_file_path=dbs_probabilities,
-                           replication_time_file=user_provided_replication_time_file_path,
-                           replication_time_valley_file=user_provided_replication_time_valley_file_path,
-                           replication_time_peak_file=user_provided_replication_time_peak_file_path,
+                           sbs_probabilities=sbs_probabilities_file_path,
+                          id_probabilities=id_probabilities_file_path,
+                           dbs_probabilities=dbs_probabilities_file_path,
+                            nucleosome_biosample='K562',
+                            replication_time_biosample='NHEK',
+                           # nucleosome_file=user_provided_nucleosome_file_path,
+                           # replication_time_signal_file=user_provided_replication_time_file_path,
+                           # replication_time_valley_file=user_provided_replication_time_valley_file_path,
+                           # replication_time_peak_file=user_provided_replication_time_peak_file_path,
                            mutation_types_contexts=['96', 'ID', 'DBS'],
-                           computation_type='COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL',
-                           epigenomics=False, nucleosome=False, replication_time=True, strand_bias=False, processivity=False,
-                           sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=True)
+                           epigenomics=True, nucleosome=True, replication_time=True, strand_bias=True, processivity=True,
+                           sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=True,necessary_dictionaries_already_exists=True)
 ##############################################################

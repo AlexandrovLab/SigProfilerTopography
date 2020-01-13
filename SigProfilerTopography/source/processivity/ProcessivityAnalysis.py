@@ -62,16 +62,11 @@ def myfuncUpdated(x):
 
 #########################################################################
 def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbability,signature2PropertiesListDict):
-
     processiveGroupLength = x['ProcessiveGroupLength']
     distance = x['Distance']
     signature = x['Signature']
     probability = x['Probability']
 
-    #Old way
-    # if (considerProbability and (probability >= PROCESSIVITY_MUTATION_SIGNATURE_PROBABILITY_THRESHOLD)):
-
-    #New way
     #We require signature to be in signature2PropertiesListDict
     if (signature in signature2PropertiesListDict):
         if (considerProbability and (probability>=float(signature2PropertiesListDict[signature][0]))):
@@ -202,20 +197,6 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
             else:
                 big_signature2ProcessiveGroupLength2DistanceListDict[signature]={}
                 big_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = small_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength]
-####################################################################################
-
-
-####################################################################################
-#Nov 13, 2019
-def fillInputList(outputDir,jobname,simNum,chrLong,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict):
-    inputList=[]
-    inputList.append(outputDir)
-    inputList.append(jobname)
-    inputList.append(simNum)
-    inputList.append(chrLong)
-    inputList.append(considerProbabilityInProcessivityAnalysis)
-    inputList.append(signature2PropertiesListDict)
-    return inputList
 ####################################################################################
 
 
@@ -379,7 +360,6 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 #####################################################################
 
     #####################################################################
-
 
 ####################################################################################
 

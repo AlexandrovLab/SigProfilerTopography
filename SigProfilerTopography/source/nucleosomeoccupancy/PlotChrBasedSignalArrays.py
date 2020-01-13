@@ -20,10 +20,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import  LIB
 from SigProfilerTopography.source.commons.TopographyCommons import  NUCLEOSOME
 from SigProfilerTopography.source.commons.TopographyCommons import  CHRBASED
 
-from SigProfilerTopography.source.commons.TopographyCommons import  chrom
-from SigProfilerTopography.source.commons.TopographyCommons import  start
-from SigProfilerTopography.source.commons.TopographyCommons import  end
-from SigProfilerTopography.source.commons.TopographyCommons import  signal
+from SigProfilerTopography.source.commons.TopographyCommons import  CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import  START
+from SigProfilerTopography.source.commons.TopographyCommons import  END
+from SigProfilerTopography.source.commons.TopographyCommons import  SIGNAL
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -34,9 +34,9 @@ def readChromBasedNucleosomeDF(chrLong,nucleosomeFilename):
     chrBasedNucleosmeFilePath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, chrBasedNucleosmeFilename)
 
     if (os.path.exists(chrBasedNucleosmeFilePath)):
-        column_names = [chrom, start, end, signal]
+        column_names = [CHROM, START, END, SIGNAL]
         # chrbased_nucleosome_df = pd.read_table(chrBasedNucleosmeFilePath, sep="\t", header=None, comment='#', names=column_names,dtype={'chrom': str, 'start': np.int32, 'end': np.int32, 'signal': np.float16})
-        chrbased_nucleosome_df = pd.read_table(chrBasedNucleosmeFilePath, sep="\t", header=None, comment='#',names=column_names, dtype={chrom: str, start: np.int32, end: np.int32, signal: np.float32})
+        chrbased_nucleosome_df = pd.read_table(chrBasedNucleosmeFilePath, sep="\t", header=None, comment='#',names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
         return chrbased_nucleosome_df
     else:
         return None

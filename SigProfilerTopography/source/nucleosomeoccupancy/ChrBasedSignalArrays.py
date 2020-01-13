@@ -26,6 +26,12 @@ import numpy as np
 import multiprocessing
 import shutil
 
+from SigProfilerTopography.source.commons.TopographyCommons import generateIntervalVersion
+
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM 
+from SigProfilerTopography.source.commons.TopographyCommons import START 
+from SigProfilerTopography.source.commons.TopographyCommons import END
+from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 
 BACKEND = 'Agg'
 if matplotlib.get_backend().lower() != BACKEND.lower():
@@ -53,37 +59,31 @@ from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
 from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
 from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
 
-from SigProfilerTopography.source.commons.TopographyCommons import chrom
-from SigProfilerTopography.source.commons.TopographyCommons import start
-from SigProfilerTopography.source.commons.TopographyCommons import end
-from SigProfilerTopography.source.commons.TopographyCommons import signal
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import START
+from SigProfilerTopography.source.commons.TopographyCommons import END
+from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 from SigProfilerTopography.source.commons.TopographyCommons import readFileInBEDFormat
 
-#########################################################################
-def unnesting(df, explode):
-    idx=df.index.repeat(df[explode[0]].str.len())
-    df1=pd.concat([pd.DataFrame({x:np.concatenate(df[x].values)} )for x in explode],axis=1)
-    df1.index=idx
-    return df1.join(df.drop(explode,1),how='left')
-#########################################################################
-
-
 ######################################################################
-def updateSignalArrays(row,signalArray):
-    signalArray[row[start]:row[end]] += row[signal]
+def updateSignalArray(row,signalArray):
+    # signalArray[row[START]:row[END]] += row[SIGNAL]
+    signalArray[row[1]:row[2]] += row[3]
+
 ######################################################################
 
 ######################################################################
-def updateSignalArraysForListComprehension(row,signalArray):
+def updateSignalArraysForListComprehension(row,signalArrayDict):
     #row [chrom start end signal]
+    signalArray = signalArrayDict[row[0]]
     signalArray[row[1]:row[2]] += row[3]
 ######################################################################
 
 ######################################################################
-# This is used right now.
+# This write chrBasedSignalArray is used right now.
 def writeChrBasedOccupancySignalArray(inputList):
     outputDir = inputList[0]
     jobname = inputList[1]
@@ -111,7 +111,7 @@ def writeChrBasedOccupancySignalArray(inputList):
     # chrBasedFileDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
 
     # Use list comprehension
-    [updateSignalArraysForListComprehension(row,signalArray) for row in chrBasedFileDF.values]
+    [updateSignalArray(row,signalArray) for row in chrBasedFileDF.values]
 
     #############################  Save as npy starts ################################
     signalArrayFilename = '%s_signal_%s' %(chrLong,filenameWoExtension)
@@ -130,14 +130,13 @@ def writeChrBasedOccupancySignalArray(inputList):
 ######################################################################
 
 
-
-
 ######################################################################
-#Used by nuclesome occupancy read all file write chrom based npy files.
+#Used by nuclesome occupancy read all file at once
+#Filter w.r.t. a quantileValue
 def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
 
-    column_names = [chrom, start, end, signal]
-    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={chrom: np.category, start: np.int32, end: np.int32, signal: np.float32})
+    column_names = [CHROM, START, END, SIGNAL]
+    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: np.category, START: np.int32, END: np.int32, SIGNAL: np.float32})
 
     print('After nucleosome occupancy is loaded into memory')
     print('Memory usage in %s MB' % memory_usage())
@@ -145,19 +144,19 @@ def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
     #########################################################
     if (quantileValue < 1.0):
         # remove the outliers
-        q = nucleosome_df[signal].quantile(quantileValue)
+        q = nucleosome_df[SIGNAL].quantile(quantileValue)
         print('q:%f' % q)
         print('before %d' % (nucleosome_df.shape[0]))
-        nucleosome_df = nucleosome_df[nucleosome_df[signal] < q]
+        nucleosome_df = nucleosome_df[nucleosome_df[SIGNAL] < q]
 
-        max_signal=nucleosome_df[signal].max()
-        min_signal=nucleosome_df[signal].min()
+        max_signal=nucleosome_df[SIGNAL].max()
+        min_signal=nucleosome_df[SIGNAL].min()
 
         print('After nucleosome_df is subset')
         print('Memory usage in %s MB' % memory_usage())
     #########################################################
 
-    nucleosome_df_grouped = nucleosome_df.groupby(chrom)
+    nucleosome_df_grouped = nucleosome_df.groupby(CHROM)
 
     print('After nucleosome occupancy grouped by')
     print('Memory usage in %s MB' % memory_usage())
@@ -167,6 +166,9 @@ def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
 
 
 ######################################################################
+#Read all data at once, filter w.r.t. a quantileValue and write chrom based signal npy files sequentially
+#This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation sequentially
+#For in house use, also has parallel write version
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 
@@ -195,7 +197,6 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(
 
         print('After all chr based files are written')
         print('Memory usage in %s MB' % memory_usage())
-
 ######################################################################
 
 
@@ -214,10 +215,148 @@ def deleteChrBasedNpyFiles(chrBasedNpyFilesPath):
 #######################################################
 
 
+##################################################################
+#JAN 10, 2020
+#If file is originally a  wig file use this function
+#Read at once, write in parallel
+#
+#If original file is bigWig and converted from bigWig to wig and has lines starts with #bedGraph it means that it is now bedGraph format
+#In fact this is bedgraph format
+# There can be wig files prepared from bedGraph which includes many lines start with #bedGraph
+#This code is intended for bigWig nucleosome occupancy files
+# bedGraph section chr1:10111-60880
+# chr1    10111   10112   4.9
+# chr1    10112   10114   5
+# chr1    10114   10116   5.1
+# bedGraph section chrX:155161349-155260605
+# chrX    155161349       155161419       0
+# chrX    155161470       155161530       0
+# chrX    155161597       155161634       0
+#Please note that end is exclusive
+def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome,wig_file_path,occupancy_type,quantileValue,remove_outliers):
+    wig_file_name=os.path.splitext(os.path.basename(wig_file_path))[0]
+
+    chromSizesDict = getChromSizesDict(genome)
+    numofProcesses = multiprocessing.cpu_count()
+
+    #To reduce memory footprint
+    # Delete old chr based epigenomics files
+    if occupancy_type==EPIGENOMICSOCCUPANCY:
+        chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+        deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
+
+    if os.path.exists(wig_file_path):
+        # Read the wavelet signal
+        wig_unprocessed_df = pd.read_table(wig_file_path, sep="\t", comment='#', header=None)
+
+        # Process the wavelet signal, convert into interval version
+        # Add column names
+        wigfile_interval_version_df = generateIntervalVersion(wig_unprocessed_df)
+        max_signal = wigfile_interval_version_df[SIGNAL].max()
+        min_signal = wigfile_interval_version_df[SIGNAL].min()
+
+        # Outlier elimination starts
+        if ((remove_outliers==True) and (quantileValue < 1.0)):
+            # remove the outliers
+            q = wigfile_interval_version_df[SIGNAL].quantile(quantileValue)
+            print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue))
+            print('before outlier removal number of rows: %d' % (wigfile_interval_version_df.shape[0]))
+            file_df = wigfile_interval_version_df[wigfile_interval_version_df[SIGNAL] < q]
+            print('after outlier removal number of rows: %d' % (file_df.shape[0]))
+        # Outlier elimination ends
+
+        file_df_grouped = file_df.groupby(CHROM)
+        pool = multiprocessing.Pool(numofProcesses)
+
+        poolInputList = []
+
+        for chrLong, chromBasedFileDF in file_df_grouped:
+            chromSize = chromSizesDict[chrLong]
+            inputList = []
+            inputList.append(outputDir)
+            inputList.append(jobname)
+            inputList.append(chrLong)
+            inputList.append(chromSize)
+            inputList.append(chromBasedFileDF)
+            inputList.append(wig_file_name)
+            inputList.append(occupancy_type)
+            inputList.append(max_signal)
+            inputList.append(min_signal)
+            poolInputList.append(inputList)
+
+        pool.map(writeChrBasedOccupancySignalArray, poolInputList)
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+##################################################################
+
+######################################################################
+#Read in chunks, at the end have all signal arrays in memory and write sequentially
+def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type):
+    wig_file_name_wo_extension = os.path.splitext(os.path.basename(library_file_with_path))[0]
+    chromSizesDict = getChromSizesDict(genome)
+
+    #To reduce memory footprint
+    # Delete old chr based epigenomics files
+    if occupancy_type==EPIGENOMICSOCCUPANCY:
+        chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+        deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
+
+    if os.path.exists(library_file_with_path):
+        column_names = [CHROM, START, END, SIGNAL]
+
+        #chromSize
+        signalArrayDict={}
+        max_signal=np.finfo(np.float32).min
+        min_signal=np.finfo(np.float32).max
+
+        for chunk_df in  pd.read_table(library_file_with_path,chunksize=5000000, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: str, START: np.int32, END: np.int32, SIGNAL: np.float32}):
+            print(chunk_df[CHROM].unique())
+
+            chrom_list=chunk_df[CHROM].unique()
+            if (chunk_df[SIGNAL].max()>max_signal):
+                max_signal=chunk_df[SIGNAL].max()
+            if (chunk_df[SIGNAL].min()<min_signal):
+                min_signal=chunk_df[SIGNAL].min()
+
+            for chrom in chrom_list:
+                if chrom not in signalArrayDict:
+                    signalArray=np.zeros(chromSizesDict[chrom], dtype=np.float32)
+                    signalArrayDict[chrom]=signalArray
+
+            # Use list comprehension
+            [updateSignalArraysForListComprehension(row, signalArrayDict) for row in chunk_df.values]
+            print('#################')
+
+        print('\n#####################################################')
+        print('min_signal:%f max_signal:%f' %(min_signal,max_signal))
+        print('#####################################################\n')
+
+        if (occupancy_type == EPIGENOMICSOCCUPANCY):
+            os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
+        elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
+            os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED),exist_ok=True)
+
+        for key in signalArrayDict.keys():
+            signalArray=signalArrayDict[key]
+            print('%s np.sum(signalArray,dtype=np.float32):%f' %(key,np.sum(signalArray,dtype=np.float32)))
+            signalArrayFilename = '%s_signal_%s' %(key,wig_file_name_wo_extension)
+            if (occupancy_type == EPIGENOMICSOCCUPANCY):
+                chrBasedSignalFile = os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
+            elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
+                chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,CHRBASED, signalArrayFilename)
+            np.save(chrBasedSignalFile,signalArray)
+######################################################################
+
 
 ######################################################################
 #Dec 2, 2019
-def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWithPath,occupancy_type):
+#This function is used when user provides its own bed/np/narrowpeak files for occupancy analysis
+#Read at once writes in parallel
+def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWithPath,occupancy_type,quantileValue,remove_outliers):
     chromSizesDict = getChromSizesDict(genome)
     numofProcesses = multiprocessing.cpu_count()
 
@@ -228,13 +367,23 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
         deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
 
     if os.path.exists(BEDFileWithPath):
-        bedFile=os.path.basename(BEDFileWithPath)
-
-        bedfilename, bedfile_extention= os.path.splitext(bedFile)
+        bedfilename, bedfile_extention= os.path.splitext(os.path.basename(BEDFileWithPath))
 
         if (bedfile_extention.lower()=='.bed' or bedfile_extention.lower()=='.np' or bedfile_extention.lower()=='.narrowpeak'):
-            file_df, max_signal, min_signal=readFileInBEDFormat(BEDFileWithPath)
-            file_df_grouped = file_df.groupby(chrom)
+            discard_signal=False
+            file_df, max_signal, min_signal=readFileInBEDFormat(BEDFileWithPath,discard_signal)
+
+            #Outlier elimination starts
+            if ((remove_outliers==True) and (quantileValue < 1.0)):
+                # remove the outliers
+                q = file_df[SIGNAL].quantile(quantileValue)
+                print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue))
+                print('before outlier removal number of rows: %d' % (file_df.shape[0]))
+                file_df = file_df[file_df[SIGNAL] < q]
+                print('after outlier removal number of rows: %d' % (file_df.shape[0]))
+            #Outlier elimination ends
+
+            file_df_grouped = file_df.groupby(CHROM)
             pool = multiprocessing.Pool(numofProcesses)
 
             poolInputList = []
@@ -265,6 +414,9 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
 
 
 ######################################################################
+#Read all data at once, filter w.r.t. a quantileValue and write chrom based in parallel
+#This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation in parallel
+#For in house use, also has sequential write version
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 
@@ -275,7 +427,6 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
     print('Before nucleosome occupancy is loaded into memory')
     print('Memory usage in %s MB' %memory_usage())
 
-    column_names = [chrom, start, end, signal]
     if os.path.exists(nucleosomeFilename):
 
         nucleosome_df_grouped, max_signal, min_signal = readNucleosomeOccupancyData(quantileValue, nucleosomeFilename)
@@ -310,8 +461,3 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
         print('Memory usage in %s MB' % memory_usage())
 
 ######################################################################
-
-
-
-
-
