@@ -160,13 +160,15 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ You can have as many Histone DNA binding files as you want.
 
-	`histone_dna_binding_file1=.../path_to/file1.bed`
-	`histone_dna_binding_file2=.../path_to/file2.bed`
-	`epigenomics_files_list=[histone_dna_binding_file1,histone_dna_binding_file2]`
+		`histone_dna_binding_file1=.../path_to/file1.bed`
+	
+		`histone_dna_binding_file2=.../path_to/file2.bed`
+	
+		`epigenomics_files_list=[histone_dna_binding_file1,histone_dna_binding_file2]`
 
 	+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
 
 	
 + **NUCLEOSOME OCCUPANCY**
@@ -178,20 +180,20 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ Then you need to set `nucleosome_file` in the `runAnalyses` call as follows:
 	
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path, nucleosome_file=user_nucleosome_file,mutation_types_contexts=['96','DBS'],nucleosome=True)`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path, nucleosome_file=user_nucleosome_file,mutation_types_contexts=['96','DBS'],nucleosome=True)`
 
 + **REPLICATION TIME** and **REPLICATION STRAND BIAS**
 	+ You can provide your replication data files as follows:
 	
-	` user_replication_time_signal_file = '.../path_to/replication_time.wig'`
+		` user_replication_time_signal_file = '.../path_to/replication_time.wig'`
 	
-	`user_replication_time_valley_file = '.../path_to/replication_time_valley.bed'`
+		`user_replication_time_valley_file = '.../path_to/replication_time_valley.bed'`
 	
-	`user_replication_time_peak_file = '.../path_to/replication_time_peak.bed'`
+		`user_replication_time_peak_file = '.../path_to/replication_time_peak.bed'`
 
 	+ Then you need to set `replication_time_signal_file`, `replication_time_valley_file`, and `replication_time_peak_file`, in the `runAnalyses` call as follows:
 	
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,replication_time_signal_file=user_replication_time_signal_file, replication_time_valley_file=user_replication_time_valley_file, replication_time_peak_file=user_replication_time_peak_file,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,replication_time_signal_file=user_replication_time_signal_file, replication_time_valley_file=user_replication_time_valley_file, replication_time_peak_file=user_replication_time_peak_file,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)`
 
 
 **SIGPROFILERTOPOGRAPHY PARAMETERS**
