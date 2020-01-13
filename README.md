@@ -98,12 +98,12 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	By default, SigProfilerTopograpy makes use of these 6 Histone DNA binding files for histone occupancy analyses.
 
-1. ENCFF291WFP_H3K27me3_breast_epithelium.bed
-2. ENCFF906MJM_H3K36me3_breast_epithelium.bed
-3. ENCFF065FJK_H3K9me3_breast_epithelium.bed
-4. ENCFF154XFN_H3K27ac_breast_epithelium.bed
-5. ENCFF336DDM_H3K4me1_breast_epithelium.bed
-6. ENCFF065TIH_H3K4me3_breast_epithelium.bed
+	1. ENCFF291WFP_H3K27me3_breast_epithelium.bed
+	2. ENCFF906MJM_H3K36me3_breast_epithelium.bed
+	3. ENCFF065FJK_H3K9me3_breast_epithelium.bed
+	4. ENCFF154XFN_H3K27ac_breast_epithelium.bed
+	5. ENCFF336DDM_H3K4me1_breast_epithelium.bed
+	6. ENCFF065TIH_H3K4me3_breast_epithelium.bed
 
 
 + **NUCLEOSOME OCCUPANCY**
