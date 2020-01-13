@@ -114,7 +114,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ If you want to run SigProfilerTopography using  MNase-seq of GM12878 cell line, you have to include `nucleosome_biosample='GM12878'`  in the `runAnalyses` call as follows:
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
 
 	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` you have set  which requires ~11 GB of storage.
 
@@ -130,7 +130,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ If you want to run SigProfilerTopography using  Repli-seq of any available biosamples e.g.: NHEK,  then you have to include `replication_time_biosample='NHEK'`  in the `runAnalyses` call as follows:
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='NHEK')`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='NHEK')`
                     
 | Biosample | Organism  | Tissue | Cell Type | Disease |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
