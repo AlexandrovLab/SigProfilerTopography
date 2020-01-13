@@ -40,7 +40,7 @@ $ pip install SigProfilerMatrixGenerator
 $ pip install SigProfilerSimulator
 ```
 4. Install your desired reference genome from the command line/terminal.
-Currently SigProfilerTopography only supports GRCh37 (hg19), therefore install GRCh37 reference genome as follows: 
+Currently SigProfilerTopography only supports GRCh37 (hg19), therefore install GRCh37 reference genome as follows:
 ```
 $ python
 >> from SigProfilerMatrixGenerator import install as genInstall
@@ -57,7 +57,7 @@ $ python
 
 6. Within a python session, you can run the topography analyses as follows:
 
-	+ You must provide the mutation types in `mutation_types_contexts`  
+	+ You must provide the mutation types in `mutation_types_contexts`
 	
 		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply 
 		
@@ -67,9 +67,7 @@ $ python
 		`mutation_types_contexts=['96', 'ID', 'DBS']`
 
 	+ You must provide the corresponding probabilities files in `sbs_probabilities`, `id_probabilities` and `dbs_probabilities` accordingly.
-		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply 
-		
-		`sbs_probabilities` and `dbs_probabilities`
+		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply `sbs_probabilities` and `dbs_probabilities`
 
 	+ These probabilities files must be output probabilities files coming from SigProfilerExtractor.
 
@@ -118,7 +116,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
 
-	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for nucleosome occupancy analysis which requires ~11 GB of storage for each cell line.
+	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` you have set  which requires ~11 GB of storage.
 
 + **REPLICATION TIME** and **REPLICATION STRAND BIAS**
 
@@ -126,10 +124,9 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ SigProfilerTopography provides replication time files for the biosamples listed in the table below:
 	
-	+ SigProfilerTopography downloads corresponding replication time files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*   which requires ~25 MB of storage for each biosample.
+	+ SigProfilerTopography downloads replication time files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` you have set which requires ~25 MB of storage.
 
 	+ SigProfilerTopography downloads hg19.2bit from **http://hgdownload.cse.ucsc.edu/goldenPath/**  under *.../SigProfilerTopography/lib/ucscgenome/*   which requires ~797 MB of storage.
-
 
 	+ If you want to run SigProfilerTopography using  Repli-seq of any available biosamples e.g.: NHEK,  then you have to include `replication_time_biosample='NHEK'`  in the `runAnalyses` call as follows:
 
@@ -164,8 +161,8 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 	+ You can have as many Histone DNA binding files as you want.
 
 	`histone_dna_binding_file1=.../path_to/file1.bed`
-`histone_dna_binding_file2=.../path_to/file2.bed`
-`epigenomics_files_list=[histone_dna_binding_file1,histone_dna_binding_file2]`
+	`histone_dna_binding_file2=.../path_to/file2.bed`
+	`epigenomics_files_list=[histone_dna_binding_file1,histone_dna_binding_file2]`
 
 	+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
 
@@ -176,6 +173,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 	+ SigProfilerTopography enables user to provide `nucleosome_file` to be used in nucleosome occupancy analysis.
 
 	+ You can provide your nucleosome data file as follows:
+	
 		` user_nucleosome_file = '.../path_to/nucleosome.wig'`
 
 	+ Then you need to set `nucleosome_file` in the `runAnalyses` call as follows:
@@ -184,6 +182,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 + **REPLICATION TIME** and **REPLICATION STRAND BIAS**
 	+ You can provide your replication data files as follows:
+	
 	` user_replication_time_signal_file = '.../path_to/replication_time.wig'`
 	
 	`user_replication_time_valley_file = '.../path_to/replication_time_valley.bed'`
@@ -216,7 +215,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 **COPYRIGHT**
 
-This software and its documentation are copyright 2020 as a part of the SigProfiler project.
+This software and its documentation are copyright 2018-2020 as a part of the SigProfiler project.
 The SigProfilerTopography framework is free software and is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 **CONTACT INFORMATION**
