@@ -85,6 +85,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UN
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
+
 from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
 
 ##############################################################################################################
@@ -755,7 +758,7 @@ def occupancy_analysis(genome,
     file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
     quantileValue = 0.97
-    remove_outliers = True
+    remove_outliers = False
 
     if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
         library_file_type=BIGWIG
@@ -771,6 +774,9 @@ def occupancy_analysis(genome,
         readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
     elif (file_extension.lower()=='.wig'):
         library_file_type=WIG
+        #For inhouse preparation
+        #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
+        #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
         BEDGRAPH=decideFileType(library_file_with_path)
         if BEDGRAPH==True:
             readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type)

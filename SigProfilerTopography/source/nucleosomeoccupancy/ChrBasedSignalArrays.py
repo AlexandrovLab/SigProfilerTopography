@@ -136,7 +136,7 @@ def writeChrBasedOccupancySignalArray(inputList):
 def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
-    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: np.category, START: np.int32, END: np.int32, SIGNAL: np.float32})
+    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
 
     print('After nucleosome occupancy is loaded into memory')
     print('Memory usage in %s MB' % memory_usage())
@@ -146,8 +146,9 @@ def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
         # remove the outliers
         q = nucleosome_df[SIGNAL].quantile(quantileValue)
         print('q:%f' % q)
-        print('before %d' % (nucleosome_df.shape[0]))
+        print('before outlier elimination number of rows: %d' % (nucleosome_df.shape[0]))
         nucleosome_df = nucleosome_df[nucleosome_df[SIGNAL] < q]
+        print('after outlier elimination number of rows: %d' % (nucleosome_df.shape[0]))
 
         max_signal=nucleosome_df[SIGNAL].max()
         min_signal=nucleosome_df[SIGNAL].min()
@@ -176,16 +177,19 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(
     print('Memory usage in %s MB' %memory_usage())
 
     if os.path.exists(nucleosomeFilename):
-
         nucleosome_df_grouped, max_signal, min_signal = readNucleosomeOccupancyData(quantileValue,nucleosomeFilename)
+        print('max_signal:%d min_signal:%d' %(max_signal,min_signal))
+        print('np.finfo(np.float16).min:%f np.finfo(np.float16).max:%f' % (np.finfo(np.float16).min,np.finfo(np.float16).max))
 
         print('After nucleosome occupancy grouped by')
         print('Memory usage in %s MB' % memory_usage())
 
         for chrLong, chromBasedNucleosomeDF in nucleosome_df_grouped:
-            print('Debug June 13, 2019 For %s write nucleosome signal and count array' %(chrLong))
+            print('For %s write nucleosome signal and count array' %(chrLong))
             chromSize = chromSizesDict[chrLong]
             inputList = []
+            inputList.append(None)
+            inputList.append(None)
             inputList.append(chrLong)
             inputList.append(chromSize)
             inputList.append(chromBasedNucleosomeDF)
@@ -295,6 +299,7 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
 
 ######################################################################
 #Read in chunks, at the end have all signal arrays in memory and write sequentially
+#No outlier elimination
 def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type):
     wig_file_name_wo_extension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     chromSizesDict = getChromSizesDict(genome)
@@ -428,19 +433,22 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
     print('Memory usage in %s MB' %memory_usage())
 
     if os.path.exists(nucleosomeFilename):
-
         nucleosome_df_grouped, max_signal, min_signal = readNucleosomeOccupancyData(quantileValue, nucleosomeFilename)
+        print('max_signal:%d min_signal:%d' %(max_signal,min_signal))
+        print('np.finfo(np.float16).min:%f np.finfo(np.float16).max:%f' % (np.finfo(np.float16).min,np.finfo(np.float16).max))
+
         pool = multiprocessing.Pool(numofProcesses)
 
         print('After pool is initialized')
         print('Memory usage in %s MB' % memory_usage())
-
         poolInputList = []
 
         for chrLong, chromBasedNucleosomeDF in nucleosome_df_grouped:
             print('for %s write nucleosome signal and count array' %(chrLong))
             chromSize = chromSizesDict[chrLong]
             inputList = []
+            inputList.append(None)
+            inputList.append(None)
             inputList.append(chrLong)
             inputList.append(chromSize)
             inputList.append(chromBasedNucleosomeDF)

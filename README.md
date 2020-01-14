@@ -116,7 +116,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
 
-	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` you have set  which requires ~11 GB of storage.
+	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` you have set  which requires ~6 GB of storage.
 
 + **REPLICATION TIME** and **REPLICATION STRAND BIAS**
 
@@ -150,7 +150,6 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 | GM12812 | human  | blood | B-Lymphocyte | Unknown |
 | GM12813 | human  | blood | B-Lymphocyte | Unknown |
                     
-
 
 
 **USER PROVIDED LIBRARY FILES**
@@ -195,7 +194,6 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 	
 		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,replication_time_signal_file=user_replication_time_signal_file, replication_time_valley_file=user_replication_time_valley_file, replication_time_peak_file=user_replication_time_peak_file,mutation_types_contexts=['96','DBS'],replication_time=True,strand_bias=True)`
 
-
 **SIGPROFILERTOPOGRAPHY PARAMETERS**
 
                     
@@ -212,8 +210,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 + However, as an example these parameters can be relaxed in the `runAnalyses` call as follows:
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities_file_path=sbs_probabilities,id_probabilities_file_path=id_probabilities,dbs_probabilities_file_path=dbs_probabilities,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
-
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,mutation_types_contexts=['96','ID','DBS'],epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
 
 **COPYRIGHT**
 

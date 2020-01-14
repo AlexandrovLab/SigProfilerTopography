@@ -26,6 +26,9 @@ import shutil
 import platform
 import multiprocessing
 
+import SigProfilerMatrixGenerator as matrix_generator
+MATRIX_GENERATOR_PATH=matrix_generator.__path__[0]
+
 from SigProfilerTopography import version as topography_version
 from SigProfilerMatrixGenerator import version as matrix_generator_version
 from SigProfilerSimulator import version as simulator_version
@@ -224,57 +227,6 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         print('%s does not exist.' %(mutations_probabilities_file_path))
 ############################################################
 
-
-
-# #######################################################
-# def download_bigwig2wig():
-#     filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,BIGWIG2WIG)
-#     downloadFromWeb(BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL,filepath)
-#     os.chmod(filepath,0o744)
-# #######################################################
-
-# #######################################################
-# #Depreceated JAN 7, 2020
-# def download_2bit_file(genome):
-#     if (genome == GRCh37):
-#         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-#         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG19_2BIT)
-#         downloadFromWeb(HG19_URL, filepath)
-#     elif (genome == GRCh38):
-#         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-#         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, HG38_2BIT)
-#         downloadFromWeb(HG38_URL, filepath)
-#     elif (genome == MM9):
-#         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-#         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM9_2BIT)
-#         downloadFromWeb(MM9_URL, filepath)
-#     elif (genome == MM10):
-#         os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME), exist_ok=True)
-#         filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM10_2BIT)
-#         downloadFromWeb(MM10_URL, filepath)
-# #######################################################
-
-# ########################################################
-# #Depreceated JAN 7, 2020
-# # bigWig2Wig executable is for linux/unix
-# # https://hgdownload.cse.ucsc.edu/admin/exe/
-# # At this address mac version is also provided but not for windows
-# def download_nucleosome_occupancy(cellLine):
-#     # bigWig2Wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, BIGWIG2WIG)
-#     # os.chmod(bigWig2Wig_filepath,0o744)
-#     if (cellLine==GM12878):
-#         gm12878_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_GM12878_BIGWIG)
-#         downloadFromWeb(ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL, gm12878_bigWig_filepath)
-#         # gm12878_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,ENCODE_NUCLEOSOME_GM12878_WIG)
-#         # subprocess.call([bigWig2Wig_filepath, gm12878_bigWig_filepath,gm12878_wig_filepath])
-#     elif (cellLine==K562):
-#         K562_bigWig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_BIGWIG)
-#         downloadFromWeb(ENCODE_NUCLEOSOME_K562_BIGWIG_URL, K562_bigWig_filepath)
-#         # K562_wig_filepath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, ENCODE_NUCLEOSOME_K562_WIG)
-#         # subprocess.call([bigWig2Wig_filepath, K562_bigWig_filepath,K562_wig_filepath])
-# #######################################################
-
-
 #######################################################
 #JAN 7, 2020
 #Download genome 2bit files if it does not exists
@@ -468,7 +420,7 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,
 
 
 #######################################################
-def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path):
     #############################################
     # REPLICATIONTIME
     # Delete the output/jobname/DATA/REPLICATIONTIME if exists
@@ -484,7 +436,7 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_
 
     #Option2: Load offline prepared np arrays during runtime managby ed by replication_time_np_arrays_fill_runtime=False
     #Option2: Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
-    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path)
     ###############################################
 
 #######################################################
@@ -650,6 +602,7 @@ def runAnalyses(genome,
                 plusorMinus_epigenomics=2000,
                 plusorMinus_nucleosome=1000,
                 verbose=False,
+                matrix_generator_path=MATRIX_GENERATOR_PATH,
                 PCAWG=False,
                 DATA_IS_READY_PLOT_FIGURES=False):
 
@@ -1233,7 +1186,7 @@ def runAnalyses(genome,
             check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file)
 
         start_time = time.time()
-        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path)
         print('#################################################################################')
         print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
@@ -1357,7 +1310,6 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,multipleTesti
 
 ##############################################################
 #To run on laptob
-
 import os
 
 if __name__== "__main__":
@@ -1377,21 +1329,22 @@ if __name__== "__main__":
     # user_provided_replication_time_valley_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekValleysRep1.bed')
     # user_provided_replication_time_peak_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekPkRep1.bed')
 
-    user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.wig')
+    # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeK562Sig.wig')
+    user_provided_nucleosome_file_path = os.path.join('C:\\', 'Users', 'burcak', 'Developer', 'Python','SigProfilerTopography', 'SigProfilerTopography', 'lib','nucleosome', 'wgEncodeSydhNsomeGm12878Sig.wig')
 
     # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.bigWig')
 
     runAnalyses(genome, inputDir, outputDir, jobname, numberofSimulations,
                            sbs_probabilities=sbs_probabilities_file_path,
-                          id_probabilities=id_probabilities_file_path,
+                           id_probabilities=id_probabilities_file_path,
                            dbs_probabilities=dbs_probabilities_file_path,
-                            nucleosome_biosample='K562',
-                            replication_time_biosample='NHEK',
+                            # nucleosome_biosample='K562',
+                            # replication_time_biosample='NHEK',
                            # nucleosome_file=user_provided_nucleosome_file_path,
                            # replication_time_signal_file=user_provided_replication_time_file_path,
                            # replication_time_valley_file=user_provided_replication_time_valley_file_path,
                            # replication_time_peak_file=user_provided_replication_time_peak_file_path,
                            mutation_types_contexts=['96', 'ID', 'DBS'],
-                           epigenomics=True, nucleosome=True, replication_time=True, strand_bias=True, processivity=True,
+                           epigenomics=False, nucleosome=False, replication_time=True, strand_bias=False, processivity=False,
                            sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=True,necessary_dictionaries_already_exists=True)
 ##############################################################

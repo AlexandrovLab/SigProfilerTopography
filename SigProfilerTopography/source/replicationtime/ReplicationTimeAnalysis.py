@@ -105,9 +105,18 @@ from SigProfilerTopography.source.commons.TopographyCommons import getSample2Num
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
 
+##################################################################
+# Provides the reference file conversion from binary to base information
+tsb_ref = {0: ['N', 'A'], 1: ['N', 'C'], 2: ['N', 'G'], 3: ['N', 'T'],
+           4: ['T', 'A'], 5: ['T', 'C'], 6: ['T', 'G'], 7: ['T', 'T'],
+           8: ['U', 'A'], 9: ['U', 'C'], 10: ['U', 'G'], 11: ['U', 'T'],
+           12: ['B', 'A'], 13: ['B', 'C'], 14: ['B', 'G'], 15: ['B', 'T'],
+           16: ['N', 'N'], 17: ['T', 'N'], 18: ['U', 'N'], 19: ['B', 'N']}
+##################################################################
+
 
 ##################################################################
-def readRepliSeqTimeData(genome,repliseqDataFilename):
+def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
 
     ###################################################################
     ############### Read RepliSeq Time data starts ####################
@@ -125,7 +134,7 @@ def readRepliSeqTimeData(genome,repliseqDataFilename):
     print('Chromosome names in replication time signal data: %s' %(chrNamesInReplicationTimeDataArray))
 
     #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(genome,pool,replication_time_interval_version_df)
+    wavelet_processed_augmented_df = augment(genome,pool,replication_time_interval_version_df,matrix_generator_path)
 
     #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
 
@@ -188,12 +197,58 @@ def getNumberofAttributableBases(wavelet_row, chrBasedGenome):
     return numofAttributableBases
 ##################################################################
 
+
+##################################################################
+#Jam 13, 2020
+def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row, chrom_string):
+    start =wavelet_row[1]
+    end = wavelet_row[2]
+
+    #old way
+    #In my code ends are inclusive
+    #twobitreader uses ends exlusive
+    # seq = chrBasedGenome.get_slice(start, end+1)
+
+    seq = ''
+    for i in range(start,end+1,1):
+        seq += tsb_ref[chrom_string[i - 1]][1]
+
+    numofAttributableBases = seq.count('A') + seq.count('T') + seq.count('G') + seq.count('C') + seq.count('a') + seq.count('t') + seq.count('g') + seq.count('c')
+    # print('######### debug starts ##############')
+    # print(wavelet_row)
+    # print('len(seq):%d' %len(seq))
+    # print('numofAttributableBases:%d' %numofAttributableBases)
+    # print('##########  debug ends #############')
+    return numofAttributableBases
+##################################################################
+
+
 ##################################################################
 def addNumofAttributableBasesColumn(inputList):
     chrLong = inputList[0]
     chrBased_wavelet_processed_df_group =inputList[1]
-    wholeGenome = inputList[2]
-    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, chrBasedGenome = wholeGenome[chrLong], axis= 1)
+
+    #new way
+    genome=inputList[2]
+    matrix_generator_path=inputList[3]
+
+    # old way
+    # wholeGenome = inputList[2]
+    # resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBases, chrBasedGenome = wholeGenome[chrLong], axis= 1)
+
+    #Read a chromosome based file
+    # /home/burcak/anaconda3/lib/python3.7/site-packages/SigProfilerMatrixGenerator/references/chromosomes/tsb/GRCh37
+    chrNumber = chrLong[3:]
+    chrbased_filename = chrNumber + ".txt"
+    chrbased_file_path = os.path.join(matrix_generator_path,'references','chromosomes','tsb',genome,chrbased_filename)
+
+
+
+    #new way
+    with open(chrbased_file_path, "rb") as f2:
+        chrom_string = f2.read()
+        resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBasesUsingMatrixGeneratorGenome, chrom_string=chrom_string, axis= 1)
+
 
     # print('######## debug numberofAttributableBases starts ########')
     # print('for %s starts' %chrLong)
@@ -1375,11 +1430,13 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 
 
 ##################################################################
-def augment(genome,pool,wavelet_processed_df):
-    if (genome==GRCh37):
-        wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
-    elif (genome==GRCh38):
-        wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
+def augment(genome,pool,wavelet_processed_df,matrix_generator_path):
+
+    # #old way
+    # if (genome==GRCh37):
+    #     wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
+    # elif (genome==GRCh38):
+    #     wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
 
     #Augment in parallel for each chromosome
     poolInputList = []
@@ -1388,8 +1445,14 @@ def augment(genome,pool,wavelet_processed_df):
         inputList = []
         inputList.append(chr)
         inputList.append(chrBased_wavelet_processed_df_group)
+
+        #new way
+        inputList.append(genome)
+        inputList.append(matrix_generator_path)
+
+        #old way
         #Please note that when you provide the chr based hg19_genome it gives error
-        inputList.append(wholeGenome)
+        # inputList.append(wholeGenome)
         poolInputList.append(inputList)
 
     # print('Augmentation starts')
@@ -1513,7 +1576,7 @@ def writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,decil
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path):
 
     print('\n#################################################################################')
     print('--- ReplicationTimeAnalysis starts')
@@ -1561,7 +1624,8 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
     # Please note that each decile_df contains intervals from all chroms (mixed chroms)
     #What is the type of deciles? Deciles is a list of dataframes.
     if verbose: print('Worker pid %s READ Repliseq DATA STARTS  %s MB' % (str(os.getpid()), memory_usage()))
-    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,repliseqDataFilename)
+    #Whole genome is needed here
+    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path)
     if verbose: print('Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
 
     #Get chrBased grouped deciles
