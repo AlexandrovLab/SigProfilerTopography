@@ -177,7 +177,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 + **REPLICATION TIME** and **REPLICATION STRAND BIAS**
 	+ You can provide your replication data files as follows:
 	
-		` user_replication_time_signal_file = '.../path_to/replication_time.wig'`
+		` user_replication_time_signal_file = '.../path_to/replication_time_signal.wig'`
 	
 		`user_replication_time_valley_file = '.../path_to/replication_time_valley.bed'`
 	
@@ -206,10 +206,10 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
 	
-+ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'ID', 'DBS']`
++ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'ID', 'DBS']` for simulations.
 
 	* However, you can set `'192'`, `'384'`, `'1536'` or `'3072'` instead of `'96'`
-	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set mutation_types_contexts as follows: 
+	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set `mutation_types_contexts` in the `runAnalyses` call as follows: 
 	
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['192', 'ID', 'DBS'])`

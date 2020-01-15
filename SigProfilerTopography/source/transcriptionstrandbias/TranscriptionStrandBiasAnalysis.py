@@ -22,6 +22,7 @@
 
 import multiprocessing
 import numpy as np
+import os
 
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
@@ -60,6 +61,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import Signature2Mut
 
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2Type2TranscriptionStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Type2Sample2TranscriptionStrand2CountDict_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
 
 ########################################################################
@@ -311,6 +313,7 @@ def searchMutationOnTranscriptionStrandArray(
 
 ########################################################################
 #DEC 24, 2019
+#Called by USING_APPLY_ASYNC
 def searchMutationsForApplySync(chrBased_simBased_subs_df,
                                 chrBased_simBased_indels_df,
                                 chrBased_simBased_dinucs_df,
@@ -319,7 +322,8 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
                                 sample_based,
                                 subsSignature2PropertiesListDict,
                                 indelsSignature2PropertiesListDict,
-                                dinucsSignature2PropertiesListDict):
+                                dinucsSignature2PropertiesListDict,
+                                verbose):
 
     simNum2Type2TranscriptionStrand2CountDict = {}
     simNum2Sample2Type2TranscriptionStrand2CountDict = {}
@@ -371,6 +375,7 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
 
     elif (chrBased_gene_array is None):
         if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
+            if verbose: print('Worker pid %s SBS searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
             chrBased_simBased_subs_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
                                          simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
                                          simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
@@ -380,8 +385,10 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
                                          type=SUBS,
                                          sample_based=sample_based,
                                          axis=1)
+            if verbose: print('Worker pid %s SBS searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
 
         if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
+            if verbose: print('Worker pid %s ID searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
             chrBased_simBased_indels_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
                                            simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
                                            simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
@@ -391,8 +398,10 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
                                            type=INDELS,
                                            sample_based=sample_based,
                                            axis=1)
+            if verbose: print('Worker pid %s ID searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
 
         if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
+            if verbose: print('Worker pid %s DBS searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
             chrBased_simBased_dinucs_df.apply(searchMutationUsingTranscriptionStrandColumn_simulations_integrated,
                                            simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
                                            simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
@@ -402,6 +411,7 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
                                            type=DINUCS,
                                            sample_based=sample_based,
                                            axis=1)
+            if verbose: print('Worker pid %s DBS searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
 
     return (simNum2Type2TranscriptionStrand2CountDict,
             simNum2Sample2Type2TranscriptionStrand2CountDict,
@@ -411,6 +421,7 @@ def searchMutationsForApplySync(chrBased_simBased_subs_df,
 
 
 ########################################################################
+#Called by COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
 def searchMutations(inputList):
     chrBased_subs_split_df = inputList[0]
     chrBased_indels_split_df = inputList[1]
@@ -514,7 +525,7 @@ def searchMutations(inputList):
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
+def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
 
     print('\n#################################################################################')
     print('--- TranscriptionStrandBias Analysis starts')
@@ -619,6 +630,8 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptio
                 chrBased_SimNum2Type2Sample2Strand2CountDict=result_tuple[2]
                 chrBased_SimNum2Signature2MutationType2Strand2CountDict=result_tuple[3]
 
+                if verbose: print('Worker pid %s Accumulate Transcription Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+
                 accumulate_simulations_integrated_for_each_tuple(
                             chrBased_SimNum2Type2Strand2CountDict,
                             chrBased_SimNum2Sample2Type2Strand2CountDict,
@@ -635,7 +648,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,useTranscriptio
                 chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
                 chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
                 chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-                pool.apply_async(searchMutationsForApplySync, (chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df,chrBased_transcription_array,numofSimulations,sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict),callback=accumulate_apply_async_result)
+                pool.apply_async(searchMutationsForApplySync, (chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df,chrBased_transcription_array,numofSimulations,sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose),callback=accumulate_apply_async_result)
             ####################################################################
 
 

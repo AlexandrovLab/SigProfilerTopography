@@ -16,6 +16,7 @@
 import multiprocessing
 import numpy as np
 import pandas as pd
+import os
 
 from SigProfilerTopography.source.commons.TopographyCommons import CHROM
 from SigProfilerTopography.source.commons.TopographyCommons import START
@@ -42,6 +43,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import updateDiction
 from SigProfilerTopography.source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
 
 from SigProfilerTopography.source.commons.TopographyCommons import readFileInBEDFormat
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
 
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
@@ -318,7 +320,8 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
     sample_based,
     subsSignature2PropertiesListDict,
     indelsSignature2PropertiesListDict,
-    dinucsSignature2PropertiesListDict):
+    dinucsSignature2PropertiesListDict,
+    verbose):
 
     simNum2Type2ReplicationStrand2CountDict= {}
     simNum2Sample2Type2ReplicationStrand2CountDict= {}
@@ -333,6 +336,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
 
     ##############################  Fill dictionaries for subs  starts ####################
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
+        if verbose: print('Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_subs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -343,11 +347,13 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=SUBS,
                                 sample_based=sample_based,
                                 axis=1)
+        if verbose: print('Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for subs  ends ######################
 
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
+        if verbose: print('Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_indels_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -358,10 +364,12 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=INDELS,
                                 sample_based=sample_based,
                                 axis=1)
+        if verbose: print('Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for indels  ends ######################
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
+        if verbose: print('Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_dinucs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -372,6 +380,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=DINUCS,
                                 sample_based=sample_based,
                                 axis=1)
+        if verbose: print('Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for indels  ends ######################
 
 
@@ -627,6 +636,8 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     chrBased_SimNum2Type2Sample2Strand2CountDict = result_tuple[2]
                     chrBased_SimNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
 
+                    if verbose: print('Worker pid %s Accumulate Transcription Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+
                     accumulate_simulations_integrated_for_each_tuple(
                         chrBased_SimNum2Type2Strand2CountDict,
                         chrBased_SimNum2Sample2Type2Strand2CountDict,
@@ -651,7 +662,8 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                                                               sample_based,
                                                                               subsSignature2PropertiesListDict,
                                                                               indelsSignature2PropertiesListDict,
-                                                                              dinucsSignature2PropertiesListDict),callback=accumulate_apply_async_result)
+                                                                              dinucsSignature2PropertiesListDict,
+                                                                              verbose),callback=accumulate_apply_async_result)
                 ################################################################################
 
         ################################################################################

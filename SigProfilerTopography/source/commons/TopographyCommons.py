@@ -674,6 +674,7 @@ def readTrancriptsENSEMBL(genome):
 ###################################################################
 
 ###################################################################
+#Not used anymore
 def readTranscriptsNCBI():
     transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_NCBIREFSEQCURATED)
 

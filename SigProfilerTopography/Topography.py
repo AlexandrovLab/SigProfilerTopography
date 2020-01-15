@@ -354,7 +354,13 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
 #######################################################
 def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus,verbose):
 
-    if (not os.path.exists(library_file_with_path)):
+    #We have to exclude for Topography provided nucleosome occupancy files
+    exclude_from_check=False
+    
+    if (os.path.basename(library_file_with_path)==GM12878_NUCLEOSOME_OCCUPANCY_FILE) or (os.path.basename(library_file_with_path)==K562_NUCLEOSOME_OCCUPANCY_FILE):
+        exclude_from_check=True
+
+    if (not exclude_from_check)  and (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
 
     occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
@@ -411,7 +417,7 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict):
+def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -425,14 +431,9 @@ def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    # computation_type = COMPUTATION_ALL_CHROMOSOMES_PARALLEL
-    # computation_type = COMPUTATION_CHROMOSOMES_SEQUENTIAL_CHROMOSOME_SPLITS_PARALLEL
-    # computation_type = COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
-    # computation_type = COMPUTATION_CHROMOSOMES_SEQUENTIAL_SIMULATIONS_SEQUENTIAL
-    # computation_type = USING_APPLY_ASYNC
     # useTranscriptionStrandColumn = False
     useTranscriptionStrandColumn = True
-    transcriptionStrandBiasAnalysis(computation_type,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
+    transcriptionStrandBiasAnalysis(computation_type,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
     ###############################################
 #######################################################
 
@@ -517,8 +518,6 @@ def runAnalyses(genome,
                 dbs_probabilities=None,
                 mutation_types_contexts=None,
                 epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE1,DEFAULT_HISTONE_OCCUPANCY_FILE2,DEFAULT_HISTONE_OCCUPANCY_FILE3,DEFAULT_HISTONE_OCCUPANCY_FILE4,DEFAULT_HISTONE_OCCUPANCY_FILE5,DEFAULT_HISTONE_OCCUPANCY_FILE6],
-                # epigenomics_files_memos=['H3K27me3_Breast_Epithelium','H3K36me3_Breast_Epithelium','H3K9me3_Breast_Epithelium','H3K27ac_Breast_Epithelium','H3K4me1_Breast_Epithelium','H3K4me3_Breast_Epithelium'],
-                # epigenomics_biosamples=['Breast_Epithelium'],
                 epigenomics_files_memos=None,
                 epigenomics_biosamples=None,
                 nucleosome_biosample=K562,
@@ -659,8 +658,6 @@ def runAnalyses(genome,
 
     print('#################################################################################')
     numofProcesses = multiprocessing.cpu_count()
-    # chunksize=calc_chunksize(numofProcesses, numofSimulations+1, factor=4)
-    # print('--- chunksize for multiprocessing: %d' %chunksize)
     print('--- numofProcesses for multiprocessing: %d' %numofProcesses)
     print('#################################################################################\n')
 
@@ -1120,20 +1117,20 @@ def runAnalyses(genome,
 
     if (strand_bias):
 
-        # Transcription Strand Bias
-        start_time = time.time()
-        runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict)
-        print('#################################################################################')
-        print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-        print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
-        print('#################################################################################\n')
-
         # Replication Strand Bias
         start_time = time.time()
         runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
         print('#################################################################################')
         print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        print('#################################################################################\n')
+
+        # Transcription Strand Bias
+        start_time = time.time()
+        runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+        print('#################################################################################')
+        print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
         print('#################################################################################\n')
 
     if (processivity):
@@ -1270,6 +1267,6 @@ if __name__== "__main__":
                            # replication_time_signal_file=user_provided_replication_time_file_path,
                            # replication_time_valley_file=user_provided_replication_time_valley_file_path,
                            # replication_time_peak_file=user_provided_replication_time_peak_file_path,
-                           epigenomics=False, nucleosome=False, replication_time=True, strand_bias=False, processivity=False,
+                           epigenomics=False, nucleosome=False, replication_time=False, strand_bias=True, processivity=False,
                            sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=True,necessary_dictionaries_already_exists=True)
 ##############################################################
