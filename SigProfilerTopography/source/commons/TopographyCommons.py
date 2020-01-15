@@ -176,17 +176,6 @@ GRCh37_ENSEMBL = 'GRCh37_transcripts.txt'
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
 
-HG19_2BIT = 'hg19.2bit'
-HG38_2BIT = 'hg38.2bit'
-MM9_2BIT = 'mm9.2bit'
-MM10_2BIT = 'mm10.2bit'
-
-
-HG19_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.2bit'
-HG38_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit'
-MM9_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm9/bigZips/mm9.2bit'
-MM10_URL = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/mm10.2bit'
-
 ENCODE_NUCLEOSOME_GM12878_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeGm12878Sig.bigWig'
 ENCODE_NUCLEOSOME_K562_BIGWIG_URL = 'http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeSydhNsome/wgEncodeSydhNsomeK562Sig.bigWig'
 # BIGWIG_TO_WIG_EXECUTABLE_LINUX_X86_64_URL = 'http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToWig'
@@ -390,6 +379,14 @@ DEFAULT_HISTONE_OCCUPANCY_FILE5 = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
 
 BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
+
+
+########################################################
+# e.g: chrLong='chr3' chrShort='3'
+def getChrShort(chrLong):
+    chrShort = chrLong[3:]
+    return chrShort
+########################################################
 
 ########################################################
 def natural_key(string_):
