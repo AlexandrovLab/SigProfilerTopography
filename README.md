@@ -206,10 +206,9 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
 	
-+ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'ID', 'DBS']` for simulations.
++ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'ID', 'DBS']` for simulations unless you want to set `mutation_types_contexts` as `['192', 'ID', 'DBS']`,`['384', 'ID', 'DBS']`, `['1536', 'ID', 'DBS']`, or `['3072', 'ID', 'DBS']`.
 
-	* However, you can set `'192'`, `'384'`, `'1536'` or `'3072'` instead of `'96'`
-	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set `mutation_types_contexts` in the `runAnalyses` call as follows: 
+	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set `mutation_types_contexts=['192', 'ID', 'DBS']` in the `runAnalyses` call as follows: 
 	
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['192', 'ID', 'DBS'])`

@@ -129,8 +129,8 @@ from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAna
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
-from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import occupancyAverageSignalFigures
-from SigProfilerTopography.source.plotting.NucleosomeOccupancyAverageSignalFigures import plot_heatmaps
+from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
+from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import plot_heatmaps
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
@@ -356,11 +356,11 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,
 
     #We have to exclude for Topography provided nucleosome occupancy files
     exclude_from_check=False
-    
+
     if (os.path.basename(library_file_with_path)==GM12878_NUCLEOSOME_OCCUPANCY_FILE) or (os.path.basename(library_file_with_path)==K562_NUCLEOSOME_OCCUPANCY_FILE):
         exclude_from_check=True
 
-    if (not exclude_from_check)  and (not os.path.exists(library_file_with_path)):
+    if (not exclude_from_check) and (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
 
     occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
@@ -417,7 +417,7 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -431,9 +431,7 @@ def runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    # useTranscriptionStrandColumn = False
-    useTranscriptionStrandColumn = True
-    transcriptionStrandBiasAnalysis(computation_type,sample_based,useTranscriptionStrandColumn,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
     ###############################################
 #######################################################
 
@@ -1024,13 +1022,13 @@ def runAnalyses(genome,
     ###############################################
 
     ###############################################
-    # We need full path of the library files
+    # We need set nucleosome_file
     # By default nucleosome_biosample=K562 and nucleosome_file is None
-    # For GM12878 and K562 cell lines
+    # Here we set filename with extension not full path
     if ((nucleosome_file is None)):
         nucleosome_file = getNucleosomeFile(nucleosome_biosample)
     #User has provided nucleosome file with full path
-    elif (nucleosome_file is not None):
+    else:
         nucleosome_biosample = None
     ###############################################
 
@@ -1127,7 +1125,7 @@ def runAnalyses(genome,
 
         # Transcription Strand Bias
         start_time = time.time()
-        runTranscriptionStradBiasAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+        runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
@@ -1262,11 +1260,11 @@ if __name__== "__main__":
                            id_probabilities=id_probabilities_file_path,
                            dbs_probabilities=dbs_probabilities_file_path,
                             # nucleosome_biosample='K562',
-                            replication_time_biosample='NHEK',
+                            # replication_time_biosample='NHEK',
                            # nucleosome_file=user_provided_nucleosome_file_path,
                            # replication_time_signal_file=user_provided_replication_time_file_path,
                            # replication_time_valley_file=user_provided_replication_time_valley_file_path,
                            # replication_time_peak_file=user_provided_replication_time_peak_file_path,
-                           epigenomics=False, nucleosome=False, replication_time=False, strand_bias=True, processivity=False,
-                           sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=True,necessary_dictionaries_already_exists=True)
+                           epigenomics=False, nucleosome=True, replication_time=False, strand_bias=False, processivity=False,
+                           sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=False,necessary_dictionaries_already_exists=True)
 ##############################################################

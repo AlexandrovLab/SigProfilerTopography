@@ -691,7 +691,9 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedSubstitutionsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedSubstitutionsHighs))
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='royalblue',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
+        #old way
+        # simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
         listofLegends.append(simsAggSubs[0])
         if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
@@ -706,7 +708,9 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedIndelsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedIndelsHighs))
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dotted',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='darkgreen', linestyle='dashed',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
+        #old way
+        # simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dotted',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
         listofLegends.append(simsAggIndels[0])
         if (simulationsAggregatedIndelsLows is not None) and (simulationsAggregatedIndelsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
@@ -721,7 +725,9 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (simulationsAggregatedDinucsHighs is not None):
         max_list.append(np.amax(simulationsAggregatedDinucsHighs))
     if simulationsAggregatedDinucsMedians is not None:
-        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashdot',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
+        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='crimson', linestyle='dashed',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
+        #old way
+        # simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashdot',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
         if (simulationsAggregatedDinucsLows is not None) and (simulationsAggregatedDinucsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
@@ -890,14 +896,16 @@ def plotSignatureBasedFigures(mutationType,signature2PropertiesListDict,sample2S
         text = 'indels'
         color = 'darkgreen'
         fillcolor = 'lightgreen'
-        linestyle='dotted'
+        linestyle='dashed'
+        # linestyle='dotted'
     elif (mutationType==DBS):
         xlabel = 'Interval around dinuc (bp)'
         label = 'Aggregated Dinucs'
         text = 'dinucs'
         color = 'crimson'
         fillcolor = 'lightpink'
-        linestyle='dashdot'
+        linestyle='dashed'
+        # linestyle='dashdot'
 
     for signature in signature2PropertiesListDict:
         #[cutoff numberofMutations  averageProbability]

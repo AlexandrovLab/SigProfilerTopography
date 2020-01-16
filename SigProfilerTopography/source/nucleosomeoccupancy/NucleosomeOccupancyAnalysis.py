@@ -147,6 +147,7 @@ def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict
 ########################################################################################
 #Updated JAN 9, 2020
 #November 26 2019
+#Called from apply_async
 def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
         outputDir,
         jobname, chrLong, simNum, chromSizesDict,
@@ -202,7 +203,6 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
     if (occupancy_type== EPIGENOMICSOCCUPANCY):
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
-
     elif (occupancy_type==NUCLEOSOMEOCCUPANCY):
         chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED,signalArrayFilename)
 
@@ -213,8 +213,10 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
         # chrBasedSignalArray = np.load(chrBasedSignalFile,mmap_mode=None)
         # chrBasedSignalArray = np.random.uniform(low=0.0, high=13.3, size=(maximum_chrom_size,))
 
-    # Comment below to make it run in windows
-    elif ((library_file_type==BIGWIG) or (library_file_type==BIGBED)):
+    #If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
+    #For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension
+    if os.path.isabs(library_file_with_path):
+        # Comment below to make it run in windows
         if (library_file_type == BIGWIG):
             try:
                 import pyBigWig
@@ -665,6 +667,7 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
 ########################################################################################
 #Updated JAN 9, 2020
 # November 1, 2019
+#Called from  imap_unordered
 def combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList(inputList):
     occupancy_type=inputList[0]
     outputDir=inputList[1]

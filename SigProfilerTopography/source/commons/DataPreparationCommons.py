@@ -57,6 +57,7 @@ from TopographyCommons import PROJECT
 from TopographyCommons import TYPE
 
 from TopographyCommons import getNucleotides
+from TopographyCommons import revcompl
 
 ############################################################
 def readProbabilities(probabilitiesFile):
@@ -103,21 +104,6 @@ def readProbabilities(probabilitiesFile):
     return probabilities_df
 ############################################################
 
-
-
-############################################################
-# Notice that [::-1] provides visiting x from the last base to the first base
-revcompl = lambda x: ''.join([{'A':'T','C':'G','G':'C','T':'A','N':'N'}[B] for B in x][::-1])
-############################################################
-
-
-# ############################################################
-# def complement(upperNucleotides):
-#     complemented = ''
-#     for upperNucleotide in upperNucleotides:
-#         complemented += complementDict[upperNucleotide]
-#     return complemented
-# ############################################################
 
 
 ############################################################

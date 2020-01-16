@@ -401,9 +401,9 @@ def getNucleosomeFile(nucleosome_biosample):
 
     if (nucleosome_biosample is not None):
         if (nucleosome_biosample==GM12878):
-            nucleosome_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,GM12878_NUCLEOSOME_OCCUPANCY_FILE)
+            nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
         elif (nucleosome_biosample==K562):
-            nucleosome_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,K562_NUCLEOSOME_OCCUPANCY_FILE)
+            nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
 
     return nucleosome_file
 #######################################################
@@ -1331,10 +1331,16 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
 ########################################################################################
 
 
-
 ##########################################################################################
 ############### Common functions for Nucleosome Occupancy Analysis ends ##################
 ##########################################################################################
+
+############################################################
+#Used by DataPreparationCommons.py
+#Kept here for further possible usage
+# Notice that [::-1] provides visiting x from the last base to the first base
+revcompl = lambda x: ''.join([{'A':'T','C':'G','G':'C','T':'A','N':'N'}[B] for B in x][::-1])
+############################################################
 
 ############################################################
 #Tested works correctly.
@@ -1352,57 +1358,6 @@ def getNucleotides(chromosomeShort,start,end,humanGenome):
     seq = seq.upper()
     return seq
 ############################################################
-
-############################################################
-def addPyramidineStrandColumnToDF(inputList):
-    chrShort= inputList[0]
-    chr_based_indels_df = inputList[1]
-    genome = inputList[2]
-
-    chr_based_indels_df = chr_based_indels_df.apply(addPyramidineStrandColumn,genome=genome,axis=1)
-
-    return chr_based_indels_df
-############################################################
-
-############################################################
-def allPyrimidine(ref):
-    if (('A' in ref) or ('G' in ref)):
-        return False
-    else:
-        return True
-############################################################
-
-
-############################################################
-def allPurine(ref):
-    if (('T' in ref) or ('C' in ref)):
-        return False
-    else:
-        return True
-############################################################
-
-##################################################################
-def addPyramidineStrandColumn(mutation_row, genome):
-    chromosomeShort = mutation_row[CHROM]
-    start = mutation_row[START]
-    end = mutation_row[END]
-    ref = mutation_row[REF]
-
-    #Make  zero based
-    start = start-1
-    end = end-1
-
-    referenceGenomeDNASequence = getNucleotides(chromosomeShort, start, end, genome)
-
-    if (ref == referenceGenomeDNASequence) and (allPyrimidine(ref)):
-        mutation_row[PYRAMIDINESTRAND] = +1
-    elif (ref == referenceGenomeDNASequence) and (allPurine(ref)):
-        mutation_row[PYRAMIDINESTRAND] = -1
-    else:
-        mutation_row[PYRAMIDINESTRAND] = 0
-
-    return mutation_row
-##################################################################
 
 
 ######################################################################
