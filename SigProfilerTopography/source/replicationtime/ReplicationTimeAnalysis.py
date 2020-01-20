@@ -43,7 +43,6 @@
 
 import multiprocessing
 import sys
-import twobitreader
 import os
 import math
 import numpy as np
@@ -181,27 +180,8 @@ def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
 
 ##################################################################
 
-
-
 ##################################################################
-def getNumberofAttributableBases(wavelet_row, chrBasedGenome):
-    start =wavelet_row[1]
-    end = wavelet_row[2]
-    #In my code ends are inclusive
-    #twobitreader uses ends exlusive
-    seq = chrBasedGenome.get_slice(start, end+1)
-    numofAttributableBases = seq.count('A') + seq.count('T') + seq.count('G') + seq.count('C') + seq.count('a') + seq.count('t') + seq.count('g') + seq.count('c')
-    # print('######### debug starts ##############')
-    # print(wavelet_row)
-    # print('len(seq):%d' %len(seq))
-    # print('numofAttributableBases:%d' %numofAttributableBases)
-    # print('##########  debug ends #############')
-    return numofAttributableBases
-##################################################################
-
-
-##################################################################
-#Jam 13, 2020
+#Jan 13, 2020
 def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_string):
     start =wavelet_row[1]
     end = wavelet_row[2]

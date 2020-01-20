@@ -192,7 +192,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
                     
 | Parameter | Default Value  |
 | ------------- | ------------- |
-| average probabilty | 0.9  |
+| average probability | 0.9  |
 | num_of_sbs_required | 5000  |
 | num_of_id_required | 1000  |
 | num_of_dbs_required | 200  |

@@ -377,6 +377,9 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
         if (bedfile_extention.lower()=='.bed' or bedfile_extention.lower()=='.np' or bedfile_extention.lower()=='.narrowpeak'):
             discard_signal=False
             file_df, max_signal, min_signal=readFileInBEDFormat(BEDFileWithPath,discard_signal)
+            if (quantileValue < 1.0):
+                q = file_df[SIGNAL].quantile(quantileValue)
+                print('Signal greater than %f is above quantile: %f' % (q,quantileValue))
 
             #Outlier elimination starts
             if ((remove_outliers==True) and (quantileValue < 1.0)):

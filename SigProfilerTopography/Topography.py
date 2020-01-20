@@ -36,8 +36,8 @@ from SigProfilerSimulator import version as simulator_version
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerSimulator import SigProfilerSimulator as simulator
 
-from SigProfilerTopography.source.commons.DataPreparationCommons import readProbabilities
-from SigProfilerTopography.source.commons.DataPreparationCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
+from SigProfilerTopography.source.commons.TopographyCommons import readProbabilities
+from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
@@ -1025,10 +1025,17 @@ def runAnalyses(genome,
     # We need set nucleosome_file
     # By default nucleosome_biosample=K562 and nucleosome_file is None
     # Here we set filename with extension not full path
-    if ((nucleosome_file is None)):
+    #There can be 2 cases:
+    #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
+    #Case 2 : nucleosome_biosample is not an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
+
+    #Case1: nucleosome_biosample is not None, nucleosome_file is a filename without fullpath
+    if (nucleosome_biosample in available_nucleosome_biosamples):
+        #Sets the filename without the full path
         nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-    #User has provided nucleosome file with full path
+    #Case2: nucleosome_biosample is set to None, nucleosome_file is a filename with fullpath
     else:
+        # We expect that user has provided nucleosome file with full path
         nucleosome_biosample = None
     ###############################################
 
@@ -1252,7 +1259,6 @@ if __name__== "__main__":
 
     # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeK562Sig.wig')
     user_provided_nucleosome_file_path = os.path.join('C:\\', 'Users', 'burcak', 'Developer', 'Python','SigProfilerTopography', 'SigProfilerTopography', 'lib','nucleosome', 'wgEncodeSydhNsomeGm12878Sig.wig')
-
     # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.bigWig')
 
     runAnalyses(genome, inputDir, outputDir, jobname, numberofSimulations,
@@ -1265,6 +1271,6 @@ if __name__== "__main__":
                            # replication_time_signal_file=user_provided_replication_time_file_path,
                            # replication_time_valley_file=user_provided_replication_time_valley_file_path,
                            # replication_time_peak_file=user_provided_replication_time_peak_file_path,
-                           epigenomics=False, nucleosome=True, replication_time=False, strand_bias=False, processivity=False,
+                           epigenomics=True, nucleosome=False, replication_time=False, strand_bias=False, processivity=False,
                            sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=False,necessary_dictionaries_already_exists=True)
 ##############################################################

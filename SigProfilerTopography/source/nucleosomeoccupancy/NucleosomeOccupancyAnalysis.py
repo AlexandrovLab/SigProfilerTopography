@@ -230,7 +230,7 @@ def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
                                library_file_opened_by_pyBigWig.header()['nBasesCovered'] * my_mean * my_mean) ** (0.5) / (
                             library_file_opened_by_pyBigWig.header()['nBasesCovered'] ** (0.5))
                     # Scientific definition of outlier
-                    my_upperBound = std_dev * 3
+                    my_upperBound = my_mean + std_dev * 3
                 else:
                     # Undefined
                     my_upperBound = np.iinfo(np.int16).max

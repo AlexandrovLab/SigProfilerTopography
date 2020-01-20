@@ -488,6 +488,8 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     # print('fdr_bh_adjusted_pvalues: %s' %(fdr_bh_adjusted_pvalues))
     # print('############# for debug ends Nov 12, 2018 ################')
 
+    #Here we can take into difference between strand1_values and strand2_values while deciding on significance
+
 
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
