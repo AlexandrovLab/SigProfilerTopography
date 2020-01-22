@@ -123,10 +123,6 @@ def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
     ############### Read RepliSeq Time data starts ####################
     ###################################################################
 
-    ################################
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
-    ################################
 
     #JAN 7, 2020
     replication_time_interval_version_df = readWig_with_fixedStep_variableStep(repliseqDataFilename)
@@ -135,7 +131,7 @@ def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
     print('Chromosome names in replication time signal data: %s' %(chrNamesInReplicationTimeDataArray))
 
     #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(genome,pool,replication_time_interval_version_df,matrix_generator_path)
+    wavelet_processed_augmented_df = augment(genome,replication_time_interval_version_df,matrix_generator_path)
 
     #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
 
@@ -167,11 +163,6 @@ def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
     #     totalNumberofIntervals += len(decile_df)
     # print('totalNumberofIntervals in all deciles : %d' %totalNumberofIntervals)
     # ############################################################
-
-    ################################
-    pool.close()
-    pool.join()
-    ################################
 
     return chrNamesInReplicationTimeDataArray, deciles_df_list
     ###################################################################
@@ -205,6 +196,18 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
     return numofAttributableBases
 ##################################################################
 
+
+##################################################################
+def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrom_string):
+    resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBasesUsingMatrixGeneratorGenome,chrom_string=chrom_string, axis= 1)
+
+    if (len(chrBased_wavelet_processed_df_group)!=len(resulting_df)):
+        print('There is a situation: len(chrBased_wavelet_processed_df_group) is not equal  to len(resulting_df)')
+
+    chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
+
+    return (chrLong,chrBased_wavelet_processed_df_group)
+##################################################################
 
 ##################################################################
 def addNumofAttributableBasesColumn(inputList):
@@ -1401,7 +1404,12 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 
 
 ##################################################################
-def augment(genome,pool,wavelet_processed_df,matrix_generator_path):
+def augment(genome,wavelet_processed_df,matrix_generator_path):
+
+    ################################
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+    ################################
 
     #old way
     # if (genome==GRCh37):
@@ -1412,37 +1420,64 @@ def augment(genome,pool,wavelet_processed_df,matrix_generator_path):
     #Augment in parallel for each chromosome
     poolInputList = []
     chrBased_wavelet_processed_df_groups = wavelet_processed_df.groupby(CHROM)
-    for chrLong, chrBased_wavelet_processed_df_group in chrBased_wavelet_processed_df_groups:
-        inputList = []
-        inputList.append(chrLong)
-        inputList.append(chrBased_wavelet_processed_df_group)
 
-        #new way
+    #JAN 21, 2020 starts
+    frames = []
+
+    ####################################################################################
+    #tuple contains (chrLong,chrBased_wavelet_processed_df_group)
+    def accumulate_apply_async_result(tuple):
+        chrBased_augmented_df = tuple[1]
+        frames.append(chrBased_augmented_df)
+    ####################################################################################
+
+    for chrLong, chrBased_wavelet_processed_df_group in chrBased_wavelet_processed_df_groups:
         chrShort=getChrShort(chrLong)
         chrbased_filename = chrShort + ".txt"
         chrbased_file_path = os.path.join(matrix_generator_path, 'references', 'chromosomes', 'tsb', genome,chrbased_filename)
         with open(chrbased_file_path, "rb") as f2:
             chrom_string = f2.read()
-        inputList.append(chrom_string)
+        pool.apply_async(addNumofAttributableBasesColumnForApplyAsync, (chrLong,chrBased_wavelet_processed_df_group,chrom_string), callback=accumulate_apply_async_result)
+    #JAN 21, 2020 ends
 
-        #old way
-        #Please note that when you provide the chr based hg19_genome it gives error
-        # inputList.append(wholeGenome)
-        poolInputList.append(inputList)
-
-    # print('Augmentation starts')
-    #Each tuple contains chrLong and the dataframe with augmented column with number of attributable bases
-    listofTuples = pool.map(addNumofAttributableBasesColumn,poolInputList)
-    # print('len(poolInputList): %d' %len(poolInputList))
-    # print('len(listofDFs): %d' %len(listofTuples))
+    # #Pool.map starts
+    # for chrLong, chrBased_wavelet_processed_df_group in chrBased_wavelet_processed_df_groups:
+    #     inputList = []
+    #     inputList.append(chrLong)
+    #     inputList.append(chrBased_wavelet_processed_df_group)
+    #
+    #     #new way
+    #     chrShort=getChrShort(chrLong)
+    #     chrbased_filename = chrShort + ".txt"
+    #     chrbased_file_path = os.path.join(matrix_generator_path, 'references', 'chromosomes', 'tsb', genome,chrbased_filename)
+    #     with open(chrbased_file_path, "rb") as f2:
+    #         chrom_string = f2.read()
+    #     inputList.append(chrom_string)
+    #
+    #     #old way
+    #     #Please note that when you provide the chr based hg19_genome it gives error
+    #     # inputList.append(wholeGenome)
+    #     poolInputList.append(inputList)
+    #
+    # # print('Augmentation starts')
+    # #Each tuple contains chrLong and the dataframe with augmented column with number of attributable bases
+    # listofTuples = pool.map(addNumofAttributableBasesColumn,poolInputList)
+    # # print('len(poolInputList): %d' %len(poolInputList))
+    # # print('len(listofDFs): %d' %len(listofTuples))
 
     #Define frames which will be a list of dataframes
-    frames = []
+    # frames = []
+    #
+    # for tuple in listofTuples:
+    #     #chrLong = tuple[0]
+    #     chrBased_augmented_df = tuple[1]
+    #     frames.append(chrBased_augmented_df)
+    # #Pool.map ends
 
-    for tuple in listofTuples:
-        #chrLong = tuple[0]
-        chrBased_augmented_df = tuple[1]
-        frames.append(chrBased_augmented_df)
+    ################################
+    pool.close()
+    pool.join()
+    ################################
 
     augment_df = pd.concat(frames,ignore_index=True)
 
