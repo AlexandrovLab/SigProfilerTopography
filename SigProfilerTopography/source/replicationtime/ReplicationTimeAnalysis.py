@@ -117,12 +117,11 @@ tsb_ref = {0: ['N', 'A'], 1: ['N', 'C'], 2: ['N', 'G'], 3: ['N', 'T'],
 
 
 ##################################################################
-def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
+def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path,verbose):
 
     ###################################################################
     ############### Read RepliSeq Time data starts ####################
     ###################################################################
-
 
     #JAN 7, 2020
     replication_time_interval_version_df = readWig_with_fixedStep_variableStep(repliseqDataFilename)
@@ -131,13 +130,14 @@ def readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path):
     print('Chromosome names in replication time signal data: %s' %(chrNamesInReplicationTimeDataArray))
 
     #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(genome,replication_time_interval_version_df,matrix_generator_path)
+    wavelet_processed_augmented_df = augment(genome,replication_time_interval_version_df,matrix_generator_path,verbose)
 
     #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
 
     #Sort in descending order
     #Higher the replication time signal earlier the replication is
     wavelet_processed_augmented_df.sort_values(SIGNAL, ascending=False, inplace=True)
+
 
     # print('############ after sort wavelet_processed_augmented_df ###################')
     # print(wavelet_processed_augmented_df.head())
@@ -198,13 +198,24 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
 
 
 ##################################################################
-def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrom_string):
+def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose):
+    if verbose: print('Worker pid %s %s Before memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
+
+    # 1st way Slower. Not tested for the results.
+    # chrom_string = np.memmap(chrbased_file_path, dtype=np.byte, mode='r')
+
+    # 2nd way Faster than 1st way
+    with open(chrbased_file_path, "rb") as f2:
+        chrom_string = f2.read()
+
     resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBasesUsingMatrixGeneratorGenome,chrom_string=chrom_string, axis= 1)
 
     if (len(chrBased_wavelet_processed_df_group)!=len(resulting_df)):
         print('There is a situation: len(chrBased_wavelet_processed_df_group) is not equal  to len(resulting_df)')
 
     chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
+
+    if verbose: print('Worker pid %s %s After memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
 
     return (chrLong,chrBased_wavelet_processed_df_group)
 ##################################################################
@@ -1260,6 +1271,8 @@ def fillInputList(outputDir,jobname,simNum,chrLong,
     return inputList
 ##################################################################
 
+
+
 ##################################################################
 def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationType,
                                     outputDir,
@@ -1402,27 +1415,18 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 ##################################################################
 
 
-
 ##################################################################
-def augment(genome,wavelet_processed_df,matrix_generator_path):
+def augment(genome,wavelet_processed_df,matrix_generator_path,verbose):
 
     ################################
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
     ################################
 
-    #old way
-    # if (genome==GRCh37):
-    #     wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG19_2BIT))
-    # elif (genome==GRCh38):
-    #     wholeGenome = twobitreader.TwoBitFile(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,UCSCGENOME,HG38_2BIT))
-
-    #Augment in parallel for each chromosome
-    poolInputList = []
+    #Augment for each chromosome
     chrBased_wavelet_processed_df_groups = wavelet_processed_df.groupby(CHROM)
 
-    #JAN 21, 2020 starts
-    frames = []
+    frames=[]
 
     ####################################################################################
     #tuple contains (chrLong,chrBased_wavelet_processed_df_group)
@@ -1435,51 +1439,15 @@ def augment(genome,wavelet_processed_df,matrix_generator_path):
         chrShort=getChrShort(chrLong)
         chrbased_filename = chrShort + ".txt"
         chrbased_file_path = os.path.join(matrix_generator_path, 'references', 'chromosomes', 'tsb', genome,chrbased_filename)
-        with open(chrbased_file_path, "rb") as f2:
-            chrom_string = f2.read()
-        pool.apply_async(addNumofAttributableBasesColumnForApplyAsync, (chrLong,chrBased_wavelet_processed_df_group,chrom_string), callback=accumulate_apply_async_result)
+        pool.apply_async(addNumofAttributableBasesColumnForApplyAsync, (chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose), callback=accumulate_apply_async_result)
     #JAN 21, 2020 ends
-
-    # #Pool.map starts
-    # for chrLong, chrBased_wavelet_processed_df_group in chrBased_wavelet_processed_df_groups:
-    #     inputList = []
-    #     inputList.append(chrLong)
-    #     inputList.append(chrBased_wavelet_processed_df_group)
-    #
-    #     #new way
-    #     chrShort=getChrShort(chrLong)
-    #     chrbased_filename = chrShort + ".txt"
-    #     chrbased_file_path = os.path.join(matrix_generator_path, 'references', 'chromosomes', 'tsb', genome,chrbased_filename)
-    #     with open(chrbased_file_path, "rb") as f2:
-    #         chrom_string = f2.read()
-    #     inputList.append(chrom_string)
-    #
-    #     #old way
-    #     #Please note that when you provide the chr based hg19_genome it gives error
-    #     # inputList.append(wholeGenome)
-    #     poolInputList.append(inputList)
-    #
-    # # print('Augmentation starts')
-    # #Each tuple contains chrLong and the dataframe with augmented column with number of attributable bases
-    # listofTuples = pool.map(addNumofAttributableBasesColumn,poolInputList)
-    # # print('len(poolInputList): %d' %len(poolInputList))
-    # # print('len(listofDFs): %d' %len(listofTuples))
-
-    #Define frames which will be a list of dataframes
-    # frames = []
-    #
-    # for tuple in listofTuples:
-    #     #chrLong = tuple[0]
-    #     chrBased_augmented_df = tuple[1]
-    #     frames.append(chrBased_augmented_df)
-    # #Pool.map ends
 
     ################################
     pool.close()
     pool.join()
     ################################
 
-    augment_df = pd.concat(frames,ignore_index=True)
+    augment_df = pd.concat(frames, ignore_index=True)
 
     return augment_df
 ##################################################################
@@ -1637,7 +1605,7 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
     #Whole genome is needed here
     #Formerly I was reading 2bit files using twobitreader
     #Now, formerly downloaded matrix generator reference genome is being used.
-    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path)
+    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path,verbose)
     if verbose: print('Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
 
     #Get chrBased grouped deciles

@@ -647,7 +647,7 @@ def readTrancriptsENSEMBL(genome):
         transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_ENSEMBL)
 
     if (os.path.exists(transcriptsFilenamePath)):
-        ensembl_transcripts_df = pd.read_table(transcriptsFilenamePath, header=0,sep="\t")
+        ensembl_transcripts_df = pd.read_csv(transcriptsFilenamePath, header=0,sep='\t')
 
         #Gene stable ID  Transcript stable ID    Chromosome/scaffold name        Strand  Transcript start (bp)   Transcript end (bp)     Transcript type
 
@@ -675,7 +675,7 @@ def readTranscriptsNCBI():
     transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_NCBIREFSEQCURATED)
 
     if (os.path.exists(transcriptsFilenamePath)):
-        GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df = pd.read_table(transcriptsFilenamePath, header = 0, sep="\t")
+        GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df = pd.read_csv(transcriptsFilenamePath, header = 0, sep='\t')
         print('debug GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df starts')
         print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.columns.values)
         # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.shape)
@@ -949,7 +949,7 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber):
     if (os.path.exists(chrBasedMutationDFFilePath)):
 
         #############################################
-        only_header_chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath, sep="\t", comment='#', nrows=1)
+        only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
         columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
 
         # We assume that after the column named 'Mutation' there are the signature columns in tab separated way.
@@ -998,7 +998,7 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber):
             mydtypes[MUTATION] = 'category'
         #################################################
 
-        chrBased_mutation_df = pd.read_table(chrBasedMutationDFFilePath,sep="\t", header=0, dtype=mydtypes)
+        chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes)
         chrBased_mutation_df[SIMULATION_NUMBER]=simulationNumber
     #############################################
 
@@ -1389,14 +1389,14 @@ def readFileInBEDFormat(file_with_path,discard_signal):
 
     print('############################################')
     if os.path.exists(file_with_path):
-        file_df = pd.read_table(file_with_path, header=None, nrows=1)  # 2.25 GB
+        file_df = pd.read_csv(file_with_path, header=None, nrows=1,sep='\t')  # 2.25 GB
         ncols=file_df.shape[1]
 
         if (ncols<=3):
             print('There is no enough columns in this bed file')
         elif (ncols==4):
             print('SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header')
-            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [CHROM,START,END,SIGNAL],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32})
+            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [CHROM,START,END,SIGNAL],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},sep='\t')
 
         elif ((ncols==10) or (ncols==9)):
             # ENCODE narrowpeak BED6+4 ncols=10
@@ -1408,16 +1408,16 @@ def readFileInBEDFormat(file_with_path,discard_signal):
                 print('ENCODE narrowpeak BED6+3')
 
             if discard_signal==True:
-                file_df = pd.read_table(file_with_path, header=None, usecols=[0,1,2],
+                file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
                                         names=[CHROM,START,END],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32})
+                                        dtype={0: 'category', 1: np.int32, 2: np.int32},sep='\t')
 
             else:
                 print('SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header')
-                file_df = pd.read_table(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
+                file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
                                         names=[CHROM, START, END, NAME, SCORE, STRAND, SIGNAL],
                                         dtype={0: 'category', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
-                                               5: 'category', 6: np.float32})
+                                               5: 'category', 6: np.float32},sep='\t')
 
                 # file_df.drop([3,4,5], inplace=True, axis=1)
                 file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
@@ -1425,7 +1425,7 @@ def readFileInBEDFormat(file_with_path,discard_signal):
 
         elif (ncols>=5):
             print('SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header')
-            file_df=pd.read_table(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32})
+            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
 
         print("file_df.dtypes")
         print(file_df.dtypes)
@@ -1566,7 +1566,7 @@ def generateIntervalVersion(wig_unprocessed_df):
 def readWig_with_fixedStep_variableStep(wig_file_path):
 
     #Read the wavelet signal
-    wig_unprocessed_df = pd.read_table(wig_file_path, sep="\t", comment='#', header=None)
+    wig_unprocessed_df = pd.read_csv(wig_file_path, sep='\t', comment='#', header=None)
 
     #Process the wavelet signal, convert into interval version
     #Add column names
@@ -2136,7 +2136,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context):
 
     if (os.path.exists(chr_based_mutation_filepath)):
         try:
-            mutations_with_genomic_positions_df = pd.read_table(chr_based_mutation_filepath, sep="\t", header=None)
+            mutations_with_genomic_positions_df = pd.read_csv(chr_based_mutation_filepath, sep='\t', header=None)
         except pd.errors.EmptyDataError:
             mutations_with_genomic_positions_df = pd.DataFrame()
 
@@ -2286,7 +2286,7 @@ def readProbabilities(probabilitiesFile):
     #This is same for Release and PCAWG_Matlab
     # There is header in the first column
     #Sample names can be composed of numbers
-    probabilities_df = pd.read_table(probabilitiesFile,sep="\t", header=0, dtype={'Sample Names':str,'MutationTypes':str})
+    probabilities_df = pd.read_csv(probabilitiesFile,sep='\t', header=0, dtype={'Sample Names':str,'MutationTypes':str})
 
     # Mutation_Probabilities.txt for SBS96
     # Sample Names    MutationTypes   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40

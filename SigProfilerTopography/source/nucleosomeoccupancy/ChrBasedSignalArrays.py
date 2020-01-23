@@ -136,7 +136,7 @@ def writeChrBasedOccupancySignalArray(inputList):
 def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
-    nucleosome_df = pd.read_table(nucleosomeFilename, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+    nucleosome_df = pd.read_csv(nucleosomeFilename, sep='\t', header=None, comment='#', names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
 
     print('After nucleosome occupancy is loaded into memory')
     print('Memory usage in %s MB' % memory_usage())
@@ -251,7 +251,7 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
 
     if os.path.exists(wig_file_path):
         # Read the wavelet signal
-        wig_unprocessed_df = pd.read_table(wig_file_path, sep="\t", comment='#', header=None)
+        wig_unprocessed_df = pd.read_csv(wig_file_path, sep='\t', comment='#', header=None)
 
         # Process the wavelet signal, convert into interval version
         # Add column names
@@ -318,7 +318,7 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
         max_signal=np.finfo(np.float32).min
         min_signal=np.finfo(np.float32).max
 
-        for chunk_df in  pd.read_table(library_file_with_path,chunksize=5000000, sep="\t", header=None, comment='#', names=column_names, dtype={CHROM: str, START: np.int32, END: np.int32, SIGNAL: np.float32}):
+        for chunk_df in  pd.read_csv(library_file_with_path,chunksize=5000000, sep='\t', header=None, comment='#', names=column_names, dtype={CHROM: str, START: np.int32, END: np.int32, SIGNAL: np.float32}):
             print(chunk_df[CHROM].unique())
 
             chrom_list=chunk_df[CHROM].unique()

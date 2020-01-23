@@ -240,6 +240,7 @@ def readNormalizedMutationData(sample,analysisType,outputDir,jobname):
 
     #Check if filepath exists
     if os.path.exists(filepath):
+        #TODO Change it to read_csv
         normalizedMutationData_df = pd.read_table(filepath, sep=" ", comment='#', header=None)
         normalizedMutationData_df.dropna(axis=1, how='any', inplace=True)
         return normalizedMutationData_df
