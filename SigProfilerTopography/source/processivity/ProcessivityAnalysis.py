@@ -15,6 +15,7 @@ import os
 from json import JSONEncoder
 
 from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
 
 from SigProfilerTopography.source.commons.TopographyCommons import START
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
@@ -61,15 +62,16 @@ def myfuncUpdated(x):
 
 
 #########################################################################
-def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbability,signature2PropertiesListDict):
+def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbability,signature_cutoff_numberofmutations_averageprobability_df):
     processiveGroupLength = x['ProcessiveGroupLength']
     distance = x['Distance']
     signature = x['Signature']
     probability = x['Probability']
 
     #We require signature to be in signature2PropertiesListDict
-    if (signature in signature2PropertiesListDict):
-        if (considerProbability and (probability>=float(signature2PropertiesListDict[signature][0]))):
+    if signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+        cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+        if (considerProbability and (probability>=cutoff)):
             if signature in signature2ProcessiveGroupLength2DistanceListDict:
                 if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:
                     signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength].append(distance)
@@ -92,11 +94,11 @@ def fillDict(x,signature2ProcessiveGroupLength2DistanceListDict, considerProbabi
 
 ####################################################################################
 #DEC 22, 2019
-def findProcessiveGroupsForApplySync(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose):
+def findProcessiveGroupsForApplySync(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     #Sort it
     sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
 
-    return findProcessiveGroups(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose)
+    return findProcessiveGroups(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
 ####################################################################################
 
 
@@ -107,19 +109,19 @@ def findProcessiveGroupsForInputList(inputList):
     sample=inputList[2]
     sampleBased_chrBased_spms_df = inputList[3]
     considerProbabilityInProcessivityAnalysis = inputList[4]
-    signature2PropertiesListDict=inputList[5]
+    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[5]
     verbose=inputList[6]
 
     #Sort it
     sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
 
-    return findProcessiveGroups(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose)
+    return findProcessiveGroups(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
 ####################################################################################
 
 
 
 ####################################################################################
-def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose):
+def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
     signature2ProcessiveGroupLength2DistanceListDict = {}
 
     if verbose: print('Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
@@ -141,7 +143,7 @@ def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_
         df.apply(fillDict,
                  signature2ProcessiveGroupLength2DistanceListDict=signature2ProcessiveGroupLength2DistanceListDict,
                  considerProbability=considerProbabilityInProcessivityAnalysis,
-                 signature2PropertiesListDict=signature2PropertiesListDict,
+                 signature_cutoff_numberofmutations_averageprobability_df=signature_cutoff_numberofmutations_averageprobability_df,
                  axis=1)
 
     if verbose: print('Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
@@ -170,7 +172,13 @@ def findMedians(signature2ProcessiveGroupLength2GroupSizeListDict):
                                                  numberofProcessiveGroups=numberofProcessiveGroups,
                                                  medianofNumberofProcessiveGroupsinMB = median)
 
-                signature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength]= processiveGroupStruct
+                processiveGroupDict={}
+                processiveGroupDict['processiveGroupLength']=processiveGroupLength
+                processiveGroupDict['numberofProcessiveGroups']=numberofProcessiveGroups
+                processiveGroupDict['medianofNumberofProcessiveGroupsinMB'] = median
+
+                # signature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength]= processiveGroupStruct
+                signature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength] = processiveGroupDict
 
     return signature2ProcessiveGroupLength2PropertiesDict
 ####################################################################################
@@ -199,9 +207,19 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
                 big_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = small_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength]
 ####################################################################################
 
+####################################################################################
+#This method can be customized for other dictionaries
+def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath):
+    L = sorted([(signature, processiveGroupLength, v1['numberofProcessiveGroups'],v1['medianofNumberofProcessiveGroupsinMB']) for signature, v in signature2ProcessiveGroupLength2PropertiesDict.items() for processiveGroupLength, v1 in v.items()])
+    df = pd.DataFrame(L,columns=['Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_of_Number_of_Processive_Groups_in_MB'])
+
+    #write this dataframe
+    df.to_csv(filePath, sep='\t', header=True, index=False)
+####################################################################################
+
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
 
@@ -257,7 +275,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                         sampleBased_chrBased_spms_df_grouped = chrBased_spms_df.groupby(SAMPLE)
 
                         for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
-                            pool.apply_async(findProcessiveGroupsForApplySync,(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose),callback=accumulate_apply_async_result)
+                            pool.apply_async(findProcessiveGroupsForApplySync,(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result)
                 ####################################################################################
 
                 ####################################################################################
@@ -268,7 +286,14 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 ####################################################################################
                 signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
                 filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' % (simNum)
-                writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, ProcessiveGroupStructEncoder)
+                # writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, ProcessiveGroupStructEncoder)
+                writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, None)
+                ####################################################################################
+
+                ####################################################################################
+                filename = 'Sim%d_Processivity.txt' % (simNum)
+                filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
+                writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
                 ####################################################################################
 
         else:
@@ -328,7 +353,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                             inputList.append(sample)
                             inputList.append(sampleBased_chrBased_spms_df)
                             inputList.append(considerProbabilityInProcessivityAnalysis)
-                            inputList.append(signature2PropertiesListDict)
+                            inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
                             inputList.append(verbose)
                             poolInputList.append(inputList)
 
@@ -365,10 +390,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
 
 ##################################################################################
-def processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose):
+def processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     print('\n#################################################################################')
     print('--- ProcessivityAnalysis starts')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     print('--- ProcessivityAnalysis ends')
     print('#################################################################################\n')
 ##################################################################################

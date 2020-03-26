@@ -28,8 +28,8 @@ import shutil
 
 from SigProfilerTopography.source.commons.TopographyCommons import generateIntervalVersion
 
-from SigProfilerTopography.source.commons.TopographyCommons import CHROM 
-from SigProfilerTopography.source.commons.TopographyCommons import START 
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import START
 from SigProfilerTopography.source.commons.TopographyCommons import END
 from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 
@@ -76,9 +76,8 @@ def updateSignalArray(row,signalArray):
 ######################################################################
 
 ######################################################################
-def updateSignalArraysForListComprehension(row,signalArrayDict):
+def updateSignalArraysForListComprehension(row,signalArray):
     #row [chrom start end signal]
-    signalArray = signalArrayDict[row[0]]
     signalArray[row[1]:row[2]] += row[3]
 ######################################################################
 
@@ -297,12 +296,82 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
 
 ##################################################################
 
+##################################################################
+def fill_signal_array_dict(chrname,chr_based_df_list,chromSizesDict,occupancy_type,verbose):
+
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict starts:  current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), memory_usage()))
+    process_signal_array_dict={}
+
+    process_signal_array = np.zeros(chromSizesDict[chrname], dtype=np.float32)
+    max_signal = np.finfo(np.float32).min
+    min_signal = np.finfo(np.float32).max
+
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict --- len(chr_based_df_list):%d current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), len(chr_based_df_list),memory_usage()))
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict --- chrname:%s current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), chrname,memory_usage()))
+
+
+    for chr_based_df in chr_based_df_list:
+        if (chr_based_df[SIGNAL].max() > max_signal):
+            max_signal = chr_based_df[SIGNAL].max()
+        if (chr_based_df[SIGNAL].min() < min_signal):
+            min_signal = chr_based_df[SIGNAL].min()
+        # Use list comprehension
+        [updateSignalArraysForListComprehension(row, process_signal_array) for row in chr_based_df.values]
+
+    # Initialzie the list, you will return this list
+    process_signal_array_dict['min_signal'] = min_signal
+    process_signal_array_dict['max_signal'] = max_signal
+    process_signal_array_dict[chrname]=process_signal_array
+
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict: min_signal: %f max_signal: %f current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), process_signal_array_dict['min_signal'], process_signal_array_dict['max_signal'], memory_usage()))
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict: signal_array_dict.keys():%s current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), process_signal_array_dict.keys(), memory_usage()))
+    if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict ends: current_mem_usage %.2f (mb)\n' % (occupancy_type, str(os.getpid()), memory_usage()))
+
+    return process_signal_array_dict
+##################################################################
+
+##################################################################
+def update_min_max_array(process_signal_array_dict, signal_array_dict):
+    process_min_signal = process_signal_array_dict['min_signal']
+    process_max_signal = process_signal_array_dict['max_signal']
+
+    if (process_min_signal < signal_array_dict['min_signal']):
+        signal_array_dict['min_signal']=process_min_signal
+    if (process_max_signal > signal_array_dict['max_signal']):
+        signal_array_dict['max_signal']=process_max_signal
+
+    process_all_keys=set(process_signal_array_dict.keys())
+    process_chrom_keys=process_all_keys.difference(set(['min_signal','max_signal']))
+
+    for chrom_key in process_chrom_keys:
+        if chrom_key not in signal_array_dict:
+            signal_array_dict[chrom_key]=process_signal_array_dict[chrom_key]
+        else:
+            signal_array_dict[chrom_key]+=process_signal_array_dict[chrom_key]
+##################################################################
+
+
+
+##################################################################
+def append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList):
+    if chrname in chr2DataframeList:
+        chr2DataframeList[chrname].append(chrom_based_chunk_df)
+    else:
+        chr2DataframeList[chrname]=[chrom_based_chunk_df]
+##################################################################
+
+
 ######################################################################
-#Read in chunks, at the end have all signal arrays in memory and write sequentially
-#No outlier elimination
-def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type):
+def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type,verbose,chunksize = 10 ** 7):
+    chr2DataframeList={}
+    signal_array_dict = {}
+    signal_array_dict['max_signal'] = np.finfo(np.float32).min
+    signal_array_dict['min_signal'] = np.finfo(np.float32).max
+
     wig_file_name_wo_extension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     chromSizesDict = getChromSizesDict(genome)
+
+    possible_chrom_list=list(chromSizesDict.keys())
 
     #To reduce memory footprint
     # Delete old chr based epigenomics files
@@ -311,42 +380,153 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
         deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
 
     if os.path.exists(library_file_with_path):
-        column_names = [CHROM, START, END, SIGNAL]
 
-        #chromSize
-        signalArrayDict={}
-        max_signal=np.finfo(np.float32).min
-        min_signal=np.finfo(np.float32).max
+        data=pd.read_csv(library_file_with_path, delimiter='\t', iterator=True, chunksize=chunksize)
+        print(type(data))
+        print(sys.getsizeof(data))
+        print('################################')
 
-        for chunk_df in  pd.read_csv(library_file_with_path,chunksize=5000000, sep='\t', header=None, comment='#', names=column_names, dtype={CHROM: str, START: np.int32, END: np.int32, SIGNAL: np.float32}):
-            print(chunk_df[CHROM].unique())
+        for chunk_df in data:
+            print(type(chunk_df))
+            print(sys.getsizeof(chunk_df))
+            chunk_df.columns=[CHROM, START, END, SIGNAL]
+            chunk_df[CHROM] = chunk_df[CHROM].astype('category')
+            chunk_df[START] = chunk_df[START].astype(np.int32)
+            chunk_df[END] = chunk_df[END].astype(np.int32)
+            chunk_df[SIGNAL] = chunk_df[SIGNAL].astype(np.float32)
+            print(sys.getsizeof(chunk_df))
+            print('################################')
 
-            chrom_list=chunk_df[CHROM].unique()
-            if (chunk_df[SIGNAL].max()>max_signal):
-                max_signal=chunk_df[SIGNAL].max()
-            if (chunk_df[SIGNAL].min()<min_signal):
-                min_signal=chunk_df[SIGNAL].min()
+            chunk_df = chunk_df[chunk_df[CHROM].isin(possible_chrom_list)]
+            chunk_df_grouped = chunk_df.groupby(CHROM)
+            for chrname, chrom_based_chunk_df in chunk_df_grouped:
+                if chrname in possible_chrom_list:
+                    append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList)
 
-            for chrom in chrom_list:
-                if chrom not in signalArrayDict:
-                    signalArray=np.zeros(chromSizesDict[chrom], dtype=np.float32)
-                    signalArrayDict[chrom]=signalArray
+        for chrname in chr2DataframeList:
+            chr_based_df_list=chr2DataframeList[chrname]
+            process_signal_array_dict = {}
 
-            # Use list comprehension
-            [updateSignalArraysForListComprehension(row, signalArrayDict) for row in chunk_df.values]
-            print('#################')
+            process_signal_array = np.zeros(chromSizesDict[chrname], dtype=np.float32)
+            max_signal = np.finfo(np.float32).min
+            min_signal = np.finfo(np.float32).max
 
-        print('\n#####################################################')
-        print('min_signal:%f max_signal:%f' %(min_signal,max_signal))
-        print('#####################################################\n')
+            for chr_based_df in chr_based_df_list:
+                if (chr_based_df[SIGNAL].max() > max_signal):
+                    max_signal = chr_based_df[SIGNAL].max()
+                if (chr_based_df[SIGNAL].min() < min_signal):
+                    min_signal = chr_based_df[SIGNAL].min()
+                    # Use list comprehension
+                [updateSignalArraysForListComprehension(row, process_signal_array) for row in chr_based_df.values]
+
+            # Initialzie the list, you will return this list
+            process_signal_array_dict['min_signal'] = min_signal
+            process_signal_array_dict['max_signal'] = max_signal
+            process_signal_array_dict[chrname]=process_signal_array
+
+            update_min_max_array(process_signal_array_dict, signal_array_dict)
+
 
         if (occupancy_type == EPIGENOMICSOCCUPANCY):
             os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
         elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
             os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED),exist_ok=True)
 
-        for key in signalArrayDict.keys():
-            signalArray=signalArrayDict[key]
+        all_keys=set(signal_array_dict.keys())
+        chrom_keys=all_keys.difference(set(['min_signal','max_signal']))
+
+        for key in chrom_keys:
+            signalArray=signal_array_dict[key]
+            print('%s np.sum(signalArray,dtype=np.float32):%f' %(key,np.sum(signalArray,dtype=np.float32)))
+            signalArrayFilename = '%s_signal_%s' %(key,wig_file_name_wo_extension)
+            if (occupancy_type == EPIGENOMICSOCCUPANCY):
+                chrBasedSignalFile = os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
+            elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
+                chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,CHRBASED, signalArrayFilename)
+            np.save(chrBasedSignalFile,signalArray)
+######################################################################
+
+
+######################################################################
+#Read in chunks, at the end have all signal arrays in memory and write sequentially
+#No outlier elimination
+def readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, library_file_with_path, occupancy_type,verbose,chunksize = 10 ** 7):
+    chr2DataframeList={}
+    signal_array_dict = {}
+    signal_array_dict['max_signal'] = np.finfo(np.float32).min
+    signal_array_dict['min_signal'] = np.finfo(np.float32).max
+
+    wig_file_name_wo_extension = os.path.splitext(os.path.basename(library_file_with_path))[0]
+    chromSizesDict = getChromSizesDict(genome)
+
+    possible_chrom_list=list(chromSizesDict.keys())
+    if verbose: print('\tVerbose %s Worker pid %s chrom_list:%s' % (occupancy_type, str(os.getpid()), possible_chrom_list))
+
+    #To reduce memory footprint
+    # Delete old chr based epigenomics files
+    if occupancy_type==EPIGENOMICSOCCUPANCY:
+        chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+        deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
+
+    if os.path.exists(library_file_with_path):
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(numofProcesses)
+        jobs = []
+
+        #########################################################################################
+        def accumulate_apply_async_result(process_signal_array_dict):
+            if verbose: print('\tVerbose %s Worker pid %s Accumulate Apply Sync Result starts --- process_signal_array_dict.keys():%s' % (occupancy_type, str(os.getpid()), process_signal_array_dict.keys()))
+            update_min_max_array(process_signal_array_dict,signal_array_dict)
+            if verbose: print('\tVerbose %s Worker pid %s Accumulate Apply Sync Result ends --- process_signal_array_dict.keys():%s' % (occupancy_type, str(os.getpid()), process_signal_array_dict.keys()))
+        #########################################################################################
+
+        data=pd.read_csv(library_file_with_path, delimiter='\t', iterator=True, chunksize=chunksize)
+        if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data)))
+        if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(data):%s' %(occupancy_type, str(os.getpid()),sys.getsizeof(data)))
+        if verbose: print('\t################################')
+
+        for chunk_df in data:
+            print(type(chunk_df))
+            print(sys.getsizeof(chunk_df))
+            chunk_df.columns=[CHROM, START, END, SIGNAL]
+            chunk_df[CHROM] = chunk_df[CHROM].astype('category')
+            chunk_df[START] = chunk_df[START].astype(np.int32)
+            chunk_df[END] = chunk_df[END].astype(np.int32)
+            chunk_df[SIGNAL] = chunk_df[SIGNAL].astype(np.float32)
+            if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(chunk_df):%s' % (occupancy_type, str(os.getpid()), sys.getsizeof(chunk_df)))
+            if verbose: print('\t################################')
+
+            chunk_df = chunk_df[chunk_df[CHROM].isin(possible_chrom_list)]
+            chunk_df_grouped = chunk_df.groupby(CHROM)
+            for chrname, chrom_based_chunk_df in chunk_df_grouped:
+                if chrname in possible_chrom_list:
+                    append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList)
+
+        for chrname in chr2DataframeList:
+            chr_based_df_list=chr2DataframeList[chrname]
+            jobs.append(pool.apply_async(fill_signal_array_dict,args=(chrname,chr_based_df_list, chromSizesDict, occupancy_type, verbose,),callback=accumulate_apply_async_result))
+            if verbose: print('\tJOB chrName:%s chrom_based_chunk_df(%d,%d)' % (chrname, chrom_based_chunk_df.shape[0], chrom_based_chunk_df.shape[1]))
+
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+
+        pool.close()
+        pool.join()
+
+        if verbose: print('\n\tVerbose %s Worker pid %s library_file:%s min_signal:%f max_signal:%f' % (occupancy_type, str(os.getpid()), library_file_with_path, signal_array_dict['min_signal'], signal_array_dict['max_signal']))
+        if (occupancy_type == EPIGENOMICSOCCUPANCY):
+            os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
+        elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
+            os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED),exist_ok=True)
+
+        all_keys=set(signal_array_dict.keys())
+        chrom_keys=all_keys.difference(set(['min_signal','max_signal']))
+
+        if verbose: print('\tVerbose %s Worker pid %s  library_file:%s chrom_keys:%s\n' % (occupancy_type, str(os.getpid()), library_file_with_path,chrom_keys))
+
+        for key in chrom_keys:
+            signalArray=signal_array_dict[key]
             print('%s np.sum(signalArray,dtype=np.float32):%f' %(key,np.sum(signalArray,dtype=np.float32)))
             signalArrayFilename = '%s_signal_%s' %(key,wig_file_name_wo_extension)
             if (occupancy_type == EPIGENOMICSOCCUPANCY):

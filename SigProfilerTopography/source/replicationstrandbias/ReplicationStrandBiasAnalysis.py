@@ -53,10 +53,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import accumulate_si
 
 from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import DinucsSignature2PropertiesListDictFilename
-
 from SigProfilerTopography.source.commons.TopographyCommons import Type2ReplicationStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Signature2MutationType2ReplicationStrand2CountDict_Filename
 
@@ -217,7 +213,7 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
         simNum2Sample2Type2ReplicationStrand2CountDict,
         simNum2Type2Sample2ReplicationStrand2CountDict,
         simNum2Signature2MutationType2ReplicationStrand2CountDict,
-        signature2PropertiesListDict,
+        signature_cutoff_numberofmutations_averageprobability_df,
         type,
         sample_based):
 
@@ -259,7 +255,7 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
                                         simNum2Type2Sample2ReplicationStrand2CountDict,
                                         simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                         LAGGING,
-                                        signature2PropertiesListDict)
+                                        signature_cutoff_numberofmutations_averageprobability_df)
 
             updateDictionaries_simulations_integrated(mutation_row,
                                         mutationType,
@@ -270,7 +266,7 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
                                         simNum2Type2Sample2ReplicationStrand2CountDict,
                                         simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                         LEADING,
-                                        signature2PropertiesListDict)
+                                        signature_cutoff_numberofmutations_averageprobability_df)
 
 
         # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
@@ -290,7 +286,7 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
                                             simNum2Type2Sample2ReplicationStrand2CountDict,
                                             simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                             LEADING,
-                                            signature2PropertiesListDict)
+                                            signature_cutoff_numberofmutations_averageprobability_df)
 
                 # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
                 elif (slope*pyramidineStrand < 0):
@@ -303,7 +299,7 @@ def searchMutationOnReplicationStrandArray_simulations_integrated(
                                             simNum2Type2Sample2ReplicationStrand2CountDict,
                                             simNum2Signature2MutationType2ReplicationStrand2CountDict,
                                             LAGGING,
-                                            signature2PropertiesListDict)
+                                            signature_cutoff_numberofmutations_averageprobability_df)
         else:
             print('There is a situation!!!')
     #############################################################################################################
@@ -318,9 +314,9 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
     chrBased_simBased_dinucs_df,
     numofSimulations,
     sample_based,
-    subsSignature2PropertiesListDict,
-    indelsSignature2PropertiesListDict,
-    dinucsSignature2PropertiesListDict,
+    subsSignature_cutoff_numberofmutations_averageprobability_df,
+    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
     verbose):
 
     simNum2Type2ReplicationStrand2CountDict= {}
@@ -343,7 +339,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=subsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=SUBS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -360,7 +356,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=indelsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=INDELS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -376,7 +372,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=dinucsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=DINUCS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -400,9 +396,9 @@ def  searchMutationsOnReplicationStrandArray(inputList):
     chrBased_dinucs_split_df = inputList[3]
     numofSimulations = inputList[4]
     sample_based = inputList[5]
-    subsSignature2PropertiesListDict = inputList[6]
-    indelsSignature2PropertiesListDict = inputList[7]
-    dinucsSignature2PropertiesListDict = inputList[8]
+    subsSignature_cutoff_numberofmutations_averageprobability_df = inputList[6]
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = inputList[7]
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = inputList[8]
 
     simNum2Type2ReplicationStrand2CountDict= {}
     simNum2Sample2Type2ReplicationStrand2CountDict= {}
@@ -423,7 +419,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=subsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=SUBS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -438,7 +434,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=indelsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=INDELS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -452,7 +448,7 @@ def  searchMutationsOnReplicationStrandArray(inputList):
                                 simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
                                 simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
                                 simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature2PropertiesListDict=dinucsSignature2PropertiesListDict,
+                                signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                 type=DINUCS,
                                 sample_based=sample_based,
                                 axis=1)
@@ -579,7 +575,7 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 ########################################################################
 
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
@@ -660,9 +656,9 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                                                               chrBased_simBased_dinucs_df,
                                                                               numofSimulations,
                                                                               sample_based,
-                                                                              subsSignature2PropertiesListDict,
-                                                                              indelsSignature2PropertiesListDict,
-                                                                              dinucsSignature2PropertiesListDict,
+                                                                              subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                              indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                              dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                               verbose),callback=accumulate_apply_async_result)
                 ################################################################################
 
@@ -711,9 +707,9 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     inputList.append(chrBased_dinucs_df)  # different split each time
                     inputList.append(numofSimulations)
                     inputList.append(sample_based)
-                    inputList.append(subsSignature2PropertiesListDict)
-                    inputList.append(indelsSignature2PropertiesListDict)
-                    inputList.append(dinucsSignature2PropertiesListDict)
+                    inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
+                    inputList.append(indelsSignature_cutoff_numberofmutations_averageprobability_df)
+                    inputList.append(dinucsSignature_cutoff_numberofmutations_averageprobability_df)
 
                     poolInputList.append(inputList)
                 ################################################################################

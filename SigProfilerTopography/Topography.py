@@ -112,16 +112,15 @@ from SigProfilerTopography.source.commons.TopographyCommons import doesSimulatio
 from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
 from SigProfilerTopography.source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
 from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
-from SigProfilerTopography.source.commons.TopographyCommons import appendDictionaryUnderDataDirectory
 
-from SigProfilerTopography.source.commons.TopographyCommons import MutationType2NumberofMutatiosDictFilename
 from SigProfilerTopography.source.commons.TopographyCommons import readDictionary
 
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 
-from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import DinucsSignature2PropertiesListDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
@@ -139,7 +138,7 @@ from SigProfilerTopography.source.plotting.ProcessivityFigures import processivi
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
 #read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
-def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,startSimNum, endSimNum,partialDirname,PCAWG):
+def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,startSimNum, endSimNum,partialDirname,PCAWG,verbose):
 
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
@@ -155,15 +154,17 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         os.makedirs(os.path.join(outputDir, jobname, DATA,CHRBASED,simName), exist_ok=True)
 
     if (os.path.exists(mutations_probabilities_file_path)):
+
         ##########################################################################################
         mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path)
         ##########################################################################################
 
-        # print('mutations_probabilities_df.head()')
-        # print(mutations_probabilities_df.head())
+        if verbose:
+            print('mutations_probabilities_df.head()')
+            print(mutations_probabilities_df.head())
 
-        # print('mutations_probabilities_df.columns.values')
-        # print(mutations_probabilities_df.columns.values)
+            print('mutations_probabilities_df.columns.values')
+            print(mutations_probabilities_df.columns.values)
 
         ##########################################################################################
         #Step1 SigProfilerTopography Python Package
@@ -352,8 +353,11 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
 #######################################################
 
 #######################################################
-def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus,verbose):
+def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,
+                        subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                        computation_type,occupancy_type,plusorMinus,verbose):
 
+    #######################################################################
     #We have to exclude for Topography provided nucleosome occupancy files
     exclude_from_check=False
 
@@ -362,13 +366,14 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,
 
     if (not exclude_from_check) and (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
+    #######################################################################
 
-    occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
 #######################################################
 
 
 #######################################################
-def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path):
+def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
 
     #############################################
     # REPLICATIONTIME
@@ -385,14 +390,14 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_
 
     #Option2: Load offline prepared np arrays during runtime managby ed by replication_time_np_arrays_fill_runtime=False
     #Option2: Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
-    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path)
+    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
     ###############################################
 
 #######################################################
 
 
 #######################################################
-def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     ###############################################
     # REPLICATIONSTRANDBIAS
@@ -411,13 +416,13 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
     valleysBEDFilename = replicationTimeValleyFilename
     peaksBEDFilename = replicationTimePeakFilename
 
-    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose):
+def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     ###############################################
     # TRANSCRIPTIONSTRANDBIAS
     # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
@@ -431,13 +436,13 @@ def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_
             print('Error: %s - %s.' % (e.filename, e.strerror))
     ################################################
 
-    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
+    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 #######################################################
 
 
 #######################################################
-def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,signature2PropertiesListDict,verbose):
+def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     ###############################################
     # PROCESSIVITY
     # Delete the output/jobname/DATA/PROCESSIVITY if exists
@@ -455,7 +460,7 @@ def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimul
     considerProbabilityInProcessivityAnalysis = True
     # considerProbabilityInProcessivityAnalysis = False
     # computation_type=USING_APPLY_ASYNC
-    processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,signature2PropertiesListDict,verbose)
+    processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 #######################################################
 
@@ -531,20 +536,26 @@ def runAnalyses(genome,
                 strand_bias=False,
                 processivity=False,
                 sample_based=False,
-                new_simulations_enforced=True,
                 plot_figures=True,
                 full_mode=True,
-                necessary_dictionaries_already_exists=False,
+                sim_data_ready=False,
+                matgen_data_ready=False,
+                prob_merged_data_ready=False,
+                tables_ready=False,
                 average_probability=0.9,
                 num_of_sbs_required=5000,
                 num_of_id_required=1000,
                 num_of_dbs_required=200,
-                plusorMinus_epigenomics=2000,
+                plusorMinus_epigenomics=1000,
                 plusorMinus_nucleosome=1000,
                 verbose=False,
                 matrix_generator_path=MATRIX_GENERATOR_PATH,
                 PCAWG=False,
-                DATA_IS_READY_PLOT_FIGURES=False):
+                data_is_ready_plot_epigenomics=False,
+                data_is_ready_plot_nucleosome=False,
+                data_is_ready_plot_replication_time=False,
+                data_is_ready_plot_strand_bias=False,
+                data_is_ready_plot_processivity=False):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -562,13 +573,22 @@ def runAnalyses(genome,
     chromShortNamesList=getShortNames(chromNamesList)
 
     ###################################################
+    # if mutation_types_contexts is None:
+    #     mutation_types_contexts=[]
+    #     if (sbs_probabilities is not None) and (os.path.exists(sbs_probabilities)):
+    #         mutation_types_contexts.append(SBS96)
+    #     if (id_probabilities is not None) and (os.path.exists(id_probabilities)):
+    #         mutation_types_contexts.append(ID)
+    #     if (dbs_probabilities is not None) and (os.path.exists(dbs_probabilities)):
+    #         mutation_types_contexts.append(DBS)
+
     if mutation_types_contexts is None:
         mutation_types_contexts=[]
-        if (sbs_probabilities is not None) and (os.path.exists(sbs_probabilities)):
+        if (sbs_probabilities is not None):
             mutation_types_contexts.append(SBS96)
-        if (id_probabilities is not None) and (os.path.exists(id_probabilities)):
+        if (id_probabilities is not None):
             mutation_types_contexts.append(ID)
-        if (dbs_probabilities is not None) and (os.path.exists(dbs_probabilities)):
+        if (dbs_probabilities is not None):
             mutation_types_contexts.append(DBS)
     ###################################################
 
@@ -605,10 +625,18 @@ def runAnalyses(genome,
     print('--- inputDir:%s' %inputDir)
     print('--- outputDir:%s' %outputDir)
     print('--- jobname:%s' %jobname)
+    if (sbs_probabilities is not None):
+        print('--- sbs_probabilities:%s' %sbs_probabilities)
+    if (dbs_probabilities is not None):
+        print('--- dbs_probabilities:%s' %dbs_probabilities)
+    if (id_probabilities is not None):
+        print('--- id_probabilities:%s' %id_probabilities)
+
     print('--- numofSimulations:%d' %numofSimulations)
     print('--- epigenomics_files:%s' %epigenomics_files)
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples)
+    print('--- number of epigenomics_files:%d' %len(epigenomics_files))
 
     print('--- nucleosome_biosample:%s' %nucleosome_biosample)
     print('--- nucleosome_file:%s' % nucleosome_file)
@@ -642,7 +670,6 @@ def runAnalyses(genome,
             print('--- Strand Bias Analysis.')
         if processivity:
             print('--- Processivity Analysis.')
-    print('--- new_simulations_enforced:%s' %new_simulations_enforced)
     print('--- plot_figures:%s' %plot_figures)
     print('--- average mutation probability required %0.2f' %average_probability)
     print('--- minimum number of sbs mutations required: %d' %num_of_sbs_required)
@@ -669,96 +696,15 @@ def runAnalyses(genome,
     print('#################################################################################\n')
     #################################################################################
 
-    #######################################################################################################
-    #####################################  Full mode starts ###############################################
-    #######################################################################################################
-    if (full_mode==True):
 
-        ###################################################################################################
-        #######################  SigProfilerMatrixGenerator for original data starts ######################
-        ###################################################################################################
-        # Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
-        print('#################################################################################')
-        print('--- SigProfilerMatrixGenerator for original data')
-        start_time = time.time()
-
-        print('For original data inputDir:%s' % (inputDir))
-        matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=True)
-        # print('matrices')
-        # print(matrices)
-
-        # original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
-        # original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
-        # original matrix generator chrbased data will be under inputDir/output/vcf_files/ID
-
-        print("--- SigProfilerMatrixGenerator for original data: %s seconds ---" % (time.time() - start_time))
-        print("--- SigProfilerMatrixGenerator for original data: %f minutess ---" % float((time.time() - start_time) / 60))
-        print('#################################################################################\n')
-        ###################################################################################################
-        #######################  SigProfilerMatrixGenerator for original data ends ########################
-        ###################################################################################################
-
-        ####################################################################################################################
-        ##################  Merge original chr based files with Mutation Probabilities starts ##############################
-        ####################################################################################################################
-        print('#################################################################################')
-        print('--- Merge original chr based files with Mutation Probabilities starts')
-        print('#################################################################################')
-        startSimNum = 0
-        endSimNum = 0
-        start_time = time.time()
-        # SBS
-        for mutation_type_context in mutation_types_contexts:
-            if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
-                print('--- Merge %s mutations with probabilities for %s' % (
-                mutation_type_context, sbs_probabilities))
-                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir,
-                                                                                   outputDir,
-                                                                                   jobname, mutation_type_context,
-                                                                                   sbs_probabilities,
-                                                                                   startSimNum,
-                                                                                   endSimNum, SNV,PCAWG)
-
-        # ID
-        if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
-            print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
-            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                               jobname, ID, id_probabilities,
-                                                                               startSimNum, endSimNum, ID,PCAWG)
-
-        # DBS
-        if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
-            print('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities))
-            prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                               jobname, DBS,
-                                                                               dbs_probabilities,
-                                                                               startSimNum, endSimNum, DBS,PCAWG)
-
-        print("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))
-        print("--- Merge original chr based files with Mutation Probabilities: %f minutes" % (float((time.time() - start_time) / 60)))
-        print('--- Merge original chr based files with Mutation Probabilities ends')
-        print('#################################################################################\n')
-        ####################################################################################################################
-        ##################  Merge original chr based files with Mutation Probabilities ends ################################
-        ####################################################################################################################
-
+    ###################################################################################################################
+    ################################################# Full Mode starts ################################################
+    ###################################################################################################################
+    if full_mode:
         ###################################################################################################################
+        ################################## First simulations if any starts ################################################
         ###################################################################################################################
-        ###################################################################################################################
-        existsSimulations= doesSimulationsAlreadyExists(outputDir,jobname,numofSimulations)
-
-        if existsSimulations:
-            print('#################################################################################')
-            print('--- %d simulations already exists' %(numofSimulations))
-            if new_simulations_enforced:
-                print('--- new_simulations_enforced:%s' %(new_simulations_enforced))
-                print('--- New simulations will be generated')
-            else:
-                print('--- new_simulations_enforced:%s' %(new_simulations_enforced))
-                print('--- Existing simulations will be used')
-            print('#################################################################################\n')
-
-        if ((numofSimulations>0) and ((new_simulations_enforced) or (not existsSimulations))):
+        if ((numofSimulations > 0) and (not sim_data_ready)):
 
             ###################################################################################################
             ############################  SigProfilerSimulator for n simulations starts #######################
@@ -776,7 +722,7 @@ def runAnalyses(genome,
                 mutation_type_context_for_simulator.append(mutation_type_context)
                 # Please notice that Simulator reverse the given input mutationTypes_for_simulator
                 print('--- SigProfilerSimulator is running for %s' %(mutation_type_context))
-                simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,simulations=numofSimulations,chrom_based=True)
+                simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,simulations=numofSimulations,chrom_based=True, gender='male')
 
             print("--- SigProfilerSimulator for %d simulations: %s seconds" %(numofSimulations,(time.time() -  start_time)))
             print("--- SigProfilerSimulator for %d simulations: %f minutes" %(numofSimulations,float((time.time()-start_time)/60)))
@@ -786,219 +732,325 @@ def runAnalyses(genome,
             ############################  SigProfilerSimulator for n simulations ends #########################
             ###################################################################################################
 
+        ###################################################################################################################
+        ################################## First simulations if any ends ##################################################
+        ###################################################################################################################
+
+
+        ###################################################################################################################
+        ################################## Second Matrix Generator starts #################################################
+        ###################################################################################################################
+        if (not matgen_data_ready):
+
             ###################################################################################################
-            ########################### Create simN directories for MatrixGenerator starts ####################
+            #######################  SigProfilerMatrixGenerator for original data starts ######################
             ###################################################################################################
+            # Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
             print('#################################################################################')
-            print('--- Create directories for %d simulations under inputDir/output/simulations/' %(numofSimulations))
+            print('--- SigProfilerMatrixGenerator for original data')
             start_time = time.time()
-            #Create directories sim1 to SimN under inputDir/output/simulations/
-            access_rights = 0o755
-            for simNum in range(1,numofSimulations+1):
-                try:
-                    simName = 'sim%d' %(simNum)
-                    simDir = os.path.join(inputDir,'output','simulations',simName)
-                    if (not os.path.exists(simDir)):
-                        os.mkdir(simDir, access_rights)
-                    for mutation_type_context in mutation_types_contexts:
-                        simDir = os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+
+            print('For original data inputDir:%s' % (inputDir))
+            matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=True)
+            # print('matrices')
+            # print(matrices)
+
+            # original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
+            # original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
+            # original matrix generator chrbased data will be under inputDir/output/vcf_files/ID
+
+            print("--- SigProfilerMatrixGenerator for original data: %s seconds ---" % (time.time() - start_time))
+            print("--- SigProfilerMatrixGenerator for original data: %f minutess ---" % float((time.time() - start_time) / 60))
+            print('#################################################################################\n')
+            ###################################################################################################
+            #######################  SigProfilerMatrixGenerator for original data ends ########################
+            ###################################################################################################
+
+            if (numofSimulations > 0):
+                ###################################################################################################
+                ########################### Create simN directories for MatrixGenerator starts ####################
+                ###################################################################################################
+
+                print('#################################################################################')
+                print('--- Create directories for %d simulations under inputDir/output/simulations/' %(numofSimulations))
+                start_time = time.time()
+                #Create directories sim1 to SimN under inputDir/output/simulations/
+                access_rights = 0o755
+                for simNum in range(1,numofSimulations+1):
+                    try:
+                        simName = 'sim%d' %(simNum)
+                        simDir = os.path.join(inputDir,'output','simulations',simName)
                         if (not os.path.exists(simDir)):
                             os.mkdir(simDir, access_rights)
-                except OSError:
-                    print("Creation of the directory %s failed" %simDir)
-                else:
-                    print("Successfully created the directory %s" %simDir)
+                        for mutation_type_context in mutation_types_contexts:
+                            simDir = os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+                            if (not os.path.exists(simDir)):
+                                os.mkdir(simDir, access_rights)
+                    except OSError:
+                        print("Creation of the directory %s failed" %simDir)
+                    else:
+                        print("Successfully created the directory %s" %simDir)
 
-            for mutation_type_context in mutation_types_contexts:
-                # Simulator creates one maf file for each simulation for each mutation context
-                # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_96
-                # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_ID
-                # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_DBS
-                dirName = '%s_simulations_%s_%s' %(jobname, genome,mutation_type_context)
-                copyFromDir = os.path.join(inputDir,'output','simulations',dirName)
-                copyToMainDir= os.path.join(inputDir,'output','simulations')
-
-                # Topography copies these maf files  to inputDir/output/simulations/simX/mutation_type_context/X.maf
-                copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numofSimulations)
-            print("--- Create directories and copy files: %s seconds ---" %(time.time()-start_time))
-            print("--- Create directories and copy files: %f minutes ---" %(float((time.time()-start_time)/60)))
-            print('#################################################################################\n')
-            ###################################################################################################
-            ########################### Create simN directories for MatrixGenerator ends ######################
-            ###################################################################################################
-
-            ###################################################################################################
-            #Important note: Separate directory creation is necessary for Matrix Generator
-            #inputDir/output/simulations/simX/96/X.maf
-            #inputDir/output/simulations/simX/ID/X.maf
-            #inputDir/output/simulations/simX/DBS/X.maf
-
-            #enables MatrixGenerator to create chr based simulated data files under
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/96/output/vcf_files/SNV
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/ID/output/vcf_files/ID
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/DBS/output/vcf_files/DBS
-
-            #otherwise all simulations maf files will be under
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_96
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_DBS
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_ID
-
-            #Therefore running MatrixGenerator for each simulation will not be possible.
-            ###################################################################################################
-
-            ###################################################################################################
-            ####################### Run MatrixGenerator for each simulation starts ############################
-            ###################################################################################################
-            print('#################################################################################')
-            print('--- Run SigProfilerMatrixGenerator for each simulation starts')
-            start_time = time.time()
-            for simNum in range(1,numofSimulations+1):
-                simName = 'sim%d' %(simNum)
-                #For each simulation we are calling matrix generator separately for each mutation type context
-
-                print('--- SigProfilerMatrixGenerator is run for %s starts' %(simName))
                 for mutation_type_context in mutation_types_contexts:
-                    simInputDir=  os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
-                    print('For %s: %s simInputDir:%s' %(mutation_type_context,simName,simInputDir))
-                    matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=True)
-                    # print('matrices')
-                    # print(matrices)
-                    print('#####################################')
-                print('--- SigProfilerMatrixGenerator is run for %s ends\n' % (simName))
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
+                    # Simulator creates one maf file for each simulation for each mutation context
+                    # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_96
+                    # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_ID
+                    # Simulator creates maf files under inputDir/output/simulations/jobname_simulations_GRCh37_DBS
+                    dirName = '%s_simulations_%s_%s' %(jobname, genome,mutation_type_context)
+                    copyFromDir = os.path.join(inputDir,'output','simulations',dirName)
+                    copyToMainDir= os.path.join(inputDir,'output','simulations')
 
-            #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/96/output/vcf_files/SNV
-            #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/ID/output/vcf_files/ID
-            #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/DBS/output/vcf_files/DBS
-            print("--- Run MatrixGenerator for each simulation: %s seconds" %(time.time()-start_time))
-            print("--- Run MatrixGenerator for each simulation: %f minutes" %(float((time.time()-start_time)/60)))
-            print('--- Run SigProfilerMatrixGenerator for each simulation ends')
-            print('#################################################################################\n')
-            ###################################################################################################
-            ####################### Run MatrixGenerator for each simulation ends ##############################
-            ###################################################################################################
+                    # Topography copies these maf files  to inputDir/output/simulations/simX/mutation_type_context/X.maf
+                    copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numofSimulations)
+                print("--- Create directories and copy files: %s seconds ---" %(time.time()-start_time))
+                print("--- Create directories and copy files: %f minutes ---" %(float((time.time()-start_time)/60)))
+                print('#################################################################################\n')
 
+                ###################################################################################################
+                ########################### Create simN directories for MatrixGenerator ends ######################
+                ###################################################################################################
+
+                ###################################################################################################
+                #Important note: Separate directory creation is necessary for Matrix Generator
+                #inputDir/output/simulations/simX/96/X.maf
+                #inputDir/output/simulations/simX/ID/X.maf
+                #inputDir/output/simulations/simX/DBS/X.maf
+
+                #enables MatrixGenerator to create chr based simulated data files under
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/96/output/vcf_files/SNV
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/ID/output/vcf_files/ID
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/DBS/output/vcf_files/DBS
+
+                #otherwise all simulations maf files will be under
+                #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_96
+                #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_DBS
+                #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_ID
+
+                #Then running MatrixGenerator for each simulation will not be possible.
+                ###################################################################################################
+
+                ###################################################################################################
+                ####################### Run MatrixGenerator for each simulation starts ############################
+                ###################################################################################################
+                print('#################################################################################')
+                print('--- Run SigProfilerMatrixGenerator for each simulation starts')
+                start_time = time.time()
+                for simNum in range(1,numofSimulations+1):
+                    simName = 'sim%d' %(simNum)
+                    #For each simulation we are calling matrix generator separately for each mutation type context
+
+                    print('--- SigProfilerMatrixGenerator is run for %s starts' %(simName))
+                    for mutation_type_context in mutation_types_contexts:
+                        simInputDir=  os.path.join(inputDir,'output','simulations',simName,mutation_type_context)
+                        print('For %s: %s simInputDir:%s' %(mutation_type_context,simName,simInputDir))
+                        matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=True)
+                        # print('matrices')
+                        # print(matrices)
+                        print('#####################################')
+                    print('--- SigProfilerMatrixGenerator is run for %s ends\n' % (simName))
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
+                #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
+
+                #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/96/output/vcf_files/SNV
+                #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/ID/output/vcf_files/ID
+                #simN matrix generator chrbased data will be under inputDir/output/simulations/simN/DBS/output/vcf_files/DBS
+                print("--- Run MatrixGenerator for each simulation: %s seconds" %(time.time()-start_time))
+                print("--- Run MatrixGenerator for each simulation: %f minutes" %(float((time.time()-start_time)/60)))
+                print('--- Run SigProfilerMatrixGenerator for each simulation ends')
+                print('#################################################################################\n')
+                ###################################################################################################
+                ####################### Run MatrixGenerator for each simulation ends ##############################
+                ###################################################################################################
+
+        ###################################################################################################################
+        ################################## Second Matrix Generator ends ###################################################
+        ###################################################################################################################
+
+
+        ###################################################################################################################
+        ###########  Third Merge chrom based matrix generator generated files with probabilities starts ###################
+        ###################################################################################################################
+
+        if (not prob_merged_data_ready):
             ####################################################################################################################
-            ##################  Merge simulations chr based files with Mutation Probabilities starts ###########################
+            ##################  Merge original chr based files with Mutation Probabilities starts ##############################
             ####################################################################################################################
             print('#################################################################################')
-            print('--- Merge simulations chr based files with Mutation Probabilities starts')
+            print('--- Merge original chr based files with Mutation Probabilities starts')
             print('#################################################################################')
-            startSimNum=1
-            endSimNum=numofSimulations
+            startSimNum = 0
+            endSimNum = 0
             start_time = time.time()
-            #SBS
+            # SBS
             for mutation_type_context in mutation_types_contexts:
                 if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
-                    print('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities))
-                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities,startSimNum,endSimNum,'SNV',PCAWG)
+                    print('--- Merge %s context mutations with probabilities for %s' % (
+                    mutation_type_context, sbs_probabilities))
+                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir,
+                                                                                       outputDir,
+                                                                                       jobname, mutation_type_context,
+                                                                                       sbs_probabilities,
+                                                                                       startSimNum,
+                                                                                       endSimNum, SNV,PCAWG,verbose)
 
-            #ID
+            # ID
             if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
                 print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
-                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities,startSimNum,endSimNum,'ID',PCAWG)
+                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
+                                                                                   jobname, ID, id_probabilities,
+                                                                                   startSimNum, endSimNum, ID,PCAWG,verbose)
 
-            #DBS
+            # DBS
             if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
-                print('--- Merge %s mutations with probabilities for %s' % (DBS,dbs_probabilities))
-                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dbs_probabilities,startSimNum,endSimNum,'DBS',PCAWG)
+                print('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities))
+                prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
+                                                                                   jobname, DBS,
+                                                                                   dbs_probabilities,
+                                                                                   startSimNum, endSimNum, DBS,PCAWG,verbose)
 
-            print("--- Merge simulations chr based files with Mutation Probabilities: %s seconds" %(time.time()-start_time))
-            print("--- Merge simulations chr based files with Mutation Probabilities: %f minutes" %(float((time.time()-start_time)/60)))
-            print('--- Merge simulations chr based files with Mutation Probabilities ends')
+            print("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))
+            print("--- Merge original chr based files with Mutation Probabilities: %f minutes" % (float((time.time() - start_time) / 60)))
+            print('--- Merge original chr based files with Mutation Probabilities ends')
             print('#################################################################################\n')
             ####################################################################################################################
-            ##################  Merge simulations chr based files with Mutation Probabilities ends #############################
+            ##################  Merge original chr based files with Mutation Probabilities ends ################################
             ####################################################################################################################
 
-    #######################################################################################################
-    #####################################  Full mode ends ###############################################
-    #######################################################################################################
+            if (numofSimulations > 0):
+                ####################################################################################################################
+                ##################  Merge simulations chr based files with Mutation Probabilities starts ###########################
+                ####################################################################################################################
+                print('#################################################################################')
+                print('--- Merge simulations chr based files with Mutation Probabilities starts')
+                print('#################################################################################')
+                startSimNum=1
+                endSimNum=numofSimulations
+                start_time = time.time()
+                #SBS
+                for mutation_type_context in mutation_types_contexts:
+                    if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
+                        print('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities))
+                        prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities,startSimNum,endSimNum,'SNV',PCAWG,verbose)
+
+                #ID
+                if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
+                    print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
+                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities,startSimNum,endSimNum,'ID',PCAWG,verbose)
+
+                #DBS
+                if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
+                    print('--- Merge %s mutations with probabilities for %s' % (DBS,dbs_probabilities))
+                    prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'DBS',dbs_probabilities,startSimNum,endSimNum,'DBS',PCAWG,verbose)
+
+                print("--- Merge simulations chr based files with Mutation Probabilities: %s seconds" %(time.time()-start_time))
+                print("--- Merge simulations chr based files with Mutation Probabilities: %f minutes" %(float((time.time()-start_time)/60)))
+                print('--- Merge simulations chr based files with Mutation Probabilities ends')
+                print('#################################################################################\n')
+                ####################################################################################################################
+                ##################  Merge simulations chr based files with Mutation Probabilities ends #############################
+                ####################################################################################################################
+
+        ###################################################################################################################
+        ###########  Third Merge chrom based matrix generator generated files with probabilities ends #####################
+        ###################################################################################################################
 
 
-    #######################################################################################################
-    #######################################################################################################
-    #######################################################################################################
-    if (necessary_dictionaries_already_exists):
-        print('necessary_dictionaries_already_exists:%s' %(necessary_dictionaries_already_exists))
-        subsSignature2PropertiesListDict=readDictionary(os.path.join(outputDir,jobname,DATA,SubsSignature2PropertiesListDictFilename))
-        indelsSignature2PropertiesListDict= readDictionary(os.path.join(outputDir,jobname,DATA,IndelsSignature2PropertiesListDictFilename))
-        dinucsSignature2PropertiesListDict=readDictionary(os.path.join(outputDir,jobname,DATA,DinucsSignature2PropertiesListDictFilename))
-    else:
-        #################################################################################
-        print('#################################################################################')
-        print('--- Fill dictionaries using original data starts')
-        ##################################################################################
-        # For each signature we will find a cutoff value for mutations with average probability >=0.9
-        # Our aim is to have at most 10% false positive rate in mutations
-        # number of mutations >= 5K for subs signatures
-        # number of mutations >= 1K for indels signatures
-        # number of mutations >= 200 for dinuc signatures
-        # If we can not satisfy this condition we will discard the signature
+        #######################################################################################################
+        ################################### Fourth Fill Table Starts ##########################################
+        #######################################################################################################
+        if (not tables_ready):
+            #################################################################################
+            print('#################################################################################')
+            print('--- Fill tables/dictionaries using original data starts')
+            ##################################################################################
+            # For each signature we will find a cutoff value for mutations with average probability >=0.9
+            # Our aim is to have at most 10% false positive rate in mutations
+            # number of mutations >= 5K for subs signatures
+            # number of mutations >= 1K for indels signatures
+            # number of mutations >= 200 for dinuc signatures
+            # If we can not satisfy this condition we will discard the signature
 
-        cutoffs = []
-        for cufoff in np.arange(0.5, 0.91, 0.01):
-            cutoffs.append("%.2f" % (cufoff))
-
-        # We are reading original data to fill the signature2PropertiesListDict
-        subsSignature2PropertiesListDict = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                         chromNamesList, SUBS, cutoffs,
-                                                                                         average_probability,
-                                                                                         num_of_sbs_required,
-                                                                                         num_of_id_required,
-                                                                                         num_of_dbs_required)
-        indelsSignature2PropertiesListDict = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                           chromNamesList, INDELS,
-                                                                                           cutoffs, average_probability,
-                                                                                           num_of_sbs_required,
-                                                                                           num_of_id_required,
-                                                                                           num_of_dbs_required)
-        dinucsSignature2PropertiesListDict = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                           chromNamesList, DINUCS,
-                                                                                           cutoffs, average_probability,
-                                                                                           num_of_sbs_required,
-                                                                                           num_of_id_required,
-                                                                                           num_of_dbs_required)
-        ##################################################################################
-
-        ##################################################################################
-        # We are reading original data again to fill the mutationType based, sample based and signature based dictionaries
-        if sample_based:
-            # Create files
-            # createFiles(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
+            cutoffs = []
+            for cufoff in np.arange(0.5, 0.91, 0.01):
+                cutoffs.append("%.2f" % (cufoff))
 
             # Initialize
             mutationType2NumberofMutationsDict = {}
 
-            # Using original data
-            fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SUBS,
-                                              mutationType2NumberofMutationsDict,
-                                              subsSignature2PropertiesListDict, num_of_sbs_required, num_of_id_required,
-                                              num_of_dbs_required)
-            fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, INDELS,
-                                              mutationType2NumberofMutationsDict,
-                                              indelsSignature2PropertiesListDict, num_of_sbs_required,
-                                              num_of_id_required,
-                                              num_of_dbs_required)
-            fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
-                                              mutationType2NumberofMutationsDict,
-                                              dinucsSignature2PropertiesListDict, num_of_sbs_required,
-                                              num_of_id_required,
-                                              num_of_dbs_required)
+            # We are reading original data to fill the signature2PropertiesListDict
+            subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
+                                                                                             chromNamesList, SUBS, cutoffs,
+                                                                                             average_probability,
+                                                                                             num_of_sbs_required,
+                                                                                             num_of_id_required,
+                                                                                             num_of_dbs_required,
+                                                                                             mutationType2NumberofMutationsDict)
+            indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
+                                                                                               chromNamesList, INDELS,
+                                                                                               cutoffs, average_probability,
+                                                                                               num_of_sbs_required,
+                                                                                               num_of_id_required,
+                                                                                               num_of_dbs_required,
+                                                                                               mutationType2NumberofMutationsDict)
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
+                                                                                               chromNamesList, DINUCS,
+                                                                                               cutoffs, average_probability,
+                                                                                               num_of_sbs_required,
+                                                                                               num_of_id_required,
+                                                                                               num_of_dbs_required,
+                                                                                               mutationType2NumberofMutationsDict)
 
-            # We are writing number of mutations for each mutation type.
-            # e.g.: {"SUBS": 3982196, "INDELS": 234731}
-            appendDictionaryUnderDataDirectory(mutationType2NumberofMutationsDict, outputDir, jobname,MutationType2NumberofMutatiosDictFilename)
-        ##################################################################################
-        print('--- Fill dictionaries using original data ends')
-        print('#################################################################################\n')
-        #################################################################################
+            ####################################################################
+            # Write dictionary as a dataframe starts
+            filePath = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_Filename)
 
-    #######################################################################################################
-    #######################################################################################################
-    #######################################################################################################
+            L = sorted([(mutation_type, number_of_mutations)
+                        for mutation_type, number_of_mutations in mutationType2NumberofMutationsDict.items()])
+            df = pd.DataFrame(L, columns=['mutation_type', 'number_of_mutations'])
+
+            # write this dataframe
+            df.to_csv(filePath, sep='\t', header=True, index=False)
+            # Write dictionary as a dataframe ends
+            ####################################################################
+
+            ##################################################################################
+
+            ##################################################################################
+            # We are reading original data again to fill the mutationType based, sample based and signature based dictionaries
+            if sample_based:
+                # Create files
+                # createFiles(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
+
+                # Using original data
+                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SUBS,
+                                                  subsSignature_cutoff_numberofmutations_averageprobability_df, num_of_sbs_required, num_of_id_required,
+                                                  num_of_dbs_required)
+                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, INDELS,
+                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df, num_of_sbs_required,
+                                                  num_of_id_required,
+                                                  num_of_dbs_required)
+                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
+                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df, num_of_sbs_required,
+                                                  num_of_id_required,
+                                                  num_of_dbs_required)
+
+            ##################################################################################
+            print('--- Fill tables/dictionaries using original data ends')
+            print('#################################################################################\n')
+            #################################################################################
+
+        else:
+            subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t',header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+        #######################################################################################################
+        ################################### Fourth Fill Table Ends ############################################
+        #######################################################################################################
+
+    ###################################################################################################################
+    ################################################# Full Mode ends ##################################################
+    ###################################################################################################################
 
 
     #################################################################################
@@ -1027,7 +1079,7 @@ def runAnalyses(genome,
     # Here we set filename with extension not full path
     #There can be 2 cases:
     #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
-    #Case 2 : nucleosome_biosample is not an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
+    #Case 2 : nucleosome_biosample is NOT an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
 
     #Case1: nucleosome_biosample is not None, nucleosome_file is a filename without fullpath
     if (nucleosome_biosample in available_nucleosome_biosamples):
@@ -1059,6 +1111,64 @@ def runAnalyses(genome,
     ####################################################################################################################
     print('#################################################################################')
     print('--- Run SigProfilerTopography Analysis starts')
+
+    if (nucleosome):
+        #Nucleosome Occupancy
+        occupancy_type = NUCLEOSOMEOCCUPANCY
+        deleteOldData(outputDir,jobname,occupancy_type)
+
+        #For using SigProfilerTopography Nucleosme Files
+        if nucleosome_biosample in available_nucleosome_biosamples:
+            check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList)
+
+        start_time = time.time()
+        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,plusorMinus_nucleosome,verbose)
+        print('#################################################################################')
+        print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
+        print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),nucleosome_file))
+        print('#################################################################################\n')
+
+    if (replication_time):
+        # Replication Time
+        # Required genome is already downloaded by matrix generator
+
+        #For using SigProfilerTopography Provided Replication Time Files
+        if replication_time_biosample in available_replication_time_biosamples:
+            check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file)
+
+        start_time = time.time()
+        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
+        print('#################################################################################')
+        print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        print('#################################################################################\n')
+
+    if (strand_bias):
+        # Replication Strand Bias
+        start_time = time.time()
+        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+        print('#################################################################################')
+        print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        print('#################################################################################\n')
+
+        # Transcription Strand Bias
+        start_time = time.time()
+        runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+        print('#################################################################################')
+        print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
+        print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
+        print('#################################################################################\n')
+
+    if (processivity):
+        # Processivity
+        start_time = time.time()
+        runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+        print('#################################################################################')
+        print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
+        print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
+        print('#################################################################################\n')
+
     if (epigenomics):
         #Epigenomics
         occupancy_type=EPIGENOMICSOCCUPANCY
@@ -1076,7 +1186,7 @@ def runAnalyses(genome,
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
                 epigenomics_file_memos_created.append(epigenomics_file_memo)
 
-            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_epigenomics,verbose)
+            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,plusorMinus_epigenomics,verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))
             print("--- Run Epigenomics Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),epigenomics_file))
@@ -1089,65 +1199,7 @@ def runAnalyses(genome,
         if (epigenomics_biosamples is None) or (len(epigenomics_biosamples)==0):
             epigenomics_biosamples=[BIOSAMPLE_UNDECLARED]
 
-    if (nucleosome):
-        #Nucleosome Occupancy
-        occupancy_type = NUCLEOSOMEOCCUPANCY
-        deleteOldData(outputDir,jobname,occupancy_type)
-
-        #For using SigProfilerTopography Nucleosme Files
-        if nucleosome_biosample in available_nucleosome_biosamples:
-            check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList)
-
-        start_time = time.time()
-        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,computation_type,occupancy_type,plusorMinus_nucleosome,verbose)
-        print('#################################################################################')
-        print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
-        print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),nucleosome_file))
-        print('#################################################################################\n')
-
-    if (replication_time):
-        # Replication Time
-        # Required genome is already downloaded by matrix generator
-
-        #For using SigProfilerTopography Provided Replication Time Files
-        if replication_time_biosample in available_replication_time_biosamples:
-            check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file)
-
-        start_time = time.time()
-        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path)
-        print('#################################################################################')
-        print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-        print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
-        print('#################################################################################\n')
-
-    if (strand_bias):
-
-        # Replication Strand Bias
-        start_time = time.time()
-        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
-        print('#################################################################################')
-        print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-        print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
-        print('#################################################################################\n')
-
-        # Transcription Strand Bias
-        start_time = time.time()
-        runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromSizesDict,chromNamesList,computation_type,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose)
-        print('#################################################################################')
-        print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
-        print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
-        print('#################################################################################\n')
-
-    if (processivity):
-        # Processivity
-        start_time = time.time()
-        #TODO shall we consider only the signatures in subsSignature2PropertiesListDict?
-        runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature2PropertiesListDict,verbose)
-        print('#################################################################################')
-        print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
-        print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
-        print('#################################################################################\n')
-
+    print('--- Run SigProfilerTopography Analysis ends')
     print('#################################################################################\n')
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis ends ########################################
@@ -1160,9 +1212,7 @@ def runAnalyses(genome,
         print('#################################################################################')
         print('--- Plot figures starts')
         start_time = time.time()
-        # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_ONE_SAMPLE_TTEST')
-        # plotFigures(outputDir, jobname, numofSimulations, 'BONFERRONI_CORRECTION', 'USING_NULL_DISTRIBUTION')
-        plotFigures(outputDir, jobname, numofSimulations, sample_based,'USING_ZSCORE', 'USING_ZSCORE',mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,DATA_IS_READY_PLOT_FIGURES)
+        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1183,13 +1233,8 @@ def runAnalyses(genome,
 
 
 ##############################################################
-# BONFERRONI_CORRECTION = 'BONFERRONI_CORRECTION'
-# FDR_BH_CORRECTION = 'FDR_BH_CORRECTION'
-# USING_POISSON_DISTRIBUTION = 'USING_POISSON_DISTRIBUTION'
-# USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
-# USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,sample_based,multipleTesting,probabilityCalculation,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,DATA_IS_READY_PLOT_FIGURES):
+def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity):
 
     #Internally Set
     figureAugmentation = 'noaugmentation'
@@ -1206,7 +1251,30 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,multipleTesti
     ############################################################
 
     ############################################################
-    if (epigenomics or DATA_IS_READY_PLOT_FIGURES):
+    if (nucleosome or data_is_ready_plot_nucleosome):
+        occupancy_type=NUCLEOSOMEOCCUPANCY
+        deleteOldFigures(outputDir, jobname, occupancy_type)
+        nucleosome_file_basename = os.path.basename(nucleosome_file)
+        occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose)
+    ############################################################
+
+    ############################################################
+    if (replication_time or data_is_ready_plot_replication_time):
+        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes)
+    ############################################################
+
+    ############################################################
+    if (strand_bias or data_is_ready_plot_strand_bias):
+        transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
+    ############################################################
+
+    ############################################################
+    if (processivity or data_is_ready_plot_processivity):
+        processivityFigures(outputDir,jobname,numberofSimulations)
+    ############################################################
+
+    ############################################################
+    if (epigenomics or data_is_ready_plot_epigenomics):
         occupancy_type=EPIGENOMICSOCCUPANCY
         deleteOldFigures(outputDir, jobname, occupancy_type)
 
@@ -1217,19 +1285,7 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,multipleTesti
             epigenomics_file_memo= epigenomics_files_memos[idx]
             occupancyAverageSignalFigures(outputDir, jobname, figureAugmentation, numberofSimulations,sample_based, mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose)
 
-        plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type)
-
-    if (nucleosome or DATA_IS_READY_PLOT_FIGURES):
-        occupancy_type=NUCLEOSOMEOCCUPANCY
-        deleteOldFigures(outputDir, jobname, occupancy_type)
-        nucleosome_file_basename = os.path.basename(nucleosome_file)
-        occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose)
-    if (replication_time or DATA_IS_READY_PLOT_FIGURES):
-        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes)
-    if (strand_bias or DATA_IS_READY_PLOT_FIGURES):
-        transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
-    if (processivity or DATA_IS_READY_PLOT_FIGURES):
-        processivityFigures(outputDir,jobname,numberofSimulations,multipleTesting,probabilityCalculation)
+        plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose)
     ############################################################
 
 ##############################################################

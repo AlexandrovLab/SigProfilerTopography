@@ -22,6 +22,7 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 
 from matplotlib import pyplot as plt
 import matplotlib as mpl
+import pandas as pd
 
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_STRAND
@@ -43,9 +44,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTION
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
 
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import DinucsSignature2PropertiesListDictFilename
+
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
@@ -179,7 +181,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
         numberofMutations,
         signature2TranscriptionStrand2CountDict,
         signature2ReplicationStrand2CountDict,
-        signature2PropertiesListDict,
+        signature_cutoff_numberofmutations_averageprobability_df,
         outputDir,
         jobname):
 
@@ -232,7 +234,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
     transcriptionRatiosDict = {}
     replicationRatiosDict = {}
 
-    for signature in signature2PropertiesListDict:
+    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         #################################################################################################
         #First check whether we have this signature or not
         if ((signature in signature2TranscriptionStrand2CountDict) and (TRANSCRIBED_STRAND in (signature2TranscriptionStrand2CountDict[signature])) and
@@ -254,7 +256,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
     if (transcriptionRatiosDict and replicationRatiosDict):
         signaturesShownInLegend = []
 
-        for signature in signature2PropertiesListDict:
+        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
             if ((signature in replicationRatiosDict.keys()) and (signature in transcriptionRatiosDict.keys())):
                 signaturesShownInLegend.append(signature)
                 plt.scatter(replicationRatiosDict[signature], transcriptionRatiosDict[signature], label=signature)
@@ -753,7 +755,7 @@ def fillSimulationsSample2Type2StrandCountList(
         simNum2Sample2Type2Strand2CountDict,
         existingTypesList,
         numberofSimulations,
-        sample2NumberofMutationsDict,
+        signatures_or_samples,
         strandbias):
 
     sample2SimulationsTypesStrand1MediansListDict = {}
@@ -765,7 +767,7 @@ def fillSimulationsSample2Type2StrandCountList(
     # Fill sample2AllSimulationsMutationTypesTranscribedListDict
     # Fill sample2AllSimulationsMutationTypesUntranscribedListDict
     ##############################################################
-    for sample in sample2NumberofMutationsDict:
+    for sample in signatures_or_samples:
         sample2AllSimulationsTypesStrand1ListDict[sample] = []
         sample2AllSimulationsTypesStrand2ListDict[sample] = []
 
@@ -797,7 +799,7 @@ def fillSimulationsSample2Type2StrandCountList(
     # Fill sample2SimulationsMutationTypesTranscribedMediansListDict
     # Fill sample2SimulationsMutationTypesUntranscribedMediansListDict
     ##############################################################
-    for sample in sample2NumberofMutationsDict :
+    for sample in signatures_or_samples :
 
         sample2SimulationsTypesStrand1MediansListDict[sample] = []
         sample2SimulationsTypesStrand2MediansListDict[sample] = []
@@ -915,7 +917,7 @@ def fillPValuesDictionaries(strands,
 
 ##################################################################
 #Key can be signature or sample
-def plotBarPlots(outputDir,jobname,numberofSimulations,key2PropertiesListDict,isKeySample,
+def plotBarPlots(outputDir,jobname,numberofSimulations,signature_cutoff_numberofmutations_averageprobability_df,isKeySample,
                  existingMutationTypesList,
                  key2SimulationsMutationTypes_Strand1_MediansListDict,key2SimulationsMutationTypes_Strand2_MediansListDict,
                  key2MutationType2Strand2CountDict,
@@ -929,10 +931,10 @@ def plotBarPlots(outputDir,jobname,numberofSimulations,key2PropertiesListDict,is
         x_axis_labels = existingMutationTypesList
         N = len(x_axis_labels)
 
-        if ((key in key2PropertiesListDict) and (key in key2MutationTypes_BH_FDR_Adjusted_PValues_Dict)):
+        if ((key in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique()) and (key in key2MutationTypes_BH_FDR_Adjusted_PValues_Dict)):
             sample_mutationtypes_FDR_BH_adjusted_pvalues = key2MutationTypes_BH_FDR_Adjusted_PValues_Dict[key]
-            #[cutoffProbability numberofMutations averageProbability]
-            numberofMutations = key2PropertiesListDict[key][1]
+            #[signature cutoffProbability numberofMutations averageProbability]
+            numberofMutations = int(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==key]['number_of_mutations'].values[0])
 
             samplebased_simulations_mutationtypes_strand1_medians_list= None
             samplebased_simulations_mutationtypes_strand2_medians_list = None
@@ -1028,13 +1030,13 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #########################  signatures and samples starts  ################################
     ##########################################################################################
 
-    subsSignature2PropertiesListDict = getDictionary(outputDir, jobname,SubsSignature2PropertiesListDictFilename)
-    indelsSignature2PropertiesListDict = getDictionary(outputDir, jobname,IndelsSignature2PropertiesListDictFilename)
-    dinucsSignature2PropertiesListDict = getDictionary(outputDir, jobname,DinucsSignature2PropertiesListDictFilename)
+    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
-    subsSignatures = subsSignature2PropertiesListDict.keys()
-    indelsSignatures = indelsSignature2PropertiesListDict.keys()
-    dinucsSignatures = dinucsSignature2PropertiesListDict.keys()
+    subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+    indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+    dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
 
     if sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
@@ -1153,13 +1155,13 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,type2TranscriptionStrand2CountDict, type2ReplicationStrand2CountDict,outputDir,jobname)
 
     if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (subsSignatures)):
-        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,subsSignature2PropertiesListDict,outputDir,jobname)
+        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,subsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
 
     if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (indelsSignatures)):
-        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,indelsSignature2PropertiesListDict,outputDir,jobname)
+        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
 
     if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (dinucsSignatures)):
-        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,dinucsSignature2PropertiesListDict,outputDir,jobname)
+        plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
     ########################################################################
     ############## Mutation Types Scatter Plots ends #######################
     ############## Signatures Scatter Plots ends ###########################
@@ -1185,21 +1187,21 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         for sample in sample2NumberofSubsDict:
             if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
                 numberofMutations = sample2NumberofSubsDict[sample]
-                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], subsSignature2PropertiesListDict, outputDir,jobname)
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], subsSignature_cutoff_numberofmutations_averageprobability_df, outputDir,jobname)
         ###############################################################
 
         ###############################################################
         for sample in sample2NumberofIndelsDict:
             if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
                 numberofMutations = sample2NumberofIndelsDict[sample]
-                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], indelsSignature2PropertiesListDict, outputDir,jobname)
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], indelsSignature_cutoff_numberofmutations_averageprobability_df, outputDir,jobname)
         ###############################################################
 
         ###############################################################
         for sample in sample2NumberofDinucsDict:
             if ((sample in sample2Type2TranscriptionStrand2CountDict) and (sample in sample2Type2ReplicationStrand2CountDict)):
                 numberofMutations = sample2NumberofDinucsDict[sample]
-                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], dinucsSignature2PropertiesListDict, outputDir,jobname)
+                plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',sample,numberofMutations,sample2Type2TranscriptionStrand2CountDict[sample], sample2Type2ReplicationStrand2CountDict[sample], dinucsSignature_cutoff_numberofmutations_averageprobability_df, outputDir,jobname)
         ###############################################################
     ########################################################################
     ###################     Sample Based    ################################
@@ -1348,7 +1350,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
             fillSimulationsSample2Type2StrandCountList(simNum2SubsSignature2MutationType2TranscriptionStrand2CountDict,
                                                 sixMutationTypes,
                                                 numberofSimulations,
-                                                subsSignature2PropertiesListDict,
+                                                subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique(),
                                                 TRANSCRIPTIONSTRANDBIAS)
 
         # simulations signature --- mutation type --- replication
@@ -1356,7 +1358,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
             fillSimulationsSample2Type2StrandCountList(simNum2SubsSignature2MutationType2ReplicationStrand2CountDict,
                                                 sixMutationTypes,
                                                 numberofSimulations,
-                                                subsSignature2PropertiesListDict,
+                                                subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique(),
                                                 REPLICATIONSTRANDBIAS)
         #########################################################################################################################
 
@@ -1368,7 +1370,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
                     sixMutationTypes,
                     numberofSimulations,
-                    sample2NumberofSubsDict,
+                    sample2NumberofSubsDict.keys(),
                     TRANSCRIPTIONSTRANDBIAS)
 
             # samplebased --- simulations --- mutation type --- replication
@@ -1376,7 +1378,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
                     sixMutationTypes,
                     numberofSimulations,
-                    sample2NumberofSubsDict,
+                    sample2NumberofSubsDict.keys(),
                     REPLICATIONSTRANDBIAS)
 
             # samplebased --- simulations --- signature --- transcription
@@ -1384,7 +1386,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
                     subsSignatures,
                     numberofSimulations,
-                    sample2NumberofSubsDict,
+                    sample2NumberofSubsDict.keys(),
                     TRANSCRIPTIONSTRANDBIAS)
 
             # samplebased --- simulations --- signature --- replication
@@ -1392,7 +1394,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
                     subsSignatures,
                     numberofSimulations,
-                    sample2NumberofSubsDict,
+                    sample2NumberofSubsDict.keys(),
                     REPLICATIONSTRANDBIAS)
 
             # samplebased --- simulations --- signature --- transcription
@@ -1400,7 +1402,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
                     indelsSignatures,
                     numberofSimulations,
-                    sample2NumberofIndelsDict,
+                    sample2NumberofIndelsDict.keys(),
                     TRANSCRIPTIONSTRANDBIAS)
 
             # samplebased --- simulations --- signature --- replication
@@ -1408,7 +1410,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
                     indelsSignatures,
                     numberofSimulations,
-                    sample2NumberofIndelsDict,
+                    sample2NumberofIndelsDict.keys(),
                     REPLICATIONSTRANDBIAS)
             #sample based ends
 
@@ -1417,7 +1419,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2TranscriptionStrand2CountDict,
                     dinucsSignatures,
                     numberofSimulations,
-                    sample2NumberofDinucsDict,
+                    sample2NumberofDinucsDict.keys(),
                     TRANSCRIPTIONSTRANDBIAS)
 
             # samplebased --- simulations --- signature --- replication
@@ -1425,7 +1427,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                 fillSimulationsSample2Type2StrandCountList(simNum2Sample2Type2ReplicationStrand2CountDict,
                     dinucsSignatures,
                     numberofSimulations,
-                    sample2NumberofDinucsDict,
+                    sample2NumberofDinucsDict.keys(),
                     REPLICATIONSTRANDBIAS)
         #########################################################################################################################
 
@@ -2224,7 +2226,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #################################################################
     ########### Plot sub signatures mutation types starts ###########
     #################################################################
-    plotBarPlots(outputDir,jobname,numberofSimulations,subsSignature2PropertiesListDict,isKeySample,sixMutationTypes,
+    plotBarPlots(outputDir,jobname,numberofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,isKeySample,sixMutationTypes,
                  subsSignature2SimulationsMutationTypesTranscribedMediansListDict,
                  subsSignature2SimulationsMutationTypesUntranscribedMediansListDict,
                  subsSignature2MutationType2TranscriptionStrand2CountDict,
@@ -2233,7 +2235,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
                  subsSignature2MutationTypesTranscription_FDR_BH_Adjusted_PValues_Dict,
                  width,transcriptionStrands,'royalblue', 'yellowgreen', 'All Mutations','mutationtypes_transcription_strand_bias')
 
-    plotBarPlots(outputDir,jobname,numberofSimulations,subsSignature2PropertiesListDict,isKeySample,sixMutationTypes,
+    plotBarPlots(outputDir,jobname,numberofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,isKeySample,sixMutationTypes,
                  subsSignature2SimulationsMutationTypesLaggingMediansListDict,
                  subsSignature2SimulationsMutationTypesLeadingMediansListDict,
                  subsSignature2MutationType2ReplicationStrand2CountDict,

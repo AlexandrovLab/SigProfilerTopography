@@ -50,12 +50,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOC
 from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
-
-from SigProfilerTopography.source.commons.TopographyCommons import SubsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import IndelsSignature2PropertiesListDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import DinucsSignature2PropertiesListDictFilename
-
-from SigProfilerTopography.source.commons.TopographyCommons import MutationType2NumberofMutatiosDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
@@ -66,6 +64,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import getSample2Ind
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
 from SigProfilerTopography.source.commons.TopographyCommons import BIOSAMPLE_UNDECLARED
+from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 # plusOrMinus = 1000
 # windowSize = plusOrMinus*2+1
@@ -148,7 +147,6 @@ def readAsNumpyArray(averageFilePath):
 #############################################################################
 ##################### Read Average for Simulations start ####################
 #############################################################################
-#TODO what if numberofSimulations is 0 or 1?
 def readDataForSimulations(sample,signature,analyseType,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo):
     partial_file_name = 'AverageSignalArray'
 
@@ -237,20 +235,18 @@ def readDataForSimulations(sample,signature,analyseType,outputDir,jobname,number
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
-def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2PropertiesListDict,sample2Signature2NumberofMutationsDict,outputDir,jobname,color,xlabel,ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
+def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,outputDir,jobname,color,xlabel,ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         filenameEnd = 'NucleosomeOccupancy'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
         filenameEnd = 'EpigenomicsOccupancy'
 
-    for signature in signature2PropertiesListDict:
+    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         min_list = []
         max_list = []
 
         label2NumpyArrayDict = {}
-        #[Cutoff NumberofMutations AverageProbability]
-        signatureBasedNumberofMutations = signature2PropertiesListDict[signature][1]
         realAverage = readData(None, signature, SIGNATUREBASED, outputDir, jobname,occupancy_type,libraryFilenameMemo)
         label2NumpyArrayDict[signature] = realAverage
 
@@ -384,6 +380,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature2Pro
         figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type, filename)
 
         fig.savefig(figureFile)
+        plt.clf()
         plt.cla()
         plt.close(fig)
         ####################################### plotting ends #######################################
@@ -442,7 +439,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         # if (np.argwhere(np.isnan(realAverage))).size>0:
         if (np.argwhere(pd.isnull(realAverage))).size > 0:
             print('Attention: There are %d nans in realAverage in %s for %s' %(len(np.argwhere(np.isnan(realAverage))),libraryFilenameMemo,signature))
-            if verbose: print(np.argwhere(pd.isnull(realAverage)))
+            if verbose: print('\tVerbose %s' %(np.argwhere(pd.isnull(realAverage))))
 
     if ((realAverage is not None) and (pd.notna(realAverage).any(axis=0)) and (np.any(realAverage))):
         min_list.append(np.amin(realAverage))
@@ -482,9 +479,9 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
             if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
                 plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor=fillcolor)
 
-        if (simulationsSignatureBasedLows is not None and simulationsSignatureBasedLows):
+        if ((simulationsSignatureBasedLows is not None) and (not np.all(np.isnan(simulationsSignatureBasedLows)))):
             min_list.append(np.nanmin(simulationsSignatureBasedLows))
-        if (simulationsSignatureBasedHighs is not None and simulationsSignatureBasedHighs):
+        if ((simulationsSignatureBasedHighs is not None) and (not np.all(np.isnan(simulationsSignatureBasedHighs)))):
             max_list.append(np.nanmax(simulationsSignatureBasedHighs))
 
         plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white',framealpha=0)
@@ -574,6 +571,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         #######################################################################
 
         fig.savefig(figureFile)
+        plt.clf()
         #Clears the axis without removing the axis itself
         plt.cla()
         plt.close(fig)
@@ -587,7 +585,11 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
+def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
+    if mutationType==SBS96:
+        to_be_added_to_the_filename='SBS%s' %(mutationType)
+    else:
+        to_be_added_to_the_filename=mutationType
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         filenameEnd='NucleosomeOccupancy'
@@ -602,30 +604,29 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     listofSimulationsAggregatedIndels = None
     listofSimulationsAggregatedDinucs = None
 
-    min_list=[]
-    max_list=[]
     min_average_nucleosome_signal=0
     max_average_nucleosome_signal=0
 
     #######################################################################################################################
     if (sample is None):
         if libraryFilenameMemo is None:
-            filename = 'Aggregated_All_Mutations_%s.png' %(filenameEnd)
+            filename = 'Aggregated_All_Mutations_%s_%s.png' %(to_be_added_to_the_filename,filenameEnd)
         else:
-            filename = 'Aggregated_All_Mutations_%s_%s.png' %(libraryFilenameMemo,filenameEnd)
-        if (SBS96 in mutationTypes):
+            filename = 'Aggregated_All_Mutations_%s_%s_%s.png' %(to_be_added_to_the_filename,libraryFilenameMemo,filenameEnd)
+
+        if (SBS96==mutationType):
             realAggregatedSubstitutions = readData(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,occupancy_type,libraryFilenameMemo)
-        if (ID in mutationTypes):
+        if (ID==mutationType):
             realAggregatedIndels = readData(None,None, AGGREGATEDINDELS, outputDir,jobname,occupancy_type,libraryFilenameMemo)
-        if (DBS in mutationTypes):
+        if (DBS==mutationType):
             realAggregatedDinucs = readData(None,None,AGGREGATEDDINUCS,outputDir,jobname,occupancy_type,libraryFilenameMemo)
 
         if (numberofSimulations>0):
-            if (SBS96 in mutationTypes):
+            if (SBS96==mutationType):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
-            if (ID in mutationTypes):
+            if (ID==mutationType):
                 listofSimulationsAggregatedIndels = readDataForSimulations(None,None,AGGREGATEDINDELS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
-            if (DBS in mutationTypes):
+            if (DBS==mutationType):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(None,None,AGGREGATEDDINUCS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
     #######################################################################################################################
 
@@ -634,25 +635,25 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     else:
         # filename = '%s_%s_Aggregated_Substitutions_%d_Indels_%d.png' % (sample, jobname, numberofSPMs, numberofIndels)
         if (libraryFilenameMemo is None):
-            filename = '%s_Aggregated_All_Mutations_%s.png' % (sample,filenameEnd)
+            filename = '%s_Aggregated_All_Mutations_%s_%s.png' % (sample,to_be_added_to_the_filename,filenameEnd)
         else:
-            filename = '%s_Aggregated_All_Mutations_%s_%s.png' % (sample,libraryFilenameMemo,filenameEnd)
-        if (SBS96 in mutationTypes):
+            filename = '%s_Aggregated_All_Mutations_%s_%s_%s.png' % (sample,to_be_added_to_the_filename,libraryFilenameMemo,filenameEnd)
+
+        if (SBS96 == mutationType):
             realAggregatedSubstitutions = readData(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,outputDir,jobname,occupancy_type,libraryFilenameMemo)
-        if (ID in mutationTypes):
+        if (ID == mutationType):
             realAggregatedIndels = readData(sample,None,SAMPLEBASED_AGGREGATEDINDELS,outputDir,jobname,occupancy_type,libraryFilenameMemo)
-        if (DBS in mutationTypes):
+        if (DBS == mutationType):
             realAggregatedDinucs = readData(sample,None,SAMPLEBASED_AGGREGATEDDINUCS,outputDir,jobname,occupancy_type,libraryFilenameMemo)
 
         if (numberofSimulations>0):
-            if (SBS96 in mutationTypes):
+            if (SBS96 == mutationType):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
-            if (ID in mutationTypes):
+            if (ID == mutationType):
                 listofSimulationsAggregatedIndels = readDataForSimulations(sample, None,SAMPLEBASED_AGGREGATEDINDELS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
-            if (DBS in mutationTypes):
+            if (DBS == mutationType):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDDINUCS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo)
     #######################################################################################################################
-
 
     #####################################################################
     #95%CI
@@ -681,87 +682,73 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     listofLegends = []
 
+    ##############################################################
     if (realAggregatedSubstitutions is not None):
-        min_list.append(np.amin(realAggregatedSubstitutions))
-        max_list.append(np.amax(realAggregatedSubstitutions))
         aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=3,zorder=10)
         listofLegends.append(aggSubs[0])
-    if (simulationsAggregatedSubstitutionsLows is not None):
-        min_list.append(np.amin(simulationsAggregatedSubstitutionsLows))
-    if (simulationsAggregatedSubstitutionsHighs is not None):
-        max_list.append(np.amax(simulationsAggregatedSubstitutionsHighs))
+
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='royalblue',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
-        #old way
-        # simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
         listofLegends.append(simsAggSubs[0])
         if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
+    ##############################################################
 
+    ##############################################################
     if (realAggregatedIndels is not None):
-        min_list.append(np.amin(realAggregatedIndels))
-        max_list.append(np.amax(realAggregatedIndels))
         aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label='Aggregated indels',linewidth=3,zorder=10)
         listofLegends.append(aggIndels[0])
-    if (simulationsAggregatedIndelsLows is not None):
-        min_list.append(np.amin(simulationsAggregatedIndelsLows))
-    if (simulationsAggregatedIndelsHighs is not None):
-        max_list.append(np.amax(simulationsAggregatedIndelsHighs))
+
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='darkgreen', linestyle='dashed',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
-        #old way
-        # simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dotted',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dashed',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
         listofLegends.append(simsAggIndels[0])
         if (simulationsAggregatedIndelsLows is not None) and (simulationsAggregatedIndelsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
+    ##############################################################
 
+    ##############################################################
     if (realAggregatedDinucs is not None):
-        min_list.append(np.amin(realAggregatedDinucs))
-        max_list.append(np.amax(realAggregatedDinucs))
         aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label='Aggregated dinucs',linewidth=3,zorder=10)
         listofLegends.append(aggDinucs[0])
-    if (simulationsAggregatedDinucsLows is not None):
-        min_list.append(np.amin(simulationsAggregatedDinucsLows))
-    if (simulationsAggregatedDinucsHighs is not None):
-        max_list.append(np.amax(simulationsAggregatedDinucsHighs))
+
     if simulationsAggregatedDinucsMedians is not None:
-        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='crimson', linestyle='dashed',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
-        #old way
-        # simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashdot',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
+        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashed',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
         if (simulationsAggregatedDinucsLows is not None) and (simulationsAggregatedDinucsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
+    ##############################################################
 
-    # old code
-    # plt.legend(loc='lower left', prop={'size': 24},  shadow=False, edgecolor='white', facecolor ='white')
     plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white',framealpha=0)
 
+    #######################################################################
     # put the number of subs, indels and dinucs
     text=""
 
     #Subs
-    if numberofSubs>0:
+    if (mutationType==SBS96) and (numberofSubs>0):
         subs_text="{:,} subs".format(numberofSubs)
         text=subs_text
 
     #Indels
-    if numberofIndels>0:
+    if (mutationType==ID) and (numberofIndels>0):
         indels_text = "{:,} indels".format(numberofIndels)
         if len(text)>0:
             text= text + ', ' + indels_text
         else:
             text= indels_text
     #Dinucs
-    if numberofDinucs>0:
+    if (mutationType==DBS) and (numberofDinucs>0):
         dinucs_text = "{:,} dinucs".format(numberofDinucs)
         if len(text)>0:
             text= text + ', ' + dinucs_text
         else:
             text= dinucs_text
 
+    #put number of mutations
     plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
+    #######################################################################
 
-    # put the library filename
+    #put the library filename
     plt.text(0.01, 0.99, libraryFilename, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=24)
 
     #Put vertical line at x=0
@@ -848,6 +835,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     ######################################################################################
 
     fig.savefig(figureFile)
+    plt.clf()
     plt.cla()
     plt.close(fig)
     #####################################################################
@@ -877,7 +865,7 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
 
 
 #########################################################
-def plotSignatureBasedFigures(mutationType,signature2PropertiesListDict,sample2Signature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
+def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         ylabel = 'Average nucleosome signal'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
@@ -907,9 +895,9 @@ def plotSignatureBasedFigures(mutationType,signature2PropertiesListDict,sample2S
         linestyle='dashed'
         # linestyle='dashdot'
 
-    for signature in signature2PropertiesListDict:
-        #[cutoff numberofMutations  averageProbability]
-        signatureBasedNumberofMutations = signature2PropertiesListDict[signature][1]
+    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+        #[signature cutoff numberofMutations  averageProbability]
+        signatureBasedNumberofMutations = int(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['number_of_mutations'].values[0])
         plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None, signature,
                                                                           signatureBasedNumberofMutations,
                                                                           xlabel,ylabel,label,text,
@@ -963,10 +951,14 @@ def updateDictWithThreeLevels(signature2Biosample2ENCODEHM2FoldChangeDict, signa
 
 
 ########################################################
-def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm):
+def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm,plusOrMinus_epigenomics,verbose):
     occupancy_type=EPIGENOMICSOCCUPANCY
+    center=plusOrMinus_epigenomics
+    plusorMinus=250
+    start=center-plusorMinus
+    end= center+plusorMinus+1
 
-    print('----------> %s %s %s' % (signature, cancer_type, encode_hm))
+    if verbose: print('\tVerbose ----------> %s %s %s' % (signature, cancer_type, encode_hm))
     avg_real_signal = None
 
     # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
@@ -978,7 +970,8 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
         # avg_real_data_signal_array[np.isnan(avg_real_data_signal_array)] = 0
         # avg_real_signal = np.mean(avg_real_data_signal_array[1750:2251])
         # 2nd way
-        avg_real_signal = np.nanmean(avg_real_data_signal_array[1750:2251])
+        if not np.all(np.isnan(avg_real_data_signal_array[start:end])):
+            avg_real_signal = np.nanmean(avg_real_data_signal_array[start:end])
 
     avg_simulated_signal = None
     if (numberofSimulations > 0):
@@ -987,20 +980,30 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
         if ((listofSimulationsSignatureBased is not None) and listofSimulationsSignatureBased):
             stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
             (rows, cols) = stackedSimulationsSignatureBased.shape
-            # print('rows:%d cols:%d' % (rows, cols))
-            simulationsSignatureBasedMeans = np.nanmean(stackedSimulationsSignatureBased, axis=0)
-            # 1st way
-            # simulationsSignatureBasedMeans[np.isnan(simulationsSignatureBasedMeans)] = 0
-            # avg_simulated_signal = np.mean(simulationsSignatureBasedMeans[1750:2251])
-            # 2nd way
-            avg_simulated_signal = np.nanmean(simulationsSignatureBasedMeans[1750:2251])
+            if verbose: print('\tVerbose After np.vstack --- stackedSimulationsSignatureBased rows:%d cols:%d' % (rows, cols))
+
+            #Get the part that we are interested
+            stackedSimulationsSignatureBased_of_interest= stackedSimulationsSignatureBased[:,start:end]
+            (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
+            if verbose: print(
+                '\tVerbose After get part interested in --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
+
+            # Get rid of all the rows with all nans
+            stackedSimulationsSignatureBased_of_interest = stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
+            (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
+            if verbose: print(
+                '\tVerbose After removing all nan rows --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
+
+            simulationsSignatureBasedMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
+            if not np.all(np.isnan(simulationsSignatureBasedMeans)):
+                avg_simulated_signal = np.nanmean(simulationsSignatureBasedMeans)
 
     if (avg_real_signal is not None) and (avg_simulated_signal is not None):
         fold_change = avg_real_signal / avg_simulated_signal
-        print('----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, encode_hm,avg_real_signal, avg_simulated_signal, fold_change))
+        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, encode_hm,avg_real_signal, avg_simulated_signal, fold_change))
         return fold_change
     else:
-        print('----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,encode_hm,str(avg_real_signal),str(avg_simulated_signal)))
+        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,encode_hm,str(avg_real_signal),str(avg_simulated_signal)))
         return None
 ########################################################
 
@@ -1008,7 +1011,7 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
 
 ########################################################
 #Constraint epigenomic biosample name must be contained in epigenomic file memo
-def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type):
+def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose):
 
     list=[]
 
@@ -1019,26 +1022,26 @@ def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSim
 
     ########################################################################
     #Step1
-    print('===================================================================================================')
-    print('signature:%s' %(signature))
+    if verbose: print('\tVerbose ===================================================================================================')
+    if verbose: print('\tVerbose signature:%s' %(signature))
 
     # epigenomics_files_memos have been used in naming
     # ID8_sim56_H3K27me3_Breast_Epithelium_AccumulatedCountArray.txt
     # ID8_sim56_H3K27me3_Breast_Epithelium_AccumulatedSignalArray.txt
 
     encode_hms = epigenomics_files_memos
-    print('#####################################################')
-    print('%s' %(encode_hms))
+    if verbose: print('\tVerbose #####################################################')
+    if verbose: print('\tVerbose %s' %(encode_hms))
 
     for encode_hm in encode_hms:
-        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm)
+        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm,plusOrMinus_epigenomics,verbose)
         if fold_change is not None:
             updateDictWithTwoLevels(signature2EncodeHM2FoldChangeDict,signature,encode_hm,fold_change)
 
-    print('#######################################################')
-    print('Step1 After %s' % (signature))
-    print('signature2EncodeHM2FoldChangeDict')
-    print(signature2EncodeHM2FoldChangeDict)
+    if verbose: print('\tVerbose #######################################################')
+    if verbose: print('\tVerbose Step1 After %s' % (signature))
+    if verbose: print('\tVerbose signature2EncodeHM2FoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2EncodeHM2FoldChangeDict)
     ########################################################################
 
     ########################################################################
@@ -1054,17 +1057,17 @@ def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSim
                         fold_change=signature2EncodeHM2FoldChangeDict[signature][encode_hm]
                         updateDictWithThreeLevels(signature2Biosample2EncodeHM2FoldChangeDict, signature, biosample, encode_hm, fold_change)
 
-
-    print('#######################################################')
-    print('Step2 After %s' % (signature))
-    print('signature2Biosample2EncodeHM2FoldChangeDict')
-    print(signature2Biosample2EncodeHM2FoldChangeDict)
+    if verbose: print('\tVerbose #######################################################')
+    if verbose: print('\tVerbose Step2 After %s' % (signature))
+    if verbose: print('\tVerbose signature2Biosample2EncodeHM2FoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2Biosample2EncodeHM2FoldChangeDict)
     ########################################################################
 
     list.append(output_dir)
     list.append(cancer_type)
     list.append(occupancy_type)
     list.append(signature2Biosample2EncodeHM2FoldChangeDict)
+    list.append(verbose)
 
     return list
 ########################################################
@@ -1076,8 +1079,8 @@ def fill_average_fold_change_array_signature_cancertype_biosample(ENCODEHM2FoldC
         if encode_hm not in encode_hms:
             encode_hms.append(encode_hm)
 
-    #sort the hms
-    encode_hms=sorted(encode_hms)
+    # sort the hms
+    encode_hms = sorted(encode_hms, key=natural_key)
 
     #Initialize
     average_fold_change_array = np.zeros((1, len(encode_hms)))
@@ -1108,8 +1111,8 @@ def fill_average_fold_change_array(signature,cancer_type, biosample2EncodeHM2Fol
 
     print('%s %s %s' %(signature,hms,cancer_type_encode_biosamples))
 
-    #sort the hms
-    hms=sorted(hms)
+    # sort the hms
+    hms = sorted(hms, key=natural_key)
 
     #Initialize
     average_fold_change_array = np.zeros((len(cancer_type_encode_biosamples), len(hms)))
@@ -1271,6 +1274,7 @@ def plot_pcawg_heatmap(list):
     cancer_type = list[1]
     occupancy_type=list[2]
     signature2Biosample2EncodeHM2FoldChangeDict=list[3]
+    verbose=list[4]
 
     os.makedirs(os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type,HEATMAPS), exist_ok=True)
     heatmap_output_path=os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type,HEATMAPS)
@@ -1280,7 +1284,7 @@ def plot_pcawg_heatmap(list):
         for biosample in signature2Biosample2EncodeHM2FoldChangeDict[signature]:
             encode_hms, average_fold_change_array = fill_average_fold_change_array_signature_cancertype_biosample(signature2Biosample2EncodeHM2FoldChangeDict[signature][biosample])
 
-            print('len(encode_hms):%d %s' %(len(encode_hms),encode_hms))
+            if verbose: print('\tVerbose len(encode_hms):%d %s' %(len(encode_hms),encode_hms))
             cancer_type_encode_biosamples_list=[]
             cancer_type_encode_biosamples_list.append('%s, %s' %(cancer_type,biosample))
 
@@ -1289,13 +1293,13 @@ def plot_pcawg_heatmap(list):
             fig, ax = plt.subplots(figsize=(100, 40))
 
             # im, cbar = heatmap(fold_change_array, signatures, hms, ax=ax,cmap="seismic", cbarlabel="Fold Change [real/simulated]")
-            print('min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
+            if verbose: print('\tVerbose min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
 
             #Blue White Red
             im, cbar = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2)
 
             texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=50)
-            print('texts:%s' %texts)
+            if verbose: print('\tVerbose texts:%s' %texts)
 
             plt.title('%s' % (signature), fontsize=50, y=1.01)
             #Results in big squares when array is small
@@ -1303,9 +1307,13 @@ def plot_pcawg_heatmap(list):
             filename = '%s_rows_%s_%s_columns_encode_hms_heatmap.png' % (signature,cancer_type,biosample)
             figureFile = os.path.join(heatmap_output_path,filename)
 
-            fig.savefig(figureFile)
+            # Results in big squares when array is small
+            plt.tight_layout()
 
-            plt.close()
+            fig.savefig(figureFile)
+            plt.clf()
+            plt.cla()
+            plt.close(fig)
             ##########################################################################
 
     ##########################################################################
@@ -1314,24 +1322,24 @@ def plot_pcawg_heatmap(list):
 
 
 #########################################################
-def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type):
+def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose):
 
     #We can plot heatmaps if there are at least one simulation
     if (numberofSimulations>=1):
 
         cancer_type = jobname
-        subsSignature2PropertiesListDict = getDictionary(outputDir, jobname,SubsSignature2PropertiesListDictFilename)
-        indelsSignature2PropertiesListDict = getDictionary(outputDir, jobname,IndelsSignature2PropertiesListDictFilename)
-        dinucsSignature2PropertiesListDict = getDictionary(outputDir, jobname,DinucsSignature2PropertiesListDictFilename)
+        subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+        indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t',header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
 
         ###########################################
         signatures = []
 
-        for signature in dinucsSignature2PropertiesListDict:
+        for signature in subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
             signatures.append(signature)
-        for signature in indelsSignature2PropertiesListDict:
+        for signature in indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
             signatures.append(signature)
-        for signature in subsSignature2PropertiesListDict:
+        for signature in dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
             signatures.append(signature)
 
         #For tests
@@ -1343,7 +1351,7 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
         pool = multiprocessing.Pool(numofProcesses)
 
         for signature in signatures:
-            pool.apply_async(fill_signature2CancerType2Biosample2HM2FoldChangeDict, (outputDir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type), callback=plot_pcawg_heatmap)
+            pool.apply_async(fill_signature2CancerType2Biosample2HM2FoldChangeDict, args=(outputDir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose,), callback=plot_pcawg_heatmap)
             #Sequential Run
             # list=fill_signature2CancerType2Biosample2HM2FoldChangeDict(outputDir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type)
             # plot_pcawg_heatmap(list)
@@ -1373,11 +1381,10 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
         isFigureAugmentation = True
 
     ############## Read necessary dictionaries starts ########################################
-    mutationType2NumberofMutationsDict = getDictionary(outputDir, jobname, MutationType2NumberofMutatiosDictFilename)
-
-    subsSignature2PropertiesListDict = getDictionary(outputDir, jobname,SubsSignature2PropertiesListDictFilename)
-    indelsSignature2PropertiesListDict = getDictionary(outputDir, jobname,IndelsSignature2PropertiesListDictFilename)
-    dinucsSignature2PropertiesListDict = getDictionary(outputDir, jobname,DinucsSignature2PropertiesListDictFilename)
+    mutationtype_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_MutationType_NumberofMutations_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
     if sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
@@ -1403,15 +1410,16 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     numberofIndels=0
     numberofDinucs=0
 
-    if (SUBS in mutationType2NumberofMutationsDict):
-        numberofSubs=mutationType2NumberofMutationsDict[SUBS]
-    if (INDELS in mutationType2NumberofMutationsDict):
-        numberofIndels = mutationType2NumberofMutationsDict[INDELS]
-    if (DINUCS in mutationType2NumberofMutationsDict):
-        numberofDinucs = mutationType2NumberofMutationsDict[DINUCS]
+    if (SUBS in mutationtype_numberofmutations_df['mutation_type'].unique()):
+        numberofSubs=mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==SUBS,'number_of_mutations'].values[0]
+    if (INDELS in mutationtype_numberofmutations_df['mutation_type'].unique()):
+        numberofIndels = mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==INDELS,'number_of_mutations'].values[0]
+    if (DINUCS in mutationtype_numberofmutations_df['mutation_type'].unique()):
+        numberofDinucs = mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==DINUCS,'number_of_mutations'].values[0]
 
     #tissue based
-    plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+    for mutationType in mutationTypes:
+        plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
     ##############################################################
 
     #############################################################################################################################################
@@ -1420,13 +1428,13 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     if checkValidness(SIGNATUREBASED,outputDir,jobname,occupancy_type):
         if (SBS96 in mutationTypes):
             #Subs Signatures
-            plotSignatureBasedFigures(SBS96,subsSignature2PropertiesListDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(SBS96,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
         if (ID in mutationTypes):
             #Indels Signatures
-            plotSignatureBasedFigures(ID,indelsSignature2PropertiesListDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(ID,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
         if (DBS in mutationTypes):
             # Dinucs Signatures
-            plotSignatureBasedFigures(DBS,dinucsSignature2PropertiesListDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(DBS,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
     #############################################################################################################################################
 
 
@@ -1434,9 +1442,9 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     if sample_based:
         #ALL SAMPLES IN ONE
         #Plot "all samples pooled" and "sample based" signature based in one figure
-        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature2PropertiesListDict,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
-        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature2PropertiesListDict,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
-        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature2PropertiesListDict,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+        plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
 
         samplesfromSubs  = sample2NumberofSubsDict.keys()
         samplesfromIndels = sample2NumberofIndelsDict.keys()
@@ -1454,5 +1462,6 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
                 numberofDinucs = sample2NumberofDinucsDict[sample]
 
             #sample based
-            plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,sample,outputDir,jobname,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+            for mutationType in mutationTypes:
+                plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,sample,outputDir,jobname,numberofSubs, numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
     ##############################################################

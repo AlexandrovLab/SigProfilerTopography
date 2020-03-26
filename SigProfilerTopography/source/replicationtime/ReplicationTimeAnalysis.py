@@ -199,9 +199,9 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
 
 ##################################################################
 def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose):
-    if verbose: print('Worker pid %s %s Before memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
+    if verbose: print('Worker pid %s %s Before Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
 
-    # 1st way Slower. Not tested for the results.
+    # 1st way Slower. Not tested in terms fo final outcome/ results.
     # chrom_string = np.memmap(chrbased_file_path, dtype=np.byte, mode='r')
 
     # 2nd way Faster than 1st way
@@ -215,7 +215,7 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
 
     chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
 
-    if verbose: print('Worker pid %s %s After memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
+    if verbose: print('Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
 
     return (chrLong,chrBased_wavelet_processed_df_group)
 ##################################################################
@@ -271,7 +271,7 @@ def searchMutation_simulations_integrated_using_list_comprehension(mutation_row,
                                                    chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                    type2DecileIndex2NumberofMutationsDict,
                                                    sample2Type2DecileIndex2NumberofMutationsDict,
-                                                   signature2PropertiesListDict,
+                                                   signature_cutoff_numberofmutations_averageprobability_df,
                                                    type,
                                                    sample_based,
                                                    df_columns):
@@ -343,9 +343,10 @@ def searchMutation_simulations_integrated_using_list_comprehension(mutation_row,
             ################### AGGREGATED ends #######################
 
             ########################### Signatures start ###########################
-            for signature in signature2PropertiesListDict:
+            for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
                 indexofSignature=df_columns.index(signature)
-                if mutation_row[indexofSignature] >= float(signature2PropertiesListDict[signature][0]):
+                cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+                if mutation_row[indexofSignature] >= cutoff:
                     if signature in type2DecileIndex2NumberofMutationsDict:
                         if decileIndexNum in type2DecileIndex2NumberofMutationsDict[signature]:
                             type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] += 1
@@ -419,7 +420,8 @@ def searchMutation_simulations_integrated_using_list_comprehension(mutation_row,
             if sample in sample2Signature2NumberofMutationsDict:
                 for signature in sample2Signature2NumberofMutationsDict[sample]:
                     indexofSignature = df_columns.index(signature)
-                    if mutation_row[indexofSignature] >= float(signature2PropertiesListDict[signature][0]):
+                    cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+                    if mutation_row[indexofSignature] >= cutoff:
                         if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
                             sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
                         else:
@@ -439,7 +441,7 @@ def searchMutation_simulations_integrated(mutation_row,
     chrBasedReplicationTimeDataArrayWithDecileIndex,
     simNum2Type2DecileIndex2NumberofMutationsDict,
     simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
-    signature2PropertiesListDict,
+    signature_cutoff_numberofmutations_averageprobability_df,
     type):
 
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
@@ -495,8 +497,9 @@ def searchMutation_simulations_integrated(mutation_row,
             ################### AGGREGATED ends #######################
 
             ########################### Signatures start ###########################
-            for signature in signature2PropertiesListDict:
-                if mutation_row[signature] >= float(signature2PropertiesListDict[signature][0]):
+            for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+                cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+                if mutation_row[signature] >= cutoff:
                     if decileIndexNum in type2DecileIndex2NumberofMutationsDict[signature]:
                         type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] += 1
                     else:
@@ -527,7 +530,8 @@ def searchMutation_simulations_integrated(mutation_row,
 
             if sample in sample2Signature2NumberofMutationsDict:
                 for signature in sample2Signature2NumberofMutationsDict[sample]:
-                    if mutation_row[signature] >= float(signature2PropertiesListDict[signature][0]):
+                    cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+                    if mutation_row[signature] >= cutoff:
                         if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
                             sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
                         else:
@@ -548,7 +552,7 @@ def searchforMutations_NoInitialization(sample2NumberofMutationsDict,
         sample2Signature2NumberofMutationsDict,
         chrBased_simBased_mutations_df,
         chrBasedReplicationTimeDataArrayWithDecileIndex,
-        signature2PropertiesListDict,
+        signature_cutoff_numberofmutations_averageprobability_df,
         type,
         sample_based):
 
@@ -571,7 +575,7 @@ def searchforMutations_NoInitialization(sample2NumberofMutationsDict,
                                                        chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                        type2DecileIndex2NumberofMutationsDict,
                                                        sample2Type2DecileIndex2NumberofMutationsDict,
-                                                       signature2PropertiesListDict,
+                                                       signature_cutoff_numberofmutations_averageprobability_df,
                                                        type,
                                                        sample_based,
                                                        df_columns) for mutation_row in part_df.values]
@@ -583,7 +587,7 @@ def searchforMutations_NoInitialization(sample2NumberofMutationsDict,
                                                                         chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                         type2DecileIndex2NumberofMutationsDict,
                                                                         sample2Type2DecileIndex2NumberofMutationsDict,
-                                                                        signature2PropertiesListDict,
+                                                                        signature_cutoff_numberofmutations_averageprobability_df,
                                                                         type,
                                                                         sample_based,
                                                                         df_columns) for mutation_row in chrBased_simBased_mutations_df.values]
@@ -599,7 +603,7 @@ def searchforMutations(sample2NumberofMutationsDict,
         sample2Signature2NumberofMutationsDict,
         chrBased_simBased_mutations_df,
         chrBasedReplicationTimeDataArrayWithDecileIndex,
-        signature2PropertiesListDict,
+        signature_cutoff_numberofmutations_averageprobability_df,
         type,
         numofSimulations):
 
@@ -622,7 +626,7 @@ def searchforMutations(sample2NumberofMutationsDict,
             type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
             type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
 
-        for signature in signature2PropertiesListDict:
+        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
             type2DecileIndex2NumberofMutationsDict[signature] = {}
         ############################################################
 
@@ -658,7 +662,7 @@ def searchforMutations(sample2NumberofMutationsDict,
                                             chrBasedReplicationTimeDataArrayWithDecileIndex= chrBasedReplicationTimeDataArrayWithDecileIndex,
                                             simNum2Type2DecileIndex2NumberofMutationsDict=simNum2Type2DecileIndex2NumberofMutationsDict,
                                             simNum2Sample2Type2DecileIndex2NumberofMutationsDict=simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
-                                            signature2PropertiesListDict = signature2PropertiesListDict,
+                                            signature_cutoff_numberofmutations_averageprobability_df = signature_cutoff_numberofmutations_averageprobability_df,
                                             type= type,
                                             axis=1)
     else:
@@ -668,7 +672,7 @@ def searchforMutations(sample2NumberofMutationsDict,
                       chrBasedReplicationTimeDataArrayWithDecileIndex=chrBasedReplicationTimeDataArrayWithDecileIndex,
                       simNum2Type2DecileIndex2NumberofMutationsDict=simNum2Type2DecileIndex2NumberofMutationsDict,
                       simNum2Sample2Type2DecileIndex2NumberofMutationsDict=simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
-                      signature2PropertiesListDict=signature2PropertiesListDict,
+                      signature_cutoff_numberofmutations_averageprobability_df=signature_cutoff_numberofmutations_averageprobability_df,
                       type=type,
                       axis=1)
 
@@ -688,12 +692,12 @@ def fillArray(chrBased_replicationtimedata_row,chrBasedDecileIndexArray,decileIn
 ##################################################################
 
 ##################################################################
-#What am i doing in this function?
+#What am I doing in this function?
 #This function is called for each chromosome
 #For each chromosome, a numpy array is filled.
 #If there is a chromosome locus with a decile index 8 let's say, in the array that locus is filled with 8.
-#Decile index can be 1-10.
-#In this function, each available interval with an index is filled in the corresponding numpy array
+#Decile index can be between 1-10.
+#In this function, each available interval with an index is filled in the corresponding numpy array with chrom size
 def  fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list):
     #We can set the starting index as 1 in builtin function enumerate
     #First chrBased_grouped_decile has index of 1
@@ -730,9 +734,9 @@ def fillDictionaries_chromBased_simBased(sample2NumberofSubsDict,
                     sample_based,
                     simNum,
                     chrLong,
-                    subsSignature2PropertiesListDict,
-                    indelsSignature2PropertiesListDict,
-                    dinucsSignature2PropertiesListDict,
+                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                     verbose):
 
     type2DecileIndex2AccumulatedNumberofMutationsDict = {}
@@ -746,7 +750,7 @@ def fillDictionaries_chromBased_simBased(sample2NumberofSubsDict,
             sample2SubsSignature2NumberofMutationsDict,
             chrBased_simBased_subs_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            subsSignature2PropertiesListDict,
+            subsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDSUBSTITUTIONS,
             sample_based)
         if verbose: print('Worker %s STEP2.1 Search for Mutations SUBS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
@@ -762,7 +766,7 @@ def fillDictionaries_chromBased_simBased(sample2NumberofSubsDict,
             sample2IndelsSignature2NumberofMutationsDict,
             chrBased_simBased_indels_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            indelsSignature2PropertiesListDict,
+            indelsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDINDELS,
             sample_based)
         if verbose: print('Worker %s STEP2.2 Search for Mutations INDELS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
@@ -778,7 +782,7 @@ def fillDictionaries_chromBased_simBased(sample2NumberofSubsDict,
             sample2DinucsSignature2NumberofMutationsDict,
             chrBased_simBased_dinucs_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            dinucsSignature2PropertiesListDict,
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDDINUCS,
             sample_based)
         if verbose: print('Worker %s STEP2.3 Search for Mutations DINUCS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
@@ -793,7 +797,8 @@ def fillDictionaries_chromBased_simBased(sample2NumberofSubsDict,
 
 ##################################################################
 #Used up to now
-def fillDictionaries(sample2NumberofSubsDict,
+def fillDictionaries(chrLong,
+                    sample2NumberofSubsDict,
                     sample2NumberofIndelsDict,
                     sample2NumberofDinucsDict,
                     sample2SubsSignature2NumberofMutationsDict,
@@ -804,11 +809,9 @@ def fillDictionaries(sample2NumberofSubsDict,
                     chrBased_simBased_indels_df,
                     chrBased_simBased_dinucs_df,
                     numofSimulations,
-                    simNum,
-                    chrLong,
-                    subsSignature2PropertiesListDict,
-                    indelsSignature2PropertiesListDict,
-                    dinucsSignature2PropertiesListDict,
+                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                     verbose):
 
     simNum2Type2DecileIndex2NumberofMutationsDict = {}
@@ -816,48 +819,48 @@ def fillDictionaries(sample2NumberofSubsDict,
 
     ##################################################################################################################
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-        if verbose: print('Worker %s STEP2.1 Search for Mutations SUBS STARTS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.1 Search for Mutations SUBS STARTS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
         simNum2SubsType2DecileIndex2NumberofMutationsDict, simNum2Sample2SubsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofSubsDict,
             sample2SubsSignature2NumberofMutationsDict,
             chrBased_simBased_subs_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            subsSignature2PropertiesListDict,
+            subsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDSUBSTITUTIONS,
             numofSimulations)
-        if verbose: print('Worker %s STEP2.1 Search for Mutations SUBS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.1 Search for Mutations SUBS ENDS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
 
         accumulate(simNum2SubsType2DecileIndex2NumberofMutationsDict,simNum2Sample2SubsType2DecileIndex2NumberofMutationsDict,simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict)
     ##################################################################################################################
 
     ##################################################################################################################
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
-        if verbose: print('Worker %s STEP2.2 Search for Mutations INDELS STARTS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.2 Search for Mutations INDELS STARTS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
         simNum2IndelType2DecileIndex2NumberofMutationsDict, simNum2Sample2IndelsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofIndelsDict,
             sample2IndelsSignature2NumberofMutationsDict,
             chrBased_simBased_indels_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            indelsSignature2PropertiesListDict,
+            indelsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDINDELS,
             numofSimulations)
-        if verbose: print('Worker %s STEP2.2 Search for Mutations INDELS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.2 Search for Mutations INDELS ENDS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
 
         accumulate(simNum2IndelType2DecileIndex2NumberofMutationsDict,simNum2Sample2IndelsType2DecileIndex2NumberofMutationsDict,simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict)
     ##################################################################################################################
 
     ##################################################################################################################
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
-        if verbose: print('Worker %s STEP2.3 Search for Mutations DINUCS STARTS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.3 Search for Mutations DINUCS STARTS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
         simNum2DinucType2DecileIndex2NumberofMutationsDict, simNum2Sample2DinucsType2DecileIndex2NumberofMutationsDict = searchforMutations(
             sample2NumberofDinucsDict,
             sample2DinucsSignature2NumberofMutationsDict,
             chrBased_simBased_dinucs_df,
             chrBasedReplicationTimeDataArrayWithDecileIndex,
-            dinucsSignature2PropertiesListDict,
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
             AGGREGATEDDINUCS,
             numofSimulations)
-        if verbose: print('Worker %s STEP2.3 Search for Mutations DINUCS ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()))
+        if verbose: print('Worker %s STEP2.3 Search for Mutations DINUCS ENDS %s %s MB' % (str(os.getpid()), chrLong, memory_usage()))
 
         accumulate(simNum2DinucType2DecileIndex2NumberofMutationsDict,simNum2Sample2DinucsType2DecileIndex2NumberofMutationsDict,simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict)
     ##################################################################################################################
@@ -871,7 +874,7 @@ def fillDictionaries(sample2NumberofSubsDict,
 def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_for_apply_sync(outputDir,jobname,simNum,chrLong,
                     sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                     sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex):
+                    sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex):
 
     if verbose: print('Worker %s STEP1 GENERATE %s simNum:%d STARTS %s MB' %(str(os.getpid()),chrLong,simNum,memory_usage()))
 
@@ -899,9 +902,9 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_for_apply
         sample_based,
         simNum,
         chrLong,
-        subsSignature2PropertiesListDict,
-        indelsSignature2PropertiesListDict,
-        dinucsSignature2PropertiesListDict,
+        subsSignature_cutoff_numberofmutations_averageprobability_df,
+        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
         verbose)
     if verbose: print('Worker %s STEP3 FILL DICTIONARIES ENDS %s simNum:%d %s MB' %(str(os.getpid()),chrLong,simNum,memory_usage()))
 
@@ -926,9 +929,9 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList
     sample2IndelsSignature2NumberofMutationsDict = inputList[8]
     sample2DinucsSignature2NumberofMutationsDict = inputList[9]
     sample_based = inputList[10]
-    subsSignature2PropertiesListDict=inputList[11]
-    indelsSignature2PropertiesListDict=inputList[12]
-    dinucsSignature2PropertiesListDict=inputList[13]
+    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[11]
+    indelsSignature_cutoff_numberofmutations_averageprobability_df=inputList[12]
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df=inputList[13]
     verbose=inputList[14]
     chrBasedReplicationTimeDataArrayWithDecileIndex= inputList[15]
 
@@ -958,9 +961,9 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList
         sample_based,
         simNum,
         chrLong,
-        subsSignature2PropertiesListDict,
-        indelsSignature2PropertiesListDict,
-        dinucsSignature2PropertiesListDict,
+        subsSignature_cutoff_numberofmutations_averageprobability_df,
+        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
         verbose)
     if verbose: print('Worker %s STEP3 FILL DICTIONARIES ENDS %s simNum:%d %s MB' %(str(os.getpid()),chrLong,simNum,memory_usage()))
 
@@ -987,14 +990,16 @@ def generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList):
     chrBased_dinucs_df_split = inputList[10]
     chrBased_grouped_decile_df_list = inputList[11]
     numofSimulations = inputList[12]
-    subsSignature2PropertiesListDict=inputList[13]
-    indelsSignature2PropertiesListDict=inputList[14]
-    dinucsSignature2PropertiesListDict=inputList[15]
+    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[13]
+    indelsSignature_cutoff_numberofmutations_averageprobability_df=inputList[14]
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df=inputList[15]
+    verbose=inputList[16]
 
     #fill nparray slices with decileIndex and return it in the function fillChrBasedDecileIndexArray
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list)
 
     simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries(
+        chrLong,
         sample2NumberofSubsDict,
         sample2NumberofIndelsDict,
         sample2NumberofDinucsDict,
@@ -1006,9 +1011,10 @@ def generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList):
         chrBased_indels_df_split,
         chrBased_dinucs_df_split,
         numofSimulations,
-        subsSignature2PropertiesListDict,
-        indelsSignature2PropertiesListDict,
-        dinucsSignature2PropertiesListDict)
+        subsSignature_cutoff_numberofmutations_averageprobability_df,
+        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+        verbose)
 
     return simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
@@ -1247,7 +1253,7 @@ def getMutationDensityDict(decile_df_list,decileBasedAllChrAccumulatedCountDict)
 def fillInputList(outputDir,jobname,simNum,chrLong,
                   sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                  sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                 sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex):
+                 sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex):
 
     if verbose: print('Worker %s FillInputList %s simNum:%d starts' %(str(os.getpid()),chrLong,simNum))
     inputList=[]
@@ -1262,9 +1268,9 @@ def fillInputList(outputDir,jobname,simNum,chrLong,
     inputList.append(sample2IndelsSignature2NumberofMutationsDict)
     inputList.append(sample2DinucsSignature2NumberofMutationsDict)
     inputList.append(sample_based)
-    inputList.append(subsSignature2PropertiesListDict)
-    inputList.append(indelsSignature2PropertiesListDict)
-    inputList.append(dinucsSignature2PropertiesListDict)
+    inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
+    inputList.append(indelsSignature_cutoff_numberofmutations_averageprobability_df)
+    inputList.append(dinucsSignature_cutoff_numberofmutations_averageprobability_df)
     inputList.append(verbose)
     inputList.append(chrBasedReplicationTimeDataArrayWithDecileIndex)
 
@@ -1283,17 +1289,20 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                                     chromSizesDict,
                                     chrNamesList,
                                     chrBased_grouped_decile_df_list,
-                                    subsSignature2PropertiesListDict,
-                                    indelsSignature2PropertiesListDict,
-                                    dinucsSignature2PropertiesListDict,
+                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                     sample_based,
                                     verbose):
 
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
 
     simNum2Type2DecileBasedAllChrAccumulatedCountDict = {}
     simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict ={}
+
+    ################################
+    numofProcesses = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(numofProcesses)
+    ################################
 
     ########################################################################################################################################################
     if (computationType==USING_APPLY_ASYNC):
@@ -1317,17 +1326,29 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 
 
         #######################################################################################################################
+        #TODO There can be a way to make this portion of the code more robust to different operating systems e.g: ubuntu
         for chrLong in chrNamesList:
             chromSize = chromSizesDict[chrLong]
             if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s STARTS' % (str(os.getpid()), memory_usage(),chrLong))
             chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
             if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
 
+            # ################################
+            # numofProcesses = multiprocessing.cpu_count()
+            # pool = multiprocessing.Pool(numofProcesses)
+            # ################################
+
             for simNum in sim_nums:
                 pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_for_apply_sync, (outputDir,jobname,simNum,chrLong,
                     sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                     sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex), callback=accumulate_apply_async_result)
+                    sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex), callback=accumulate_apply_async_result)
+
+            # ################################
+            # pool.close()
+            # pool.join()
+            # ################################
+
         #######################################################################################################################
 
 
@@ -1344,12 +1365,17 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
             if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
 
+            # ################################
+            # numofProcesses = multiprocessing.cpu_count()
+            # pool = multiprocessing.Pool(numofProcesses)
+            # ################################
+
             for simNum, type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict in pool.imap_unordered(
                     combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, (
                     fillInputList(outputDir,jobname,simNum,chrLong,
                     sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                     sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    sample_based,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex) for simNum in sim_nums), chunksize=1):
+                    sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex) for simNum in sim_nums), chunksize=1):
 
                 if verbose: print('Worker pid %s maximum memory usage in ACCUMULATE %.2f (mb) for %s' % (str(os.getpid()), memory_usage(),chrLong))
                 accumulate_each_sim_result(simNum,
@@ -1357,9 +1383,21 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                                            sample2Type2DecileIndex2NumberofMutationsDict,
                                            simNum2Type2DecileBasedAllChrAccumulatedCountDict,
                                            simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+
+            # ################################
+            # pool.close()
+            # pool.join()
+            # ################################
+
         #######################################################################################################################
 
     elif (computationType == COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL):
+
+        # ################################
+        # numofProcesses = multiprocessing.cpu_count()
+        # pool = multiprocessing.Pool(numofProcesses)
+        # ################################
+
         # It seems that chrNames in replicationTimeData are long chr names such as chr1, chrX
         for chrLong in chrNamesList:
             poolInputList = []
@@ -1385,9 +1423,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                 inputList.append(chrBased_simBased_dinucs_df)  # Different
                 inputList.append(chrBased_grouped_decile_df_list)  # Same
                 inputList.append(numofSimulations)
-                inputList.append(subsSignature2PropertiesListDict)
-                inputList.append(indelsSignature2PropertiesListDict)
-                inputList.append(dinucsSignature2PropertiesListDict)
+                inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
+                inputList.append(indelsSignature_cutoff_numberofmutations_averageprobability_df)
+                inputList.append(dinucsSignature_cutoff_numberofmutations_averageprobability_df)
+                inputList.append(verbose)
                 poolInputList.append(inputList)
 
             # Call the parallel code for poolInputList
@@ -1397,6 +1436,12 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             # Fill np.array with 0 if there is no signal, otherwise fill with the decileIndex if there is a signal
             listofDictionaries = pool.map(generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList)
             accumulateTypeBasedDictionaries_simulations_integrated(listofDictionaries,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
+
+        # ################################
+        # pool.close()
+        # pool.join()
+        # ################################
+
         ###################################################################################################################################################
 
     # print('Replication Time Results %s starts' %(computationType))
@@ -1554,7 +1599,7 @@ def writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,decil
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature2PropertiesListDict,indelsSignature2PropertiesListDict,dinucsSignature2PropertiesListDict,verbose,matrix_generator_path):
+def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
 
     print('\n#################################################################################')
     print('--- ReplicationTimeAnalysis starts')
@@ -1632,9 +1677,9 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
                                                                                                                             chromSizesDict,
                                                                                                                             chromNamesList,
                                                                                                                             chrBased_grouped_decile_df_list,
-                                                                                                                            subsSignature2PropertiesListDict,
-                                                                                                                            indelsSignature2PropertiesListDict,
-                                                                                                                            dinucsSignature2PropertiesListDict,
+                                                                                                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                                                            indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                                                            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                                                             sample_based,
                                                                                                                             verbose)
 
