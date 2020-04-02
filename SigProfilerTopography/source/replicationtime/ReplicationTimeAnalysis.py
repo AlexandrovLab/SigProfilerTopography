@@ -48,11 +48,6 @@ import math
 import numpy as np
 import pandas as pd
 
-from SigProfilerTopography.source.commons.TopographyCommons import current_abs_path
-from SigProfilerTopography.source.commons.TopographyCommons import ONE_DIRECTORY_UP
-from SigProfilerTopography.source.commons.TopographyCommons import LIB
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATION
-from SigProfilerTopography.source.commons.TopographyCommons import UCSCGENOME
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
@@ -88,9 +83,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedM
 from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
-
-from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
-from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
 
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
@@ -199,7 +191,7 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
 
 ##################################################################
 def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose):
-    if verbose: print('Worker pid %s %s Before Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
+    if verbose: print('\tVerbose Worker pid %s %s Before Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
 
     # 1st way Slower. Not tested in terms fo final outcome/ results.
     # chrom_string = np.memmap(chrbased_file_path, dtype=np.byte, mode='r')
@@ -215,7 +207,7 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
 
     chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
 
-    if verbose: print('Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
+    if verbose: print('\tVerbose Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
 
     return (chrLong,chrBased_wavelet_processed_df_group)
 ##################################################################
@@ -1315,7 +1307,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             type2DecileIndex2NumberofMutationsDict = result_tuple[2]
             sample2Type2DecileIndex2NumberofMutationsDict = result_tuple[3]
 
-            if verbose: print('Worker pid %s memory_usage %.2f MB ACCUMULATE simNum:%s %s' % (str(os.getpid()), memory_usage(), simNum, chrLong))
+            if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB ACCUMULATE simNum:%s %s' % (str(os.getpid()), memory_usage(), simNum, chrLong))
 
             accumulate_each_sim_result(simNum,
                                        type2DecileIndex2NumberofMutationsDict,
@@ -1329,9 +1321,9 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
         #TODO There can be a way to make this portion of the code more robust to different operating systems e.g: ubuntu
         for chrLong in chrNamesList:
             chromSize = chromSizesDict[chrLong]
-            if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s STARTS' % (str(os.getpid()), memory_usage(),chrLong))
+            if verbose: print('\tVerbose Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s STARTS' % (str(os.getpid()), memory_usage(),chrLong))
             chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
-            if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
+            if verbose: print('\tVerbose Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
 
             # ################################
             # numofProcesses = multiprocessing.cpu_count()
@@ -1361,9 +1353,9 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
         #imap_unordered
         for chrLong in chrNamesList:
             chromSize = chromSizesDict[chrLong]
-            if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s STARTS' % (str(os.getpid()), memory_usage(),chrLong))
+            if verbose: print('\tVerbose Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s STARTS' % (str(os.getpid()), memory_usage(),chrLong))
             chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
-            if verbose: print('Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
+            if verbose: print('\tVerbose Worker pid %s maximum memory usage in FILL CHROM BASED NP ARRAY %.2f MB for %s ENDS' % (str(os.getpid()), memory_usage(),chrLong))
 
             # ################################
             # numofProcesses = multiprocessing.cpu_count()
@@ -1377,7 +1369,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
                     sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
                     sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex) for simNum in sim_nums), chunksize=1):
 
-                if verbose: print('Worker pid %s maximum memory usage in ACCUMULATE %.2f (mb) for %s' % (str(os.getpid()), memory_usage(),chrLong))
+                if verbose: print('\tVerbose Worker pid %s maximum memory usage in ACCUMULATE %.2f (mb) for %s' % (str(os.getpid()), memory_usage(),chrLong))
                 accumulate_each_sim_result(simNum,
                                            type2DecileIndex2NumberofMutationsDict,
                                            sample2Type2DecileIndex2NumberofMutationsDict,
@@ -1646,12 +1638,12 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
     # Last decile_df in decile_df_list contains the intervals that are replicated the latest.
     # Please note that each decile_df contains intervals from all chroms (mixed chroms)
     #What is the type of deciles? Deciles is a list of dataframes.
-    if verbose: print('Worker pid %s READ Repliseq DATA STARTS  %s MB' % (str(os.getpid()), memory_usage()))
+    if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA STARTS  %s MB' % (str(os.getpid()), memory_usage()))
     #Whole genome is needed here
     #Formerly I was reading 2bit files using twobitreader
     #Now, formerly downloaded matrix generator reference genome is being used.
     chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,repliseqDataFilename,matrix_generator_path,verbose)
-    if verbose: print('Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
+    if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
 
     #Get chrBased grouped deciles
     chrBased_grouped_decile_df_list = []

@@ -13,8 +13,8 @@
 # and  the color represents the signficance of number of processive groups in original data w.r.t. simulations data
 
 import os
+import sys
 import shutil
-import scipy.stats
 import statsmodels.stats.multitest
 import math
 import  numpy as np
@@ -30,8 +30,6 @@ from matplotlib import pyplot as plt
 
 import matplotlib as mpl
 import matplotlib.cm as cm
-from scipy.stats import poisson
-from scipy.stats import ttest_1samp
 from statsmodels.stats.weightstats import ztest
 from matplotlib.colors import Normalize
 
@@ -113,7 +111,7 @@ def plot_color_bar(outputDir,jobname,norm):
 
 
 ###################################################################
-def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict):
+def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict,verbose):
 
     ####################################################
     signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict={}
@@ -124,7 +122,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     signature_dict_keys = originalSignature2ProcessiveGroupLength2PropertiesDict.keys()
     #Pay attention it has to be reverse=True for grid representation to get SBS1 on the upper left corner otherwise SBS1 shows up on the lower left corner
     sortedSignatureList = sorted(signature_dict_keys,reverse=True,key=natural_key)
-    print('sortedSignatureList: %s' %(sortedSignatureList))
+    if verbose: print('\tVerbose sortedSignatureList: %s' %(sortedSignatureList))
     ####################################################
 
     ####################################################
@@ -136,7 +134,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     #Convert set to list
     processiveGroupLengthList = list(processiveGroupLengthSet)
     sortedProcessiveGroupLengthList = sorted(processiveGroupLengthList, key=int)
-    print('sortedProcessiveGroupLengthList: %s' %(sortedProcessiveGroupLengthList))
+    if verbose: print('\tVerbose sortedProcessiveGroupLengthList: %s' %(sortedProcessiveGroupLengthList))
     ####################################################
 
     #We will be using sortedSignatureList and sortedProcessiveGroupLengthList in calculating p-value and retrieving corrected p-value
@@ -147,38 +145,34 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     signature2ProcessiveGroupLength2RadiusDict = {}
 
     for signature in sortedSignatureList:
-        #Normalize number of groups within in signature
+        #Normalize number of groups within a signature
         numberofProcessiveGroupsList = []
         numberofProcessiveGroupsList_in_log10 = []
 
         for processiveGroupLength in sortedProcessiveGroupLengthList:
             if processiveGroupLength in originalSignature2ProcessiveGroupLength2PropertiesDict[signature]:
                 number_of_processive_groups=originalSignature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength]['numberofProcessiveGroups']
+                #Attention for a radius to be drawn there must be at least 6 processive group of that length
                 if number_of_processive_groups>=5:
                     numberofProcessiveGroupsList.append(number_of_processive_groups)
                     #Take log10
                     numberofProcessiveGroupsList_in_log10.append(math.log10(number_of_processive_groups))
                 else:
-                    print('Radius is set to 0 since  for %s processiveGroupLength:%s numberofProcessiveGroup:%d <5' % (signature, processiveGroupLength, number_of_processive_groups))
+                    if verbose: print('\tVerbose Radius is set to 0 since  for %s processiveGroupLength:%s numberofProcessiveGroup:%d <5' % (signature, processiveGroupLength, number_of_processive_groups))
                     numberofProcessiveGroupsList.append(0)
                     numberofProcessiveGroupsList_in_log10.append(0)
 
         #If numberofProcessiveGroupsList is not empty list
         if (numberofProcessiveGroupsList_in_log10 and (max(numberofProcessiveGroupsList_in_log10)>0)):
-            print('signature:%s' %signature)
-            print('numberofProcessiveGroupsList')
-            print(numberofProcessiveGroupsList)
-            print('numberofProcessiveGroupsList_in_log10')
-            print(numberofProcessiveGroupsList_in_log10)
+            if verbose: print('\tVerbose signature:%s' %signature)
+            if verbose: print('\tVerbose numberofProcessiveGroupsList:%s' %(numberofProcessiveGroupsList))
+            if verbose: print('\tVerbose numberofProcessiveGroupsList_in_log10:%s' %(numberofProcessiveGroupsList_in_log10))
             normalizedNumberofProcessiveGroupsList = [i/max(numberofProcessiveGroupsList_in_log10) for i in numberofProcessiveGroupsList_in_log10]
             radiusNumberofProcessiveGroupsList = [i*0.48 for i in normalizedNumberofProcessiveGroupsList]
 
-            print('normalizedNumberofProcessiveGroupsList')
-            print(normalizedNumberofProcessiveGroupsList)
-
-            print('radiusNumberofProcessiveGroupsList')
-            print(radiusNumberofProcessiveGroupsList)
-            print('######################################')
+            if verbose: print('\tVerbose normalizedNumberofProcessiveGroupsList:%s' %(normalizedNumberofProcessiveGroupsList))
+            if verbose: print('\tVerbose radiusNumberofProcessiveGroupsList:%s' %(radiusNumberofProcessiveGroupsList))
+            if verbose: print('\tVerbose ######################################')
 
             #Fill dictionary using radiusNormalizedNumberofProcessiveGroupsList
             radiusIndex = 0
@@ -205,7 +199,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     for signature in sortedSignatureList:
         for processiveGroupLength in sortedProcessiveGroupLengthList:
-            radius=None
+            # radius=None
             if signature in signature2ProcessiveGroupLength2RadiusDict:
                 if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
 
@@ -239,14 +233,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                         pvalue=None
                         zscore=None
 
-                        if (expectedValues is not None):
-                            if (len(expectedValues)>0):
-                                # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
-                                zstat, pvalue = ztest(expectedValues, [observedValue])
-                                #if pvalue is None or np.nan qvalue can not be calculated.
-                                if (pvalue is not None) and (not np.isnan(pvalue)):
-                                    all_p_values.append(pvalue)
-                                    all_p_values_element_names.append((signature,processiveGroupLength))
+                        if expectedValues and (len(expectedValues)>0) and (np.any(expectedValues)):
+                            # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
+                            zstat, pvalue = ztest(expectedValues, [observedValue])
+                            #if pvalue is None or np.nan qvalue can not be calculated.
+                            if (pvalue is not None) and (not np.isnan(pvalue)):
+                                all_p_values.append(pvalue)
+                                all_p_values_element_names.append((signature,processiveGroupLength))
 
                         if (expectedValues and len(expectedValues)>0):
                             avg_sims=sum(expectedValues)/len(expectedValues)
@@ -304,45 +297,16 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
         minus_log10_all_FDR_BH_adjusted_p_values=[-math.log10(q_value)  if (q_value>0 and q_value<SIGNIFICANCE_LEVEL)  else np.nan for q_value in all_FDR_BH_adjusted_p_values]
 
-        print('#############################################')
-        print('len(all_p_values):%d\n all_p_values: %s' %(len(all_p_values), all_p_values))
+        if verbose: print('\tVerbose #############################################')
+        if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' %(len(all_p_values), all_p_values))
 
-        print('#############################################')
-        print('len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
+        if verbose: print('\tVerbose #############################################')
+        if verbose: print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
 
-        print('#############################################')
-        print('len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' %(len(minus_log10_all_FDR_BH_adjusted_p_values),minus_log10_all_FDR_BH_adjusted_p_values))
-        print('#############################################')
+        if verbose: print('\tVerbose #############################################')
+        if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' %(len(minus_log10_all_FDR_BH_adjusted_p_values),minus_log10_all_FDR_BH_adjusted_p_values))
+        if verbose: print('\tVerbose #############################################')
 
-        # #######################################################################################
-        # #######################  Get the corrected q values in an order starts ################
-        # #######################################################################################
-        # #Old way
-        # value_index = 0
-        # for signature in sortedSignatureList:
-        #     for processiveGroupLength in sortedProcessiveGroupLengthList:
-        #         p_value=None
-        #         q_value=None
-        #         minus_log10_qvalue=None
-        #
-        #         if signature in signature2ProcessiveGroupLength2RadiusDict:
-        #             if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
-        #                 p_value = all_p_values[value_index]
-        #                 q_value = all_FDR_BH_adjusted_p_values[value_index]
-        #
-        #                 signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue']=q_value
-        #                 if q_value is not None and q_value==0 :
-        #                     signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = np.inf
-        #                 elif q_value is not None:
-        #                     signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = -math.log10(q_value)
-        #                 else:
-        #                     signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = None
-        #
-        #                 print('%s processiveGroupLength:%s pvalue:%.0E qvalue:%.0E minus_log10_qvalue:%s' %(signature, processiveGroupLength, p_value, q_value,minus_log10_qvalue))
-        #                 value_index += 1
-        # #######################################################################################
-        # #######################  Get the corrected q values in an order ends ################
-        # #######################################################################################
 
         #######################################################################################
         #######################  Get the corrected q values in an order starts ################
@@ -360,10 +324,19 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
             else:
                 signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = None
         #######################################################################################
-        #######################  Get the corrected q values in an order ends ################
+        #######################  Get the corrected q values in an order ends ##################
         #######################################################################################
 
-    print('################################################################')
+        #For the (signature,processiveGroupLength) tuples where pvalue can not be calculated using ztest e.g.: expected values are all zero
+        #We need to set qvalue and minus_log10_qvalue as None
+        #So that writeDictionaryAsADataframe does not give error.
+        for signature in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict:
+            for processiveGroupLength in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature]:
+                if (signature,processiveGroupLength) not in all_p_values_element_names:
+                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue'] =None
+                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] =None
+
+    if verbose: print('\tVerbose ################################################################')
     ####################################################################################
     ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None ######
     ####################################################################################
@@ -371,9 +344,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     ###################################################################
     ############### For information starts ############################
     ###################################################################
-    print('signature2ProcessiveGroupLength2RadiusDict')
-    print(signature2ProcessiveGroupLength2RadiusDict)
-    print('##########################################')
+    if verbose: print('\tVerbose signature2ProcessiveGroupLength2RadiusDict:%s' %(signature2ProcessiveGroupLength2RadiusDict))
+    if verbose: print('\tVerbose ##########################################')
 
     #Get the highest processive group length with a nonzero radius
     maxProcessiveGroupLength = 0
@@ -384,16 +356,15 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
                 if (int(processiveGroupLength) > maxProcessiveGroupLength):
                     maxProcessiveGroupLength = int(processiveGroupLength)
 
-    print('Processivity plot will be for this maxProcessiveGroupLength:%d' %(maxProcessiveGroupLength))
-    print('len(sortedProcessiveGroupLengthList):%d' %(len(sortedProcessiveGroupLengthList)))
+    if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' %(maxProcessiveGroupLength))
+    if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' %(len(sortedProcessiveGroupLengthList)))
 
     index=None
     if ((len(sortedProcessiveGroupLengthList)>0) and (maxProcessiveGroupLength>0)):
         #Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
         index = sortedProcessiveGroupLengthList.index(str(maxProcessiveGroupLength))
-        print('sortedProcessiveGroupLengthList[index]:%s' %(sortedProcessiveGroupLengthList[index]))
-        print('##########################################')
-
+        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' %(sortedProcessiveGroupLengthList[index]))
+        if verbose: print('\tVerbose ##########################################')
     ###################################################################
     ############### For information ends ##############################
     ###################################################################
@@ -416,8 +387,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     # fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sortedSignatureList)))
     # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
-
-    print('maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sortedSignatureList)))
+    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sortedSignatureList)))
 
     if len(sortedSignatureList)<=2:
         fig = plt.figure(figsize=(15, 15))
@@ -479,9 +449,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
                 if signature in signature2ProcessiveGroupLength2RadiusDict:
                     if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
-
+                        color=None
                         radius = signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]
-                        color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
+                        if 'minus_log10_qvalue' in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]:
+                            color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
 
                         if ((radius is not None) and (radius>0) and color):
                             #Very important: You have to norm
@@ -625,10 +596,10 @@ def writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2Processi
 
 
 ###################################################################
-def processivityFigures(outputDir,jobname,numberofSimulations):
+def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
-    print('Topography.py jobnamePath:%s ' %jobnamePath)
+    if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
 
     ############################################################
     if (os.path.exists(jobnamePath)):
@@ -653,15 +624,14 @@ def processivityFigures(outputDir,jobname,numberofSimulations):
 
     ############################################################
     if (numberofSimulations > 0):
-        print('Which simulations are available?: simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()')
-        print(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())
-        print('Number of simulations: len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())')
-        print(len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()))
+        if verbose: print('\tVerbose Which simulations are available?: simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()')
+        if verbose: print('\tVerbose %s' %(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()))
+        if verbose: print('\tVerbose Number of simulations: len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())')
+        if verbose: print('\tVerbose %d' %(len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())))
     ############################################################
 
-
     ############################################################
-    plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict)
+    plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict,verbose)
     ############################################################
 
 ###################################################################

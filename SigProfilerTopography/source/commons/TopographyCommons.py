@@ -252,8 +252,8 @@ STRANDBIAS = 'strand_bias'
 SCATTERPLOTS= 'scatter_plots'
 HEATMAPS='heatmaps'
 PLOTTING = 'plotting'
-TRANSCRIPTIONSTRANDBIAS = 'transcriptionstrandbias'
-REPLICATIONSTRANDBIAS = 'replicationstrandbias'
+TRANSCRIPTIONSTRANDBIAS = 'transcription_strand_bias'
+REPLICATIONSTRANDBIAS = 'replication_strand_bias'
 
 ALL = 'all'
 SAMPLES = 'samples'
@@ -383,6 +383,10 @@ BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
 
 ########################################################
 def get_splits(outputDir, jobname, simNum,chrLong):
+    #################################################################################################################
+    # If library file does not exists there is no library file to use and fill the signal and count arrays
+    # Nucleosomes have chrM
+    # SinglePointMutations and Indels have chrMT
 
     chrLong_for_mutations_data = chrLong
     if (chrLong == 'chrM'):

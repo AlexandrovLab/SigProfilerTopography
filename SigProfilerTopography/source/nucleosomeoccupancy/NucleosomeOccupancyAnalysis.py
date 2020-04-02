@@ -85,7 +85,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UN
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool
+
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_chunks
+from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_read_all
+
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
 
@@ -104,6 +107,7 @@ def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorM
     print('--- Library file with path: %s\n' %library_file_with_path)
 
     #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig otherwise no
+    #By the way pyBigWig can be imported in unix, linux like os not available in windows
     #Using HM and CTCF bed files preparing chr based signal array runtime
     #Using ATAC-seq wig files preparing chr based signal array runtime
     occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
@@ -120,7 +124,7 @@ def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict
                       sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
                   subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,plusorMinus,sample_based,verbose):
 
-    if verbose: print('FillInputList: Worker pid %s current_mem_usage %.2f (mb) chrLong:%s simNum:%d' % (str(os.getpid()), memory_usage(),chrLong,simNum))
+    if verbose: print('\tVerbose FillInputList: Worker pid %s current_mem_usage %.2f (mb) chrLong:%s simNum:%d' % (str(os.getpid()), memory_usage(),chrLong,simNum))
     inputList=[]
 
     inputList.append(occupancy_type)
@@ -149,7 +153,7 @@ def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict
 
 ########################################################################################
 #March 24, 2020
-#TODO update it
+#Runs for each chrBased_mutations_df_split
 def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
         occupancy_type,
         outputDir,
@@ -180,10 +184,6 @@ def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
     signal_index = None
     ##############################################################
 
-    #################################################################################################################
-    # If library file does not exists there is no library file to use and fill the signal and count arrays
-    # Nucleosomes have chrM
-    # SinglePointMutations and Indels have chrMT
 
     if (chrBased_mutations_df is not None) and verbose:
         print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_mutations_df.shape[0],chrBased_mutations_df.shape[1]))
@@ -953,7 +953,7 @@ def occupancy_analysis(genome,
     file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
     quantileValue = 0.97
-    remove_outliers = False
+    remove_outliers = True
 
     if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
         library_file_type=BIGWIG
@@ -975,8 +975,11 @@ def occupancy_analysis(genome,
         BEDGRAPH=decideFileType(library_file_with_path)
         if BEDGRAPH==True:
             if verbose: start_time = time.time()
-            readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, library_file_with_path,occupancy_type,verbose)
-            if verbose: print('Verbose Without pool Took %f seconds' %((time.time() - start_time)))
+            #Read by chunks
+            # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
+            #Read at once
+            readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue)
+            if verbose: print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)))
 
             #For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
             # start_time = time.time()

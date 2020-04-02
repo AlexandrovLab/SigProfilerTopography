@@ -160,11 +160,10 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         ##########################################################################################
 
         if verbose:
-            print('mutations_probabilities_df.head()')
-            print(mutations_probabilities_df.head())
-
-            print('mutations_probabilities_df.columns.values')
-            print(mutations_probabilities_df.columns.values)
+            print('\tVerbose mutations_probabilities_df.head()')
+            print('\tVerbose %s' %(mutations_probabilities_df.head()))
+            print('\tVerbose mutations_probabilities_df.columns.values')
+            print('\tVerbose %s' %(mutations_probabilities_df.columns.values))
 
         ##########################################################################################
         #Step1 SigProfilerTopography Python Package
@@ -523,6 +522,7 @@ def runAnalyses(genome,
                 epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE1,DEFAULT_HISTONE_OCCUPANCY_FILE2,DEFAULT_HISTONE_OCCUPANCY_FILE3,DEFAULT_HISTONE_OCCUPANCY_FILE4,DEFAULT_HISTONE_OCCUPANCY_FILE5,DEFAULT_HISTONE_OCCUPANCY_FILE6],
                 epigenomics_files_memos=None,
                 epigenomics_biosamples=None,
+                epigenomics_dna_elements=None,
                 nucleosome_biosample=K562,
                 nucleosome_file=None,
                 replication_time_biosample=MCF7,
@@ -636,6 +636,7 @@ def runAnalyses(genome,
     print('--- epigenomics_files:%s' %epigenomics_files)
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples)
+    print('--- epigenomics_dna_elements:%s' %epigenomics_dna_elements)
     print('--- number of epigenomics_files:%d' %len(epigenomics_files))
 
     print('--- nucleosome_biosample:%s' %nucleosome_biosample)
@@ -1054,7 +1055,9 @@ def runAnalyses(genome,
 
 
     #################################################################################
+    ################################## Setting starts ###############################
     ################## Set full path library files starts ###########################
+    #################################################################################
 
     ###############################################
     # We need full path of the library files
@@ -1103,7 +1106,27 @@ def runAnalyses(genome,
         replication_time_biosample=None
     ###############################################
 
+    ###############################################
+    # data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
+    epigenomics_file_memos_created = []
+
+    # Run for each epigenomics file
+    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
+            epigenomics_file_memos_created.append(epigenomics_file_memo)
+
+    # Used for plotting
+    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
+        epigenomics_files_memos = epigenomics_file_memos_created
+
+    if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
+        epigenomics_biosamples = [BIOSAMPLE_UNDECLARED]
+    ###############################################
+
+    #################################################################################
     ################## Set full path library files ends #############################
+    ################################## Setting ends #################################
     #################################################################################
 
     ####################################################################################################################
@@ -1174,9 +1197,6 @@ def runAnalyses(genome,
         occupancy_type=EPIGENOMICSOCCUPANCY
         deleteOldData(outputDir,jobname,occupancy_type)
 
-        #data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
-        epigenomics_file_memos_created=[]
-
         #Run for each epigenomics file
         for idx, epigenomics_file in enumerate(epigenomics_files):
             start_time = time.time()
@@ -1184,20 +1204,12 @@ def runAnalyses(genome,
                 epigenomics_file_memo= epigenomics_files_memos[idx]
             else:
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
-                epigenomics_file_memos_created.append(epigenomics_file_memo)
 
             runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,plusorMinus_epigenomics,verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))
             print("--- Run Epigenomics Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),epigenomics_file))
             print('#################################################################################\n')
-
-        #Used for plotting
-        if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-            epigenomics_files_memos=epigenomics_file_memos_created
-
-        if (epigenomics_biosamples is None) or (len(epigenomics_biosamples)==0):
-            epigenomics_biosamples=[BIOSAMPLE_UNDECLARED]
 
     print('--- Run SigProfilerTopography Analysis ends')
     print('#################################################################################\n')
@@ -1212,7 +1224,7 @@ def runAnalyses(genome,
         print('#################################################################################')
         print('--- Plot figures starts')
         start_time = time.time()
-        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity)
+        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1234,7 +1246,7 @@ def runAnalyses(genome,
 
 ##############################################################
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity):
+def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,nucleosome_file,epigenomics,nucleosome,replication_time,strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_is_ready_plot_epigenomics,data_is_ready_plot_nucleosome,data_is_ready_plot_replication_time,data_is_ready_plot_strand_bias,data_is_ready_plot_processivity):
 
     #Internally Set
     figureAugmentation = 'noaugmentation'
@@ -1270,7 +1282,7 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
 
     ############################################################
     if (processivity or data_is_ready_plot_processivity):
-        processivityFigures(outputDir,jobname,numberofSimulations)
+        processivityFigures(outputDir,jobname,numberofSimulations,verbose)
     ############################################################
 
     ############################################################
@@ -1279,13 +1291,13 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
         deleteOldFigures(outputDir, jobname, occupancy_type)
 
         #Please note that epigenomics_file_memo is not None
-        #If None it is created.
+        #If None then it is created.
         for idx, epigenomics_file in enumerate(epigenomics_files):
             epigenomics_file_basename = os.path.basename(epigenomics_file)
             epigenomics_file_memo= epigenomics_files_memos[idx]
             occupancyAverageSignalFigures(outputDir, jobname, figureAugmentation, numberofSimulations,sample_based, mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose)
 
-        plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose)
+        plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose)
     ############################################################
 
 ##############################################################

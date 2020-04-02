@@ -332,7 +332,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
 
     ##############################  Fill dictionaries for subs  starts ####################
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-        if verbose: print('Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_subs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -343,13 +343,13 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=SUBS,
                                 sample_based=sample_based,
                                 axis=1)
-        if verbose: print('Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for subs  ends ######################
 
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
-        if verbose: print('Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_indels_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -360,12 +360,12 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=INDELS,
                                 sample_based=sample_based,
                                 axis=1)
-        if verbose: print('Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for indels  ends ######################
 
     ##############################  Fill dictionaries for indels  starts ####################
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
-        if verbose: print('Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
         chrBased_simBased_dinucs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
                                 chrBasedReplicationArray=chrBased_replication_array,
                                 simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
@@ -376,7 +376,7 @@ def searchMutationsOnReplicationStrandArrayForApplyAsync(
                                 type=DINUCS,
                                 sample_based=sample_based,
                                 axis=1)
-        if verbose: print('Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose: print('\tVerbose Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ##############################  Fill dictionaries for indels  ends ######################
 
 
@@ -632,7 +632,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     chrBased_SimNum2Type2Sample2Strand2CountDict = result_tuple[2]
                     chrBased_SimNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
 
-                    if verbose: print('Worker pid %s Accumulate Transcription Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+                    if verbose: print('\tVerbose Worker pid %s Accumulate Replication Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
 
                     accumulate_simulations_integrated_for_each_tuple(
                         chrBased_SimNum2Type2Strand2CountDict,
@@ -728,16 +728,16 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     pool.join()
     ################################
 
-    if verbose: print('ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
-    if verbose: print('accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
-    if verbose: print(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0])
-    if verbose: print('accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
-    if verbose: print(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0])
-    if verbose: print('accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
-    if verbose: print(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0])
-    if verbose: print('accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
-    if verbose: print(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0])
-    if verbose: print('ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
+    if verbose: print('\tVerbose ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
+    if verbose: print('\tVerbose accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
+    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]))
+    if verbose: print('\tVerbose accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
+    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]))
+    if verbose: print('\tVerbose accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
+    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]))
+    if verbose: print('\tVerbose accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
+    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]))
+    if verbose: print('\tVerbose ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
 
     ############################################################################################################
     #####################################       Output starts      #############################################

@@ -72,7 +72,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import readFileInBED
 def updateSignalArray(row,signalArray):
     # signalArray[row[START]:row[END]] += row[SIGNAL]
     signalArray[row[1]:row[2]] += row[3]
-
 ######################################################################
 
 ######################################################################
@@ -309,7 +308,6 @@ def fill_signal_array_dict(chrname,chr_based_df_list,chromSizesDict,occupancy_ty
     if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict --- len(chr_based_df_list):%d current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), len(chr_based_df_list),memory_usage()))
     if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict --- chrname:%s current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), chrname,memory_usage()))
 
-
     for chr_based_df in chr_based_df_list:
         if (chr_based_df[SIGNAL].max() > max_signal):
             max_signal = chr_based_df[SIGNAL].max()
@@ -353,15 +351,16 @@ def update_min_max_array(process_signal_array_dict, signal_array_dict):
 
 
 ##################################################################
-def append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList):
-    if chrname in chr2DataframeList:
-        chr2DataframeList[chrname].append(chrom_based_chunk_df)
+def append_chr_based_df_list_dict(chrname,chrom_based_chunk_df,chr2DataframeListDict):
+    if chrname in chr2DataframeListDict:
+        chr2DataframeListDict[chrname].append(chrom_based_chunk_df)
     else:
-        chr2DataframeList[chrname]=[chrom_based_chunk_df]
+        chr2DataframeListDict[chrname]=[chrom_based_chunk_df]
 ##################################################################
 
 
 ######################################################################
+#No pool not used anymore
 def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type,verbose,chunksize = 10 ** 7):
     chr2DataframeList={}
     signal_array_dict = {}
@@ -401,7 +400,7 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
             chunk_df_grouped = chunk_df.groupby(CHROM)
             for chrname, chrom_based_chunk_df in chunk_df_grouped:
                 if chrname in possible_chrom_list:
-                    append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList)
+                    append_chr_based_df_list_dict(chrname,chrom_based_chunk_df,chr2DataframeList)
 
         for chrname in chr2DataframeList:
             chr_based_df_list=chr2DataframeList[chrname]
@@ -426,7 +425,6 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
 
             update_min_max_array(process_signal_array_dict, signal_array_dict)
 
-
         if (occupancy_type == EPIGENOMICSOCCUPANCY):
             os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
         elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
@@ -446,12 +444,78 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
             np.save(chrBasedSignalFile,signalArray)
 ######################################################################
 
+######################################################################
+#Pool is used.
+#Read at once.
+#Use quantile for outliers
+def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue):
+    chromSizesDict = getChromSizesDict(genome)
+    possible_chrom_list = list(chromSizesDict.keys())
+    if verbose: print('\tVerbose possible_chrom_list:%s' % (possible_chrom_list))
+
+    #To reduce memory footprint
+    # Delete old chr based epigenomics files
+    if occupancy_type==EPIGENOMICSOCCUPANCY:
+        chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+        deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
+
+    if os.path.exists(library_file_with_path):
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(numofProcesses)
+        jobs = []
+
+        column_names = [CHROM, START, END, SIGNAL]
+        data_df=pd.read_csv(library_file_with_path, sep='\t', header=None, comment='#' ,names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+
+        if verbose: print('\tVerbose Before data_df[CHROM].unique():%s' % (data_df[CHROM].unique()))
+        data_df = data_df[data_df[CHROM].isin(possible_chrom_list)]
+        if verbose: print('\tVerbose After data_df[CHROM].unique():%s' % (data_df[CHROM].unique()))
+
+        max_signal=data_df[SIGNAL].max()
+        min_signal=data_df[SIGNAL].min()
+        if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data_df)))
+        if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(data):%s' %(occupancy_type, str(os.getpid()),sys.getsizeof(data_df)))
+        if verbose: print('\tVerbose %s Worker pid %s max_signal:%f min_signal:%f' %(occupancy_type, str(os.getpid()),max_signal,min_signal))
+        if verbose: print('\tVerbose ################################')
+
+        if (remove_outliers and (quantileValue < 1.0)):
+            # remove the outliers
+            q = data_df[SIGNAL].quantile(quantileValue)
+            if verbose: print('\tVerbose q:%f' % q)
+            if verbose: print('\tVerbose before outlier elimination number of rows: %d' % (data_df.shape[0]))
+            data_df = data_df[data_df[SIGNAL] < q]
+            if verbose: print('\tVerbose after outlier elimination number of rows: %d' % (data_df.shape[0]))
+
+        data_df_grouped = data_df.groupby(CHROM)
+
+        for chrname,chrBased_data_df in data_df_grouped:
+            if chrname in possible_chrom_list:
+                inputList=[]
+                inputList.append(outputDir)
+                inputList.append(jobname)
+                inputList.append(chrname)
+                inputList.append(chromSizesDict[chrname])
+                inputList.append(chrBased_data_df)
+                inputList.append(library_file_with_path)
+                inputList.append(occupancy_type)
+                inputList.append(max_signal)
+                inputList.append(min_signal)
+                jobs.append(pool.apply_async(writeChrBasedOccupancySignalArray,args=(inputList,)))
+                if verbose: print('\tVerbose JOB chrName:%s chrBased_data_df(%d,%d)' % (chrname, chrBased_data_df.shape[0], chrBased_data_df.shape[1]))
+
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+
+        pool.close()
+        pool.join()
+######################################################################
 
 ######################################################################
+#Pool is used
 #Read in chunks, at the end have all signal arrays in memory and write sequentially
-#No outlier elimination
-def readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, library_file_with_path, occupancy_type,verbose,chunksize = 10 ** 7):
-    chr2DataframeList={}
+def readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,chunksize = 10 ** 7,number_of_stds_for_outlier=10):
+    chr2DataframeListDict={}
     signal_array_dict = {}
     signal_array_dict['max_signal'] = np.finfo(np.float32).min
     signal_array_dict['min_signal'] = np.finfo(np.float32).max
@@ -483,7 +547,7 @@ def readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, l
         data=pd.read_csv(library_file_with_path, delimiter='\t', iterator=True, chunksize=chunksize)
         if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data)))
         if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(data):%s' %(occupancy_type, str(os.getpid()),sys.getsizeof(data)))
-        if verbose: print('\t################################')
+        if verbose: print('\tVerbose ################################')
 
         for chunk_df in data:
             print(type(chunk_df))
@@ -494,18 +558,18 @@ def readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, l
             chunk_df[END] = chunk_df[END].astype(np.int32)
             chunk_df[SIGNAL] = chunk_df[SIGNAL].astype(np.float32)
             if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(chunk_df):%s' % (occupancy_type, str(os.getpid()), sys.getsizeof(chunk_df)))
-            if verbose: print('\t################################')
+            if verbose: print('\tVerbose ################################')
 
             chunk_df = chunk_df[chunk_df[CHROM].isin(possible_chrom_list)]
             chunk_df_grouped = chunk_df.groupby(CHROM)
             for chrname, chrom_based_chunk_df in chunk_df_grouped:
                 if chrname in possible_chrom_list:
-                    append_chr_based_df_list(chrname,chrom_based_chunk_df,chr2DataframeList)
+                    append_chr_based_df_list_dict(chrname,chrom_based_chunk_df,chr2DataframeListDict)
 
-        for chrname in chr2DataframeList:
-            chr_based_df_list=chr2DataframeList[chrname]
+        for chrname in chr2DataframeListDict:
+            chr_based_df_list=chr2DataframeListDict[chrname]
             jobs.append(pool.apply_async(fill_signal_array_dict,args=(chrname,chr_based_df_list, chromSizesDict, occupancy_type, verbose,),callback=accumulate_apply_async_result))
-            if verbose: print('\tJOB chrName:%s chrom_based_chunk_df(%d,%d)' % (chrname, chrom_based_chunk_df.shape[0], chrom_based_chunk_df.shape[1]))
+            if verbose: print('\tVerbose JOB chrName:%s chrom_based_chunk_df(%d,%d)' % (chrname, chrom_based_chunk_df.shape[0], chrom_based_chunk_df.shape[1]))
 
         # wait for all jobs to finish
         for job in jobs:
@@ -533,6 +597,12 @@ def readWig_write_derived_from_bedgraph_using_pool(outputDir, jobname, genome, l
                 chrBasedSignalFile = os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
             elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
                 chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,CHRBASED, signalArrayFilename)
+
+            if remove_outliers:
+                mean=signalArray.mean()
+                std=signalArray.std()
+                # number_of_elements_as_outliers=np.count_nonzero(signalArray>(mean+4*std))
+                signalArray[signalArray>(mean+number_of_stds_for_outlier*std)]=0
             np.save(chrBasedSignalFile,signalArray)
 ######################################################################
 

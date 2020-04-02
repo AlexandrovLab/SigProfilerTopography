@@ -751,6 +751,8 @@ def fillSimulationsType2StrandCountList(
 
 
 ##################################################################
+#TODO Update the function March 29, 2020
+#TODO left here fill results_dict
 def fillSimulationsSample2Type2StrandCountList(
         simNum2Sample2Type2Strand2CountDict,
         existingTypesList,
@@ -771,7 +773,7 @@ def fillSimulationsSample2Type2StrandCountList(
         sample2AllSimulationsTypesStrand1ListDict[sample] = []
         sample2AllSimulationsTypesStrand2ListDict[sample] = []
 
-        #Do not include simNum=0 since it is original data
+        #Do not include simNum=0 since it is the original data
         for simNum in range(1, numberofSimulations+1):
             #new code
             sample2TypeStrand2CountDict = simNum2Sample2Type2Strand2CountDict[str(simNum)]
@@ -1002,9 +1004,33 @@ def  fillPValuesDict(type2StrandBiasPValueDict, typesPValuesList,types):
 ##################################################################
 
 
+
 # ##################################################################
 #main function
 def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based):
+
+    # ####################################################
+    # #TODO March 29, 2020
+    # #TODO Append a dict for each result to results_list
+    # #TODO Create a dataframe df = pd.DataFrame(results_list)
+    # transcription_results_dict={}
+    # replication_results_dict = {}
+    #
+    # #TODO Put values of results_dict into results_list
+    # # for key in results_dict:
+    # #     results_list.append(results_dict[key])
+    # transcription_results_list=[]
+    # replication_results_list = []
+    #
+    # #TODO create a dataframe using results_list
+    # # df = pd.DataFrame(results_list)
+    # # filePath = '/home/burcak/test.txt'
+    # # df.to_csv(filePath, sep='\t', header=True, index=False)
+    # # transcription_results_df
+    # # replication_results_df
+    #
+    # # TODO fill transcription_results_dict and replication_results_dict in the following function fillSimulationsSample2Type2StrandCountList
+    # ####################################################
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS)
     print('Topography.py jobnamePath:%s ' %jobnamePath)
@@ -1029,7 +1055,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples starts  ################################
     ##########################################################################################
-
     subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
@@ -1080,7 +1105,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
         Type2Sample2TranscriptionStrand2CountDict_Filepath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS,Type2Sample2TranscriptionStrand2CountDict_Filename)
         simNum2Type2Sample2TranscriptionStrand2CountDict = readDictionary(Type2Sample2TranscriptionStrand2CountDict_Filepath)
         type2Sample2TranscriptionStrand2CountDict = simNum2Type2Sample2TranscriptionStrand2CountDict[str(0)]
-
     #########################   Transcription ends   #########################################
 
     #########################   Replication starts   #########################################
@@ -1154,13 +1178,13 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None)):
         plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(None,None,type2TranscriptionStrand2CountDict, type2ReplicationStrand2CountDict,outputDir,jobname)
 
-    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (subsSignatures)):
+    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (np.any(subsSignatures))):
         plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('subs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,subsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
 
-    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (indelsSignatures)):
+    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (np.any(indelsSignatures))):
         plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('indels',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
 
-    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (dinucsSignatures)):
+    if ((type2TranscriptionStrand2CountDict is not None) and (type2ReplicationStrand2CountDict is not None) and (np.any(dinucsSignatures))):
         plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio('dinucs',None,None,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,outputDir,jobname)
     ########################################################################
     ############## Mutation Types Scatter Plots ends #######################
@@ -1438,8 +1462,6 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     #TODO These dictionaries will be written
     type2TranscriptionPValueDict={}
     type2ReplicationPValueDict={}
-    #subsSignature2MutationTypesTranscriptionPValuesListDict
-    #subsSignature2MutationTypesReplicationPValuesListDict
 
     #########################################################################################################
     #########################  Calculate p-values for SubsSignature Mutation Type starts  ###################
@@ -2139,7 +2161,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_transcription_labels = subsSignatures
     N_signatures_transcription = len(x_axis_transcription_labels)
 
-    if (x_axis_transcription_labels and subs_signatures_transcribedStrandCount_list and subs_signatures_untranscribedStrandCount_list and simulations_subs_signatures_transcribed_medians_list and simulations_subs_signatures_untranscribed_medians_list and (subsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_transcription_labels) and subs_signatures_transcribedStrandCount_list and subs_signatures_untranscribedStrandCount_list and simulations_subs_signatures_transcribed_medians_list and simulations_subs_signatures_untranscribed_medians_list and (subsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_transcription_labels, subs_signatures_transcribedStrandCount_list, subs_signatures_untranscribedStrandCount_list, simulations_subs_signatures_transcribed_medians_list, simulations_subs_signatures_untranscribed_medians_list, subsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_transcription_labels, subs_signatures_transcribedStrandCount_list, subs_signatures_untranscribedStrandCount_list, simulations_subs_signatures_transcribed_medians_list, simulations_subs_signatures_untranscribed_medians_list, subsSignaturetype_transcription_FDR_BH_adjusted_pvalues = zip(*zipped)
@@ -2151,7 +2173,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_replication_labels = subsSignatures
     N_signatures_replication = len(x_axis_replication_labels)
 
-    if (x_axis_replication_labels and subs_signatures_laggingStrandCount_list and subs_signatures_leadingStrandCount_list and simulations_subs_signatures_lagging_medians_list and simulations_subs_signatures_leading_medians_list and (subsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_replication_labels) and subs_signatures_laggingStrandCount_list and subs_signatures_leadingStrandCount_list and simulations_subs_signatures_lagging_medians_list and simulations_subs_signatures_leading_medians_list and (subsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_replication_labels, subs_signatures_laggingStrandCount_list, subs_signatures_leadingStrandCount_list, simulations_subs_signatures_lagging_medians_list, simulations_subs_signatures_leading_medians_list, subsSignaturetype_replication_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_replication_labels, subs_signatures_laggingStrandCount_list, subs_signatures_leadingStrandCount_list, simulations_subs_signatures_lagging_medians_list, simulations_subs_signatures_leading_medians_list, subsSignaturetype_replication_FDR_BH_adjusted_pvalues = zip(*zipped)
@@ -2169,7 +2191,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_transcription_labels = indelsSignatures
     N_signatures_transcription = len(x_axis_transcription_labels)
 
-    if (x_axis_transcription_labels and indels_signatures_transcribedStrandCount_list and indels_signatures_untranscribedStrandCount_list and simulations_indels_signatures_transcribed_medians_list and simulations_indels_signatures_untranscribed_medians_list and (indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_transcription_labels) and indels_signatures_transcribedStrandCount_list and indels_signatures_untranscribedStrandCount_list and simulations_indels_signatures_transcribed_medians_list and simulations_indels_signatures_untranscribed_medians_list and (indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_transcription_labels, indels_signatures_transcribedStrandCount_list, indels_signatures_untranscribedStrandCount_list, simulations_indels_signatures_transcribed_medians_list, simulations_indels_signatures_untranscribed_medians_list, indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_transcription_labels, indels_signatures_transcribedStrandCount_list, indels_signatures_untranscribedStrandCount_list, simulations_indels_signatures_transcribed_medians_list, simulations_indels_signatures_untranscribed_medians_list, indelsSignaturetype_transcription_FDR_BH_adjusted_pvalues = zip(*zipped)
@@ -2181,7 +2203,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_replication_labels = indelsSignatures
     N_signatures_replication = len(x_axis_replication_labels)
 
-    if (x_axis_replication_labels and indels_signatures_laggingStrandCount_list and indels_signatures_leadingStrandCount_list and simulations_indels_signatures_lagging_medians_list and simulations_indels_signatures_leading_medians_list and (indelsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_replication_labels) and indels_signatures_laggingStrandCount_list and indels_signatures_leadingStrandCount_list and simulations_indels_signatures_lagging_medians_list and simulations_indels_signatures_leading_medians_list and (indelsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_replication_labels, indels_signatures_laggingStrandCount_list, indels_signatures_leadingStrandCount_list, simulations_indels_signatures_lagging_medians_list, simulations_indels_signatures_leading_medians_list, indelsSignaturetype_replication_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_replication_labels, indels_signatures_laggingStrandCount_list, indels_signatures_leadingStrandCount_list, simulations_indels_signatures_lagging_medians_list, simulations_indels_signatures_leading_medians_list, indelsSignaturetype_replication_FDR_BH_adjusted_pvalues = zip(*zipped)
@@ -2199,7 +2221,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_transcription_labels = dinucsSignatures
     N_signatures_transcription = len(x_axis_transcription_labels)
 
-    if (x_axis_transcription_labels and dinucs_signatures_transcribedStrandCount_list and dinucs_signatures_untranscribedStrandCount_list and simulations_dinucs_signatures_transcribed_medians_list and simulations_dinucs_signatures_untranscribed_medians_list and (dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_transcription_labels) and dinucs_signatures_transcribedStrandCount_list and dinucs_signatures_untranscribedStrandCount_list and simulations_dinucs_signatures_transcribed_medians_list and simulations_dinucs_signatures_untranscribed_medians_list and (dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_transcription_labels, dinucs_signatures_transcribedStrandCount_list, dinucs_signatures_untranscribedStrandCount_list, simulations_dinucs_signatures_transcribed_medians_list, simulations_dinucs_signatures_untranscribed_medians_list, dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_transcription_labels, dinucs_signatures_transcribedStrandCount_list, dinucs_signatures_untranscribedStrandCount_list, simulations_dinucs_signatures_transcribed_medians_list, simulations_dinucs_signatures_untranscribed_medians_list, dinucsSignaturetype_transcription_FDR_BH_adjusted_pvalues = zip(*zipped)
@@ -2211,7 +2233,7 @@ def transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentati
     x_axis_replication_labels = dinucsSignatures
     N_signatures_replication = len(x_axis_replication_labels)
 
-    if (x_axis_replication_labels and dinucs_signatures_laggingStrandCount_list and dinucs_signatures_leadingStrandCount_list and simulations_dinucs_signatures_lagging_medians_list and simulations_dinucs_signatures_leading_medians_list and (dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
+    if (np.any(x_axis_replication_labels) and dinucs_signatures_laggingStrandCount_list and dinucs_signatures_leadingStrandCount_list and simulations_dinucs_signatures_lagging_medians_list and simulations_dinucs_signatures_leading_medians_list and (dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues.size>0)):
         zipped = zip(x_axis_replication_labels, dinucs_signatures_laggingStrandCount_list, dinucs_signatures_leadingStrandCount_list, simulations_dinucs_signatures_lagging_medians_list, simulations_dinucs_signatures_leading_medians_list, dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues)
         zipped = sorted(zipped, key=lambda x: natural_key(x[0]))
         x_axis_replication_labels, dinucs_signatures_laggingStrandCount_list, dinucs_signatures_leadingStrandCount_list, simulations_dinucs_signatures_lagging_medians_list, simulations_dinucs_signatures_leading_medians_list, dinucsSignaturetype_replication_FDR_BH_adjusted_pvalues = zip(*zipped)

@@ -124,7 +124,7 @@ def findProcessiveGroupsForInputList(inputList):
 def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
     signature2ProcessiveGroupLength2DistanceListDict = {}
 
-    if verbose: print('Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
+    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
     #They must be same type of mutation e.g.: T>A
     #They must be resulted from same signature
     #They must be on the same strand
@@ -146,7 +146,7 @@ def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_
                  signature_cutoff_numberofmutations_averageprobability_df=signature_cutoff_numberofmutations_averageprobability_df,
                  axis=1)
 
-    if verbose: print('Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
+    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
 
     return signature2ProcessiveGroupLength2DistanceListDict
 ####################################################################################
@@ -224,7 +224,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
 
         #####################################################################
-        if verbose: print('computation_type:%s' % (computation_type))
+        if verbose: print('\tVerbose computation_type:%s' % (computation_type))
 
         if computation_type == USING_APPLY_ASYNC:
             for simNum in range(0,numofSimulations+1):
@@ -240,7 +240,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 def accumulate_apply_async_result(small_signature2ProcessiveGroupLength2DistanceListDict):
                     for signature in small_signature2ProcessiveGroupLength2DistanceListDict:
                         for processiveGroupLength in small_signature2ProcessiveGroupLength2DistanceListDict[signature]:
-                            if verbose: print('Worker pid %s memory_usage %.2f MB accumulate_apply_async_result starts' % (str(os.getpid()), memory_usage()))
+                            if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB accumulate_apply_async_result starts' % (str(os.getpid()), memory_usage()))
 
                             if signature in signature2ProcessiveGroupLength2DistanceListDict:
                                 if processiveGroupLength in signature2ProcessiveGroupLength2DistanceListDict[signature]:

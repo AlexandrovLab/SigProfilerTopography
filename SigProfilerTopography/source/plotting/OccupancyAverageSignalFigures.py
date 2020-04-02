@@ -21,6 +21,8 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 from matplotlib import pyplot as plt
 
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
+
+from SigProfilerTopography.source.commons.TopographyCommons import SBS
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
@@ -951,18 +953,18 @@ def updateDictWithThreeLevels(signature2Biosample2ENCODEHM2FoldChangeDict, signa
 
 
 ########################################################
-def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm,plusOrMinus_epigenomics,verbose):
+def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,dna_element,plusOrMinus_epigenomics,verbose):
     occupancy_type=EPIGENOMICSOCCUPANCY
     center=plusOrMinus_epigenomics
     plusorMinus=250
     start=center-plusorMinus
     end= center+plusorMinus+1
 
-    if verbose: print('\tVerbose ----------> %s %s %s' % (signature, cancer_type, encode_hm))
+    if verbose: print('\n\tVerbose ----------> %s %s %s' % (signature, cancer_type, dna_element))
     avg_real_signal = None
 
     # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
-    avg_real_data_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, cancer_type, occupancy_type,encode_hm)
+    avg_real_data_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, cancer_type, occupancy_type,dna_element)
 
     if avg_real_data_signal_array is not None:
         #If there is nan in the list np.mean returns nan.
@@ -975,7 +977,7 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
 
     avg_simulated_signal = None
     if (numberofSimulations > 0):
-        listofSimulationsSignatureBased = readDataForSimulations(None, signature, SIGNATUREBASED, output_dir,cancer_type, numberofSimulations, occupancy_type,encode_hm)
+        listofSimulationsSignatureBased = readDataForSimulations(None, signature, SIGNATUREBASED, output_dir,cancer_type, numberofSimulations, occupancy_type,dna_element)
 
         if ((listofSimulationsSignatureBased is not None) and listofSimulationsSignatureBased):
             stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
@@ -1000,10 +1002,10 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
 
     if (avg_real_signal is not None) and (avg_simulated_signal is not None):
         fold_change = avg_real_signal / avg_simulated_signal
-        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, encode_hm,avg_real_signal, avg_simulated_signal, fold_change))
+        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, dna_element,avg_real_signal, avg_simulated_signal, fold_change))
         return fold_change
     else:
-        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,encode_hm,str(avg_real_signal),str(avg_simulated_signal)))
+        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,dna_element,str(avg_real_signal),str(avg_simulated_signal)))
         return None
 ########################################################
 
@@ -1011,14 +1013,21 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,e
 
 ########################################################
 #Constraint epigenomic biosample name must be contained in epigenomic file memo
-def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose):
+def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSimulations,signature,signature_type,cancer_type,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose):
 
     list=[]
 
     #Step1
-    signature2EncodeHM2FoldChangeDict = {}
+    signature2EpigenomicsFileMemo2FoldChangeDict = {}
+
     #Step2
-    signature2Biosample2EncodeHM2FoldChangeDict = {}
+    signature2Biosample2EpigenomicsFileMemo2FoldChangeDict = {}
+
+    #Step3
+    signature2Biosample2DNAElementPooled2AverageFoldChangeDict = {}
+
+    #Step4
+    signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict = {}
 
     ########################################################################
     #Step1
@@ -1029,51 +1038,182 @@ def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSim
     # ID8_sim56_H3K27me3_Breast_Epithelium_AccumulatedCountArray.txt
     # ID8_sim56_H3K27me3_Breast_Epithelium_AccumulatedSignalArray.txt
 
-    encode_hms = epigenomics_files_memos
     if verbose: print('\tVerbose #####################################################')
-    if verbose: print('\tVerbose %s' %(encode_hms))
+    if verbose: print('\tVerbose DNA Elements %s' %(epigenomics_files_memos))
 
-    for encode_hm in encode_hms:
-        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,encode_hm,plusOrMinus_epigenomics,verbose)
+    for epigenomics_files_memo in epigenomics_files_memos:
+        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memo,plusOrMinus_epigenomics,verbose)
         if fold_change is not None:
-            updateDictWithTwoLevels(signature2EncodeHM2FoldChangeDict,signature,encode_hm,fold_change)
+            updateDictWithTwoLevels(signature2EpigenomicsFileMemo2FoldChangeDict,signature,epigenomics_files_memo,fold_change)
 
     if verbose: print('\tVerbose #######################################################')
     if verbose: print('\tVerbose Step1 After %s' % (signature))
-    if verbose: print('\tVerbose signature2EncodeHM2FoldChangeDict')
-    if verbose: print('\tVerbose %s' %signature2EncodeHM2FoldChangeDict)
+    if verbose: print('\tVerbose signature2EpigenomicsFileMemo2FoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2EpigenomicsFileMemo2FoldChangeDict)
     ########################################################################
 
     ########################################################################
     #Step2
-    for biosample in epigenomics_biosamples:
-        for signature in signature2EncodeHM2FoldChangeDict:
-            for encode_hm in signature2EncodeHM2FoldChangeDict[signature]:
-                if (biosample==BIOSAMPLE_UNDECLARED):
-                    fold_change=signature2EncodeHM2FoldChangeDict[signature][encode_hm]
-                    updateDictWithThreeLevels(signature2Biosample2EncodeHM2FoldChangeDict, signature, BIOSAMPLE_UNDECLARED, encode_hm, fold_change)
-                else:
-                    if (biosample.lower() in encode_hm.lower()):
-                        fold_change=signature2EncodeHM2FoldChangeDict[signature][encode_hm]
-                        updateDictWithThreeLevels(signature2Biosample2EncodeHM2FoldChangeDict, signature, biosample, encode_hm, fold_change)
+    if epigenomics_biosamples is not None:
+        for biosample in epigenomics_biosamples:
+            for signature in signature2EpigenomicsFileMemo2FoldChangeDict:
+                for epigenomics_file_memo in signature2EpigenomicsFileMemo2FoldChangeDict[signature]:
+                    if (biosample==BIOSAMPLE_UNDECLARED):
+                        fold_change=signature2EpigenomicsFileMemo2FoldChangeDict[signature][epigenomics_file_memo]
+                        updateDictWithThreeLevels(signature2Biosample2EpigenomicsFileMemo2FoldChangeDict, signature, BIOSAMPLE_UNDECLARED, epigenomics_file_memo, fold_change)
+                    else:
+                        if (biosample.lower() in epigenomics_file_memo.lower()):
+                            fold_change=signature2EpigenomicsFileMemo2FoldChangeDict[signature][epigenomics_file_memo]
+                            updateDictWithThreeLevels(signature2Biosample2EpigenomicsFileMemo2FoldChangeDict, signature, biosample, epigenomics_file_memo, fold_change)
 
     if verbose: print('\tVerbose #######################################################')
     if verbose: print('\tVerbose Step2 After %s' % (signature))
-    if verbose: print('\tVerbose signature2Biosample2EncodeHM2FoldChangeDict')
-    if verbose: print('\tVerbose %s' %signature2Biosample2EncodeHM2FoldChangeDict)
+    if verbose: print('\tVerbose signature2Biosample2EpigenomicsFileMemo2FoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2Biosample2EpigenomicsFileMemo2FoldChangeDict)
+    ########################################################################
+
+    ########################################################
+    #Step3 Pool for DNA elements
+    #Will be filled in Step3
+    if epigenomics_dna_elements is not None:
+        for signature in signature2Biosample2EpigenomicsFileMemo2FoldChangeDict:
+            for biosample in signature2Biosample2EpigenomicsFileMemo2FoldChangeDict[signature]:
+                #Pool for each dna_element in epigenomics_dna_elements
+                for epigenomics_dna_element in epigenomics_dna_elements:
+                    signature_biosample_dna_element_fold_change_list = []
+                    for signature_biosample_dna_element in signature2Biosample2EpigenomicsFileMemo2FoldChangeDict[signature][biosample]:
+                        if (epigenomics_dna_element.lower() in signature_biosample_dna_element.lower()):
+                            signature_biosample_dna_element_fold_change_list.append(signature2Biosample2EpigenomicsFileMemo2FoldChangeDict[signature][biosample][signature_biosample_dna_element])
+                    if len(signature_biosample_dna_element_fold_change_list)>0:
+                        average_fold_change=np.nanmean(signature_biosample_dna_element_fold_change_list)
+                    else:
+                        average_fold_change=np.nan
+                    #update
+                    # signature2Biosample2DNAElementPooled2AverageFoldChangeDict[signature][biosample][epigenomics_dna_element]=average_fold_change
+                    updateDictWithThreeLevels(signature2Biosample2DNAElementPooled2AverageFoldChangeDict, signature, biosample,epigenomics_dna_element, average_fold_change)
+    ########################################################
+
+
+    if verbose: print('\tVerbose #######################################################')
+    if verbose: print('\tVerbose Step3 After %s' % (signature))
+    if verbose: print('\tVerbose signature2Biosample2DNAElementPooled2AverageFoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2Biosample2DNAElementPooled2AverageFoldChangeDict)
+    ########################################################################
+
+    ########################################################
+    #Step4 Pool for Biosamples
+    #Will be filled in Step4
+    if epigenomics_biosamples is not None:
+        for signature in signature2Biosample2DNAElementPooled2AverageFoldChangeDict:
+            signature_based_biosamples=signature2Biosample2DNAElementPooled2AverageFoldChangeDict[signature]
+            for epigenomics_dna_element in epigenomics_dna_elements:
+                signature_dna_element_fold_change_list=[]
+                for biosample in signature_based_biosamples:
+                    signature_dna_element_fold_change_list.append(signature2Biosample2DNAElementPooled2AverageFoldChangeDict[signature][biosample][epigenomics_dna_element])
+                if (len(signature_dna_element_fold_change_list)>0 and not np.all(np.isnan(signature_dna_element_fold_change_list))):
+                    average_fold_change=np.nanmean(signature_dna_element_fold_change_list)
+                else:
+                    average_fold_change=np.nan
+                #update
+                # signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature][epigenomics_dna_element]=average_fold_change
+                updateDictWithTwoLevels(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, signature, epigenomics_dna_element,average_fold_change)
+    ########################################################
+
+    if verbose: print('\tVerbose #######################################################')
+    if verbose: print('\tVerbose Step4 After %s' % (signature))
+    if verbose: print('\tVerbose signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict')
+    if verbose: print('\tVerbose %s' %signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict)
     ########################################################################
 
     list.append(output_dir)
+    list.append(signature)
+    list.append(signature_type)
     list.append(cancer_type)
     list.append(occupancy_type)
-    list.append(signature2Biosample2EncodeHM2FoldChangeDict)
+    list.append(signature2Biosample2EpigenomicsFileMemo2FoldChangeDict)
+    list.append(signature2Biosample2DNAElementPooled2AverageFoldChangeDict)
+    list.append(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict)
     list.append(verbose)
 
     return list
 ########################################################
 
+
 ########################################################
-def fill_average_fold_change_array_signature_cancertype_biosample(ENCODEHM2FoldChangeDict):
+#Plot heatmaps
+# For Step4
+def fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict):
+    signatures=[]
+    dna_elements=[]
+
+    for signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+        if signature not in signatures:
+            signatures.append(signature)
+        for dna_element in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]:
+            if dna_element not in dna_elements:
+                dna_elements.append(dna_element)
+
+    #sort the dna_elements and signatures
+    dna_elements=sorted(dna_elements,key=natural_key)
+    signatures=sorted(signatures,key=natural_key)
+
+    #Initialize
+    average_fold_change_array = np.zeros((len(signatures), len(dna_elements)))
+
+    #fill the average_fold_change_array
+    for signature_index, signature in enumerate(signatures,0):
+        for dna_element_index, dna_element in enumerate(dna_elements,0):
+            if signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+                if dna_element in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]:
+                    average_fold_change_array[signature_index,dna_element_index]=signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature][dna_element]
+                else:
+                    average_fold_change_array[signature_index,dna_element_index]=np.nan
+            else:
+                average_fold_change_array[signature_index, dna_element_index] = np.nan
+
+    return signatures, dna_elements, average_fold_change_array
+########################################################
+
+
+########################################################
+#Plot heatmaps
+# For Step3
+def fill_average_fold_change_array_rows_biosamples_columns_dna_elements(biosample2DNAElementPooled2AverageFoldChangeDict):
+    biosamples=[]
+    dna_elements=[]
+
+    for biosample in biosample2DNAElementPooled2AverageFoldChangeDict:
+        biosamples.append(biosample)
+        for dna_element in biosample2DNAElementPooled2AverageFoldChangeDict[biosample]:
+            if dna_element not in dna_elements:
+                dna_elements.append(dna_element)
+
+    # sort the biosamples
+    biosamples = sorted(biosamples,key=natural_key)
+
+    #sort the hms
+    dna_elements=sorted(dna_elements,key=natural_key)
+
+    #Initialize
+    average_fold_change_array = np.zeros((len(biosamples), len(dna_elements)))
+
+    for biosample_index,biosample in enumerate(biosamples,0):
+        for dna_element_index,dna_element in enumerate(dna_elements,0):
+            if biosample in biosample2DNAElementPooled2AverageFoldChangeDict:
+                if dna_element in biosample2DNAElementPooled2AverageFoldChangeDict[biosample]:
+                    average_fold_change = biosample2DNAElementPooled2AverageFoldChangeDict[biosample][dna_element]
+                    average_fold_change_array[biosample_index,dna_element_index]=average_fold_change
+                else:
+                    average_fold_change_array[biosample_index,dna_element_index]=np.nan
+            else:
+                average_fold_change_array[biosample_index, dna_element_index] = np.nan
+
+    return biosamples, dna_elements, average_fold_change_array
+########################################################
+
+########################################################
+#For Step2
+def fill_average_fold_change_array_row_each_biosample(ENCODEHM2FoldChangeDict):
     encode_hms=[]
     for encode_hm in ENCODEHM2FoldChangeDict:
         if encode_hm not in encode_hms:
@@ -1093,43 +1233,6 @@ def fill_average_fold_change_array_signature_cancertype_biosample(ENCODEHM2FoldC
             average_fold_change_array[0,hm_index]=np.nan
 
     return encode_hms, average_fold_change_array
-########################################################
-
-
-
-########################################################
-def fill_average_fold_change_array(signature,cancer_type, biosample2EncodeHM2FoldChangeDict):
-    hms=[]
-    cancer_type_encode_biosamples=[]
-
-    for biosample in biosample2EncodeHM2FoldChangeDict:
-        cancer_type_biosample=(cancer_type,biosample)
-        cancer_type_encode_biosamples.append(cancer_type_biosample)
-        for hm in biosample2EncodeHM2FoldChangeDict[biosample]:
-            if hm not in hms:
-                hms.append(hm)
-
-    print('%s %s %s' %(signature,hms,cancer_type_encode_biosamples))
-
-    # sort the hms
-    hms = sorted(hms, key=natural_key)
-
-    #Initialize
-    average_fold_change_array = np.zeros((len(cancer_type_encode_biosamples), len(hms)))
-
-    for cancer_type_biosample_index,cancer_type_biosample in enumerate(cancer_type_encode_biosamples,0):
-        biosample = cancer_type_biosample[1]
-        for hm_index,hm in enumerate(hms,0):
-            if biosample in biosample2EncodeHM2FoldChangeDict:
-                if hm in biosample2EncodeHM2FoldChangeDict[biosample]:
-                    average_fold_change = biosample2EncodeHM2FoldChangeDict[biosample][hm]
-                    average_fold_change_array[cancer_type_biosample_index,hm_index]=average_fold_change
-                else:
-                    average_fold_change_array[cancer_type_biosample_index,hm_index]=np.nan
-            else:
-                average_fold_change_array[cancer_type_biosample_index, hm_index] = np.nan
-
-    return cancer_type_encode_biosamples, hms, average_fold_change_array
 ########################################################
 
 
@@ -1268,23 +1371,113 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
 
 
 ########################################################
-def plot_pcawg_heatmap(list):
+#March 30, 2020
+#For Step4
+def plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,cancer_type,signatureType,heatmap_output_path,verbose):
 
-    output_dir=list[0]
-    cancer_type = list[1]
-    occupancy_type=list[2]
-    signature2Biosample2EncodeHM2FoldChangeDict=list[3]
-    verbose=list[4]
+    signatures, dna_elements, average_fold_change_array= fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict)
 
-    os.makedirs(os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type,HEATMAPS), exist_ok=True)
-    heatmap_output_path=os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type,HEATMAPS)
+    ##########################################################################
+    # fig, ax = plt.subplots() #does not plot and blocks multiprocessing
+    if len(signatures) > 20:
+        # if signature in ['SBS1', 'SBS5','SBS40','DBS2','DBS4','ID1','ID2','ID5']:
+        fig, ax = plt.subplots(figsize=(60, 100))
+        text_fontsize=60
+    else:
+        fig, ax = plt.subplots(figsize=(50, 40))
+        text_fontsize=70
 
-    print('Plotting starts')
-    for signature in signature2Biosample2EncodeHM2FoldChangeDict:
-        for biosample in signature2Biosample2EncodeHM2FoldChangeDict[signature]:
-            encode_hms, average_fold_change_array = fill_average_fold_change_array_signature_cancertype_biosample(signature2Biosample2EncodeHM2FoldChangeDict[signature][biosample])
+    # im, cbar = heatmap(fold_change_array, signatures, hms, ax=ax,cmap="seismic", cbarlabel="Fold Change [real/simulated]")
+    try:
+        print('min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
+    except ValueError:
+        print('average_fold_change_array')
+        print(average_fold_change_array)
+        print('average_fold_change_array.size')
+        print(average_fold_change_array.size)
+        print('average_fold_change_array.shape')
+        print(average_fold_change_array.shape)
 
-            if verbose: print('\tVerbose len(encode_hms):%d %s' %(len(encode_hms),encode_hms))
+    # Blue White Re
+    im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+
+    #Here we set the fontsize
+    texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=text_fontsize)
+    print('texts:%s' % texts)
+
+    plt.title(cancer_type, fontsize=90, y=1.01)
+    # Results in big squares when array is small
+    # plt.tight_layout()
+
+    #############################################################################################################
+    #Add signature type
+    if len(signatures)==1:
+        filename = 'Step4_%s_rows_biosamples_pooled_columns_dna_elements_heatmap.png' %(signatures[0])
+    else:
+        filename = 'Step5_rows_%s_signatures_columns_dna_elements_heatmap.png' %(signatureType)
+    #############################################################################################################
+
+    figureFile = os.path.join(heatmap_output_path, filename)
+
+    fig.savefig(figureFile)
+
+    plt.close()
+    ##########################################################################
+
+########################################################
+
+
+
+########################################################
+#March 30, 2020
+#For Step3
+def plot_heatmap_rows_biosamples_given_signature(signature2Biosample2DNAElementPooled2AverageFoldChangeDict,heatmap_output_path):
+
+    for signature in signature2Biosample2DNAElementPooled2AverageFoldChangeDict:
+        biosamples, dna_elements, average_fold_change_array = fill_average_fold_change_array_rows_biosamples_columns_dna_elements(signature2Biosample2DNAElementPooled2AverageFoldChangeDict[signature])
+        print('%s %s %s %s' %(signature,biosamples,dna_elements,average_fold_change_array))
+
+        ##########################################################################
+        # fig, ax = plt.subplots() #does not plot and blocks multiprocessing
+        if len(biosamples)>20:
+            fig, ax = plt.subplots(figsize=(60, 100))
+        else:
+            fig, ax = plt.subplots(figsize=(50, 40))
+
+        print('min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
+
+        #Blue White Red
+        print('average_fold_change_array')
+        print(average_fold_change_array)
+        print('biosamples:%s' %(biosamples))
+        print('dna_elements:%s' % (dna_elements))
+        im, cbar = heatmap(average_fold_change_array, biosamples, dna_elements, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0.25, vmax=1.75)
+
+        texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=70)
+        print('texts:%s' %texts)
+
+        plt.title('%s' % (signature), fontsize=90, y=1.01)
+        # Results in big squares when array is small
+        plt.tight_layout()
+        filename = 'Step3_%s_rows_biosamples_columns_dna_elements_heatmap.png' % (signature)
+        figureFile = os.path.join(heatmap_output_path,filename)
+
+        fig.savefig(figureFile)
+
+        plt.close()
+        ##########################################################################
+
+########################################################
+
+
+########################################################
+def plot_heatmap_row_each_biosample_given_signature(signature2Biosample2DNAElement2FoldChangeDict,cancer_type,heatmap_output_path,verbose):
+    if verbose: print('\n\tVerbose Plotting starts for Step2 using signature2Biosample2DNAElement2FoldChangeDict')
+    for signature in signature2Biosample2DNAElement2FoldChangeDict:
+        for biosample in signature2Biosample2DNAElement2FoldChangeDict[signature]:
+            encode_hms, average_fold_change_array = fill_average_fold_change_array_row_each_biosample(signature2Biosample2DNAElement2FoldChangeDict[signature][biosample])
+
+            if verbose: print('\tVerbose %s %s len(encode_hms):%d %s' %(signature, biosample,len(encode_hms),encode_hms))
             cancer_type_encode_biosamples_list=[]
             cancer_type_encode_biosamples_list.append('%s, %s' %(cancer_type,biosample))
 
@@ -1304,7 +1497,7 @@ def plot_pcawg_heatmap(list):
             plt.title('%s' % (signature), fontsize=50, y=1.01)
             #Results in big squares when array is small
             # plt.tight_layout()
-            filename = '%s_rows_%s_%s_columns_encode_hms_heatmap.png' % (signature,cancer_type,biosample)
+            filename = 'Step2_%s_rows_%s_%s_columns_encode_hms_heatmap.png' % (signature,cancer_type,biosample)
             figureFile = os.path.join(heatmap_output_path,filename)
 
             # Results in big squares when array is small
@@ -1315,14 +1508,52 @@ def plot_pcawg_heatmap(list):
             plt.cla()
             plt.close(fig)
             ##########################################################################
-
-    ##########################################################################
+    if verbose: print('\tVerbose Plotting ends for Step2 using signature2Biosample2DNAElement2FoldChangeDict')
 
 ########################################################
 
 
+########################################################
+def accumulate(signature,
+    signature_type,
+    signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+    accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+    accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+    accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict):
+
+    if (signature_type==SBS):
+        if (signature not in accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict):
+            if signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+                accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]=signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]
+        else:
+            print('There is a situation: %s' %accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature])
+
+    if (signature_type==DBS):
+        if (signature not in accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict):
+            if signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+                accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]=signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]
+        else:
+            print('There is a situation: %s' %accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature])
+
+    if (signature_type==ID):
+        if (signature not in accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict):
+            if signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+                accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]=signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]
+        else:
+            print('There is a situation: %s' %accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature])
+########################################################
+
+
 #########################################################
-def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose):
+def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose):
+
+    if verbose: print('\tVerbose epigenomics_files_memos:%s' % (epigenomics_files_memos))
+    if verbose: print('\tVerbose epigenomics_biosamples:%s' %(epigenomics_biosamples))
+    if verbose: print('\tVerbose epigenomics_dna_elements:%s' %(epigenomics_dna_elements))
+
+    accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict={}
+    accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict={}
+    accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict={}
 
     #We can plot heatmaps if there are at least one simulation
     if (numberofSimulations>=1):
@@ -1335,26 +1566,80 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
         ###########################################
         signatures = []
 
+        #For real run
         for signature in subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            signatures.append(signature)
+            signatures.append((signature,SBS))
         for signature in indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            signatures.append(signature)
+            signatures.append((signature,ID))
         for signature in dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            signatures.append(signature)
+            signatures.append((signature,DBS))
 
         #For tests
-        # signatures.append('DBS6')
+        # signatures.append(('DBS6',DBS))
+        # signatures.append(('SBS17b',SBS))
+        # signatures.append(('SBS18',SBS))
+        # signatures.append(('SBS33',SBS))
         ###########################################
+
+        ########################################################
+        def plot_heatmap(list):
+
+            output_dir = list[0]
+            signature = list[1]
+            signature_type = list[2]
+            cancer_type = list[3]
+            occupancy_type = list[4]
+            signature2Biosample2DNAElement2FoldChangeDict = list[5]
+            signature2Biosample2DNAElementPooled2AverageFoldChangeDict = list[6]
+            signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict = list[7]
+            verbose = list[8]
+
+            os.makedirs(os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type, HEATMAPS), exist_ok=True)
+            heatmap_output_path = os.path.join(output_dir, cancer_type, FIGURE, ALL, occupancy_type, HEATMAPS)
+
+            # Step2 Plot a heatmap for Step2 using signature2Biosample2DNAElement2FoldChangeDict
+            if signature2Biosample2DNAElement2FoldChangeDict:
+                plot_heatmap_row_each_biosample_given_signature(signature2Biosample2DNAElement2FoldChangeDict, cancer_type,heatmap_output_path, verbose)
+
+            # Step3
+            if signature2Biosample2DNAElementPooled2AverageFoldChangeDict:
+                plot_heatmap_rows_biosamples_given_signature(signature2Biosample2DNAElementPooled2AverageFoldChangeDict,heatmap_output_path)
+
+            # Step4
+            if signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+                plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, cancer_type,signature_type,heatmap_output_path, verbose)
+
+            accumulate(signature,
+                       signature_type,
+                       signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+                       accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+                       accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
+                       accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict)
+            ##########################################################################
+        ########################################################
 
         #######################################################################
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(numofProcesses)
+        jobs=[]
 
-        for signature in signatures:
-            pool.apply_async(fill_signature2CancerType2Biosample2HM2FoldChangeDict, args=(outputDir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type,plusOrMinus_epigenomics,verbose,), callback=plot_pcawg_heatmap)
+        for signature,signature_type in signatures:
+            jobs.append(pool.apply_async(fill_signature2CancerType2Biosample2HM2FoldChangeDict, args=(outputDir,numberofSimulations,signature,signature_type,cancer_type,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose,), callback=plot_heatmap))
             #Sequential Run
-            # list=fill_signature2CancerType2Biosample2HM2FoldChangeDict(outputDir,numberofSimulations,signature,cancer_type,epigenomics_files_memos,epigenomics_biosamples,occupancy_type)
-            # plot_pcawg_heatmap(list)
+            # list=fill_signature2CancerType2Biosample2HM2FoldChangeDict(outputDir,numberofSimulations,signature,signature_type,cancer_type,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose)
+            # plot_heatmap(list)
+
+        for job in jobs:
+            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+
+        heatmap_output_path = os.path.join(outputDir, cancer_type, FIGURE, ALL, occupancy_type, HEATMAPS)
+
+        if accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,'Mutographs ESCC SBS Signatures',SBS,heatmap_output_path, verbose)
+        if accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, 'Mutographs ESCC DBS Signatures',DBS,heatmap_output_path, verbose)
+        if accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, 'Mutographs ESCC ID Signatures',ID,heatmap_output_path, verbose)
 
         pool.close()
         pool.join()
