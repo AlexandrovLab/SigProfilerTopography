@@ -586,6 +586,10 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     ###############################################
 
     ###############################################
+    jobs = []
+    ###############################################
+
+    ###############################################
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
     ###############################################
 
@@ -650,7 +654,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
                     chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
                     chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-                    pool.apply_async(searchMutationsOnReplicationStrandArrayForApplyAsync,(chrBased_replication_array,
+                    jobs.append(pool.apply_async(searchMutationsOnReplicationStrandArrayForApplyAsync,(chrBased_replication_array,
                                                                               chrBased_simBased_subs_df,
                                                                               chrBased_simBased_indels_df,
                                                                               chrBased_simBased_dinucs_df,
@@ -659,7 +663,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                              verbose),callback=accumulate_apply_async_result)
+                                                                              verbose),callback=accumulate_apply_async_result))
                 ################################################################################
 
         ################################################################################
@@ -722,6 +726,15 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                             accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
                             accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
             ################################################################################
+
+
+    ################################
+    if verbose: print('\tVerbose Replication Strand Bias Analysis len(jobs):%d\n' % (len(jobs)))
+
+    # wait for all jobs to finish
+    for job in jobs:
+        if verbose: print('\tVerbose Replication Strand Bias Analysis Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+    ################################
 
     ################################
     pool.close()

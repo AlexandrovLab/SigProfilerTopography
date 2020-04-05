@@ -234,6 +234,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 pool = multiprocessing.Pool(numofProcesses)
                 ####################################################################################
 
+                ####################################################################################
+                jobs = []
+                ####################################################################################
+
                 signature2ProcessiveGroupLength2DistanceListDict = {}
 
                 ####################################################################################
@@ -275,8 +279,16 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                         sampleBased_chrBased_spms_df_grouped = chrBased_spms_df.groupby(SAMPLE)
 
                         for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
-                            pool.apply_async(findProcessiveGroupsForApplySync,(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result)
+                            jobs.append(pool.apply_async(findProcessiveGroupsForApplySync,(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result))
                 ####################################################################################
+
+                ################################
+                if verbose: print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)))
+
+                # wait for all jobs to finish
+                for job in jobs:
+                    if verbose: print('\tVerbose Processivity Worker pid %s job.get():%s ' %(str(os.getpid()), job.get()))
+                ################################
 
                 ####################################################################################
                 pool.close()

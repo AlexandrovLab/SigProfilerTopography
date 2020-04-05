@@ -576,7 +576,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         plt.clf()
         #Clears the axis without removing the axis itself
         plt.cla()
-        plt.close(fig)
+        plt.close()
 #############################################################################
 ########################## Plot Figure starts  ##############################
 #############################################################################
@@ -839,7 +839,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     fig.savefig(figureFile)
     plt.clf()
     plt.cla()
-    plt.close(fig)
+    plt.close()
     #####################################################################
     #####################################################################
     #####################################################################
@@ -856,11 +856,14 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
 
     #If directory exists and if there are files under it.
     if (os.path.exists(data_file_path)):
-        filenames = [f for f in os.listdir(data_file_path) if os.path.isfile(os.path.join(data_file_path, f))]
-        if (len(filenames)>0):
-            return True
-        else:
-            return False
+        return True
+        #Takes very long time especially in epigenomics
+        # filenames = [f for f in os.listdir(data_file_path) if os.path.isfile(os.path.join(data_file_path, f))]
+        # print('DEBUG len(filenames):%d' %(len(filenames)))
+        # if (len(filenames)>0):
+        #     return True
+        # else:
+        #     return False
     else:
         return False
 #########################################################
@@ -1648,9 +1651,9 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
 #########################################################
 
 
-#########################################################
 
 #########################################################
+#Original old call
 def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         ylabel='Average nucleosome signal'
@@ -1704,6 +1707,7 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
 
     #tissue based
     for mutationType in mutationTypes:
+        if verbose: print('\tVerbose Worker pid %s Plot all mutations pooled %s\t%s' %(str(os.getpid()),str(mutationType),libraryFilenameMemo))
         plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
     ##############################################################
 
@@ -1713,15 +1717,17 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     if checkValidness(SIGNATUREBASED,outputDir,jobname,occupancy_type):
         if (SBS96 in mutationTypes):
             #Subs Signatures
+            if verbose: print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo))
             plotSignatureBasedFigures(SBS96,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
         if (ID in mutationTypes):
             #Indels Signatures
+            if verbose: print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()),libraryFilenameMemo))
             plotSignatureBasedFigures(ID,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
         if (DBS in mutationTypes):
             # Dinucs Signatures
+            if verbose: print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo))
             plotSignatureBasedFigures(DBS,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
     #############################################################################################################################################
-
 
     ##############################################################
     if sample_based:

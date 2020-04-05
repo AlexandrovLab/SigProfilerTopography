@@ -283,6 +283,10 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromSizesDict,
     pool = multiprocessing.Pool(numofProcesses)
     #############################################
 
+    #############################################
+    jobs = []
+    #############################################
+
     ##################### Read Transcripts starts ######################
     #NCBI has the long chromosome names such as: chr1, chr2, chr3, chr4, ... , chr21, chr22, chrX, chrY, chrMT
     # transcriptsSource = NCBI
@@ -372,11 +376,19 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromSizesDict,
                 chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
                 chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
                 chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-                pool.apply_async(searchMutationsForApplySync, (chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df,numofSimulations,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result)
+                jobs.append(pool.apply_async(searchMutationsForApplySync, (chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df,numofSimulations,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result))
             ####################################################################
 
 
         ####################################################################################################
+
+    ################################
+    if verbose: print('\tVerbose Transcription Strand Bias Analysis len(jobs):%d\n' % (len(jobs)))
+
+    # wait for all jobs to finish
+    for job in jobs:
+        if verbose: print('\tVerbose Transcription Strand Bias Analysis Worker pid %s job.get():%s ' %(str(os.getpid()), job.get()))
+    ################################
 
     ################################
     pool.close()

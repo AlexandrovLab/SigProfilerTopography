@@ -1296,6 +1296,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
     pool = multiprocessing.Pool(numofProcesses)
     ################################
 
+    ################################
+    jobs = []
+    ################################
+
     ########################################################################################################################################################
     if (computationType==USING_APPLY_ASYNC):
         sim_nums = range(0, numofSimulations + 1)
@@ -1331,10 +1335,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
             # ################################
 
             for simNum in sim_nums:
-                pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_for_apply_sync, (outputDir,jobname,simNum,chrLong,
+                jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_for_apply_sync, (outputDir,jobname,simNum,chrLong,
                     sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
                     sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                    sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex), callback=accumulate_apply_async_result)
+                    sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,chrBasedReplicationTimeDataArrayWithDecileIndex), callback=accumulate_apply_async_result))
 
             # ################################
             # pool.close()
@@ -1442,6 +1446,15 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
     # print('simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[0]')
     # print(simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict[0])
     # print('Replication Time Results %s ends' %(computationType))
+
+
+    ################################
+    if verbose: print('\tVerbose Replication Time Analysis len(jobs):%d\n' %(len(jobs)))
+
+    # wait for all jobs to finish
+    for job in jobs:
+        if verbose: print('\tVerbose Replication Time Analysis Worker pid %s job.get():%s ' %(str(os.getpid()),job.get()))
+    ################################
 
     ################################
     pool.close()
