@@ -73,6 +73,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
+INDIVIDUAL_SIGNATURE='INDIVIDUAL_SIGNATURE'
+ALL_SIGNATURES='ALL_SIGNATURES'
+
 #############################################################################
 ##################### Read Average as Pandas Series #########################
 #############################################################################
@@ -859,7 +862,6 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
         return True
         #Takes very long time especially in epigenomics
         # filenames = [f for f in os.listdir(data_file_path) if os.path.isfile(os.path.join(data_file_path, f))]
-        # print('DEBUG len(filenames):%d' %(len(filenames)))
         # if (len(filenames)>0):
         #     return True
         # else:
@@ -1376,8 +1378,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
 ########################################################
 #March 30, 2020
 #For Step4
-def plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,cancer_type,signatureType,heatmap_output_path,verbose):
-
+def plot_heatmap_rows_signatures(heatmap_type,signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,cancer_type,signatureType,heatmap_output_path,verbose):
     signatures, dna_elements, average_fold_change_array= fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict)
 
     ##########################################################################
@@ -1392,14 +1393,13 @@ def plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2Avera
 
     # im, cbar = heatmap(fold_change_array, signatures, hms, ax=ax,cmap="seismic", cbarlabel="Fold Change [real/simulated]")
     try:
-        print('min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
+        if verbose: print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
     except ValueError:
-        print('average_fold_change_array')
-        print(average_fold_change_array)
-        print('average_fold_change_array.size')
-        print(average_fold_change_array.size)
-        print('average_fold_change_array.shape')
-        print(average_fold_change_array.shape)
+        if verbose: print('\tVerbose average_fold_change_array:%s' %(average_fold_change_array))
+        if verbose: print('\tVerbose average_fold_change_array.size')
+        if verbose: print(average_fold_change_array.size)
+        if verbose: print('\tVerbose average_fold_change_array.shape')
+        if verbose: print(average_fold_change_array.shape)
 
     # Blue White Re
     im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
@@ -1414,9 +1414,9 @@ def plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2Avera
 
     #############################################################################################################
     #Add signature type
-    if len(signatures)==1:
+    if (heatmap_type==INDIVIDUAL_SIGNATURE):
         filename = 'Step4_%s_rows_biosamples_pooled_columns_dna_elements_heatmap.png' %(signatures[0])
-    else:
+    elif (heatmap_type==ALL_SIGNATURES):
         filename = 'Step5_rows_%s_signatures_columns_dna_elements_heatmap.png' %(signatureType)
     #############################################################################################################
 
@@ -1610,7 +1610,7 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
 
             # Step4
             if signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
-                plot_heatmap_rows_signatures(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, cancer_type,signature_type,heatmap_output_path, verbose)
+                plot_heatmap_rows_signatures(INDIVIDUAL_SIGNATURE,signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, cancer_type,signature_type,heatmap_output_path, verbose)
 
             accumulate(signature,
                        signature_type,
@@ -1637,15 +1637,15 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
 
         heatmap_output_path = os.path.join(outputDir, cancer_type, FIGURE, ALL, occupancy_type, HEATMAPS)
 
-        if accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
-            plot_heatmap_rows_signatures(accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,'Mutographs ESCC SBS Signatures',SBS,heatmap_output_path, verbose)
-        if accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
-            plot_heatmap_rows_signatures(accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, 'Mutographs ESCC DBS Signatures',DBS,heatmap_output_path, verbose)
-        if accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
-            plot_heatmap_rows_signatures(accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, 'Mutographs ESCC ID Signatures',ID,heatmap_output_path, verbose)
-
         pool.close()
         pool.join()
+
+        if accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(ALL_SIGNATURES,accumulated_subsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,cancer_type,SBS,heatmap_output_path, verbose)
+        if accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(ALL_SIGNATURES,accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, cancer_type,DBS,heatmap_output_path, verbose)
+        if accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
+            plot_heatmap_rows_signatures(ALL_SIGNATURES,accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict, cancer_type,ID,heatmap_output_path, verbose)
         ########################################################################
 
 #########################################################

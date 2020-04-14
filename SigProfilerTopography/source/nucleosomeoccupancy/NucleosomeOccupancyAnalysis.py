@@ -35,13 +35,15 @@ from SigProfilerTopography.source.commons.TopographyCommons import func_addSigna
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import accumulateSimulationBasedTypeBasedArrays
-from SigProfilerTopography.source.commons.TopographyCommons import accumulateSimulationBasedSampleBasedTypeBasedArrays
+
+from SigProfilerTopography.source.commons.TopographyCommons import accumulateChrBasedSimBasedSplitBasedArrays
+from SigProfilerTopography.source.commons.TopographyCommons import accumulateChrBasedSimBasedSplitBasedSampleBasedArrays
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import writeSimulationBasedAverageNucleosomeOccupancy
 
+from SigProfilerTopography.source.commons.TopographyCommons import TYPE
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS
 from SigProfilerTopography.source.commons.TopographyCommons import INDELS
 from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
@@ -81,6 +83,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import Sample2Dinucs
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
+from SigProfilerTopography.source.commons.TopographyCommons import MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE
 
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
@@ -93,12 +96,11 @@ from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays impor
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially
 
 from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
-from SigProfilerTopography.source.commons.TopographyCommons import get_splits
+from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 
 ##############################################################################################################
 #main function
-def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,
-                      subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose):
+def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,outputDir,jobname,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose):
 
     print('\n#################################################################################')
     print('--- %s Analysis starts' %(occupancy_type))
@@ -106,11 +108,11 @@ def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorM
     print('--- Occupancy Type:%s' % (occupancy_type))
     print('--- Library file with path: %s\n' %library_file_with_path)
 
-    #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig otherwise no
+    #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig (linux only) otherwise no
     #By the way pyBigWig can be imported in unix, linux like os not available in windows
     #Using HM and CTCF bed files preparing chr based signal array runtime
     #Using ATAC-seq wig files preparing chr based signal array runtime
-    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
+    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,outputDir,jobname,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
     print('--- %s Analysis ends' %(occupancy_type))
     print('#################################################################################\n')
 ##############################################################################################################
@@ -120,11 +122,9 @@ def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorM
 ########################################################################################
 # November 1, 2019
 # Just fill the list
-def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,
-                      sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                  subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,plusorMinus,sample_based,verbose):
-
+def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,splitIndex,chromSizesDict,library_file_with_path,library_file_type,sample2NumberofSubsDict,sample2SubsSignature2NumberofMutationsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,plusorMinus,sample_based,verbose):
     if verbose: print('\tVerbose FillInputList: Worker pid %s current_mem_usage %.2f (mb) chrLong:%s simNum:%d' % (str(os.getpid()), memory_usage(),chrLong,simNum))
+
     inputList=[]
 
     inputList.append(occupancy_type)
@@ -132,38 +132,44 @@ def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict
     inputList.append(jobname)
     inputList.append(chrLong)
     inputList.append(simNum)
+    inputList.append(splitIndex)
     inputList.append(chromSizesDict)
     inputList.append(library_file_with_path)
     inputList.append(library_file_type)
     inputList.append(sample2NumberofSubsDict)
-    inputList.append(sample2NumberofIndelsDict)
-    inputList.append(sample2NumberofDinucsDict)
     inputList.append(sample2SubsSignature2NumberofMutationsDict)
-    inputList.append(sample2IndelsSignature2NumberofMutationsDict)
-    inputList.append(sample2DinucsSignature2NumberofMutationsDict)
     inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
     inputList.append(indelsSignature_cutoff_numberofmutations_averageprobability_df)
     inputList.append(dinucsSignature_cutoff_numberofmutations_averageprobability_df)
     inputList.append(plusorMinus)
     inputList.append(sample_based)
     inputList.append(verbose)
-    # print('FillInputList: Worker pid %s maximum memory usage %.2f (mb)' % (str(os.getpid()), current_mem_usage()))
+
     return inputList
 ########################################################################################
 
 ########################################################################################
-#March 24, 2020
-#Runs for each chrBased_mutations_df_split
-def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
-        occupancy_type,
-        outputDir,
-        jobname, chrLong, simNum, chromSizesDict,
-        library_file_with_path,
-        library_file_type,
-        sample2NumberofMutatiosDict,
-        sample2Signature2NumberofMutationsDict,
-        signature_cutoff_numberofmutations_averageprobability_df,
-        plusorMinus, sample_based,verbose):
+#Updated April 10, 2020
+# For imap_unordered
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered(inputList):
+
+    occupancy_type=inputList[0]
+    outputDir=inputList[1]
+    jobname=inputList[2]
+    chrLong = inputList[3]
+    simNum = inputList[4]
+    splitIndex = inputList[5]
+    chromSizesDict = inputList[6]
+    library_file_with_path = inputList[7]
+    library_file_type = inputList[8]
+    sample2NumberofSubsDict = inputList[9]
+    sample2SubsSignature2NumberofMutationsDict = inputList[10]
+    subsSignature_cutoff_numberofmutations_averageprobability_df = inputList[11]
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = inputList[12]
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = inputList[13]
+    plusorMinus = inputList[14]
+    sample_based = inputList[15]
+    verbose = inputList[16]
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
     # 1st part  Prepare chr based mutations dataframes
@@ -184,16 +190,18 @@ def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
     signal_index = None
     ##############################################################
 
+    #Read All Mutations
+    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex)
 
-    if (chrBased_mutations_df is not None) and verbose:
-        print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_mutations_df.shape[0],chrBased_mutations_df.shape[1]))
+    if (chrBased_simBased_combined_df_split is not None) and verbose:
+        print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_simBased_combined_df_split.shape[0],chrBased_simBased_combined_df_split.shape[1]))
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_mutations_df: %f in MB -- chrLong:%s simNum:%d' % (
+    if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_simBased_combined_df_split: %f in MB -- chrLong:%s simNum:%d' % (
             occupancy_type,
             str(os.getpid()),
             sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
-            sys.getsizeof(chrBased_mutations_df) / MEGABYTE_IN_BYTES,
+            sys.getsizeof(chrBased_simBased_combined_df_split) / MEGABYTE_IN_BYTES,
             chrLong, simNum))
     #################################################################################################################
 
@@ -265,9 +273,9 @@ def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
         ###############################################################################
 
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-        if ((chrBased_mutations_df is not None) and (not chrBased_mutations_df.empty)):
-            df_columns = list(chrBased_mutations_df.columns.values)
-            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+        if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
+            df_columns = list(chrBased_simBased_combined_df_split.columns.values)
+            [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
                 library_file_opened_by_pyBigWig,
@@ -276,17 +284,18 @@ def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
                 signal_index,
                 my_upperBound,
                 maximum_chrom_size,
-                sample2NumberofMutatiosDict,
-                sample2Signature2NumberofMutationsDict,
+                sample2NumberofSubsDict,
+                sample2SubsSignature2NumberofMutationsDict,
                 simNum2Type2SignalArrayDict,
                 simNum2Type2CountArrayDict,
                 simNum2Sample2Type2SignalArrayDict,
                 simNum2Sample2Type2CountArrayDict,
-                signature_cutoff_numberofmutations_averageprobability_df,
-                mutation_type,
+                subsSignature_cutoff_numberofmutations_averageprobability_df,
+                indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                 plusorMinus,
                 sample_based,
-                df_columns) for row in chrBased_mutations_df[df_columns].values]
+                df_columns) for row in chrBased_simBased_combined_df_split[df_columns].values]
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
         ###############################################################################
         ################### Fill signal and count array ends ##########################
@@ -312,290 +321,10 @@ def chrbased_data_fill_signal_count_arrays(chrBased_mutations_df,mutation_type,
 ########################################################################################
 
 
-########################################################################################
-#Updated JAN 9, 2020
-#November 26 2019
-#Called from apply_async
-def combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,
-        outputDir,
-        jobname, chrLong, simNum, chromSizesDict,
-        library_file_with_path,
-        library_file_type,
-        sample2NumberofSubsDict, sample2NumberofIndelsDict, sample2NumberofDinucsDict,
-        sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict,
-        sample2DinucsSignature2NumberofMutationsDict,
-        subsSignature_cutoff_numberofmutations_averageprobability_df,
-        indelsSignature_cutoff_numberofmutations_averageprobability_df,
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-        plusorMinus, sample_based,verbose):
-
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    # 1st part  Prepare chr based mutations dataframes
-    maximum_chrom_size = chromSizesDict[chrLong]
-    start_time = time.time()
-
-    ##############################################################
-    simNum2Type2SignalArrayDict = {}
-    simNum2Type2CountArrayDict = {}
-    simNum2Sample2Type2SignalArrayDict = {}
-    simNum2Sample2Type2CountArrayDict = {}
-    ##############################################################
-
-    ##############################################################
-    chrBasedSignalArray = None #Will be filled from chrBasedSignal files if they exists
-    library_file_opened_by_pyBigWig = None #Will be filled by pyBigWig from bigWig or bigBed
-    my_upperBound = None
-    signal_index = None
-    ##############################################################
-
-    #################################################################################################################
-    # If library file does not exists there is no library file to use and fill the signal and count arrays
-    # Nucleosomes have chrM
-    # SinglePointMutations and Indels have chrMT
-    chrLong_for_mutations_data = chrLong
-    if (chrLong == 'chrM'):
-        chrLong_for_mutations_data = 'chrMT'
-
-    chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, SUBS, simNum)
-    chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, INDELS, simNum)
-    chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, DINUCS, simNum)
-
-    if (chrBased_subs_df is not None) and verbose:
-        print('\tVerbose %s Worker pid %s chrBased_subs_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_subs_df.shape[0],chrBased_subs_df.shape[1]))
-    if (chrBased_indels_df is not None) and verbose:
-        print('\tVerbose %s Worker pid %s chrBased_indels_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_indels_df.shape[0],chrBased_indels_df.shape[1]))
-    if (chrBased_dinucs_df is not None) and verbose:
-        print('\tVerbose %s Worker pid %s chrBased_dinucs_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_dinucs_df.shape[0],chrBased_dinucs_df.shape[1]))
-
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- subs_df: %f in MB -- indels_df: %f in MB -- dinucs_df: %f in MB -- chrLong:%s simNum:%d' % (
-            occupancy_type,
-            str(os.getpid()),
-            sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
-            sys.getsizeof(chrBased_subs_df) / MEGABYTE_IN_BYTES,
-            sys.getsizeof(chrBased_indels_df) / MEGABYTE_IN_BYTES,
-            sys.getsizeof(chrBased_dinucs_df) / MEGABYTE_IN_BYTES,
-            chrLong, simNum))
-    #################################################################################################################
-
-    #################################################################################################################
-    libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
-    signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
-    if (occupancy_type== EPIGENOMICSOCCUPANCY):
-        chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
-    elif (occupancy_type==NUCLEOSOMEOCCUPANCY):
-        chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED,signalArrayFilename)
-
-    #Downloaded or created runtime
-    if (os.path.exists(chrBasedSignalFile)):
-        #Can this cause to deep sleep of processes?
-        # chrBasedSignalArray = np.load(chrBasedSignalFile, mmap_mode='r')
-        chrBasedSignalArray = np.load(chrBasedSignalFile)
-
-        # For testing purposes
-        # chrBasedSignalArray = np.load(chrBasedSignalFile,mmap_mode=None)
-        # chrBasedSignalArray = np.random.uniform(low=0.0, high=13.3, size=(maximum_chrom_size,))
-
-    #If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
-    #For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension, it is not absolute path
-    if os.path.isabs(library_file_with_path):
-
-        # Comment below to make it run in windows
-        if (library_file_type == BIGWIG):
-            try:
-                import pyBigWig
-                library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
-                if chrLong in library_file_opened_by_pyBigWig.chroms():
-                    maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
-                # For BigWig Files information in header is correct
-                if ('sumData' in library_file_opened_by_pyBigWig.header()) and ('nBasesCovered' in library_file_opened_by_pyBigWig.header()):
-                    my_mean = library_file_opened_by_pyBigWig.header()['sumData'] / library_file_opened_by_pyBigWig.header()['nBasesCovered']
-                    std_dev = (library_file_opened_by_pyBigWig.header()['sumSquared'] - 2 * my_mean * library_file_opened_by_pyBigWig.header()['sumData'] +
-                               library_file_opened_by_pyBigWig.header()['nBasesCovered'] * my_mean * my_mean) ** (0.5) / (
-                            library_file_opened_by_pyBigWig.header()['nBasesCovered'] ** (0.5))
-                    # Scientific definition of outlier
-                    my_upperBound = my_mean + std_dev * 3
-                else:
-                    # Undefined
-                    my_upperBound = np.iinfo(np.int16).max
-            except:
-                print('Exception %s' %library_file_with_path)
-
-        elif (library_file_type == BIGBED):
-            try:
-                import pyBigWig
-                library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
-                if BED_6PLUS4 in str(library_file_opened_by_pyBigWig.SQL()):
-                    signal_index = 3
-                elif BED_9PLUS2 in str(library_file_opened_by_pyBigWig.SQL()):
-                    signal_index = 7
-                if chrLong in library_file_opened_by_pyBigWig.chroms():
-                    # For BigBed Files information in header is not meaningful
-                    maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
-                    my_mean = np.mean([float(entry[2].split('\t')[signal_index]) for entry in
-                                       library_file_opened_by_pyBigWig.entries(chrLong, 0, maximum_chrom_size)])
-                    # Not scientific definition of outlier
-                    my_upperBound = my_mean * 10
-                else:
-                    # Undefined
-                    my_upperBound = np.iinfo(np.int16).max
-            except:
-                print('Exception %s' %library_file_with_path)
-    #################################################################################################################
-
-    #################################################################################################################
-    if ((chrBasedSignalArray is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
-        ######################################################## #######################
-        ################### Fill signal and count array starts ########################
-        ###############################################################################
-
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Dinucs Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-        # Fill for dinucs
-        if ((chrBased_dinucs_df is not None) and (not chrBased_dinucs_df.empty)):
-            df_columns = list(chrBased_dinucs_df.columns.values)
-            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
-                row,
-                chrLong,
-                library_file_opened_by_pyBigWig,
-                chrBasedSignalArray,
-                library_file_type,
-                signal_index,
-                my_upperBound,
-                maximum_chrom_size,
-                sample2NumberofDinucsDict,
-                sample2DinucsSignature2NumberofMutationsDict,
-                simNum2Type2SignalArrayDict,
-                simNum2Type2CountArrayDict,
-                simNum2Sample2Type2SignalArrayDict,
-                simNum2Sample2Type2CountArrayDict,
-                dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                AGGREGATEDDINUCS,
-                plusorMinus,
-                sample_based,
-                df_columns) for row in chrBased_dinucs_df[df_columns].values]
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 Dinucs End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check3_1 Indels Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-        # Fill for indels
-        if ((chrBased_indels_df is not None) and (not chrBased_indels_df.empty)):
-            df_columns = list(chrBased_indels_df.columns.values)
-            [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
-                row,
-                chrLong,
-                library_file_opened_by_pyBigWig,
-                chrBasedSignalArray,
-                library_file_type,
-                signal_index,
-                my_upperBound,
-                maximum_chrom_size,
-                sample2NumberofIndelsDict,
-                sample2IndelsSignature2NumberofMutationsDict,
-                simNum2Type2SignalArrayDict,
-                simNum2Type2CountArrayDict,
-                simNum2Sample2Type2SignalArrayDict,
-                simNum2Sample2Type2CountArrayDict,
-                indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                AGGREGATEDINDELS,
-                plusorMinus,
-                sample_based,
-                df_columns) for row in chrBased_indels_df[df_columns].values]
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check3_2 Indels End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check4_1 Subs Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-        # Fill for single point mutations
-        if ((chrBased_subs_df is not None) and (not chrBased_subs_df.empty)):
-            list_of_dfs = None
-            df_columns = list(chrBased_subs_df.columns.values)
-
-            # 1 MB 1024*1024= 1048576 B
-            size_in_mbs = sys.getsizeof(chrBased_subs_df) / 1048576
-            # if verbose: print('\tVerbose %s Worker pid %s ##################### subs_df: %f in MB chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()),size_in_mbs, chrLong, simNum))
-            max_size_in_mbs = 50
-            if (size_in_mbs > max_size_in_mbs):
-                numberofSplits = math.ceil(size_in_mbs / max_size_in_mbs)
-                if verbose: print('\tVerbose %s Worker pid %s numberofSplits: %d chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()),numberofSplits, chrLong, simNum))
-                list_of_dfs = np.array_split(chrBased_subs_df, numberofSplits)
-
-            # This is 3X-4X faster with almost same memory usage
-            if list_of_dfs is not None:
-                for part_index, part_df in enumerate(list_of_dfs, 1):
-                    [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
-                        row,
-                        chrLong,
-                        library_file_opened_by_pyBigWig,
-                        chrBasedSignalArray,
-                        library_file_type,
-                        signal_index,
-                        my_upperBound,
-                        maximum_chrom_size,
-                        sample2NumberofSubsDict,
-                        sample2SubsSignature2NumberofMutationsDict,
-                        simNum2Type2SignalArrayDict,
-                        simNum2Type2CountArrayDict,
-                        simNum2Sample2Type2SignalArrayDict,
-                        simNum2Sample2Type2CountArrayDict,
-                        subsSignature_cutoff_numberofmutations_averageprobability_df,
-                        AGGREGATEDSUBSTITUTIONS,
-                        plusorMinus,
-                        sample_based,
-                        df_columns) for row in part_df[df_columns].values]
-            else:
-                [fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
-                    row,
-                    chrLong,
-                    library_file_opened_by_pyBigWig,
-                    chrBasedSignalArray,
-                    library_file_type,
-                    signal_index,
-                    my_upperBound,
-                    maximum_chrom_size,
-                    sample2NumberofSubsDict,
-                    sample2SubsSignature2NumberofMutationsDict,
-                    simNum2Type2SignalArrayDict,
-                    simNum2Type2CountArrayDict,
-                    simNum2Sample2Type2SignalArrayDict,
-                    simNum2Sample2Type2CountArrayDict,
-                    subsSignature_cutoff_numberofmutations_averageprobability_df,
-                    AGGREGATEDSUBSTITUTIONS,
-                    plusorMinus,
-                    sample_based,
-                    df_columns) for row in chrBased_subs_df[df_columns].values]
-
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check4_2 Subs End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-        ###############################################################################
-        ################### Fill signal and count array ends ##########################
-        ###############################################################################
-
-    if (library_file_opened_by_pyBigWig is not None):
-        library_file_opened_by_pyBigWig.close()
-
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s took %f seconds chrLong:%s simNum:%d\n' % (occupancy_type,str(os.getpid()), (time.time() - start_time), chrLong, simNum))
-    ###############################################################################
-    ################### Return  starts ############################################
-    ###############################################################################
-
-    # Initialzie the list, you will return this list
-    SignalArrayAndCountArrayList = []
-    SignalArrayAndCountArrayList.append(simNum2Type2SignalArrayDict)
-    SignalArrayAndCountArrayList.append(simNum2Type2CountArrayDict)
-    SignalArrayAndCountArrayList.append(simNum2Sample2Type2SignalArrayDict)
-    SignalArrayAndCountArrayList.append(simNum2Sample2Type2CountArrayDict)
-
-    #Closing does not work. Even making it None makes it stuck. Why?
-    #close it
-    # if (chrBasedSignalArray):
-    #     chrBasedSignalArray=None
-
-    return SignalArrayAndCountArrayList
-########################################################################################
-
 
 ########################################################################################
-#Using list comprehension
-#September 18, 2019
-#You need to send mutation_row[START], mutation_row[SAMPLE], mutation_row[SIMULATION_NUMBER], and mutation_row[signature]
-def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig_using_list_comp(
+#April 6, 2020
+def fillSignalArrayAndCountArray_using_list_comp(
         row,
         chrLong,
         library_file_opened_by_pyBigWig,
@@ -610,11 +339,27 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
         simNum2Type2CountArrayDict,
         simNum2Sample2Type2SignalArrayDict,
         simNum2Sample2Type2CountArrayDict,
-        signature_cutoff_numberofmutations_averageprobability_df,
-        my_type,
+        subsSignature_cutoff_numberofmutations_averageprobability_df,
+        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
         plusOrMinus,
         sample_based,
         df_columns):
+
+    indexofType = df_columns.index(TYPE)
+    mutation_row_type = row[indexofType]
+
+    ###########################################
+    if mutation_row_type==SUBS:
+        my_type=AGGREGATEDSUBSTITUTIONS
+        signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df
+    elif mutation_row_type == INDELS:
+        my_type=AGGREGATEDINDELS
+        signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df
+    elif mutation_row_type == DINUCS:
+        my_type=AGGREGATEDDINUCS
+        signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df
+    ###########################################
 
     window_array=None
     windowSize=plusOrMinus*2+1
@@ -648,17 +393,6 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
             window_array = chrBasedSignalArray[0:(mutation_row_start + plusOrMinus + 1)]
             window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant', constant_values=(0, 0))
 
-        # #Slower but uses less memory solution
-        # elif (chrom_based_signal_df is not None):
-        #     start=0
-        #     end=mutation_row_start+plusOrMinus+1
-        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-        #     if overlaps_df is not None:
-        #         window_array = np.zeros((windowSize,), dtype=np.float32)
-        #         #Overlap
-        #         #chr1  240106575  240107544  3.78085
-        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
-
         elif (library_file_type==BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
             window_array=library_file_opened_by_pyBigWig.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
@@ -690,16 +424,6 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):maximum_chrom_size]
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        # elif (chrom_based_signal_df is not None):
-        #     start=mutation_row_start-plusOrMinus
-        #     end=maximum_chrom_size
-        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-        #     if overlaps_df is not None:
-        #         window_array = np.zeros((windowSize,), dtype=np.float32)
-        #         #Overlap
-        #         #chr1  240106575  240107544  3.78085
-        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
-
         elif (library_file_type==BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
             window_array = library_file_opened_by_pyBigWig.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
@@ -722,16 +446,6 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
     else:
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
-
-        # elif (chrom_based_signal_df is not None):
-        #     start=mutation_row_start-plusOrMinus
-        #     end=mutation_row_start+plusOrMinus+1
-        #     overlaps_df=chrom_based_signal_df[((start <= chrom_based_signal_df['end']) & (chrom_based_signal_df['start'] <= end))]
-        #     if overlaps_df is not None:
-        #         window_array = np.zeros((windowSize,), dtype=np.float32)
-        #         #Overlap
-        #         #chr1  240106575  240107544  3.78085
-        #         [(func_addSignal(window_array, overlap[1], overlap[2], np.float32(overlap[3]),mutation_row_start, plusOrMinus)) for overlap in overlaps_df.values]
 
         elif (library_file_type==BIGWIG):
             #Important: You have to go over intervals if there are overlapping intervals.
@@ -849,47 +563,8 @@ def fillSignalArrayAndCountArrayForMutationsSimulationsIntegrated_using_pyBigWig
                     sample2Type2CountArrayDict[sample][my_type] += (window_array > 0)
         ######################################################################
 
-
 ########################################################################################
 
-
-
-########################################################################################
-#Updated JAN 9, 2020
-# November 1, 2019
-#Called from  imap_unordered
-def combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList(inputList):
-    occupancy_type=inputList[0]
-    outputDir=inputList[1]
-    jobname=inputList[2]
-    chrLong=inputList[3]
-    simNum=inputList[4]
-    chromSizesDict=inputList[5]
-    library_file_with_path=inputList[6]
-    library_file_type=inputList[7]
-    sample2NumberofSubsDict=inputList[8]
-    sample2NumberofIndelsDict=inputList[9]
-    sample2NumberofDinucsDict=inputList[10]
-    sample2SubsSignature2NumberofMutationsDict=inputList[11]
-    sample2IndelsSignature2NumberofMutationsDict=inputList[12]
-    sample2DinucsSignature2NumberofMutationsDict=inputList[13]
-    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[14]
-    indelsSignature_cutoff_numberofmutations_averageprobability_df=inputList[15]
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df=inputList[16]
-    plusorMinus=inputList[17]
-    sample_based=inputList[18]
-    verbose=inputList[19]
-
-    return combined_prepare_chrbased_data_fill_signal_count_arrays(occupancy_type,outputDir, jobname, chrLong, simNum, chromSizesDict,
-                                        library_file_with_path,
-                                        library_file_type,
-                                        sample2NumberofSubsDict, sample2NumberofIndelsDict, sample2NumberofDinucsDict,
-                                        sample2SubsSignature2NumberofMutationsDict, sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                        plusorMinus, sample_based,verbose)
-########################################################################################
 
 
 ########################################################################################
@@ -902,10 +577,9 @@ def occupancy_analysis(genome,
                         sample_based,
                         plusorMinus,
                         chromSizesDict,
-                        chromNamesList,
                         outputDir,
                         jobname,
-                        numofSimulations,
+                        job_tuples,
                         library_file_with_path,
                         library_file_memo,
                         subsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -944,10 +618,13 @@ def occupancy_analysis(genome,
     # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1)
     ##########################################################################
 
+    ##########################################################################
     simNum2Type2AccumulatedSignalArrayDict = {}
     simNum2Type2AccumulatedCountArrayDict = {}
     simNum2Sample2Type2AccumulatedSignalArrayDict = {}
     simNum2Sample2Type2AccumulatedCountArrayDict = {}
+    total_number_of_jobs_sent=0
+    ##########################################################################
 
     ##############################################################
     #What is the type of the signal_file_with_path?
@@ -990,41 +667,43 @@ def occupancy_analysis(genome,
         library_file_type=LIBRARY_FILE_TYPE_OTHER
     ##############################################################
 
-
     ###################################################################################
     ##################  USING IMAP UNORDERED starts ###################################
     ###################################################################################
-    if (computation_type==USING_IMAP_UNORDERED):
+    # if (computation_type==USING_IMAP_UNORDERED):
+    if (computation_type == USING_APPLY_ASYNC):
 
-        #original
-        sim_nums = range(0, numofSimulations+1)
-        sim_num_chr_tuples=((sim_num,chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
 
-        # test
-        # sim_nums = range(0,10)
-        # chromNamesList=['chr1']
-        # sim_num_chr_tuples=((sim_num,chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+        #####################################################################################################################
+        jobIndex = 0
 
-        #on tscc-11-9 all works, on tscc-11-17 it does not work
-        pool = multiprocessing.Pool(numofProcesses)
+        ###############################################################
+        while jobIndex<len(job_tuples):
 
-        # works in laptop, works in login node in tscc, submits each task to different process, but not hpc on tscc
-        # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1000)
+            ###############################################################
+            #Fill poolInputList in a controlled way
+            poolInputList=[]
 
-        # This worked. Sends each job to a new process. Works for laptop, login node,  tscc hpc
-        # pool = multiprocessing.Pool(numofProcesses,maxtasksperchild=1)
+            while len(poolInputList)<MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE and len(poolInputList)<len(job_tuples) and jobIndex<len(job_tuples):
+                chrLong, simNum, splitIndex = job_tuples[jobIndex]
 
-        #imap uses iterable as input
-        # Note that map may cause high memory usage for very long iterables.
-        # Consider using imap() or imap_unordered() with explicit chunksize option for better efficiency.
-        # This method chops the iterable into a number of chunks which it submits to the process pool as separate tasks.
-        # The (approximate) size of these chunks can be specified by setting chunksize to a positive integer.
-        # default chunksize=1
+                inputList = fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,splitIndex,chromSizesDict,library_file_with_path,library_file_type,sample2NumberofSubsDict,sample2SubsSignature2NumberofMutationsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,plusorMinus,sample_based,verbose)
 
-        for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(combined_prepare_chrbased_data_fill_signal_count_arrays_using_inputList, (fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,chromSizesDict,library_file_with_path,library_file_type,
-                                                            sample2NumberofSubsDict,sample2NumberofIndelsDict,sample2NumberofDinucsDict,sample2SubsSignature2NumberofMutationsDict,sample2IndelsSignature2NumberofMutationsDict,sample2DinucsSignature2NumberofMutationsDict,
-                                                        subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,plusorMinus,sample_based,verbose) for simNum,chrLong in sim_num_chr_tuples),chunksize=1):
+                poolInputList.append(inputList)
+                jobIndex+=1
+            ###############################################################
 
+            print('len(poolInputList):%d SENT TO POOL.IMAP_UNORDERED' %(len(poolInputList)),flush=True)
+            total_number_of_jobs_sent+=len(poolInputList)
+
+            ###############################################################
+            #Run the jobs in poolInputList
+
+            for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered, poolInputList):
                 simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
                 simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
                 simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
@@ -1033,102 +712,25 @@ def occupancy_analysis(genome,
                 keys = simNum2Type2SignalArrayDict.keys()
                 if verbose: print('\tVerbose %s Accumulate: Worker pid %s current_mem_usage %.2f (mb) simNum:%s' % (occupancy_type,str(os.getpid()),memory_usage(),keys))
 
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict, simNum2Type2SignalArrayDict)
-                accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
-                accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
+                accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2SignalArrayDict,simNum2Type2AccumulatedSignalArrayDict)
+                accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2CountArrayDict,simNum2Type2AccumulatedCountArrayDict)
+                accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2SignalArrayDict,simNum2Sample2Type2AccumulatedSignalArrayDict)
+                accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2CountArrayDict,simNum2Sample2Type2AccumulatedCountArrayDict)
+            #####################################################################################################################
+
+        ###############################################################
+
+        #####################################################################################################################
 
         ################################
         pool.close()
         pool.join()
         ################################
+
+        print('total_number_of_jobs_sent:%d SENT TO POOL.IMAP_UNORDERED' % (total_number_of_jobs_sent), flush=True)
 
     ###################################################################################
     ##################  USING IMAP UNORDERED ends #####################################
-    ###################################################################################
-
-    ###################################################################################
-    ########################  USING APPLY ASYNC NEW2 starts ###########################
-    ###################################################################################
-    elif (computation_type == USING_APPLY_ASYNC):
-
-        sim_nums = range(0, numofSimulations+1)
-        sim_num_chr_tuples=((sim_num,chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
-
-        #########################################################################################
-        def accumulate_apply_async_result(simulatonBased_SignalArrayAndCountArrayList):
-            simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
-            simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
-            simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
-            simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
-
-            keys = simNum2Type2SignalArrayDict.keys()
-
-            if verbose: print('\tVerbose %s Worker pid %s memory_usage %.2f MB ACCUMULATE simNum:%s' %(occupancy_type,str(os.getpid()), memory_usage(), keys))
-
-            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSignalArrayDict,simNum2Type2SignalArrayDict)
-            accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedCountArrayDict, simNum2Type2CountArrayDict)
-            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSignalArrayDict,simNum2Sample2Type2SignalArrayDict)
-            accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedCountArrayDict,simNum2Sample2Type2CountArrayDict)
-
-            if verbose: print('\tVerbose %s Worker pid %s memory_usage %.2f MB ACCUMULATE simNum:%s ends' %(occupancy_type,str(os.getpid()), memory_usage(), keys))
-        #########################################################################################
-
-        #########################################################################################
-        pool = multiprocessing.Pool(numofProcesses)
-        jobs=[]
-
-        for simNum, chrLong in sim_num_chr_tuples:
-            chrBased_subs_df_split_list, chrBased_indels_df_split_list, chrBased_dinucs_df_split_list = get_splits(outputDir,jobname,simNum,chrLong)
-
-            # SUBS
-            for chrBased_subs_df_split in chrBased_subs_df_split_list:
-                jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays, args=(chrBased_subs_df_split,AGGREGATEDSUBSTITUTIONS,occupancy_type,
-                              outputDir, jobname, chrLong, simNum, chromSizesDict,
-                              library_file_with_path,
-                              library_file_type,
-                              sample2NumberofSubsDict,
-                              sample2SubsSignature2NumberofMutationsDict,
-                            subsSignature_cutoff_numberofmutations_averageprobability_df,
-                            plusorMinus, sample_based,verbose,), callback=accumulate_apply_async_result))
-
-            #INDELS
-            for chrBased_indels_df_split in chrBased_indels_df_split_list:
-                jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays,
-                                             args=(chrBased_indels_df_split, AGGREGATEDINDELS, occupancy_type,
-                                                   outputDir, jobname, chrLong, simNum, chromSizesDict,
-                                                   library_file_with_path,
-                                                   library_file_type,
-                                                   sample2NumberofIndelsDict,
-                                                   sample2IndelsSignature2NumberofMutationsDict,
-                                                   indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                   plusorMinus, sample_based, verbose,),
-                                             callback=accumulate_apply_async_result))
-            #DINUCS
-            for chrBased_dinucs_df_split in chrBased_dinucs_df_split_list:
-                jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays,
-                                             args=(chrBased_dinucs_df_split, AGGREGATEDDINUCS, occupancy_type,
-                                                   outputDir, jobname, chrLong, simNum, chromSizesDict,
-                                                   library_file_with_path,
-                                                   library_file_type,
-                                                   sample2NumberofDinucsDict,
-                                                   sample2DinucsSignature2NumberofMutationsDict,
-                                                   dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                   plusorMinus, sample_based, verbose,),
-                                             callback=accumulate_apply_async_result))
-
-        if verbose: print('\tVerbose %s len(jobs):%d\n' %(occupancy_type,len(jobs)))
-
-        # wait for all jobs to finish
-        for job in jobs:
-            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
-
-        pool.close()
-        pool.join()
-        #########################################################################################
-
-    ###################################################################################
-    ########################  USING APPLY ASYNC NEW2 starts ###########################
     ###################################################################################
 
     writeSimulationBasedAverageNucleosomeOccupancy(occupancy_type,
@@ -1141,6 +743,4 @@ def occupancy_analysis(genome,
                                                    outputDir, jobname,library_file_memo,verbose)
 
 
-#Using pyBigWig for bigBed and bigWig files ends
-#Using bed files prepared on the fly ends
 ########################################################################################

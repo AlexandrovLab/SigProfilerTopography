@@ -22,11 +22,15 @@
 
 import multiprocessing
 import numpy as np
+import pandas as pd
 import os
+import math
 
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+
+from SigProfilerTopography.source.commons.TopographyCommons import TYPE
 
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS
 from SigProfilerTopography.source.commons.TopographyCommons import INDELS
@@ -38,6 +42,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import NONTRANSCRIBE
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
 
 from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries_simulations_integrated
+
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
@@ -52,9 +57,107 @@ from SigProfilerTopography.source.commons.TopographyCommons import Signature2Mut
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2Type2TranscriptionStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Type2Sample2TranscriptionStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
+from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
 
 ########################################################################
+#April 5, 2020]
+def searchAllMutationUsingTranscriptionStrandColumn_simulations_integrated(
+        mutation_row,
+        simNum2Type2TranscriptionStrand2CountDict,
+        simNum2Sample2Type2TranscriptionStrand2CountDict,
+        simNum2Type2Sample2TranscriptionStrand2CountDict,
+        simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+        subsSignature_cutoff_numberofmutations_averageprobability_df,
+        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+        sample_based):
+
+    mutationType = None
+    mutationTranscriptionStrand = mutation_row[TRANSCRIPTIONSTRAND]
+    mutationSample = mutation_row[SAMPLE]
+
+    ##########################################
+    type=mutation_row[TYPE]
+
+    if (type==SUBS):
+        signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df
+    elif (type==INDELS):
+        signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df
+    elif (type==DINUCS):
+        signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df
+
+    if (type==SUBS):
+        #e.g.: C>A
+        mutationType = mutation_row[MUTATION]
+    ##########################################
+
+    #Values on TranscriptionStrand column
+    # N --> Non-transcribed
+    # T --> Transcribed
+    # U --> Untranscribed
+    # Q --> Question Not known
+
+    if (mutationTranscriptionStrand == 'U'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                sample_based,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                UNTRANSCRIBED_STRAND,
+                                signature_cutoff_numberofmutations_averageprobability_df)
+
+    elif (mutationTranscriptionStrand == 'T'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                sample_based,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                TRANSCRIBED_STRAND,
+                                signature_cutoff_numberofmutations_averageprobability_df)
+    elif (mutationTranscriptionStrand == 'B'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                sample_based,
+                               simNum2Type2TranscriptionStrand2CountDict,
+                               simNum2Sample2Type2TranscriptionStrand2CountDict,
+                               simNum2Type2Sample2TranscriptionStrand2CountDict,
+                               simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                               UNTRANSCRIBED_STRAND,
+                               signature_cutoff_numberofmutations_averageprobability_df)
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                sample_based,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                TRANSCRIBED_STRAND,
+                                signature_cutoff_numberofmutations_averageprobability_df)
+    elif (mutationTranscriptionStrand == 'N'):
+        updateDictionaries_simulations_integrated(mutation_row,
+                                mutationType,
+                                mutationSample,
+                                sample_based,
+                                simNum2Type2TranscriptionStrand2CountDict,
+                                simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                NONTRANSCRIBED_STRAND,
+                                signature_cutoff_numberofmutations_averageprobability_df)
+########################################################################
+
+
+########################################################################
+#old code for April 5, 2020
 def searchMutationUsingTranscriptionStrandColumn_simulations_integrated(
         mutation_row,
         simNum2Type2TranscriptionStrand2CountDict,
@@ -138,6 +241,48 @@ def searchMutationUsingTranscriptionStrandColumn_simulations_integrated(
 ########################################################################
 
 ########################################################################
+#April 5, 2020
+def searchAllMutationsForApplySync(chrBased_simBased_combined_df_split,
+                                numofSimulations,
+                                sample_based,
+                                subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                verbose):
+
+    simNum2Type2TranscriptionStrand2CountDict = {}
+    simNum2Sample2Type2TranscriptionStrand2CountDict = {}
+    simNum2Type2Sample2TranscriptionStrand2CountDict = {}
+    simNum2Signature2MutationType2TranscriptionStrand2CountDict = {}
+
+    for simNum in range(0,numofSimulations+1):
+        simNum2Type2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Sample2Type2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Type2Sample2TranscriptionStrand2CountDict[simNum]={}
+        simNum2Signature2MutationType2TranscriptionStrand2CountDict[simNum]={}
+
+    if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
+        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        chrBased_simBased_combined_df_split.apply(searchAllMutationUsingTranscriptionStrandColumn_simulations_integrated,
+                                     simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
+                                     simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
+                                     simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
+                                     simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
+                                    subsSignature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    indelsSignature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                     sample_based=sample_based,
+                                     axis=1)
+        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+
+    return (simNum2Type2TranscriptionStrand2CountDict,
+            simNum2Sample2Type2TranscriptionStrand2CountDict,
+            simNum2Type2Sample2TranscriptionStrand2CountDict,
+            simNum2Signature2MutationType2TranscriptionStrand2CountDict)
+########################################################################
+
+########################################################################
+#old code for April 5, 2020
 #DEC 24, 2019
 #Called by USING_APPLY_ASYNC
 def searchMutationsForApplySync(chrBased_simBased_subs_df,
@@ -346,39 +491,79 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromSizesDict,
 
     #DEC 24, 2019
     elif (computationType==USING_APPLY_ASYNC):
+        sim_nums = range(0, numofSimulations + 1)
+        sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-        ####################################################################################################
-        for chrLong in chromNamesList:
-            chromSize = chromSizesDict[chrLong]
+        ####################################################################
+        def accumulate_apply_async_result(result_tuple):
+            chrBased_SimNum2Type2Strand2CountDict = result_tuple[0]
+            chrBased_SimNum2Sample2Type2Strand2CountDict = result_tuple[1]
+            chrBased_SimNum2Type2Sample2Strand2CountDict = result_tuple[2]
+            chrBased_SimNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
 
+            if verbose: print(
+                'Worker pid %s Accumulate Transcription Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+
+            accumulate_simulations_integrated_for_each_tuple(
+                chrBased_SimNum2Type2Strand2CountDict,
+                chrBased_SimNum2Sample2Type2Strand2CountDict,
+                chrBased_SimNum2Type2Sample2Strand2CountDict,
+                chrBased_SimNum2Signature2MutationType2Strand2CountDict,
+                accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
+                accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
+                accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
+                accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
+        ####################################################################
+
+        ####################################################################
+        for simNum, chrLong in sim_num_chr_tuples:
             ####################################################################
-            def accumulate_apply_async_result(result_tuple):
-                chrBased_SimNum2Type2Strand2CountDict=result_tuple[0]
-                chrBased_SimNum2Sample2Type2Strand2CountDict=result_tuple[1]
-                chrBased_SimNum2Type2Sample2Strand2CountDict=result_tuple[2]
-                chrBased_SimNum2Signature2MutationType2Strand2CountDict=result_tuple[3]
+            chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+            chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+            chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
 
-                if verbose: print('Worker pid %s Accumulate Transcription Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+            if (chrBased_simBased_subs_df is not None):
+                chrBased_simBased_subs_df[TYPE] = SUBS
 
-                accumulate_simulations_integrated_for_each_tuple(
-                            chrBased_SimNum2Type2Strand2CountDict,
-                            chrBased_SimNum2Sample2Type2Strand2CountDict,
-                            chrBased_SimNum2Type2Sample2Strand2CountDict,
-                            chrBased_SimNum2Signature2MutationType2Strand2CountDict,
-                            accumulatedAllChromosomesType2TranscriptionStrand2CountDict,
-                            accumulatedAllChromosomesSample2Type2TranscriptionStrand2CountDict,
-                            accumulatedAllChromosomesType2Sample2TranscriptionStrand2CountDict,
-                            accumulatedAllChromosomesSignature2MutationType2TranscriptionStrand2CountDict)
-            ####################################################################
+            if (chrBased_simBased_indels_df is not None):
+                chrBased_simBased_indels_df[TYPE] = INDELS
 
-            ####################################################################
-            for simNum in range(0,numofSimulations+1):
-                chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-                chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-                chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-                jobs.append(pool.apply_async(searchMutationsForApplySync, (chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df,numofSimulations,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose),callback=accumulate_apply_async_result))
-            ####################################################################
+            if (chrBased_simBased_dinucs_df is not None):
+                chrBased_simBased_dinucs_df[TYPE] = DINUCS
 
+            if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
+                chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df],ignore_index=True, axis=0)
+
+                ###########################################################
+                chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
+                number_of_splits = math.ceil(chrBased_simBased_number_of_mutations / NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
+
+                index_tuples = []
+                start = 0
+                for split in range(1, number_of_splits + 1):
+                    end = start + NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
+                    if end > chrBased_simBased_combined_df.shape[0]:
+                        end = chrBased_simBased_combined_df.shape[0]
+                    index_tuples.append((start, end))
+                    start = end
+
+                print('%s simNum:%d chrBased_simBased_number_of_mutations:%d Number of splits:%d' % (chrLong, simNum, chrBased_simBased_number_of_mutations, number_of_splits))
+                ###########################################################
+
+                for split_number, index_tuple in enumerate(index_tuples, 1):
+                    start = index_tuple[0]
+                    end = index_tuple[1]
+                    print('%s simNum:%d chrBased_simBased_number_of_mutations:%d start:%d end:%d split_number:%d' % (chrLong, simNum, chrBased_simBased_number_of_mutations, start, end, split_number))
+                    jobs.append(pool.apply_async(searchAllMutationsForApplySync,
+                                                 args=(chrBased_simBased_combined_df.iloc[start:end,:],
+                                                       numofSimulations,
+                                                       sample_based,
+                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                       indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                       dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                       verbose,),
+                                                 callback=accumulate_apply_async_result))
+        ####################################################################
 
         ####################################################################################################
 

@@ -47,6 +47,9 @@ MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1073741824
 MEGABYTE_IN_BYTES = 1048576
 
+NUMBER_OF_MUTATIONS_IN_EACH_SPLIT=100000
+MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=200
+
 BIGWIG='BIGWIG'
 BIGBED='BIGBED'
 WIG='WIG'
@@ -202,6 +205,7 @@ Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Ta
 
 #Table
 Table_MutationType_NumberofMutations_Filename='Table_MutationType_NumberofMutations.txt'
+Table_ChrLong_NumberofMutations_Filename='Table_ChrLong_NumberofMutations.txt'
 
 #For Subs
 Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
@@ -226,6 +230,10 @@ ONE_DIRECTORY_UP = '..'
 
 GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
 GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
+
+MM9ChromSizesDictFilename = 'mm9ChromSizesDict.txt'
+MM10ChromSizesDictFilename = 'mm10ChromSizesDict.txt'
+
 INDELBASED = 'indelbased'
 SIGNATUREBASED = 'signaturebased'
 SAMPLEBASED = 'samplebased'
@@ -379,6 +387,54 @@ DEFAULT_HISTONE_OCCUPANCY_FILE5 = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
 
 BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
+
+
+##################################################################
+#April 9, 2020
+def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex):
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+    if (chrBased_simBased_subs_df is not None):
+        chrBased_simBased_subs_df[TYPE] = SUBS
+
+    if (chrBased_simBased_indels_df is not None):
+        chrBased_simBased_indels_df[TYPE] = INDELS
+
+    if (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+
+    if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
+
+        ###########################################################
+        chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
+        number_of_splits = math.ceil(chrBased_simBased_number_of_mutations / NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
+
+        #################################
+        split_start_end_tuples = []
+        start = 0
+        for split in range(1, number_of_splits + 1):
+            end = start + NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
+            if end > chrBased_simBased_combined_df.shape[0]:
+                end = chrBased_simBased_combined_df.shape[0]
+            split_start_end_tuples.append((start, end))
+            start = end
+        #################################
+
+        #################################
+        if (splitIndex<len(split_start_end_tuples)):
+            split_start, split_end = split_start_end_tuples[splitIndex]
+            print('DEBUG %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
+            chrBased_simBased_combined_df_split = chrBased_simBased_combined_df.iloc[split_start:split_end, :]
+            return chrBased_simBased_combined_df_split
+        else:
+            return None
+        #################################
+    else:
+        return None
+##################################################################
 
 
 ########################################################
@@ -754,14 +810,22 @@ def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
 
 
 ###################################################################
+#Bookkeeping
+#http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.chrom.sizes
+#http://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.chrom.sizes
+#http://hgdownload.cse.ucsc.edu/goldenpath/mm9/bigZips/mm9.chrom.sizes
+#http://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigZips/mm10.chrom.sizes
 def getChromSizesDict(genome):
     chromSizesDict = {}
 
-    #TODO Do for mouse genomes
     if (genome==GRCh37):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
     elif (genome==GRCh38):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh38ChromSizesDictFilename)
+    elif (genome==MM9):
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM9ChromSizesDictFilename)
+    elif (genome==MM10):
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM10ChromSizesDictFilename)
 
     if (os.path.exists(chromSizesDictPath)):
         chromSizesDict = readDictionary(chromSizesDictPath)
@@ -911,7 +975,7 @@ def writeUserFriendlyAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2Number
 
 
 ##################################################################
-def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,type,cutoffs,average_probability,num_of_sbs_required,num_of_id_required,num_of_dbs_required,mutationType2NumberofMutationsDict):
+def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,mutation_type,cutoffs,average_probability,num_of_sbs_required,num_of_id_required,num_of_dbs_required,mutationType2NumberofMutationsDict,chrLong2NumberofMutationsDict):
 
     #Filled in the first part
     #PropertiesList consists of[sum_of_number of mutations, sum of probabilities]
@@ -927,8 +991,10 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
 
     all_samples=set()
 
+
     for chrLong in chromNamesList:
-        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,type,0,return_number_of_samples=True)
+        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,mutation_type,0,return_number_of_samples=True)
+
         all_samples = all_samples.union(chrbased_samples)
 
         if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
@@ -936,10 +1002,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
             # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
             signatures = getSignatures(chrBased_mutation_df)
 
-            if type in mutationType2NumberofMutationsDict:
-                mutationType2NumberofMutationsDict[type] += chrBased_mutation_df.shape[0]
+            if mutation_type in mutationType2NumberofMutationsDict:
+                mutationType2NumberofMutationsDict[mutation_type] += chrBased_mutation_df.shape[0]
             else:
-                mutationType2NumberofMutationsDict[type] = chrBased_mutation_df.shape[0]
+                mutationType2NumberofMutationsDict[mutation_type] = chrBased_mutation_df.shape[0]
+
+            if chrLong in chrLong2NumberofMutationsDict:
+                chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
+            else:
+                chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
 
             # First part starts
             # First accumulate number of mutations and sum of probabilities with mutations with probability >= cutoff probability
@@ -993,15 +1064,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
 
 
     #Set the filenames and number of required mutations
-    if (type==SUBS):
+    if (mutation_type==SUBS):
         number_of_required_mutations=num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
         table_signature_cutoff_numberofmutations_averageprobability_filename=Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-    elif (type == INDELS):
+    elif (mutation_type == INDELS):
         number_of_required_mutations=num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
         table_signature_cutoff_numberofmutations_averageprobability_filename=Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-    elif (type== DINUCS):
+    elif (mutation_type== DINUCS):
         number_of_required_mutations=num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
         table_signature_cutoff_numberofmutations_averageprobability_filename=Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -1279,45 +1350,49 @@ def doesSimulationsAlreadyExists(outputDir,jobname,numofSimulations):
 ##########################################################################################
 
 ########################################################################################
-#We will accumulate signature2SplitArrayDict in signature2AccumulatedSplitsChrBasedArrayDict
-def accumulateSimulationBasedTypeBasedArrays(simNum2Type2AccumulatedSplitsChrBasedArrayDict, simNum2Type2SplitArrayDict):
-    for simNum in simNum2Type2SplitArrayDict:
-        type2SplitArrayDict = simNum2Type2SplitArrayDict[simNum]
-
-        if simNum in simNum2Type2AccumulatedSplitsChrBasedArrayDict:
-            type2AccumulatedSplitsChrBasedArrayDict = simNum2Type2AccumulatedSplitsChrBasedArrayDict[simNum]
-        else:
-            type2AccumulatedSplitsChrBasedArrayDict = {}
-            simNum2Type2AccumulatedSplitsChrBasedArrayDict[simNum] = type2AccumulatedSplitsChrBasedArrayDict
-
-        for type in type2SplitArrayDict.keys():
-            if type in type2AccumulatedSplitsChrBasedArrayDict:
-                type2AccumulatedSplitsChrBasedArrayDict[type] += type2SplitArrayDict[type]
-            else:
-                type2AccumulatedSplitsChrBasedArrayDict[type] = type2SplitArrayDict[type]
-########################################################################################
-
-########################################################################################
-def accumulateSimulationBasedSampleBasedTypeBasedArrays(simNum2Sample2Type2AccumulatedSplitsChrBasedArrayDict,simNum2Sample2Type2SplitArrayDict):
-    for simNum in simNum2Sample2Type2SplitArrayDict:
-        sample2Type2SplitArrayDict = simNum2Sample2Type2SplitArrayDict[simNum]
-        if simNum in simNum2Sample2Type2AccumulatedSplitsChrBasedArrayDict:
-            sample2Type2AccumulatedSplitsChrBasedArrayDict = simNum2Sample2Type2AccumulatedSplitsChrBasedArrayDict[simNum]
-        else:
-            sample2Type2AccumulatedSplitsChrBasedArrayDict= {}
-            simNum2Sample2Type2AccumulatedSplitsChrBasedArrayDict[simNum] = sample2Type2AccumulatedSplitsChrBasedArrayDict
-
-        for sample in sample2Type2SplitArrayDict.keys():
-            for type in sample2Type2SplitArrayDict[sample].keys():
-                if (sample in sample2Type2AccumulatedSplitsChrBasedArrayDict):
-                    if (type in sample2Type2AccumulatedSplitsChrBasedArrayDict[sample]):
-                        sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] += sample2Type2SplitArrayDict[sample][type]
-                    else:
-                        sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] = sample2Type2SplitArrayDict[sample][type]
+# April 12, 2020
+# simNum2Type2ArrayDict comes for each (chr,sim,split) tuple
+# Accumulate simNum2Type2ArrayDict in simNum2Type2AccumulatedArrayDict
+def accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2ArrayDict, simNum2Type2AccumulatedArrayDict):
+    for simNum in simNum2Type2ArrayDict:
+        for my_type in simNum2Type2ArrayDict[simNum]:
+            if simNum in simNum2Type2AccumulatedArrayDict:
+                if my_type in simNum2Type2AccumulatedArrayDict[simNum]:
+                    simNum2Type2AccumulatedArrayDict[simNum][my_type]+=simNum2Type2ArrayDict[simNum][my_type]
                 else:
-                    sample2Type2AccumulatedSplitsChrBasedArrayDict[sample]= {}
-                    sample2Type2AccumulatedSplitsChrBasedArrayDict[sample][type] = sample2Type2SplitArrayDict[sample][type]
+                    simNum2Type2AccumulatedArrayDict[simNum][my_type]=simNum2Type2ArrayDict[simNum][my_type]
+            else:
+                simNum2Type2AccumulatedArrayDict[simNum] = {}
+                simNum2Type2AccumulatedArrayDict[simNum][my_type] =simNum2Type2ArrayDict[simNum][my_type]
 ########################################################################################
+
+
+
+########################################################################################
+# April 12, 2020
+# Cleaner Version
+#Accumulate simNum2Sample2Type2ArrayDict in simNum2Sample2Type2AccumulatedArrayDict
+def accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2ArrayDict,simNum2Sample2Type2AccumulatedArrayDict):
+    for simNum in simNum2Sample2Type2ArrayDict:
+        for sample in simNum2Sample2Type2ArrayDict[simNum]:
+            for my_type in simNum2Sample2Type2ArrayDict[simNum][sample]:
+
+                if simNum in simNum2Sample2Type2AccumulatedArrayDict:
+                    if sample in simNum2Sample2Type2AccumulatedArrayDict[simNum]:
+                        if my_type in simNum2Sample2Type2AccumulatedArrayDict[simNum][sample]:
+                            simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] += simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
+                        else:
+                            simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
+                    else:
+                        simNum2Sample2Type2AccumulatedArrayDict[simNum][sample]={}
+                        simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
+                else:
+                    simNum2Sample2Type2AccumulatedArrayDict[simNum] = {}
+                    simNum2Sample2Type2AccumulatedArrayDict[simNum][sample] = {}
+                    simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
+########################################################################################
+
+
 
 
 ########################################################################################
@@ -1800,7 +1875,7 @@ def generateIntervalVersion(wig_unprocessed_df):
     # print('wig_chrom_start_end_signal_version_df.dtypes')
     # print(wig_chrom_start_end_signal_version_df.dtypes)
 
-    wig_chrom_start_end_signal_version_df[CHROM] = wig_chrom_start_end_signal_version_df[CHROM].astype(str)
+    wig_chrom_start_end_signal_version_df[CHROM] = wig_chrom_start_end_signal_version_df[CHROM].astype('category')
     wig_chrom_start_end_signal_version_df[START] = wig_chrom_start_end_signal_version_df[START].astype(np.int32)
     wig_chrom_start_end_signal_version_df[END] = wig_chrom_start_end_signal_version_df[END].astype(np.int32)
     wig_chrom_start_end_signal_version_df[SIGNAL] = wig_chrom_start_end_signal_version_df[SIGNAL].astype(np.float32)
@@ -1816,6 +1891,7 @@ def generateIntervalVersion(wig_unprocessed_df):
 #JAN 7, 2020
 #If file is originally a  wig file use this function
 #No Outlier Elimination is done
+#Used by Replication Time and Replication Strand Bias
 def readWig_with_fixedStep_variableStep(wig_file_path):
 
     #Read the wavelet signal
@@ -1883,6 +1959,7 @@ def updateTypeBasedDictionary(type2Sample2Strand2CountDict,type,mutationSample,s
         type2Sample2Strand2CountDict[type][mutationSample]={}
         type2Sample2Strand2CountDict[type][mutationSample][strand] =1
 ##################################################################
+
 
 ########################################################################
 def updateDictionaries_simulations_integrated(mutation_row,
@@ -2524,7 +2601,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 
 
 ############################################################
-def readProbabilities(probabilitiesFile):
+def readProbabilities(probabilitiesFile,verbose):
 
     #For Release and PCAWG_Matlab
     #This is same for Release and PCAWG_Matlab
@@ -2555,25 +2632,26 @@ def readProbabilities(probabilitiesFile):
     # Sample Names    MutationTypes   DBS2    DBS4    DBS5    DBS6    DBS9    DBS11
     # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
 
-    print('Probabilities information starts')
-    print('probabilities_df.shape')
-    print(probabilities_df.shape)
-    print('probabilities_df.head()')
-    print(probabilities_df.head())
-    print('probabilities_df.dtypes')
-    print(probabilities_df.dtypes)
+    if verbose:
+        print('\tVerbose Probabilities information starts')
+        print('\tVerbose probabilities_df.shape')
+        print(probabilities_df.shape)
+        print('\tVerbose probabilities_df.head()')
+        print(probabilities_df.head())
+        print('\tVerbose probabilities_df.dtypes')
+        print(probabilities_df.dtypes)
 
-    if (SAMPLE in probabilities_df.columns.values):
-        print('Unique samples in probabilities_df')
-        print(probabilities_df[SAMPLE].unique())
-        print('# of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
+        if (SAMPLE in probabilities_df.columns.values):
+            print('\tVerbose Unique samples in probabilities_df')
+            print(probabilities_df[SAMPLE].unique())
+            print('\tVerbose # of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
 
-    if (MUTATION in probabilities_df.columns.values):
-        print('Unique MutationTypes in probabilities_df')
-        print(probabilities_df[MUTATION].unique())
-        print('# of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
-    print('Probabilities information ends')
-    print('##############################')
+        if (MUTATION in probabilities_df.columns.values):
+            print('\tVerbose Unique MutationTypes in probabilities_df')
+            print(probabilities_df[MUTATION].unique())
+            print('\tVerbose # of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
+        print('\tVerbose Probabilities information ends')
+        print('\tVerbose ##############################')
 
     return probabilities_df
 ############################################################

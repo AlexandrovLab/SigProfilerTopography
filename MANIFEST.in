@@ -8,6 +8,8 @@ include SigProfilerTopography/source/processivity/*
 include SigProfilerTopography/source/plotting/*
 include SigProfilerTopography/lib/ucscgenome/hg19ChromSizesDict.txt
 include SigProfilerTopography/lib/ucscgenome/hg38ChromSizesDict.txt
+include SigProfilerTopography/lib/ucscgenome/mm9ChromSizesDict.txt
+include SigProfilerTopography/lib/ucscgenome/mm10ChromSizesDict.txt
 include SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
 include SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
 include SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
