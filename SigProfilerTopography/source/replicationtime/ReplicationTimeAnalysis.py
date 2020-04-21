@@ -285,8 +285,8 @@ def search_for_each_mutation_using_list_comprehension(
         sample2IndelsSignature2NumberofMutationsDict,
         sample2DinucsSignature2NumberofMutationsDict,
         chrBasedReplicationTimeDataArrayWithDecileIndex,
-        type2DecileIndex2NumberofMutationsDict,
-        sample2Type2DecileIndex2NumberofMutationsDict,
+        simNum2Type2DecileIndex2NumberofMutationsDict,
+        simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
         subsSignature_cutoff_numberofmutations_averageprobability_df,
         indelsSignature_cutoff_numberofmutations_averageprobability_df,
         dinucsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -297,6 +297,9 @@ def search_for_each_mutation_using_list_comprehension(
     ###########################################
     indexofType = df_columns.index(TYPE)
     mutation_row_type = mutation_row[indexofType]
+
+    indexofSimulationNumber = df_columns.index(SIMULATION_NUMBER)
+    mutation_row_sim_num = mutation_row[indexofSimulationNumber]
 
     if mutation_row_type==SUBS:
         my_type=AGGREGATEDSUBSTITUTIONS
@@ -351,35 +354,50 @@ def search_for_each_mutation_using_list_comprehension(
             decileIndexNum = int(decileIndex)
 
             ################### AGGREGATED starts #####################
-            if my_type in type2DecileIndex2NumberofMutationsDict:
-                if decileIndexNum in type2DecileIndex2NumberofMutationsDict[my_type]:
-                    type2DecileIndex2NumberofMutationsDict[my_type][decileIndexNum] += 1
+            if mutation_row_sim_num in simNum2Type2DecileIndex2NumberofMutationsDict:
+                if my_type in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]:
+                    if decileIndexNum in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type]:
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type][decileIndexNum] += 1
+                    else:
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type][decileIndexNum] = 1
                 else:
-                    type2DecileIndex2NumberofMutationsDict[my_type][decileIndexNum] = 1
+                    simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type]={}
+                    simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type][decileIndexNum] = 1
             else:
-                type2DecileIndex2NumberofMutationsDict[my_type]={}
-                type2DecileIndex2NumberofMutationsDict[my_type][decileIndexNum] = 1
+                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num] = {}
+                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type] = {}
+                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][my_type][decileIndexNum] = 1
 
             if (my_type==AGGREGATEDINDELS):
                 if length >= 3:
-                    if MICROHOMOLOGY in type2DecileIndex2NumberofMutationsDict:
-                        if decileIndexNum in type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY]:
-                            type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY][decileIndexNum] += 1
+                    if mutation_row_sim_num in simNum2Type2DecileIndex2NumberofMutationsDict:
+                        if MICROHOMOLOGY in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]:
+                            if decileIndexNum in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY]:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY][decileIndexNum] += 1
+                            else:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY][decileIndexNum] = 1
                         else:
-                            type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY][decileIndexNum] = 1
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY] = {}
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY][decileIndexNum] = 1
                     else:
-                        type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY] = {}
-                        type2DecileIndex2NumberofMutationsDict[MICROHOMOLOGY][decileIndexNum] = 1
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]={}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY] = {}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][MICROHOMOLOGY][decileIndexNum] = 1
 
                 else:
-                    if REPEAT in type2DecileIndex2NumberofMutationsDict:
-                        if decileIndexNum in type2DecileIndex2NumberofMutationsDict[REPEAT]:
-                            type2DecileIndex2NumberofMutationsDict[REPEAT][decileIndexNum] += 1
+                    if mutation_row_sim_num in simNum2Type2DecileIndex2NumberofMutationsDict:
+                        if REPEAT in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]:
+                            if decileIndexNum in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT]:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT][decileIndexNum] += 1
+                            else:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT][decileIndexNum] = 1
                         else:
-                            type2DecileIndex2NumberofMutationsDict[REPEAT][decileIndexNum] = 1
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT] = {}
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT][decileIndexNum] = 1
                     else:
-                        type2DecileIndex2NumberofMutationsDict[REPEAT] = {}
-                        type2DecileIndex2NumberofMutationsDict[REPEAT][decileIndexNum] = 1
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num] = {}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT] = {}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][REPEAT][decileIndexNum] = 1
             ################### AGGREGATED ends #######################
 
             ########################### Signatures start ###########################
@@ -387,88 +405,115 @@ def search_for_each_mutation_using_list_comprehension(
                 indexofSignature=df_columns.index(signature)
                 cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
                 if mutation_row[indexofSignature] >= cutoff:
-                    if signature in type2DecileIndex2NumberofMutationsDict:
-                        if decileIndexNum in type2DecileIndex2NumberofMutationsDict[signature]:
-                            type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] += 1
+                    if mutation_row_sim_num in simNum2Type2DecileIndex2NumberofMutationsDict:
+                        if signature in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]:
+                            if decileIndexNum in simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature]:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature][decileIndexNum] += 1
+                            else:
+                                simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature][decileIndexNum] = 1
                         else:
-                            type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] = 1
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature] = {}
+                            simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature][decileIndexNum] = 1
                     else:
-                        type2DecileIndex2NumberofMutationsDict[signature] = {}
-                        type2DecileIndex2NumberofMutationsDict[signature][decileIndexNum] = 1
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num] = {}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature] = {}
+                        simNum2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][signature][decileIndexNum] = 1
+
             ########################### Signatures end #############################
 
-            ############################# Sample Based starts ###########################
-            if sample_based:
-
-                if sample in sample2NumberofMutationsDict:
-                    ############## Sample Based Aggregated Substitutions starts ############
-                    if sample in sample2Type2DecileIndex2NumberofMutationsDict:
-                        if my_type in sample2Type2DecileIndex2NumberofMutationsDict[sample]:
-
-                            if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type]:
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndexNum] += 1
-                            else:
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndexNum] = 1
-
-                            if (my_type==AGGREGATEDINDELS):
-                                if length >= 3:
-                                    if MICROHOMOLOGY in sample2Type2DecileIndex2NumberofMutationsDict[sample]:
-                                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY]:
-                                            sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] += 1
-                                        else:
-                                            sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] = 1
-                                    else:
-                                        sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY] = {}
-                                        sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] = 1
-
-
-                                else:
-                                    if REPEAT in sample2Type2DecileIndex2NumberofMutationsDict[sample]:
-                                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT]:
-                                            sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] += 1
-                                        else:
-                                            sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] = 1
-                                    else:
-                                        sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT] = {}
-                                        sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] = 1
-
-                        else:
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type] = {}
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndexNum] = 1
-                            if my_type == AGGREGATEDINDELS:
-                                if length >= 3:
-                                    sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY] = {}
-                                    sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] = 1
-                                else:
-                                    sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT] = {}
-                                    sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] = 1
-
-                    else:
-                        sample2Type2DecileIndex2NumberofMutationsDict[sample]={}
-                        sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type]={}
-                        sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndexNum] = 1
-                        if my_type==AGGREGATEDINDELS:
-                            if length >= 3:
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY] = {}
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][MICROHOMOLOGY][decileIndexNum] = 1
-                            else:
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT] = {}
-                                sample2Type2DecileIndex2NumberofMutationsDict[sample][REPEAT][decileIndexNum] = 1
-
-                ############## Sample Based Aggregated Substitutions ends ##############
-
-            if sample in sample2Signature2NumberofMutationsDict:
-                for signature in sample2Signature2NumberofMutationsDict[sample]:
-                    indexofSignature = df_columns.index(signature)
-                    cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
-                    if mutation_row[indexofSignature] >= cutoff:
-                        if decileIndexNum in sample2Type2DecileIndex2NumberofMutationsDict[sample][signature]:
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] += 1
-                        else:
-                            sample2Type2DecileIndex2NumberofMutationsDict[sample][signature][decileIndexNum] = 1
-                ############## Sample Based Signatures ends ############################
-
-            ############################# Sample Based ends ############################
+            # ############################# Sample Based starts ###########################
+            # if sample_based:
+            #
+            #     if sample in sample2NumberofMutationsDict:
+            #         ############## Sample Based Aggregated Substitutions starts ############
+            #         if mutation_row_sim_num in simNum2Sample2Type2DecileIndex2NumberofMutationsDict:
+            #             if sample in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]:
+            #                 if my_type in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample]:
+            #
+            #                     if decileIndexNum in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type]:
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type][decileIndexNum] += 1
+            #                     else:
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type][decileIndexNum] = 1
+            #
+            #                     if (my_type == AGGREGATEDINDELS):
+            #                         if length >= 3:
+            #                             if MICROHOMOLOGY in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample]:
+            #                                 if decileIndexNum in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY]:
+            #                                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] += 1
+            #                                 else:
+            #                                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] = 1
+            #                             else:
+            #                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY] = {}
+            #                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] = 1
+            #
+            #                         else:
+            #                             if REPEAT in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample]:
+            #                                 if decileIndexNum in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT]:
+            #                                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] += 1
+            #                                 else:
+            #                                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] = 1
+            #                             else:
+            #                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT] = {}
+            #                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] = 1
+            #
+            #                 else:
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type] = {}
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type][decileIndexNum] = 1
+            #                     if my_type == AGGREGATEDINDELS:
+            #                         if length >= 3:
+            #                             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY] = {}
+            #                             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] = 1
+            #                         else:
+            #                             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT] = {}
+            #                             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] = 1
+            #
+            #             else:
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample] = {}
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type] = {}
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type][decileIndexNum] = 1
+            #                 if my_type == AGGREGATEDINDELS:
+            #                     if length >= 3:
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY] = {}
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] = 1
+            #                     else:
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT] = {}
+            #                         simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] = 1
+            #
+            #         else:
+            #             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]={}
+            #             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample] = {}
+            #             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type] = {}
+            #             simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][my_type][decileIndexNum] = 1
+            #             if my_type == AGGREGATEDINDELS:
+            #                 if length >= 3:
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY] = {}
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][MICROHOMOLOGY][decileIndexNum] = 1
+            #                 else:
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT] = {}
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][REPEAT][decileIndexNum] = 1
+            #         ############## Sample Based Aggregated Substitutions ends ##############
+            #
+            #
+            # ############## Sample Based Signatures ends ############################
+            # if sample in sample2Signature2NumberofMutationsDict:
+            #     for signature in sample2Signature2NumberofMutationsDict[sample]:
+            #         indexofSignature = df_columns.index(signature)
+            #         cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+            #         if mutation_row[indexofSignature] >= cutoff:
+            #             if mutation_row_sim_num in simNum2Sample2Type2DecileIndex2NumberofMutationsDict:
+            #                 if decileIndexNum in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][signature]:
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][signature][decileIndexNum] += 1
+            #                 else:
+            #                     simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][signature][decileIndexNum] = 1
+            #
+            #             else:
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num]={}
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample] = {}
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][signature] = {}
+            #                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict[mutation_row_sim_num][sample][signature][decileIndexNum] = 1
+            # ############## Sample Based Signatures ends ############################
+            #
+            # ############################# Sample Based ends ############################
 
 ##################################################################
 
@@ -491,27 +536,27 @@ def searchforAllMutations(
        sample_based):
 
     ######################################################################
-    type2DecileIndex2NumberofMutationsDict = {}
-    sample2Type2DecileIndex2NumberofMutationsDict = {}
+    simNum2Type2DecileIndex2NumberofMutationsDict = {}
+    simNum2Sample2Type2DecileIndex2NumberofMutationsDict = {}
 
     df_columns=list(chrBased_simBased_combined_df_split.columns.values)
     [search_for_each_mutation_using_list_comprehension(mutation_row,
-                                                                       sample2NumberofSubsDict,
-                                                                       sample2NumberofIndelsDict,
-                                                                       sample2NumberofDinucsDict,
-                                                                       sample2SubsSignature2NumberofMutationsDict,
-                                                                       sample2IndelsSignature2NumberofMutationsDict,
-                                                                       sample2DinucsSignature2NumberofMutationsDict,
-                                                                       chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                                                        type2DecileIndex2NumberofMutationsDict,
-                                                                        sample2Type2DecileIndex2NumberofMutationsDict,
-                                                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                        sample_based,
-                                                                        df_columns) for mutation_row in chrBased_simBased_combined_df_split.values]
+                                                   sample2NumberofSubsDict,
+                                                   sample2NumberofIndelsDict,
+                                                   sample2NumberofDinucsDict,
+                                                   sample2SubsSignature2NumberofMutationsDict,
+                                                   sample2IndelsSignature2NumberofMutationsDict,
+                                                   sample2DinucsSignature2NumberofMutationsDict,
+                                                   chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                    simNum2Type2DecileIndex2NumberofMutationsDict,
+                                                    simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
+                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                    sample_based,
+                                                    df_columns) for mutation_row in chrBased_simBased_combined_df_split.values]
 
-    return type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
+    return simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 
 ##################################################################
 
@@ -587,11 +632,13 @@ def fillDictionaries_chromBased_simBased_for_all_mutations(
         verbose):
 
 
+    simNum2Type2DecileIndex2NumberofMutationsDict = {}
+    simNum2Sample2Type2DecileIndex2NumberofMutationsDict = {}
+
     ##################################################################################################################
     if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
-
         if verbose: print('\tVerbose Worker %s Search for all mutations STARTS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()),flush=True)
-        type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict = searchforAllMutations(
+        simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = searchforAllMutations(
             sample2NumberofSubsDict,
             sample2NumberofIndelsDict,
             sample2NumberofDinucsDict,
@@ -605,10 +652,11 @@ def fillDictionaries_chromBased_simBased_for_all_mutations(
             dinucsSignature_cutoff_numberofmutations_averageprobability_df,
             sample_based)
         if verbose: print('\tVerbose Worker %s Search for all mutations ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()),flush=True)
-
+    else:
+        print('DEBUG APRIL 16 2020 %s simNum:%d None' %(chrLong,simNum),flush=True)
     ##################################################################################################################
 
-    return  type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
+    return  simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
 
 
@@ -642,7 +690,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
 
     #Search for (chrLong,simNum,splitIndex) tuple
-    type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict  = fillDictionaries_chromBased_simBased_for_all_mutations(
+    simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict  = fillDictionaries_chromBased_simBased_for_all_mutations(
         sample2NumberofSubsDict,
         sample2NumberofIndelsDict,
         sample2NumberofDinucsDict,
@@ -659,7 +707,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(inputList
         dinucsSignature_cutoff_numberofmutations_averageprobability_df,
         verbose)
 
-    return chrLong, simNum, splitIndex, type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict
+    return simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
 
 
@@ -785,55 +833,57 @@ def fillInputList(outputDir,
 
 
 #########################################################################################
-def accumulate_imap_unordered_result(chrLong,simNum,splitIndex,type2DecileIndex2NumberofMutationsDict,sample2Type2DecileIndex2NumberofMutationsDict,simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict,simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict,verbose):
+def accumulate_imap_unordered_result(simNum2Type2DecileIndex2NumberofMutationsDict,simNum2Sample2Type2DecileIndex2NumberofMutationsDict,simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict,simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict,verbose):
 
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB type2DecileIndex2NumberofMutationsDict: %.2f MB sample2Type2DecileIndex2NumberofMutationsDict: %.2f MB  simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB BEFORE ACCUMULATE  %s simNum:%s splitIndex:%d' % (str(os.getpid()), memory_usage(),sys.getsizeof(type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(sample2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,chrLong,simNum, splitIndex), flush=True)
+    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB type2DecileIndex2NumberofMutationsDict: %.2f MB sample2Type2DecileIndex2NumberofMutationsDict: %.2f MB  simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB BEFORE ACCUMULATE' % (str(os.getpid()), memory_usage(),sys.getsizeof(simNum2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES), flush=True)
 
     ###########################################################################
-    for my_type in type2DecileIndex2NumberofMutationsDict:
-        for decileIndex in type2DecileIndex2NumberofMutationsDict[my_type]:
-            if simNum in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict:
-                if my_type in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum]:
-                    if decileIndex in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type]:
-                        simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] += type2DecileIndex2NumberofMutationsDict[my_type][decileIndex]
+    for simNum in simNum2Type2DecileIndex2NumberofMutationsDict:
+        for my_type in simNum2Type2DecileIndex2NumberofMutationsDict[simNum]:
+            for decileIndex in simNum2Type2DecileIndex2NumberofMutationsDict[simNum][my_type]:
+                if simNum in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict:
+                    if my_type in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum]:
+                        if decileIndex in simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type]:
+                            simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] += simNum2Type2DecileIndex2NumberofMutationsDict[simNum][my_type][decileIndex]
+                        else:
+                            simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = simNum2Type2DecileIndex2NumberofMutationsDict[simNum][my_type][decileIndex]
                     else:
-                        simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = type2DecileIndex2NumberofMutationsDict[my_type][decileIndex]
+                        simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type]={}
+                        simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = simNum2Type2DecileIndex2NumberofMutationsDict[simNum][my_type][decileIndex]
                 else:
-                    simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type]={}
-                    simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = type2DecileIndex2NumberofMutationsDict[my_type][decileIndex]
-            else:
-                simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum] = {}
-                simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type] = {}
-                simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = type2DecileIndex2NumberofMutationsDict[my_type][decileIndex]
+                    simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum] = {}
+                    simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type] = {}
+                    simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][my_type][decileIndex] = simNum2Type2DecileIndex2NumberofMutationsDict[simNum][my_type][decileIndex]
     ###########################################################################
 
 
     ######################## Sample Based starts #######################################
-    for sample in sample2Type2DecileIndex2NumberofMutationsDict:
-        for my_type in sample2Type2DecileIndex2NumberofMutationsDict[sample]:
-            for decileIndex in sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type]:
-                if simNum in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict:
-                    if sample in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum]:
-                        if my_type in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample]:
-                            if decileIndex in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type]:
-                                simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] += sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndex]
+    for simNum in simNum2Sample2Type2DecileIndex2NumberofMutationsDict:
+        for sample in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum]:
+            for my_type in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample]:
+                for decileIndex in simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type]:
+                    if simNum in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict:
+                        if sample in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum]:
+                            if my_type in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample]:
+                                if decileIndex in simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type]:
+                                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] += simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type][decileIndex]
+                                else:
+                                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type][decileIndex]
                             else:
-                                simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndex]
+                                simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type] = {}
+                                simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type][decileIndex]
                         else:
+                            simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample] = {}
                             simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type] = {}
-                            simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndex]
+                            simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type][decileIndex]
                     else:
+                        simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum] = {}
                         simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample] = {}
                         simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type] = {}
-                        simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndex]
-                else:
-                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum] = {}
-                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample] = {}
-                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type] = {}
-                    simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = sample2Type2DecileIndex2NumberofMutationsDict[sample][my_type][decileIndex]
+                        simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict[simNum][sample][my_type][decileIndex] = simNum2Sample2Type2DecileIndex2NumberofMutationsDict[simNum][sample][my_type][decileIndex]
     ######################## Sample Based ends #########################################
 
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB type2DecileIndex2NumberofMutationsDict: %.2f MB sample2Type2DecileIndex2NumberofMutationsDict: %.2f MB  simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB AFTER ACCUMULATE %s simNum:%s splitIndex:%d' % (str(os.getpid()), memory_usage(),sys.getsizeof(type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(sample2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,chrLong,simNum,splitIndex), flush=True)
+    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB type2DecileIndex2NumberofMutationsDict: %.2f MB sample2Type2DecileIndex2NumberofMutationsDict: %.2f MB  simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict: %.2f MB AFTER ACCUMULATE' % (str(os.getpid()), memory_usage(),sys.getsizeof(simNum2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2NumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES,sys.getsizeof(simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict)/MEGABYTE_IN_BYTES), flush=True)
 #########################################################################################
 
 
@@ -965,15 +1015,11 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 
             ###############################################################
             #Run the jobs in poolInputList
-
-
-            for chrLong, simNum, splitIndex, type2DecileIndex2NumberofMutationsDict, sample2Type2DecileIndex2NumberofMutationsDict in pool.imap_unordered(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList):
+            for simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict in pool.imap_unordered(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray, poolInputList):
                 #Accumulate the result coming from (chr,sim,split) tuple
-                accumulate_imap_unordered_result(chrLong,
-                                                 simNum,
-                                                 splitIndex,
-                                                 type2DecileIndex2NumberofMutationsDict,
-                                                 sample2Type2DecileIndex2NumberofMutationsDict,
+
+                accumulate_imap_unordered_result(simNum2Type2DecileIndex2NumberofMutationsDict,
+                                                 simNum2Sample2Type2DecileIndex2NumberofMutationsDict,
                                                  simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict,
                                                  simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict,
                                                  verbose)

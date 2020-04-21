@@ -149,10 +149,9 @@ def fillInputList(occupancy_type,outputDir,jobname,chrLong,simNum,splitIndex,chr
 ########################################################################################
 
 ########################################################################################
-#Updated April 10, 2020
+# Updated April 10, 2020
 # For imap_unordered
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered(inputList):
-
     occupancy_type=inputList[0]
     outputDir=inputList[1]
     jobname=inputList[2]
@@ -271,7 +270,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered(inpu
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
-
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
         if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
             df_columns = list(chrBased_simBased_combined_df_split.columns.values)
@@ -614,7 +612,7 @@ def occupancy_analysis(genome,
     # If chunksize is 1, maxtasksperchild=x will call the function x times in each process,
     # but if chunksize is y, it will call the function x*y times in each process.
     # Setting maxtaskperchild to 1 would restart each process in your pool after it processed a single task, which is the most aggressive setting you could use to free any leaked resources.
-    numofProcesses = multiprocessing.cpu_count()
+    # numofProcesses = multiprocessing.cpu_count()
     # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1)
     ##########################################################################
 

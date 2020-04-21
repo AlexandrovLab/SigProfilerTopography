@@ -51,7 +51,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
-from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
 
 from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
@@ -62,10 +61,12 @@ from SigProfilerTopography.source.commons.TopographyCommons import Signature2Mut
 from SigProfilerTopography.source.commons.TopographyCommons import Type2Sample2ReplicationStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2Type2ReplicationStrand2CountDict_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
+from SigProfilerTopography.source.commons.TopographyCommons import MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE
+
+from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 
 #For Supp Fig2B
 CHR10_THRESHOLD_START = 16400000
@@ -321,314 +322,6 @@ def searchAllMutationOnReplicationStrandArray_simulations_integrated(
 ########################################################################
 
 
-########################################################################
-#Old code of April 5, 2020
-# Summary:
-#   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
-#   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
-def searchMutationOnReplicationStrandArray_simulations_integrated(
-        mutation_row,
-        chrBasedReplicationArray,
-        simNum2Type2ReplicationStrand2CountDict,
-        simNum2Sample2Type2ReplicationStrand2CountDict,
-        simNum2Type2Sample2ReplicationStrand2CountDict,
-        simNum2Signature2MutationType2ReplicationStrand2CountDict,
-        signature_cutoff_numberofmutations_averageprobability_df,
-        type,
-        sample_based):
-
-    start = mutation_row[START]
-    mutationType = None
-
-    pyramidineStrand = mutation_row[PYRAMIDINESTRAND]
-    sample = mutation_row[SAMPLE]
-
-    if(type==SUBS):
-        end = start+1
-        #e.g.: C>A
-        mutationType = mutation_row[MUTATION]
-    if (type==INDELS):
-        end = start+mutation_row[LENGTH]
-    elif (type==DINUCS):
-        end = start+2
-
-    #############################################################################################################
-    #if there is overlap with chrBasedReplicationArray
-    slicedArray = chrBasedReplicationArray[start:end]
-
-    if (np.any(slicedArray)):
-
-        #It must be full with at most -1 and +1
-        uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
-
-        if (uniqueValueArray.size>2):
-            print('There is a situation!!!')
-
-        elif ((uniqueValueArray.size==2) and (pyramidineStrand!=0)):
-            #Increment both LEADING and LAGGING
-            updateDictionaries_simulations_integrated(mutation_row,
-                                        mutationType,
-                                        sample,
-                                        sample_based,
-                                        simNum2Type2ReplicationStrand2CountDict,
-                                        simNum2Sample2Type2ReplicationStrand2CountDict,
-                                        simNum2Type2Sample2ReplicationStrand2CountDict,
-                                        simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                        LAGGING,
-                                        signature_cutoff_numberofmutations_averageprobability_df)
-
-            updateDictionaries_simulations_integrated(mutation_row,
-                                        mutationType,
-                                        sample,
-                                        sample_based,
-                                        simNum2Type2ReplicationStrand2CountDict,
-                                        simNum2Sample2Type2ReplicationStrand2CountDict,
-                                        simNum2Type2Sample2ReplicationStrand2CountDict,
-                                        simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                        LEADING,
-                                        signature_cutoff_numberofmutations_averageprobability_df)
-
-
-        # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
-        elif (uniqueValueArray.size == 1):
-            for uniqueValue in np.nditer(uniqueValueArray):
-                # type(decileIndex) is numpy.ndarray
-                slope = int(uniqueValue)
-
-                #They have the same sign, multiplication (1,1) (-1,-1) must be 1
-                if (slope*pyramidineStrand > 0):
-                    updateDictionaries_simulations_integrated(mutation_row,
-                                            mutationType,
-                                            sample,
-                                            sample_based,
-                                            simNum2Type2ReplicationStrand2CountDict,
-                                            simNum2Sample2Type2ReplicationStrand2CountDict,
-                                            simNum2Type2Sample2ReplicationStrand2CountDict,
-                                            simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                            LEADING,
-                                            signature_cutoff_numberofmutations_averageprobability_df)
-
-                # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
-                elif (slope*pyramidineStrand < 0):
-                    updateDictionaries_simulations_integrated(mutation_row,
-                                            mutationType,
-                                            sample,
-                                            sample_based,
-                                            simNum2Type2ReplicationStrand2CountDict,
-                                            simNum2Sample2Type2ReplicationStrand2CountDict,
-                                            simNum2Type2Sample2ReplicationStrand2CountDict,
-                                            simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                            LAGGING,
-                                            signature_cutoff_numberofmutations_averageprobability_df)
-        else:
-            print('There is a situation!!!')
-    #############################################################################################################
-########################################################################
-
-########################################################################
-#April 5, 2020
-def searchAllMutationsOnReplicationStrandArrayForApplyAsync(
-    chrBased_replication_array,
-    chrBased_simBased_combined_df_split,
-    numofSimulations,
-    sample_based,
-    subsSignature_cutoff_numberofmutations_averageprobability_df,
-    indelsSignature_cutoff_numberofmutations_averageprobability_df,
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-    verbose):
-
-    simNum2Type2ReplicationStrand2CountDict= {}
-    simNum2Sample2Type2ReplicationStrand2CountDict= {}
-    simNum2Type2Sample2ReplicationStrand2CountDict = {}
-    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
-
-    for simNum in range(0,numofSimulations+1):
-        simNum2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Sample2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Type2Sample2ReplicationStrand2CountDict[simNum]={}
-        simNum2Signature2MutationType2ReplicationStrand2CountDict[simNum]={}
-
-    if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
-        chrBased_simBased_combined_df_split.apply(searchAllMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                subsSignature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                indelsSignature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                dinucsSignature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                sample_based=sample_based,
-                                axis=1)
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-
-    #Fill the type2replicationStranCount dictionaries and return them
-    return (simNum2Type2ReplicationStrand2CountDict,
-            simNum2Sample2Type2ReplicationStrand2CountDict,
-            simNum2Type2Sample2ReplicationStrand2CountDict,
-            simNum2Signature2MutationType2ReplicationStrand2CountDict)
-########################################################################
-
-
-########################################################################
-#old code of April 5, 2020
-def searchMutationsOnReplicationStrandArrayForApplyAsync(
-    chrBased_replication_array,
-    chrBased_simBased_subs_df,
-    chrBased_simBased_indels_df,
-    chrBased_simBased_dinucs_df,
-    numofSimulations,
-    sample_based,
-    subsSignature_cutoff_numberofmutations_averageprobability_df,
-    indelsSignature_cutoff_numberofmutations_averageprobability_df,
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-    verbose):
-
-    simNum2Type2ReplicationStrand2CountDict= {}
-    simNum2Sample2Type2ReplicationStrand2CountDict= {}
-    simNum2Type2Sample2ReplicationStrand2CountDict = {}
-    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
-
-    for simNum in range(0,numofSimulations+1):
-        simNum2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Sample2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Type2Sample2ReplicationStrand2CountDict[simNum]={}
-        simNum2Signature2MutationType2ReplicationStrand2CountDict[simNum]={}
-
-    ##############################  Fill dictionaries for subs  starts ####################
-    if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
-        chrBased_simBased_subs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=SUBS,
-                                sample_based=sample_based,
-                                axis=1)
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ##############################  Fill dictionaries for subs  ends ######################
-
-
-    ##############################  Fill dictionaries for indels  starts ####################
-    if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
-        chrBased_simBased_indels_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=INDELS,
-                                sample_based=sample_based,
-                                axis=1)
-        if verbose: print('\tVerbose Worker pid %s ID searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ##############################  Fill dictionaries for indels  ends ######################
-
-    ##############################  Fill dictionaries for indels  starts ####################
-    if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
-        chrBased_simBased_dinucs_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=DINUCS,
-                                sample_based=sample_based,
-                                axis=1)
-        if verbose: print('\tVerbose Worker pid %s DBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ##############################  Fill dictionaries for indels  ends ######################
-
-
-    #Fill the type2replicationStranCount dictionaries and return them
-    return (simNum2Type2ReplicationStrand2CountDict,
-            simNum2Sample2Type2ReplicationStrand2CountDict,
-            simNum2Type2Sample2ReplicationStrand2CountDict,
-            simNum2Signature2MutationType2ReplicationStrand2CountDict)
-########################################################################
-
-
-########################################################################
-def  searchMutationsOnReplicationStrandArray(inputList):
-    chrBased_replication_array = inputList[0]
-    chrBased_subs_split_df = inputList[1]
-    chrBased_indels_split_df = inputList[2]
-    chrBased_dinucs_split_df = inputList[3]
-    numofSimulations = inputList[4]
-    sample_based = inputList[5]
-    subsSignature_cutoff_numberofmutations_averageprobability_df = inputList[6]
-    indelsSignature_cutoff_numberofmutations_averageprobability_df = inputList[7]
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df = inputList[8]
-
-    simNum2Type2ReplicationStrand2CountDict= {}
-    simNum2Sample2Type2ReplicationStrand2CountDict= {}
-    simNum2Type2Sample2ReplicationStrand2CountDict = {}
-    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
-
-    for simNum in range(0,numofSimulations+1):
-        simNum2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Sample2Type2ReplicationStrand2CountDict[simNum]={}
-        simNum2Type2Sample2ReplicationStrand2CountDict[simNum]={}
-        simNum2Signature2MutationType2ReplicationStrand2CountDict[simNum]={}
-
-    ##############################  Fill dictionaries for subs  starts ####################
-    if ((chrBased_subs_split_df is not None) and (not chrBased_subs_split_df.empty)):
-        chrBased_subs_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=SUBS,
-                                sample_based=sample_based,
-                                axis=1)
-    ##############################  Fill dictionaries for subs  ends ######################
-
-
-    ##############################  Fill dictionaries for indels  starts ####################
-    if ((chrBased_indels_split_df is not None) and (not chrBased_indels_split_df.empty)):
-        chrBased_indels_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=INDELS,
-                                sample_based=sample_based,
-                                axis=1)
-    ##############################  Fill dictionaries for indels  ends ######################
-
-    ##############################  Fill dictionaries for indels  starts ####################
-    if ((chrBased_dinucs_split_df is not None) and (not chrBased_dinucs_split_df.empty)):
-        chrBased_dinucs_split_df.apply(searchMutationOnReplicationStrandArray_simulations_integrated,
-                                chrBasedReplicationArray=chrBased_replication_array,
-                                simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
-                                simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
-                                simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
-                                simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
-                                signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                type=DINUCS,
-                                sample_based=sample_based,
-                                axis=1)
-    ##############################  Fill dictionaries for indels  ends ######################
-
-
-    #Fill the type2replicationStranCount dictionaries and return them
-    return (simNum2Type2ReplicationStrand2CountDict,
-            simNum2Sample2Type2ReplicationStrand2CountDict,
-            simNum2Type2Sample2ReplicationStrand2CountDict,
-            simNum2Signature2MutationType2ReplicationStrand2CountDict)
-########################################################################
-
-
 
 ########################################################################
 #This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
@@ -731,20 +424,130 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
     return repliseq_wavelet_signal_df, valleys_df, peaks_df
 ########################################################################
 
+
 ########################################################################
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+# April 16, 2020
+# POOL.IMAP_UNORDERED
+# Search for all mutatitions of each (chrLong, simNum, splitIndex) tuple
+def searchAllMutationsOnReplicationStrandArray(inputList):
+    outputDir=inputList[0]
+    jobname=inputList[1]
+    chrLong=inputList[2]
+    simNum=inputList[3]
+    splitIndex=inputList[4]
+    chromSize=inputList[5]
+    repliseq_signal_df=inputList[6]
+    valleys_df=inputList[7]
+    peaks_df=inputList[8]
+    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[9]
+    indelsSignature_cutoff_numberofmutations_averageprobability_df=inputList[10]
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df=inputList[11]
+    sample_based=inputList[12]
+    verbose=inputList[13]
+
+    ################################################################################
+    #Fill these dictionaries for the (chrLong,simNum,splitIndex) tuple
+    simNum2Type2ReplicationStrand2CountDict= {}
+    simNum2Sample2Type2ReplicationStrand2CountDict= {}
+    simNum2Type2Sample2ReplicationStrand2CountDict = {}
+    simNum2Signature2MutationType2ReplicationStrand2CountDict = {}
+    ################################################################################
+
+    ################################################################################
+    #READ All Mutations
+    chrBased_simBased_combined_df_split=get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex)
+    ################################################################################
+
+    ################################################################################
+    # Read chrBasedSmoothedWaveletReplicationTimeSignalDF
+    chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
+
+    chrBasedValleysDF = valleys_df[valleys_df[CHROM] == chrLong].copy()
+    chrBasedValleysDF['type'] = 'Valley'
+    chrBasedValleysDF.astype(dtype={START: int, END: int})
+
+    chrBasedPeaksDF = peaks_df[peaks_df[CHROM] == chrLong].copy()
+    chrBasedPeaksDF['type'] = 'Peak'
+    chrBasedPeaksDF.astype(dtype={START: int, END: int})
+
+    # Concat Peaks and Valleys
+    chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+
+    # Sort Valleys and peaks
+    chrBased_valleys_peaks_df.sort_values(START, inplace=True)
+
+    if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+        chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong, chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+
+        ################################################################################
+        if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
+            if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+
+            # TODO Use list comprehension
+            chrBased_simBased_combined_df_split.apply(searchAllMutationOnReplicationStrandArray_simulations_integrated,
+                                                      chrBasedReplicationArray=chrBased_replication_array,
+                                                      simNum2Type2ReplicationStrand2CountDict=simNum2Type2ReplicationStrand2CountDict,
+                                                      simNum2Sample2Type2ReplicationStrand2CountDict=simNum2Sample2Type2ReplicationStrand2CountDict,
+                                                      simNum2Type2Sample2ReplicationStrand2CountDict=simNum2Type2Sample2ReplicationStrand2CountDict,
+                                                      simNum2Signature2MutationType2ReplicationStrand2CountDict=simNum2Signature2MutationType2ReplicationStrand2CountDict,
+                                                      subsSignature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                      indelsSignature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                      dinucsSignature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                      sample_based=sample_based,
+                                                      axis=1)
+
+            if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+        ################################################################################
+
+    ################################################################################
+
+
+
+
+    return (simNum2Type2ReplicationStrand2CountDict,
+            simNum2Sample2Type2ReplicationStrand2CountDict,
+            simNum2Type2Sample2ReplicationStrand2CountDict,
+            simNum2Signature2MutationType2ReplicationStrand2CountDict)
+
+########################################################################
+
+
+########################################################################
+#April 14, 2020
+#For pool.imap_unordered
+def fillInputList(outputDir,jobname,chrLong,simNum,splitIndex,chromSize,repliseq_signal_df,valleys_df,peaks_df,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose):
+    inputList=[]
+
+    inputList.append(outputDir)
+    inputList.append(jobname)
+    inputList.append(chrLong)
+    inputList.append(simNum)
+    inputList.append(splitIndex)
+    inputList.append(chromSize)
+
+    inputList.append(repliseq_signal_df)
+    inputList.append(valleys_df)
+    inputList.append(peaks_df)
+
+    inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
+    inputList.append(indelsSignature_cutoff_numberofmutations_averageprobability_df)
+    inputList.append(dinucsSignature_cutoff_numberofmutations_averageprobability_df)
+
+    inputList.append(sample_based)
+    inputList.append(verbose)
+
+    return inputList
+########################################################################
+
+########################################################################
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,outputDir,jobname,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
 
-    ###############################################
-    numofProcesses = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(numofProcesses)
-    ###############################################
-
-    ###############################################
-    jobs = []
-    ###############################################
+    # ###############################################
+    # jobs = []
+    # ###############################################
 
     ###############################################
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
@@ -754,155 +557,114 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     #prepare the input for parallel lines starts
     strandBias = REPLICATIONSTRANDBIAS
 
-    #Accumulate chrBased Results
-    accumulatedAllChromosomesType2ReplicationStrand2CountDict = {}
-    accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict = {}
-    accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict = {}
-    accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict = {}
+    ###############################################################################
+    #Accumulate results
+    simNum2Type2ReplicationStrand2AccumulatedCountDict = {}
+    simNum2Sample2Type2ReplicationStrand2AccumulatedCountDict = {}
+    simNum2Type2Sample2ReplicationStrand2AccumulatedCountDict = {}
+    simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict = {}
+    total_number_of_jobs_sent = 0
+    ###############################################################################
 
-    if (computationType == USING_APPLY_ASYNC):
-        ################################################################################
-        for chrLong in chromNamesList:
-            chromSize = chromSizesDict[chrLong]
+    ###############################################################################
+    #April 14, 2020 IMAP_UNORDERED starts
+    if (computationType==USING_APPLY_ASYNC):
 
-            ####################################################################
-            #Read chrBasedSmoothedWaveletReplicationTimeSignalDF
-            chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
 
-            chrBasedValleysDF = valleys_df[valleys_df[CHROM] == chrLong].copy()
-            chrBasedValleysDF['type'] = 'Valley'
-            chrBasedValleysDF.astype(dtype={START: int, END: int})
+        #####################################################################################################################
+        jobIndex = 0
 
-            chrBasedPeaksDF = peaks_df[peaks_df[CHROM] == chrLong].copy()
-            chrBasedPeaksDF['type'] = 'Peak'
-            chrBasedPeaksDF.astype(dtype={START: int, END: int})
+        ##################### while loop starts #################################
+        while jobIndex<len(job_tuples):
 
-            # Concat Peaks and Valleys
-            chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+            ###############################################################
+            #Fill poolInputList in a controlled way
+            poolInputList=[]
 
-            # Sort Valleys and peaks
-            chrBased_valleys_peaks_df.sort_values(START, inplace=True)
-            ####################################################################
+            while len(poolInputList)<MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE and len(poolInputList)<len(job_tuples) and jobIndex<len(job_tuples):
+                chrLong, simNum, splitIndex = job_tuples[jobIndex]
+                chromSize = chromSizesDict[chrLong]
 
-            ################################################################################
-            if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
-                chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+                inputList = fillInputList(outputDir,
+                                        jobname,
+                                        chrLong,
+                                        simNum,
+                                        splitIndex,
+                                        chromSize,
+                                        repliseq_signal_df,
+                                        valleys_df,
+                                        peaks_df,
+                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                        sample_based,
+                                        verbose)
 
-                ####################################################################
-                def accumulate_apply_async_result(result_tuple):
-                    chrBased_SimNum2Type2Strand2CountDict = result_tuple[0]
-                    chrBased_SimNum2Sample2Type2Strand2CountDict = result_tuple[1]
-                    chrBased_SimNum2Type2Sample2Strand2CountDict = result_tuple[2]
-                    chrBased_SimNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
+                poolInputList.append(inputList)
+                jobIndex+=1
+            ###############################################################
 
-                    if verbose: print('\tVerbose Worker pid %s Accumulate Replication Strand Bias %s MB' % (str(os.getpid()), memory_usage()))
+            print('len(poolInputList):%d SENT TO POOL.IMAP_UNORDERED' %(len(poolInputList)),flush=True)
+            total_number_of_jobs_sent+=len(poolInputList)
 
-                    accumulate_simulations_integrated_for_each_tuple(
-                        chrBased_SimNum2Type2Strand2CountDict,
-                        chrBased_SimNum2Sample2Type2Strand2CountDict,
-                        chrBased_SimNum2Type2Sample2Strand2CountDict,
-                        chrBased_SimNum2Signature2MutationType2Strand2CountDict,
-                        accumulatedAllChromosomesType2ReplicationStrand2CountDict,
-                        accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,
-                        accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,
-                        accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict)
-                ####################################################################
+            ###############################################################
+            #Run the jobs in poolInputList
+            for result_tuple in pool.imap_unordered(searchAllMutationsOnReplicationStrandArray,poolInputList):
+                #Accumulate the result coming from (chr,sim,split) tuple
+                simNum2Type2Strand2CountDict = result_tuple[0]
+                simNum2Sample2Type2Strand2CountDict = result_tuple[1]
+                simNum2Type2Sample2Strand2CountDict = result_tuple[2]
+                simNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
 
-                ################################################################################
-                for simNum in range(0,numofSimulations+1):
-                    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-                    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-                    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+                accumulate_simulations_integrated_for_each_tuple(
+                    simNum2Type2Strand2CountDict,
+                    simNum2Sample2Type2Strand2CountDict,
+                    simNum2Type2Sample2Strand2CountDict,
+                    simNum2Signature2MutationType2Strand2CountDict,
+                    simNum2Type2ReplicationStrand2AccumulatedCountDict,
+                    simNum2Sample2Type2ReplicationStrand2AccumulatedCountDict,
+                    simNum2Type2Sample2ReplicationStrand2AccumulatedCountDict,
+                    simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict)
+            #####################################################################################################################
 
-                    if (chrBased_simBased_subs_df is not None):
-                        chrBased_simBased_subs_df[TYPE]=SUBS
+        ##################### while loop ends ###################################
 
-                    if (chrBased_simBased_indels_df is not None):
-                        chrBased_simBased_indels_df[TYPE]=INDELS
 
-                    if (chrBased_simBased_dinucs_df is not None):
-                        chrBased_simBased_dinucs_df[TYPE]=DINUCS
+        ################################
+        pool.close()
+        pool.join()
+        ################################
 
-                    if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
-                        chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df,chrBased_simBased_indels_df,chrBased_simBased_dinucs_df], ignore_index=True, axis=0)
+        print('total_number_of_jobs_sent:%d SENT TO POOL.IMAP_UNORDERED' % (total_number_of_jobs_sent), flush=True)
+    #######################################################################################################################
 
-                        ###########################################################
-                        chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
-                        number_of_splits = math.ceil(chrBased_simBased_number_of_mutations / NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
+    #April 14, 2020 IMAP_UNORDERED ends
+    ###############################################################################
 
-                        index_tuples = []
-                        start = 0
-                        for split in range(1, number_of_splits + 1):
-                            end = start + NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
-                            if end > chrBased_simBased_combined_df.shape[0]:
-                                end = chrBased_simBased_combined_df.shape[0]
-                            index_tuples.append((start, end))
-                            start = end
 
-                        print('%s simNum:%d chrBased_simBased_number_of_mutations:%d Number of splits:%d' % (chrLong, simNum, chrBased_simBased_number_of_mutations, number_of_splits))
-                        ###########################################################
+    # ################################
+    # if verbose: print('\tVerbose Replication Strand Bias Analysis len(jobs):%d\n' % (len(jobs)))
+    #
+    # # wait for all jobs to finish
+    # for job in jobs:
+    #     if verbose: print('\tVerbose Replication Strand Bias Analysis Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+    # ################################
 
-                        for split_number, index_tuple in enumerate(index_tuples, 1):
-                            start = index_tuple[0]
-                            end = index_tuple[1]
-                            print('%s simNum:%d chrBased_simBased_number_of_mutations:%d start:%d end:%d split_number:%d' % (chrLong, simNum, chrBased_simBased_number_of_mutations, start, end, split_number))
-                            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArrayForApplyAsync,args=(chrBased_replication_array,
-                                                                                chrBased_simBased_combined_df.iloc[start:end,:],
-                                                                                numofSimulations,
-                                                                                sample_based,
-                                                                                subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                verbose,),callback=accumulate_apply_async_result))
-
-                            # for sequential test
-                            # result_tuple=searchAllMutationsOnReplicationStrandArrayForApplyAsync(chrBased_replication_array,
-                            #                                                     chrBased_simBased_combined_df_split,
-                            #                                                     numofSimulations,
-                            #                                                     sample_based,
-                            #                                                     subsSignature_cutoff_numberofmutations_averageprobability_df,
-                            #                                                     indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                            #                                                     dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                            #                                                     verbose)
-                            # accumulate_apply_async_result(result_tuple)
-
-                ################################################################################
-
-        ################################################################################
-
-    ################################
-    if verbose: print('\tVerbose Replication Strand Bias Analysis len(jobs):%d\n' % (len(jobs)))
-
-    # wait for all jobs to finish
-    for job in jobs:
-        if verbose: print('\tVerbose Replication Strand Bias Analysis Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-    ################################
-
-    ################################
-    pool.close()
-    pool.join()
-    ################################
-
-    if verbose: print('\tVerbose ReplicationStrandBiasAnalysis Results %s starts' %(computationType))
-    if verbose: print('\tVerbose accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]')
-    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesType2ReplicationStrand2CountDict[0]))
-    if verbose: print('\tVerbose accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]')
-    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict[0]))
-    if verbose: print('\tVerbose accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]')
-    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict[0]))
-    if verbose: print('\tVerbose accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]')
-    if verbose: print('\tVerbose %s' %(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict[0]))
-    if verbose: print('\tVerbose ReplicationStrandBiasAnalysis Results %s ends' %(computationType))
 
     ############################################################################################################
     #####################################       Output starts      #############################################
     ############################################################################################################
-    writeDictionary(accumulatedAllChromosomesType2ReplicationStrand2CountDict,outputDir,jobname,Type2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(accumulatedAllChromosomesSignature2MutationType2ReplicationStrand2CountDict, outputDir, jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename, strandBias, None)
+    #TODO Write as dataframe
+    writeDictionary(simNum2Type2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Type2ReplicationStrand2CountDict_Filename,strandBias,None)
+    writeDictionary(simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict, outputDir, jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename, strandBias, None)
 
     if sample_based:
-        writeDictionary(accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
-        writeDictionary(accumulatedAllChromosomesType2Sample2ReplicationStrand2CountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+        writeDictionary(simNum2Sample2Type2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
+        writeDictionary(simNum2Type2Sample2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
