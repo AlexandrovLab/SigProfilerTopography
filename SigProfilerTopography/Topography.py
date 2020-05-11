@@ -79,11 +79,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTO
 from SigProfilerTopography.source.commons.TopographyCommons import BIOSAMPLE_UNDECLARED
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
-from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
-from SigProfilerTopography.source.commons.TopographyCommons import RELAXED
-from SigProfilerTopography.source.commons.TopographyCommons import  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST
-from SigProfilerTopography.source.commons.TopographyCommons import  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from SigProfilerTopography.source.commons.TopographyCommons import  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 
 
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
@@ -584,7 +581,7 @@ def runAnalyses(genome,
                 matgen_data_ready=False,
                 prob_merged_data_ready=False,
                 tables_ready=False,
-                cutoff_type=RELAXED,
+                cutoff_type=STRINGENT,
                 average_probability=0.9,
                 num_of_sbs_required=5000,
                 num_of_id_required=1000,
