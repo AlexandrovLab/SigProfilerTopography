@@ -246,6 +246,8 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
         filenameEnd = 'NucleosomeOccupancy'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
         filenameEnd = 'EpigenomicsOccupancy'
+    else:
+        filenameEnd = 'EpigenomicsOccupancy'
 
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         min_list = []
@@ -405,6 +407,9 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         figurenameEnd='_NucleosomeOccupancy.png'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
         figurenameEnd='_EpigenomicsOccupancy.png'
+    else:
+        figurenameEnd='_EpigenomicsOccupancy.png'
+
 
     min_list=[]
     max_list=[]
@@ -599,6 +604,8 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         filenameEnd='NucleosomeOccupancy'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
+        filenameEnd='EpigenomicsOccupancy'
+    else:
         filenameEnd='EpigenomicsOccupancy'
 
     realAggregatedSubstitutions = None
@@ -877,6 +884,9 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         ylabel = 'Average nucleosome signal'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
         ylabel = 'Average epigenomics signal'
+    else:
+        #For epigenomics, epigenomics_dir_name can be different from EPIGENOMICSOCCUPANCY
+        ylabel = 'Average epigenomics signal'
 
     if (mutationType==SBS96):
         xlabel = 'Interval around single point mutation (bp)'
@@ -958,8 +968,7 @@ def updateDictWithThreeLevels(signature2Biosample2ENCODEHM2FoldChangeDict, signa
 
 
 ########################################################
-def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,dna_element,plusOrMinus_epigenomics,verbose):
-    occupancy_type=EPIGENOMICSOCCUPANCY
+def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,dna_element,occupancy_type,plusOrMinus_epigenomics,verbose):
     center=plusOrMinus_epigenomics
     plusorMinus=250
     start=center-plusorMinus
@@ -1044,10 +1053,10 @@ def fill_signature2CancerType2Biosample2HM2FoldChangeDict(output_dir,numberofSim
     # ID8_sim56_H3K27me3_Breast_Epithelium_AccumulatedSignalArray.txt
 
     if verbose: print('\tVerbose #####################################################')
-    if verbose: print('\tVerbose DNA Elements %s' %(epigenomics_files_memos))
+    if verbose: print('\tVerbose epigenomics_files_memos %s' %(epigenomics_files_memos))
 
     for epigenomics_files_memo in epigenomics_files_memos:
-        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memo,plusOrMinus_epigenomics,verbose)
+        fold_change=calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,epigenomics_files_memo,occupancy_type,plusOrMinus_epigenomics,verbose)
         if fold_change is not None:
             updateDictWithTwoLevels(signature2EpigenomicsFileMemo2FoldChangeDict,signature,epigenomics_files_memo,fold_change)
 
@@ -1405,8 +1414,8 @@ def plot_heatmap_rows_signatures(heatmap_type,signature2BiosamplePooledDNAElemen
     im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
 
     #Here we set the fontsize
-    texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=text_fontsize)
-    print('texts:%s' % texts)
+    # texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=text_fontsize)
+    # print('texts:%s' % texts)
 
     plt.title(cancer_type, fontsize=90, y=1.01)
     # Results in big squares when array is small
@@ -1558,7 +1567,7 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
     accumulated_dbsSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict={}
     accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict={}
 
-    #We can plot heatmaps if there are at least one simulation
+    #We can plot heatmaps if there is at least one simulation
     if (numberofSimulations>=1):
 
         cancer_type = jobname
@@ -1653,11 +1662,11 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
 
 
 #########################################################
-#Original old call
 def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         ylabel='Average nucleosome signal'
-    elif (occupancy_type==EPIGENOMICSOCCUPANCY):
+    else:
+        #For epigenomics, epigenomics_dir_name can be different than EPIGENOMICSOCCUPANCY
         ylabel='Average epigenomics signal'
 
     #######################################################################################################################

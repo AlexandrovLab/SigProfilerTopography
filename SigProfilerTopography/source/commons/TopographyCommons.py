@@ -48,12 +48,13 @@ GIGABYTE_IN_BYTES = 1073741824
 MEGABYTE_IN_BYTES = 1048576
 
 NUMBER_OF_MUTATIONS_IN_EACH_SPLIT=100000
-MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=200
+MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=100
 
 BIGWIG='BIGWIG'
 BIGBED='BIGBED'
 WIG='WIG'
 BED='BED'
+BEDGRAPH='BEDGRAPH'
 NARROWPEAK='narrowpeak'
 LIBRARY_FILE_TYPE_OTHER='LIBRARY_FILE_TYPE_OTHER'
 
@@ -296,6 +297,12 @@ MUTATIONLONG = 'MutationLong'
 COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL'
 USING_IMAP_UNORDERED='USING_IMAP_UNORDERED'
 USING_APPLY_ASYNC='USING_APPLY_ASYNC'
+USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM'
+USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT'
+USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST'
+
+RELAXED='relaxed'
+STRINGENT='stringent'
 
 ############################################
 #Column Names
@@ -416,7 +423,71 @@ def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for
 
 
 ##################################################################
+# April 27, 2020
+def get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum):
+
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+    if (chrBased_simBased_subs_df is not None):
+        chrBased_simBased_subs_df[TYPE] = SUBS
+
+    if (chrBased_simBased_indels_df is not None):
+        chrBased_simBased_indels_df[TYPE] = INDELS
+
+    if (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+
+    if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
+        return chrBased_simBased_combined_df
+    else:
+        return None
+##################################################################
+
+
+
+##################################################################
+#April 26, 2020
+def index_marks(nrows, chunk_size):
+    return range(chunk_size, math.ceil(nrows / chunk_size) * chunk_size, chunk_size)
+##################################################################
+
+
+##################################################################
+#April 26, 2020
+#Returns split df list
+def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
+
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+
+    if (chrBased_simBased_subs_df is not None):
+        chrBased_simBased_subs_df[TYPE] = SUBS
+
+    if (chrBased_simBased_indels_df is not None):
+        chrBased_simBased_indels_df[TYPE] = INDELS
+
+    if (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+
+    if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
+        chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
+
+        chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
+        indices=index_marks(chrBased_simBased_number_of_mutations,NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
+        #np.split returns a list of dataframes
+        split_df_list=np.split(chrBased_simBased_combined_df, indices)
+        return split_df_list
+    else:
+        return None
+##################################################################
+
+##################################################################
 #April 9, 2020
+#Returns split df
 def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex):
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
     chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
@@ -452,10 +523,11 @@ def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,spl
         #################################
         if (splitIndex<len(split_start_end_tuples)):
             split_start, split_end = split_start_end_tuples[splitIndex]
-            print('DEBUG %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
+            print('MONITOR %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
             chrBased_simBased_combined_df_split = chrBased_simBased_combined_df.iloc[split_start:split_end, :]
             return chrBased_simBased_combined_df_split
         else:
+            print('MONITOR %s simNum:%d splitIndex:%d Does not exists ' % (chrLong, simNum, splitIndex), flush=True)
             return None
         #################################
     else:
@@ -1001,7 +1073,7 @@ def writeUserFriendlyAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2Number
 
 
 ##################################################################
-def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,mutation_type,cutoffs,average_probability,num_of_sbs_required,num_of_id_required,num_of_dbs_required,mutationType2NumberofMutationsDict,chrLong2NumberofMutationsDict):
+def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,mutation_type,cutoffs,average_probability,num_of_sbs_required,num_of_id_required,num_of_dbs_required,mutationType2NumberofMutationsDict,chrLong2NumberofMutationsDict,cutoff_type):
 
     #Filled in the first part
     #PropertiesList consists of[sum_of_number of mutations, sum of probabilities]
@@ -1122,30 +1194,30 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
     ####################################################################
     #Update signature2PropertiesListDict with signatures not satisfying our constraints
     #There are two options
+    if cutoff_type==RELAXED:
+        #Option1: Use the lowest existing cutoff with the highest number of mutations
+        # sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
+        # for cutoff in sorted_cutoffs:
+        #     for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
+        #         if signature not in signature2PropertiesListDict:
+        #             signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
 
-    #Option1: Use the lowest existing cutoff with the highest number of mutations
-    # sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
-    # for cutoff in sorted_cutoffs:
-    #     for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
-    #         if signature not in signature2PropertiesListDict:
-    #             signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
+        #Option2: Use the highest existing cutoff with the required number of mutations
+        sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys(),reverse=True)
+        if (len(sorted_cutoffs)>0):
+            min_cutoff=sorted_cutoffs[-1]
+            signatures=cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff].keys()
 
-    #Option2: Use the highest existing cutoff with the required number of mutations
-    # sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys(),reverse=True)
-    # if (len(sorted_cutoffs)>0):
-    #     min_cutoff=sorted_cutoffs[-1]
-    #     signatures=cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff].keys()
-    #
-    #     for signature in signatures:
-    #         if signature not in signature2PropertiesListDict:
-    #             for cutoff in sorted_cutoffs:
-    #                 if (cutoff in cutoff2Signature2NumberofMutationsAverageProbabilityListDict) and (signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]):
-    #                     if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]>=number_of_required_mutations):
-    #                         signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
-    #                         break
-    #         #If not found apply option1
-    #         if signature not in signature2PropertiesListDict:
-    #             signature2PropertiesListDict[signature] = [min_cutoff, np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][1])]
+            for signature in signatures:
+                if signature not in signature2PropertiesListDict:
+                    for cutoff in sorted_cutoffs:
+                        if (cutoff in cutoff2Signature2NumberofMutationsAverageProbabilityListDict) and (signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]):
+                            if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]>=number_of_required_mutations):
+                                signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
+                                break
+                #If not found apply option1
+                if signature not in signature2PropertiesListDict:
+                    signature2PropertiesListDict[signature] = [min_cutoff, np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][1])]
     ####################################################################
 
     #Write the dictionaries
@@ -1291,6 +1363,8 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber,retu
 
         #############################################
         only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
+        # Please note thar encoding and engine slow done and increase memory usage
+        # only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1,encoding='utf8',engine='python')
         columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
 
         # Please note that we assume that after the column named 'Mutation' there are the signature columns in tab separated way.
@@ -1340,6 +1414,7 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber,retu
         #################################################
 
         chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes)
+        # chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes,encoding='utf8',engine='python')
         chrBased_mutation_df[SIMULATION_NUMBER]=simulationNumber
     #############################################
 
@@ -1464,7 +1539,7 @@ def writeSimulationBasedAverageNucleosomeOccupancy(
         simNum2Sample2Type2AccumulatedCountArrayDict,
         outputDir,
         jobname,
-        library_file_memo,verbose):
+        library_file_memo):
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type),exist_ok=True)
 
@@ -1734,76 +1809,6 @@ def decideFileType(library_file_with_path):
 ######################################################################
 
 
-##################################################################
-#SIGNAL must have type np.float32
-#No Outlier Elimination is done
-def readFileInBEDFormat(file_with_path,discard_signal):
-    file_df=None
-
-    print('############################################')
-    if os.path.exists(file_with_path):
-        file_df = pd.read_csv(file_with_path, header=None, nrows=1,sep='\t')  # 2.25 GB
-        ncols=file_df.shape[1]
-
-        if (ncols<=3):
-            print('There is no enough columns in this bed file')
-        elif (ncols==4):
-            print('SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header')
-            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [CHROM,START,END,SIGNAL],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},sep='\t')
-
-        elif ((ncols==10) or (ncols==9)):
-            # ENCODE narrowpeak BED6+4 ncols=10
-            # ENCODE broadpeak BED6+3 ncols=9
-
-            if (ncols==10):
-                print('ENCODE narrowpeak BED6+4')
-            elif (ncols==9):
-                print('ENCODE narrowpeak BED6+3')
-
-            if discard_signal==True:
-                file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
-                                        names=[CHROM,START,END],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32},sep='\t')
-
-            else:
-                print('SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header')
-                file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
-                                        names=[CHROM, START, END, NAME, SCORE, STRAND, SIGNAL],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
-                                               5: 'category', 6: np.float32},sep='\t')
-
-                # file_df.drop([3,4,5], inplace=True, axis=1)
-                file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
-
-
-        elif (ncols>=5):
-            print('SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header')
-            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
-
-        print("file_df.dtypes")
-        print(file_df.dtypes)
-        print('\nfile_df.columns.values')
-        print(file_df.columns.values)
-
-        print('\nfile_df.shape:(%d,%d)' %(file_df.shape[0],file_df.shape[1]))
-        # print(file_df.head())
-
-        if SIGNAL in file_df.columns.values:
-            max_signal=file_df[SIGNAL].max()
-            min_signal=file_df[SIGNAL].min()
-            mean_signal=file_df[SIGNAL].mean()
-            std_signal=file_df[SIGNAL].std()
-            print('Max Signal: %f' %max_signal)
-            print('Min Signal: %f' %min_signal)
-            print('Mean Signal: %f' % mean_signal)
-            print('Std Signal: %f' % std_signal)
-            return file_df, max_signal, min_signal
-        else:
-            return file_df
-        print('############################################')
-
-    return file_df
-##################################################################
 
 ##################################################################
 #JAN 7, 2020
@@ -2004,6 +2009,127 @@ def updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,my_type
         simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample] = {}
         simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] = 1
 ##################################################################
+
+
+########################################################################
+# April 23, 2020
+# Updated For List Comprehension
+def updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
+                        mutationType,
+                        mutationSample,
+                        sample_based,
+                        simNum2Type2Strand2CountDict,
+                        simNum2Sample2Type2Strand2CountDict,
+                        simNum2Type2Sample2Strand2CountDict,
+                        simNum2Signature2MutationType2Strand2CountDict,
+                        strand,
+                        signature_cutoff_numberofmutations_averageprobability_df,
+                        df_columns):
+
+    indexofSimulationNumber = df_columns.index(SIMULATION_NUMBER)
+    simNum = mutation_row[indexofSimulationNumber]
+
+    #################################################################################################
+    # Update1: update mutationType in type2Strand2CountDict
+    if (mutationType is not None):
+        updateDictionary(simNum2Type2Strand2CountDict,simNum,mutationType,strand)
+    #################################################################################################
+
+    #################################################################################################
+    # Update2: signature in type2Strand2CountDict
+    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+        #[cutoff numberofMutations averageProbability]
+        cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
+        indexofSignature = df_columns.index(signature)
+        signature_prob = mutation_row[indexofSignature]
+        if (signature_prob >= cutoff):
+            if simNum in simNum2Type2Strand2CountDict:
+                if signature in simNum2Type2Strand2CountDict[simNum]:
+                    if strand in simNum2Type2Strand2CountDict[simNum][signature]:
+                        simNum2Type2Strand2CountDict[simNum][signature][strand] += 1
+                    else:
+                        simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
+                else:
+                    simNum2Type2Strand2CountDict[simNum][signature] = {}
+                    simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
+            else:
+                simNum2Type2Strand2CountDict[simNum] = {}
+                simNum2Type2Strand2CountDict[simNum][signature] = {}
+                simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
+    #################################################################################################
+
+
+    #################################################################################################
+    #Update3 signature2MutationType2Strand2CountDict
+    if (mutationType is not None):
+        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
+            indexofSignature = df_columns.index(signature)
+            signature_prob = mutation_row[indexofSignature]
+            if (signature_prob >= cutoff):
+                if simNum in simNum2Signature2MutationType2Strand2CountDict:
+                    if signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
+                        if mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
+                            if strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
+                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] +=1
+                            else:
+                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
+
+                        else:
+                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
+                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
+                    else:
+                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
+                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]={}
+                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
+                else:
+                    simNum2Signature2MutationType2Strand2CountDict[simNum] = {}
+                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
+                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
+                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
+    #################################################################################################
+
+    #################################################################################################
+    # Update4: sample and mutationType in sample2Type2Strand2CountDict
+    if sample_based:
+        if (mutationType is not None):
+            updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum,mutationType,mutationSample,strand)
+    #################################################################################################
+
+    #################################################################################################
+    # Update5: sample and signature in sample2Type2Strand2CountDict
+    if sample_based:
+        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+            #[cutoff numberofMutations averageProbability]
+            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
+            indexofSignature = df_columns.index(signature)
+            signature_prob = mutation_row[indexofSignature]
+            if (signature_prob >= cutoff):
+                updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum, signature, mutationSample, strand)
+    #################################################################################################
+
+    #################################################################################################
+    #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
+    if sample_based:
+        if (simNum2Type2Sample2Strand2CountDict is not None) and (mutationType is not None):
+            updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,mutationType,mutationSample,strand)
+    #################################################################################################
+
+    #################################################################################################
+    #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
+    if sample_based:
+        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
+            #[cutoff numberofMutations averageProbability]
+            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
+            indexofSignature = df_columns.index(signature)
+            signature_prob = mutation_row[indexofSignature]
+            if (signature_prob >= cutoff):
+                if (simNum2Type2Sample2Strand2CountDict is not None):
+                    updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,signature,mutationSample,strand)
+    #################################################################################################
+
+
+########################################################################
 
 
 ########################################################################
@@ -2554,10 +2680,12 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 # Extractor and PCAWG_Matlab sbs probabilities has G[C>T]G
                 # SBS288 has T:A[C>G]A
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
+                #TODO Make conversion for each possible mutation context that can be in probabilities file.
                 if (mutation_type_context_for_probabilities==SBS288):
+                    #Since SBS288 probabilities mutation context does not contain B we are assigning B to N
+                    # TODO More correct way is to assign half of B as T and other half of B as U
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] == 'B', MUTATION] = 'N:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
-
                 else:
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
             return mutations_with_genomic_positions_df
@@ -2632,7 +2760,13 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
             #After merge
-            if (mutation_type_context in SBS_CONTEXTS):
+            # Make MUTATION column one of six mutation types
+            # TODO Make conversion for every possible probabilities mutation type context
+            if (mutation_type_context_for_probabilities == SBS288):
+                # SBS288 has T:A[C>G]A
+                merged_df[MUTATION] = merged_df[MUTATION].str[4:7]
+            else:
+                #SBS96 has A[C>G]A
                 merged_df[MUTATION] = merged_df[MUTATION].str[2:5]
 
             merged_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)

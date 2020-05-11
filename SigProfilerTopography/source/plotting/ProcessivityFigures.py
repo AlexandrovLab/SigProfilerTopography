@@ -295,13 +295,18 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
             print(all_p_values_array)
         ##########################################################################################
 
-        minus_log10_all_FDR_BH_adjusted_p_values=[-math.log10(q_value)  if (q_value>0 and q_value<SIGNIFICANCE_LEVEL)  else np.nan for q_value in all_FDR_BH_adjusted_p_values]
+        if all_FDR_BH_adjusted_p_values is not None:
+            minus_log10_all_FDR_BH_adjusted_p_values=[-math.log10(q_value)  if (q_value>0 and q_value<SIGNIFICANCE_LEVEL)  else np.nan for q_value in all_FDR_BH_adjusted_p_values]
+        else:
+            minus_log10_all_FDR_BH_adjusted_p_values=[]
 
         if verbose: print('\tVerbose #############################################')
         if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' %(len(all_p_values), all_p_values))
 
         if verbose: print('\tVerbose #############################################')
-        if verbose: print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
+        if verbose:
+            if (all_FDR_BH_adjusted_p_values is not None):
+                print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
 
         if verbose: print('\tVerbose #############################################')
         if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' %(len(minus_log10_all_FDR_BH_adjusted_p_values),minus_log10_all_FDR_BH_adjusted_p_values))
