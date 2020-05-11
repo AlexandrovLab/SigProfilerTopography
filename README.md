@@ -10,7 +10,7 @@ SigProfilerTopography provides topography analyses for mutations such as
 
 and carries out following analyses:
 
-- Histone Occupancy
+- Epigenomics Occupancy (e.g.: Histone Modifications, Transcription Factors, ATAC-seq)
 - Nucleosome Occupancy
 - Replication Time
 - Replication Strand Bias
@@ -42,7 +42,8 @@ $ pip install SigProfilerMatrixGenerator
 $ pip install SigProfilerSimulator
 ```
 4. Install your desired reference genome from the command line/terminal.
-Currently SigProfilerTopography only supports GRCh37 (hg19), therefore install GRCh37 reference genome as follows:
+SigProfilerTopography supports GRCh37 (hg19), GRCh38 (hg38), mm9 and mm10.
+For GRCh37 (hg19) install GRCh37 reference genome as follows:
 ```
 $ python
 >> from SigProfilerMatrixGenerator import install as genInstall
