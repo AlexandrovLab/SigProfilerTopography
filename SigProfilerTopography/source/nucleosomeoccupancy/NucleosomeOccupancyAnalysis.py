@@ -108,7 +108,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_
 
 ##############################################################################################################
 #main function
-def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose):
+def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose):
 
     print('\n#################################################################################')
     print('--- %s Analysis starts' %(occupancy_type))
@@ -120,7 +120,7 @@ def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorM
     #By the way pyBigWig can be imported in unix, linux like os not available in windows
     #Using HM and CTCF bed files preparing chr based signal array runtime
     #Using ATAC-seq wig files preparing chr based signal array runtime
-    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
+    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
     print('--- %s Analysis ends' %(occupancy_type))
     print('#################################################################################\n')
 ##############################################################################################################
@@ -128,7 +128,7 @@ def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorM
 
 ########################################################################################
 # April 27, 2020
-# requires chrBased_simBased_combined_df_split whcih can be real split or whole in fact
+# requires chrBased_simBased_combined_df_split which can be real split or whole in fact
 # This is common for pool.imap_unordered and pool.apply_async variations
 def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, outputDir, jobname, chrLong, simNum, chrBased_simBased_combined_df_split,chromSizesDict, library_file_with_path, library_file_type, sample2NumberofSubsDict,sample2SubsSignature2NumberofMutationsDict, subsSignature_cutoff_numberofmutations_averageprobability_df, indelsSignature_cutoff_numberofmutations_averageprobability_df, dinucsSignature_cutoff_numberofmutations_averageprobability_df, plusorMinus, sample_based, verbose):
 
@@ -285,7 +285,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, out
 # May 5, 2020
 # For apply_async
 # Read chromBased simBased combined mutations df in the process
-def chrbased_data_fill_signal_count_arrays_for_all_mutations_apply_async_read_data_in_the_process(occupancy_type, outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occupancy_type, outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
                                                library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
                                                subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                indelsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -304,6 +304,108 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_apply_async_read_da
                                                                     plusorMinus, sample_based, verbose)
 ########################################################################################
 
+########################################################################################
+#May 19, 2020
+# For apply_async split using poolInputList
+# Read chromBased simBased combined mutations df split in the process
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type, outputDir, jobname, chrLong, simNum, splitIndex,
+                                                                                  chromSizesDict, library_file_with_path,
+                                                                                  library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
+                                                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df, plusorMinus, sample_based, verbose):
+
+    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
+
+    return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, outputDir, jobname, chrLong, simNum,
+                                                                    chrBased_simBased_combined_df_split, chromSizesDict,
+                                                                    library_file_with_path, library_file_type,
+                                                                    sample2NumberofSubsDict,
+                                                                    sample2SubsSignature2NumberofMutationsDict,
+                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    plusorMinus, sample_based, verbose)
+########################################################################################
+
+# ########################################################################################
+# #TODO Delete it
+# #Does not work as expected
+# #May 21, 2020
+# #Using chunk
+# def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_in_chunks(occupancy_type, outputDir, jobname, chrLong, simNum, splitIndex,
+#                                                                                   chromSizesDict, library_file_with_path,
+#                                                                                   library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
+#                                                                                   subsSignature_cutoff_numberofmutations_averageprobability_df,
+#                                                                                   indelsSignature_cutoff_numberofmutations_averageprobability_df,
+#                                                                                   dinucsSignature_cutoff_numberofmutations_averageprobability_df, plusorMinus, sample_based, verbose):
+#
+#     # chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
+#     # chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+#
+#     all_chunks_simNum2Type2AccumulatedSignalArrayDict={}
+#     all_chunks_simNum2Type2AccumulatedCountArrayDict={}
+#     all_chunks_simNum2Sample2Type2AccumulatedSignalArrayDict={}
+#     all_chunks_simNum2Sample2Type2AccumulatedCountArrayDict={}
+#
+#
+#     #########################################################################################
+#     def accumulate_chunk_result(simulatonBased_SignalArrayAndCountArrayList):
+#         simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
+#         simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
+#         simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
+#         simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
+#
+#         keys = simNum2Type2SignalArrayDict.keys()
+#         if verbose: print('\tVerbose %s Accumulate: Worker pid %s current_mem_usage %.2f (mb) simNum:%s' % (occupancy_type, str(os.getpid()), memory_usage(), keys))
+#         print('MONITOR ACCUMULATE', flush=True)
+#
+#         accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2SignalArrayDict,all_chunks_simNum2Type2AccumulatedSignalArrayDict)
+#         accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2CountArrayDict,all_chunks_simNum2Type2AccumulatedCountArrayDict)
+#         accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2SignalArrayDict,all_chunks_simNum2Sample2Type2AccumulatedSignalArrayDict)
+#         accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2CountArrayDict,all_chunks_simNum2Sample2Type2AccumulatedCountArrayDict)
+#     #########################################################################################
+#
+#     mutation_types=[SUBS,INDELS,DINUCS]
+#
+#     #######################################################################################################################
+#     for mutation_type in mutation_types:
+#         filename = '%s_%s_for_topography.txt' % (chrLong, mutation_type)
+#         if (simNum == 0):
+#             chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+#         else:
+#             simulation = 'sim%s' % (simNum)
+#             chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, simulation, filename)
+#         if os.path.exists(chrBasedMutationDFFilePath):
+#             chunks = pd.read_csv(chrBasedMutationDFFilePath, chunksize=100000)
+#             #######################################################################################################################
+#             for chunk in chunks:
+#                 chunk[SIMULATION_NUMBER] = simNum
+#                 chunk[TYPE] = mutation_type
+#                 chunk_result_SignalArrayAndCountArrayList=chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, outputDir, jobname, chrLong, simNum,
+#                                                                         chunk, chromSizesDict,
+#                                                                         library_file_with_path, library_file_type,
+#                                                                         sample2NumberofSubsDict,
+#                                                                         sample2SubsSignature2NumberofMutationsDict,
+#                                                                         subsSignature_cutoff_numberofmutations_averageprobability_df,
+#                                                                         indelsSignature_cutoff_numberofmutations_averageprobability_df,
+#                                                                         dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+#                                                                         plusorMinus, sample_based, verbose)
+#
+#
+#                 #accumulate SignalArrayAndCountArrayList
+#                 accumulate_chunk_result(chunk_result_SignalArrayAndCountArrayList)
+#             #######################################################################################################################
+#     #######################################################################################################################
+#
+#     all_chunks_SignalArrayAndCountArrayList = []
+#     all_chunks_SignalArrayAndCountArrayList.append(all_chunks_simNum2Type2AccumulatedSignalArrayDict)
+#     all_chunks_SignalArrayAndCountArrayList.append(all_chunks_simNum2Type2AccumulatedCountArrayDict)
+#     all_chunks_SignalArrayAndCountArrayList.append(all_chunks_simNum2Sample2Type2AccumulatedSignalArrayDict)
+#     all_chunks_SignalArrayAndCountArrayList.append(all_chunks_simNum2Sample2Type2AccumulatedCountArrayDict)
+#
+#     return all_chunks_SignalArrayAndCountArrayList
+# ########################################################################################
 
 
 ########################################################################################
@@ -551,6 +653,73 @@ def fillSignalArrayAndCountArray_using_list_comp(
 
 
 
+################################
+#May 19, 2020
+def my_initializer(my_occupancy_type,
+                   my_outputDir,
+                   my_jobname,
+                   my_chromSizesDict,
+                   my_library_file_with_path,
+                   my_library_file_type,
+                   my_sample2NumberofSubsDict,
+                   my_sample2SubsSignature2NumberofMutationsDict,
+                   my_subsSignature_cutoff_numberofmutations_averageprobability_df,
+                   my_indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                   my_dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                   my_plusorMinus,
+                   my_sample_based,
+                   my_verbose):
+
+    global occupancy_type
+    global outputDir
+    global jobname
+    global chromSizesDict
+    global library_file_with_path
+    global library_file_type
+    global sample2NumberofSubsDict
+    global sample2SubsSignature2NumberofMutationsDict
+    global subsSignature_cutoff_numberofmutations_averageprobability_df
+    global indelsSignature_cutoff_numberofmutations_averageprobability_df
+    global dinucsSignature_cutoff_numberofmutations_averageprobability_df
+    global plusorMinus
+    global sample_based
+    global verbose
+
+    occupancy_type = my_occupancy_type
+    outputDir=my_outputDir
+    jobname=my_jobname
+    chromSizesDict=my_chromSizesDict
+    library_file_with_path =my_library_file_with_path
+    library_file_type = my_library_file_type
+    sample2NumberofSubsDict= my_sample2NumberofSubsDict
+    sample2SubsSignature2NumberofMutationsDict=my_sample2SubsSignature2NumberofMutationsDict
+    subsSignature_cutoff_numberofmutations_averageprobability_df=my_subsSignature_cutoff_numberofmutations_averageprobability_df
+    indelsSignature_cutoff_numberofmutations_averageprobability_df=my_indelsSignature_cutoff_numberofmutations_averageprobability_df
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df=my_dinucsSignature_cutoff_numberofmutations_averageprobability_df
+    plusorMinus=my_plusorMinus
+    sample_based=my_sample_based
+    verbose=my_verbose
+################################
+
+################################
+#May 19, 2020
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered(tuple):
+    chrLong, simNum, chunk =tuple
+    # print('MONITOR %s simNum:%d chunk' %(chrLong,simNum),flush=True)
+
+    return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, outputDir, jobname, chrLong, simNum,
+                                                                    chunk, chromSizesDict,
+                                                                    library_file_with_path, library_file_type,
+                                                                    sample2NumberofSubsDict,
+                                                                    sample2SubsSignature2NumberofMutationsDict,
+                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    plusorMinus, sample_based, verbose)
+
+################################
+
+
 ########################################################################################
 #Using pyBigWig for bigBed and bigWig files starts Optional for unix, linux
 #Using chrBasedSignalArrays for big files
@@ -565,6 +734,7 @@ def occupancy_analysis(genome,
                         outputDir,
                         jobname,
                         numofSimulations,
+                        job_tuples,
                         library_file_with_path,
                         library_file_memo,
                         subsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -672,6 +842,8 @@ def occupancy_analysis(genome,
         accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2CountArrayDict,simNum2Sample2Type2AccumulatedCountArrayDict)
     #########################################################################################
 
+
+
     ###################################################################################
     ########################## APRIL 26 2020 starts ###################################
     ###################################################################################
@@ -692,12 +864,23 @@ def occupancy_analysis(genome,
 
         ################################
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_apply_async_read_data_in_the_process,
-                                         args=(occupancy_type, outputDir, jobname, chrLong, simNum, chromSizesDict, library_file_with_path,
-                                               library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
+            jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations,
+                                         args=(occupancy_type,
+                                               outputDir,
+                                               jobname,
+                                               chrLong,
+                                               simNum,
+                                               chromSizesDict,
+                                               library_file_with_path,
+                                               library_file_type,
+                                               sample2NumberofSubsDict,
+                                               sample2SubsSignature2NumberofMutationsDict,
                                                subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df, plusorMinus, sample_based, verbose,),
+                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               plusorMinus,
+                                               sample_based,
+                                               verbose,),
                                          callback=accumulate_apply_async_result))
 
             print('MONITOR %s %d len(jobs):%d' %(chrLong,simNum,len(jobs)),flush=True)
@@ -713,10 +896,212 @@ def occupancy_analysis(genome,
         pool.close()
         pool.join()
         ################################
+
+    ######################## starts May 20 2020 ###############################
+    elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+        print(USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT, flush=True)
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
+
+        ################################
+        jobs=[]
+        ################################
+
+        ################################
+        for chrLong, simNum, splitIndex in job_tuples:
+            jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
+                                         args=(occupancy_type,
+                                               outputDir,
+                                               jobname,
+                                               chrLong,
+                                               simNum,
+                                               splitIndex,
+                                               chromSizesDict,
+                                               library_file_with_path,
+                                               library_file_type,
+                                               sample2NumberofSubsDict,
+                                               sample2SubsSignature2NumberofMutationsDict,
+                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               plusorMinus,
+                                               sample_based,
+                                               verbose,),
+                                         callback=accumulate_apply_async_result))
+
+            print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+        ################################
+
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+        ##############################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+    #######################  ends May 20 2020   ###############################
+
+
+    ######################## starts may 19 2020 ###############################
+    elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST):
+        print(USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST, flush=True)
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
+
+        ################################
+        jobs=[]
+        ################################
+
+        #####################################################################################################################
+        jobIndex = 0
+
+        ###############################################################
+        while jobIndex<len(job_tuples):
+
+            ###############################################################
+            #Fill poolInputList in a controlled way
+            poolInputList=[]
+
+            while len(poolInputList)<MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE and len(poolInputList)<len(job_tuples) and jobIndex<len(job_tuples):
+                # chrLong, simNum, splitIndex = job_tuples[jobIndex]
+                poolInputList.append(job_tuples[jobIndex])
+                jobIndex+=1
+            ###############################################################
+
+            print('len(poolInputList):%d SENT TO POOL.IMAP_UNORDERED' %(len(poolInputList)),flush=True)
+            total_number_of_jobs_sent+=len(poolInputList)
+
+            ###############################################################
+            #Run the jobs in poolInputList
+
+            ################################
+            for chrLong, simNum, splitIndex in poolInputList:
+                jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
+                                             args=(occupancy_type,
+                                                   outputDir,
+                                                   jobname,
+                                                   chrLong,
+                                                   simNum,
+                                                   splitIndex,
+                                                   chromSizesDict,
+                                                   library_file_with_path,
+                                                   library_file_type,
+                                                   sample2NumberofSubsDict,
+                                                   sample2SubsSignature2NumberofMutationsDict,
+                                                   subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                   indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                   dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                   plusorMinus,
+                                                   sample_based,
+                                                   verbose,),
+                                             callback=accumulate_apply_async_result))
+
+                print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            ################################
+
+            ##############################################################################
+            # wait for all jobs to finish
+            for job in jobs:
+                if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+            ##############################################################################
+            #####################################################################################################################
+
+        ###############################################################
+
+        #####################################################################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+    ######################## ends May 19 2020 #################################
+    #For Skin-Melanoma it worked only when I run for at most 10 sims for chr1 at the same time
+    elif (computation_type==USING_IMAP_UNORDERED):
+        print(USING_IMAP_UNORDERED,flush=True)
+
+        sim_nums = range(0, numofSimulations + 1)
+        sim_num_chr_tuples = [(sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList]
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses, initializer=my_initializer, initargs=(occupancy_type,
+                                                                                                    outputDir,
+                                                                                                    jobname,
+                                                                                                    chromSizesDict,
+                                                                                                    library_file_with_path,
+                                                                                                    library_file_type,
+                                                                                                    sample2NumberofSubsDict,
+                                                                                                    sample2SubsSignature2NumberofMutationsDict,
+                                                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                                    plusorMinus,
+                                                                                                    sample_based,
+                                                                                                    verbose,))
+        ################################
+
+
+
+        #####################################################################################################################
+        jobIndex = 0
+
+        ##################### while loop starts #################################
+        while jobIndex<len(sim_num_chr_tuples):
+
+            ###############################################################
+            #Fill poolInputList in a controlled way
+            poolInputList=[]
+
+            while len(poolInputList)<MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE and len(poolInputList)<len(sim_num_chr_tuples) and jobIndex<len(sim_num_chr_tuples):
+                simNum,chrLong  = sim_num_chr_tuples[jobIndex]
+                split_df_list = get_chrBased_simBased_combined_chunks_df(outputDir, jobname, chrLong, simNum)
+                if split_df_list is not None:
+                    for split_df in split_df_list:
+                        poolInputList.append((chrLong, simNum, split_df))
+
+                jobIndex+=1
+            ###############################################################
+
+            #print('len(poolInputList):%d SENT TO POOL.IMAP_UNORDERED' %(len(poolInputList)),flush=True)
+
+            #######################################################################################################################
+            for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered, poolInputList):
+                simNum2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[0]
+                simNum2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[1]
+                simNum2Sample2Type2SignalArrayDict = simulatonBased_SignalArrayAndCountArrayList[2]
+                simNum2Sample2Type2CountArrayDict = simulatonBased_SignalArrayAndCountArrayList[3]
+
+                print('MONITOR ACCUMULATE',flush=True)
+                keys = simNum2Type2SignalArrayDict.keys()
+                if verbose: print('\tVerbose %s Accumulate: Worker pid %s current_mem_usage %.2f (mb) simNum:%s' % (occupancy_type, str(os.getpid()), memory_usage(), keys))
+
+                accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2SignalArrayDict,simNum2Type2AccumulatedSignalArrayDict)
+                accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2CountArrayDict,simNum2Type2AccumulatedCountArrayDict)
+                accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2SignalArrayDict,simNum2Sample2Type2AccumulatedSignalArrayDict)
+                accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2CountArrayDict,simNum2Sample2Type2AccumulatedCountArrayDict)
+            #######################################################################################################################
+
+        #######################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
     ###################################################################################
     ########################## APRIL 26 2020 ends #####################################
     ###################################################################################
-
 
     writeSimulationBasedAverageNucleosomeOccupancy(occupancy_type,
                                                    sample_based,

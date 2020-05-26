@@ -76,6 +76,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import MAXIMUM_NUMBE
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_chunks_df
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
+from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
 
 #For Supp Fig2B
 CHR10_THRESHOLD_START = 16400000
@@ -551,7 +552,15 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
 
     ################### Read the Smoothed Wavelet Replication Time Signal starts ###########################
     #new way, JAN 7, 2020
-    repliseq_wavelet_signal_df =readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
+    file_extension = os.path.splitext(os.path.basename(smoothedWaveletRepliseqDataFilename))[1]
+    if (file_extension.lower() == '.wig'):
+        isFileTypeBEDGRAPH = decideFileType(smoothedWaveletRepliseqDataFilename)
+        if isFileTypeBEDGRAPH:
+            repliseq_wavelet_signal_df=pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#', header=None, names=[CHROM,START,END,SIGNAL])
+        else:
+            repliseq_wavelet_signal_df=readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
+    elif (file_extension.lower()=='.bedgraph'):
+        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',header=None, names=[CHROM, START, END, SIGNAL])
 
     print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df[CHROM].unique()))
     # print('repliseq_wavelet_signal_df[chr].unique')

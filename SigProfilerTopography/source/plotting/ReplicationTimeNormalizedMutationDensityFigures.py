@@ -342,13 +342,13 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,REPLICATIONTIME)
     print('Topography.py jobnamePath:%s ' %jobnamePath)
 
-    ############################################################
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    ############################################################
+    # ############################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ############################################################
 
     isFigureAugmentation = False
     if (figureAugmentation == 'augmentation'):

@@ -48,7 +48,7 @@ GIGABYTE_IN_BYTES = 1073741824
 MEGABYTE_IN_BYTES = 1048576
 
 NUMBER_OF_MUTATIONS_IN_EACH_SPLIT=100000
-MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=100
+MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=50
 
 BIGWIG='BIGWIG'
 BIGBED='BIGBED'
@@ -274,8 +274,8 @@ NUMBER_OF_MUTATIONS = 'number_of_mutations'
 MUTATION_DENSITY = 'mutation_density'
 NORMALIZED_MUTATION_DENSITY = 'normalized_mutation_density'
 
-MICROHOMOLOGY = 'Microhomology-mediated indels'
-REPEAT = 'Repeat-mediated indels'
+MICROHOMOLOGY = 'Microhomology_mediated_indels'
+REPEAT = 'Repeat_mediated_indels'
 
 DEFICIENT = 'deficient'
 PROFICIENT = 'proficient'
@@ -478,6 +478,8 @@ def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
 
         chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
         indices=index_marks(chrBased_simBased_number_of_mutations,NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
+        # print(type(indices),flush=True)
+        # print(indices,flush=True)
         #np.split returns a list of dataframes
         split_df_list=np.split(chrBased_simBased_combined_df, indices)
         return split_df_list
@@ -1348,8 +1350,8 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
 
 ##################################################################
 #Used for all kinds of mutations SUBs and Dinucs and Indels
-def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber,return_number_of_samples=False):
-    filename = '%s_%s_for_topography.txt' %(chrLong,type)
+def readChrBasedMutationsDF(outputDir,jobname,chrLong,mutation_type,simulationNumber,return_number_of_samples=False):
+    filename = '%s_%s_for_topography.txt' %(chrLong,mutation_type)
 
     if (simulationNumber==0):
         chrBasedMutationDFFilePath = os.path.join(outputDir,jobname,DATA,CHRBASED,filename)
@@ -1391,7 +1393,7 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber,retu
         for signature in signatures:
             mydtypes[signature] = np.float16
 
-        if ((type==SUBS) or (type==DINUCS)):
+        if ((mutation_type==SUBS) or (mutation_type==DINUCS)):
             mydtypes[SAMPLE] = 'category'
             mydtypes[CHROM] = 'category'
             mydtypes[START] = np.int32
@@ -1400,7 +1402,7 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,type,simulationNumber,retu
             mydtypes[TRANSCRIPTIONSTRAND] = 'category'
             mydtypes[MUTATION] = 'category'
 
-        if (type==INDELS):
+        if (mutation_type==INDELS):
             mydtypes[SAMPLE] = 'category'
             mydtypes[CHROM] = 'category'
             mydtypes[START] = np.int32
@@ -1466,6 +1468,8 @@ def accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2ArrayDict, simNum2Typ
                 simNum2Type2AccumulatedArrayDict[simNum] = {}
                 simNum2Type2AccumulatedArrayDict[simNum][my_type] =simNum2Type2ArrayDict[simNum][my_type]
 ########################################################################################
+
+
 
 
 
@@ -2709,6 +2713,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,mutation_type_context_for_probabilities)
     ###############################################################################################
 
+    #######################################################################################
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
 
         ############################################################################
@@ -2727,7 +2732,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
         # For DBS
         # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
-        elif simNum>=1:
+        if simNum>=1:
             # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
         ############################################################################
@@ -2772,6 +2777,56 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             merged_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
         else:
             print('-------------No merge file for sim%d mutation_type_context:%s for chr%s' %(simNum,mutation_type_context,chrShort))
+    #######################################################################################
+
+
+    #######################################################################################
+    elif ((chr_based_mutation_df is not None) and (mutations_probabilities_df is None)):
+
+        ############################################################################
+        #Step2 SigProfilerTopography Python Package
+
+        #For PCAWG_Matlab
+        #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
+        #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
+        if PCAWG:
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
+
+        if simNum>=1:
+            # Get rid of simulation number at the end
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
+        ############################################################################
+
+
+        if (mutation_type_context in SBS_CONTEXTS):
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,SUBS)
+        elif (mutation_type_context == DBS):
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,DINUCS)
+        elif (mutation_type_context==ID):
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,INDELS)
+
+        if (simNum==0):
+            chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,chrBasedMergedMutationsFileName)
+        else:
+            simDir = 'sim%d' %(simNum)
+            chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,simDir,chrBasedMergedMutationsFileName)
+
+        # #After test uncomment
+        # if ('MutationLong' in merged_df.columns.values):
+        #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
+
+        #After merge
+        # Make MUTATION column one of six mutation types
+        # TODO Make conversion for every possible probabilities mutation type context
+        if (mutation_type_context_for_probabilities == SBS288):
+            # SBS288 has T:A[C>G]A
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[4:7]
+        else:
+            #SBS96 has A[C>G]A
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[2:5]
+            chr_based_mutation_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
+    #######################################################################################
+
 ############################################################
 
 

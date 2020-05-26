@@ -606,13 +606,13 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
     if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
 
-    ############################################################
-    if (os.path.exists(jobnamePath)):
-        try:
-            shutil.rmtree(jobnamePath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    ############################################################
+    # ############################################################
+    # if (os.path.exists(jobnamePath)):
+    #     try:
+    #         shutil.rmtree(jobnamePath)
+    #     except OSError as e:
+    #         print('Error: %s - %s.' % (e.filename, e.strerror))
+    # ############################################################
 
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
 

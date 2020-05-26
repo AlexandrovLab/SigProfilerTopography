@@ -328,15 +328,13 @@ def search_for_each_mutation_using_list_comprehension(
     indexofStart = df_columns.index(START)
     start=mutation_row[indexofStart]
 
-    if (my_type==AGGREGATEDINDELS):
-        indexofLength = df_columns.index(LENGTH)
-        length=mutation_row[indexofLength]
-
     #end is exclusive for subs, indels and dincuc provided by readChrBased methods
     # start= mutation_row[START]
 
     if (my_type==AGGREGATEDINDELS):
         # end = start + mutation_row[LENGTH]
+        indexofLength = df_columns.index(LENGTH)
+        length=mutation_row[indexofLength]
         end = start + int(length)
     elif (my_type==AGGREGATEDSUBSTITUTIONS):
         end = start + 1
@@ -655,7 +653,7 @@ def fillDictionaries_chromBased_simBased_for_all_mutations(
             sample_based)
         if verbose: print('\tVerbose Worker %s Search for all mutations ENDS %s simNum:%d %s MB' % (str(os.getpid()), chrLong, simNum, memory_usage()),flush=True)
     else:
-        print('DEBUG APRIL 16 2020 %s simNum:%d None' %(chrLong,simNum),flush=True)
+        print('%s simNum:%d None' %(chrLong,simNum),flush=True)
     ##################################################################################################################
 
     return  simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
@@ -720,7 +718,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(chrLong,c
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize,chrBased_grouped_decile_df_list)
 
     #Search for (chrLong,simNum,splitIndex) tuple
-    simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict  = fillDictionaries_chromBased_simBased_for_all_mutations(
+    simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict = fillDictionaries_chromBased_simBased_for_all_mutations(
         sample2NumberofSubsDict,
         sample2NumberofIndelsDict,
         sample2NumberofDinucsDict,
