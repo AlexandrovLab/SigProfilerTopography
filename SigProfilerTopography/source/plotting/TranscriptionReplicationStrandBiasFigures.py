@@ -1187,9 +1187,6 @@ def replicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSi
 
         #########################################################################################################################
         # simulations signature --- mutation type --- replication
-
-        print('DEBUG1 simNum2SubsSignature2MutationType2ReplicationStrand2CountDict: %s' %(simNum2SubsSignature2MutationType2ReplicationStrand2CountDict))
-
         subsSignature2SimulationsMutationTypesLaggingMediansListDict, subsSignature2SimulationsMutationTypesLeadingMediansListDict = \
             fillSimulationsSample2Type2StrandCountList(simNum2SubsSignature2MutationType2ReplicationStrand2CountDict,
                                                 sixMutationTypes,
@@ -1245,9 +1242,6 @@ def replicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSi
     #########################  Calculate p-values for SubsSignature Mutation Type starts  ###################
     #########################################################################################################
 
-    print('DEBUG subsSignature2MutationType2ReplicationStrand2CountDict:%s' %(subsSignature2MutationType2ReplicationStrand2CountDict))
-    print('DEBUG subsSignature2SimulationsMutationTypesLaggingMediansListDict:%s' %(subsSignature2SimulationsMutationTypesLaggingMediansListDict))
-    print('DEBUG subsSignature2SimulationsMutationTypesLeadingMediansListDict:%s' %(subsSignature2SimulationsMutationTypesLeadingMediansListDict))
     subsSignature2MutationTypesLaggingCountListDict, \
     subsSignature2MutationTypesLeadingCountListDict, \
     subsSignature2MutationTypesReplicationPValuesListDict = fillPValuesDictionaries(

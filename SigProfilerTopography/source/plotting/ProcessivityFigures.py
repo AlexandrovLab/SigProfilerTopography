@@ -108,169 +108,133 @@ def plot_color_bar(outputDir,jobname,norm):
 
 ###################################################################
 
-
-
 ###################################################################
-def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict,verbose):
+def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,jobname,processivity_df,numberofSimulations,verbose):
 
-    ####################################################
+    #processivity_df
+    #'Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_of_Number_of_Processive_Groups_in_MB'
+
+    #This dictionary is filled and written as a dataframe at the end.
     signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict={}
-    ####################################################
 
     ####################################################
     #Get the list of signatures using original
-    signature_dict_keys = originalSignature2ProcessiveGroupLength2PropertiesDict.keys()
-    #Pay attention it has to be reverse=True for grid representation to get SBS1 on the upper left corner otherwise SBS1 shows up on the lower left corner
-    sortedSignatureList = sorted(signature_dict_keys,reverse=True,key=natural_key)
-    if verbose: print('\tVerbose sortedSignatureList: %s' %(sortedSignatureList))
+    signatures_list=processivity_df[processivity_df['Simulation_Number']==0]['Signature'].unique()
+    sorted_signature_list = sorted(signatures_list,reverse=True,key=natural_key)
     ####################################################
 
     ####################################################
     #Get the list of processive group lengths using original
-    processiveGroupLengthSet = set()
-    for signature in signature_dict_keys:
-        processiveGroupLengthSet = processiveGroupLengthSet.union(set(originalSignature2ProcessiveGroupLength2PropertiesDict[signature].keys()))
-
-    #Convert set to list
-    processiveGroupLengthList = list(processiveGroupLengthSet)
-    sortedProcessiveGroupLengthList = sorted(processiveGroupLengthList, key=int)
-    if verbose: print('\tVerbose sortedProcessiveGroupLengthList: %s' %(sortedProcessiveGroupLengthList))
+    processsive_group_length_list = processivity_df[processivity_df['Simulation_Number']==0]['Processsive_Group_Length'].unique()
+    sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
     ####################################################
 
-    #We will be using sortedSignatureList and sortedProcessiveGroupLengthList in calculating p-value and retrieving corrected p-value
-
     ###################################################################
-    ############### Fill this radius dictionary starts ################
+    ############### Fill this radius dataframe starts #################
     ###################################################################
-    signature2ProcessiveGroupLength2RadiusDict = {}
+    list_of_lists = []
 
-    for signature in sortedSignatureList:
-        #Normalize number of groups within a signature
+    for signature in sorted_signature_list:
+        # Normalize number of groups within a signature
         numberofProcessiveGroupsList = []
         numberofProcessiveGroupsList_in_log10 = []
 
-        for processiveGroupLength in sortedProcessiveGroupLengthList:
-            if processiveGroupLength in originalSignature2ProcessiveGroupLength2PropertiesDict[signature]:
-                number_of_processive_groups=originalSignature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength]['numberofProcessiveGroups']
-                #Attention for a radius to be drawn there must be at least 6 processive group of that length
-                if number_of_processive_groups>=5:
+        for processiveGroupLength in sorted_processsive_group_length_list:
+            if (processivity_df[(processivity_df['Simulation_Number']==0) & (processivity_df['Signature']==signature) & (processivity_df['Processsive_Group_Length']==processiveGroupLength)]['Number_of_Processive_Groups'].values.size>0):
+                number_of_processive_groups= processivity_df[(processivity_df['Simulation_Number']==0) & (processivity_df['Signature']==signature) & (processivity_df['Processsive_Group_Length']==processiveGroupLength)]['Number_of_Processive_Groups'].values[0]
+                if (number_of_processive_groups >= 5):
                     numberofProcessiveGroupsList.append(number_of_processive_groups)
-                    #Take log10
                     numberofProcessiveGroupsList_in_log10.append(math.log10(number_of_processive_groups))
                 else:
-                    if verbose: print('\tVerbose Radius is set to 0 since  for %s processiveGroupLength:%s numberofProcessiveGroup:%d <5' % (signature, processiveGroupLength, number_of_processive_groups))
                     numberofProcessiveGroupsList.append(0)
                     numberofProcessiveGroupsList_in_log10.append(0)
 
-        #If numberofProcessiveGroupsList is not empty list
-        if (numberofProcessiveGroupsList_in_log10 and (max(numberofProcessiveGroupsList_in_log10)>0)):
-            if verbose: print('\tVerbose signature:%s' %signature)
-            if verbose: print('\tVerbose numberofProcessiveGroupsList:%s' %(numberofProcessiveGroupsList))
-            if verbose: print('\tVerbose numberofProcessiveGroupsList_in_log10:%s' %(numberofProcessiveGroupsList_in_log10))
-            normalizedNumberofProcessiveGroupsList = [i/max(numberofProcessiveGroupsList_in_log10) for i in numberofProcessiveGroupsList_in_log10]
-            radiusNumberofProcessiveGroupsList = [i*0.48 for i in normalizedNumberofProcessiveGroupsList]
+        # If numberofProcessiveGroupsList is not empty list
+        if (numberofProcessiveGroupsList_in_log10 and (max(numberofProcessiveGroupsList_in_log10) > 0)):
+            normalizedNumberofProcessiveGroupsList = [i / max(numberofProcessiveGroupsList_in_log10) for i in numberofProcessiveGroupsList_in_log10]
+            radiusNumberofProcessiveGroupsList = [i * 0.48 for i in normalizedNumberofProcessiveGroupsList]
 
-            if verbose: print('\tVerbose normalizedNumberofProcessiveGroupsList:%s' %(normalizedNumberofProcessiveGroupsList))
-            if verbose: print('\tVerbose radiusNumberofProcessiveGroupsList:%s' %(radiusNumberofProcessiveGroupsList))
-            if verbose: print('\tVerbose ######################################')
-
-            #Fill dictionary using radiusNormalizedNumberofProcessiveGroupsList
+            # Fill dictionary using radiusNormalizedNumberofProcessiveGroupsList
             radiusIndex = 0
-            for processiveGroupLength in sortedProcessiveGroupLengthList:
-                if processiveGroupLength in originalSignature2ProcessiveGroupLength2PropertiesDict[signature]:
+            for processiveGroupLength in sorted_processsive_group_length_list:
+                if (processivity_df[(processivity_df['Simulation_Number']==0) & (processivity_df['Signature']==signature) & (processivity_df['Processsive_Group_Length'] == processiveGroupLength)]['Number_of_Processive_Groups'].values.size > 0):
+                    number_of_processive_groups=processivity_df[(processivity_df['Simulation_Number'] == 0) & (processivity_df['Signature'] == signature) & (processivity_df['Processsive_Group_Length'] == processiveGroupLength)]['Number_of_Processive_Groups'].values[0]
                     radius = radiusNumberofProcessiveGroupsList[radiusIndex]
-                    if signature in signature2ProcessiveGroupLength2RadiusDict:
-                        signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength] = radius
-                    else:
-                        signature2ProcessiveGroupLength2RadiusDict[signature] = {}
-                        signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength] = radius
-                    radiusIndex +=1
+                    list_of_lists.append([signature, processiveGroupLength, number_of_processive_groups, radius])
+                    radiusIndex += 1
+
+    signature_radius_df=pd.DataFrame(list_of_lists, columns=['Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Radius'])
     ###################################################################
-    ############### Fill this radius dictionary ends ##################
+    ############### Fill this radius dataframe ends ###################
     ###################################################################
 
 
     ##########################################################################################
     ############################# Calculate p-values starts ##################################
     ##########################################################################################
-    #p values
+    # p values
     all_p_values = []
-    all_p_values_element_names=[]
+    all_p_values_element_names = []
 
-    for signature in sortedSignatureList:
-        for processiveGroupLength in sortedProcessiveGroupLengthList:
-            # radius=None
-            if signature in signature2ProcessiveGroupLength2RadiusDict:
-                if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
+    for signature in sorted_signature_list:
+        for processiveGroupLength in sorted_processsive_group_length_list:
 
-                    radius=signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]
-                    observedValue = originalSignature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength]['numberofProcessiveGroups']
+            if (signature_radius_df[(signature_radius_df['Signature']==signature) & (signature_radius_df['Processsive_Group_Length']==processiveGroupLength)]['Radius'].values.size>0):
+                radius=signature_radius_df[(signature_radius_df['Signature']==signature) & (signature_radius_df['Processsive_Group_Length']==processiveGroupLength)]['Radius'].values[0]
 
-                    ##########################################################################
-                    if (simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None):
+            if (processivity_df[(processivity_df['Simulation_Number']==0) & (processivity_df['Signature']==signature) & (processivity_df['Processsive_Group_Length']==processiveGroupLength)]['Number_of_Processive_Groups'].values.size>0):
+                observedValue=processivity_df[(processivity_df['Simulation_Number'] == 0) & (processivity_df['Signature'] == signature) & (processivity_df['Processsive_Group_Length'] == processiveGroupLength)]['Number_of_Processive_Groups'].values[0]
 
-                        ########################## Fill expected values ############################
-                        expectedValues = []
+                expectedValues = []
+                for simNum in range(1,numberofSimulations+1):
+                    if (processivity_df[(processivity_df['Simulation_Number'] == simNum) & (processivity_df['Signature'] == signature) & (processivity_df['Processsive_Group_Length'] == processiveGroupLength)]['Number_of_Processive_Groups'].values.size > 0):
+                        expectedValues.append(processivity_df[(processivity_df['Simulation_Number'] == simNum) & (processivity_df['Signature'] == signature) & (processivity_df['Processsive_Group_Length'] == processiveGroupLength)]['Number_of_Processive_Groups'].values[0])
+                    else:
+                        expectedValues.append(0)
 
-                        for simulation in simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys():
-                            if signature in simulation2Signature2ProcessiveGroupLength2PropertiesDict[simulation]:
-                                if processiveGroupLength in simulation2Signature2ProcessiveGroupLength2PropertiesDict[simulation][signature]:
-                                    expectedValues.append(simulation2Signature2ProcessiveGroupLength2PropertiesDict[simulation][signature][processiveGroupLength]['numberofProcessiveGroups'])
-                                else:
-                                    expectedValues.append(0)
-                            else:
-                                expectedValues.append(0)
-                        ########################## Fill expected values ############################
+                ############################################################################
+                mean_sims = None
+                min_sims = None
+                max_sims = None
+                std_sims = None
+                pvalue = None
+                zscore = None
 
-                        ############################################################################
-                        avg_sims=None
-                        min_sims=None
-                        max_sims=None
+                if expectedValues and (len(expectedValues) > 0) and (np.any(expectedValues)):
+                    # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
+                    zstat, pvalue = ztest(expectedValues, [observedValue])
+                    # if pvalue is None or np.nan qvalue can not be calculated.
+                    if (pvalue is not None) and (not np.isnan(pvalue)):
+                        all_p_values.append(pvalue)
+                        all_p_values_element_names.append((signature, processiveGroupLength))
 
-                        mean_sims=None
-                        std_sims=None
+                if (expectedValues and len(expectedValues) > 0):
+                    mean_sims = np.mean(expectedValues)
+                    min_sims = np.min(expectedValues)
+                    max_sims = np.max(expectedValues)
+                    std_sims = np.std(expectedValues)
 
-                        pvalue=None
-                        zscore=None
+                    if (std_sims > 0):
+                        zscore = (observedValue - mean_sims) / std_sims
 
-                        if expectedValues and (len(expectedValues)>0) and (np.any(expectedValues)):
-                            # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
-                            zstat, pvalue = ztest(expectedValues, [observedValue])
-                            #if pvalue is None or np.nan qvalue can not be calculated.
-                            if (pvalue is not None) and (not np.isnan(pvalue)):
-                                all_p_values.append(pvalue)
-                                all_p_values_element_names.append((signature,processiveGroupLength))
+                processiveGroupProperties = {}
+                processiveGroupProperties['processive_group_length'] = processiveGroupLength
+                processiveGroupProperties['number_of_processive_groups'] = observedValue
+                processiveGroupProperties['radius'] = radius
+                processiveGroupProperties['mean_sims'] = mean_sims
+                processiveGroupProperties['min_sims'] = min_sims
+                processiveGroupProperties['max_sims'] = max_sims
+                processiveGroupProperties['std_sims'] = std_sims
+                processiveGroupProperties['pvalue'] = pvalue
+                processiveGroupProperties['zscore'] = zscore
+                processiveGroupProperties['expectedValues'] = expectedValues
 
-                        if (expectedValues and len(expectedValues)>0):
-                            avg_sims=sum(expectedValues)/len(expectedValues)
-                            min_sims=min(expectedValues)
-                            max_sims=max(expectedValues)
-
-                            mean_sims = np.mean(expectedValues)
-                            std_sims = np.std(expectedValues)
-
-                            if (std_sims > 0):
-                                zscore = (observedValue - mean_sims)/std_sims
-
-                        processiveGroupProperties={}
-                        processiveGroupProperties['processive_group_length']=processiveGroupLength
-                        processiveGroupProperties['number_of_processive_groups']=observedValue
-                        processiveGroupProperties['radius'] = radius
-                        processiveGroupProperties['avg_sims'] = avg_sims
-                        processiveGroupProperties['min_sims'] = min_sims
-                        processiveGroupProperties['max_sims'] = max_sims
-                        processiveGroupProperties['mean_sims'] = mean_sims
-                        processiveGroupProperties['std_sims'] = std_sims
-                        processiveGroupProperties['pvalue'] = pvalue
-                        processiveGroupProperties['zscore'] = zscore
-                        processiveGroupProperties['expectedValues']=expectedValues
-
-                        if signature in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict:
-                            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]=processiveGroupProperties
-                        else:
-                            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature]={}
-                            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]=processiveGroupProperties
-                        ############################################################################
+                if signature in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict:
+                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength] = processiveGroupProperties
+                else:
+                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature] = {}
+                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength] = processiveGroupProperties
+                ############################################################################
 
     ##########################################################################################
     ############################# Calculate p-values ends ####################################
@@ -278,97 +242,86 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
 
     ####################################################################################
-    ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None ######
+    ############################# Calculate q-values starts ############################
     ####################################################################################
-    if (simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None):
 
-        ##########################################################################################
-        all_p_values_array = np.asarray(all_p_values)
-        all_FDR_BH_adjusted_p_values=None
+    ##########################################################################################
+    all_p_values_array = np.asarray(all_p_values)
+    all_FDR_BH_adjusted_p_values = None
 
-        #FDR BH Multiple Testing Correction
-        try:
-            rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
-        except ZeroDivisionError:
-            print('ZeroDivisionError during statsmodels.stats.multitest.multipletests')
-            print('for debug ZeroDivisionError, all_p_values_array:')
-            print(all_p_values_array)
-        ##########################################################################################
+    # FDR BH Multiple Testing Correction
+    try:
+        rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
+    except ZeroDivisionError:
+        print('ZeroDivisionError during statsmodels.stats.multitest.multipletests')
+        print('for debug ZeroDivisionError, all_p_values_array:')
+        print(all_p_values_array)
+    ##########################################################################################
 
-        if all_FDR_BH_adjusted_p_values is not None:
-            minus_log10_all_FDR_BH_adjusted_p_values=[-math.log10(q_value)  if (q_value>0 and q_value<SIGNIFICANCE_LEVEL)  else np.nan for q_value in all_FDR_BH_adjusted_p_values]
+    if all_FDR_BH_adjusted_p_values is not None:
+        minus_log10_all_FDR_BH_adjusted_p_values = [-math.log10(q_value) if (q_value > 0 and q_value < SIGNIFICANCE_LEVEL) else np.nan for q_value in all_FDR_BH_adjusted_p_values]
+    else:
+        minus_log10_all_FDR_BH_adjusted_p_values = []
+
+    if verbose: print('\tVerbose #############################################')
+    if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' % (len(all_p_values), all_p_values))
+
+    if verbose: print('\tVerbose #############################################')
+    if verbose:
+        if (all_FDR_BH_adjusted_p_values is not None):
+            print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' % (len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
+
+    if verbose: print('\tVerbose #############################################')
+    if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' % (len(minus_log10_all_FDR_BH_adjusted_p_values), minus_log10_all_FDR_BH_adjusted_p_values))
+    if verbose: print('\tVerbose #############################################')
+
+    #######################################################################################
+    #######################  Get the corrected q values in an order starts ################
+    #######################################################################################
+    for element_index, all_p_values_element_name in enumerate(all_p_values_element_names):
+        q_value = all_FDR_BH_adjusted_p_values[element_index]
+        (signature, processiveGroupLength) = all_p_values_element_name
+
+        signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue'] = q_value
+        if q_value is not None and q_value == 0:
+            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = np.inf
+        elif q_value is not None:
+            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = -math.log10(q_value)
         else:
-            minus_log10_all_FDR_BH_adjusted_p_values=[]
+            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = None
+    #######################################################################################
+    #######################  Get the corrected q values in an order ends ##################
+    #######################################################################################
 
-        if verbose: print('\tVerbose #############################################')
-        if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' %(len(all_p_values), all_p_values))
-
-        if verbose: print('\tVerbose #############################################')
-        if verbose:
-            if (all_FDR_BH_adjusted_p_values is not None):
-                print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
-
-        if verbose: print('\tVerbose #############################################')
-        if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' %(len(minus_log10_all_FDR_BH_adjusted_p_values),minus_log10_all_FDR_BH_adjusted_p_values))
-        if verbose: print('\tVerbose #############################################')
-
-
-        #######################################################################################
-        #######################  Get the corrected q values in an order starts ################
-        #######################################################################################
-        #new way
-        for element_index, all_p_values_element_name in enumerate(all_p_values_element_names):
-            q_value=all_FDR_BH_adjusted_p_values[element_index]
-            (signature,processiveGroupLength)=all_p_values_element_name
-
-            signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue'] = q_value
-            if q_value is not None and q_value == 0:
-                signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = np.inf
-            elif q_value is not None:
-                signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = -math.log10(q_value)
-            else:
+    # For the (signature,processiveGroupLength) tuples where pvalue can not be calculated using ztest e.g.: expected values are all zero
+    # We need to set qvalue and minus_log10_qvalue as None
+    # So that writeDictionaryAsADataframe does not give error.
+    for signature in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict:
+        for processiveGroupLength in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature]:
+            if (signature, processiveGroupLength) not in all_p_values_element_names:
+                signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue'] = None
                 signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] = None
-        #######################################################################################
-        #######################  Get the corrected q values in an order ends ##################
-        #######################################################################################
-
-        #For the (signature,processiveGroupLength) tuples where pvalue can not be calculated using ztest e.g.: expected values are all zero
-        #We need to set qvalue and minus_log10_qvalue as None
-        #So that writeDictionaryAsADataframe does not give error.
-        for signature in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict:
-            for processiveGroupLength in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature]:
-                if (signature,processiveGroupLength) not in all_p_values_element_names:
-                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['qvalue'] =None
-                    signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue'] =None
 
     if verbose: print('\tVerbose ################################################################')
     ####################################################################################
-    ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None ######
+    ############################# Calculate q-values ends ############################
     ####################################################################################
 
     ###################################################################
     ############### For information starts ############################
     ###################################################################
-    if verbose: print('\tVerbose signature2ProcessiveGroupLength2RadiusDict:%s' %(signature2ProcessiveGroupLength2RadiusDict))
-    if verbose: print('\tVerbose ##########################################')
+    # Get the highest processive group length with a nonzero radius
+    #'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Radius'
+    maxProcessiveGroupLength= max(signature_radius_df[(signature_radius_df['Radius']>0)]['Processsive_Group_Length'].values)
 
-    #Get the highest processive group length with a nonzero radius
-    maxProcessiveGroupLength = 0
-    for signature in signature2ProcessiveGroupLength2RadiusDict:
-        for processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
-            radius = signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]
-            if (round(radius,2)>0):
-                if (int(processiveGroupLength) > maxProcessiveGroupLength):
-                    maxProcessiveGroupLength = int(processiveGroupLength)
+    if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' % (maxProcessiveGroupLength))
+    if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' % (len(sorted_processsive_group_length_list)))
 
-    if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' %(maxProcessiveGroupLength))
-    if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' %(len(sortedProcessiveGroupLengthList)))
-
-    index=None
-    if ((len(sortedProcessiveGroupLengthList)>0) and (maxProcessiveGroupLength>0)):
-        #Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
-        index = sortedProcessiveGroupLengthList.index(str(maxProcessiveGroupLength))
-        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' %(sortedProcessiveGroupLengthList[index]))
+    index = None
+    if ((len(sorted_processsive_group_length_list) > 0) and (maxProcessiveGroupLength > 0)):
+        # Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
+        index = sorted_processsive_group_length_list.index(maxProcessiveGroupLength)
+        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' % (sorted_processsive_group_length_list[index]))
         if verbose: print('\tVerbose ##########################################')
     ###################################################################
     ############### For information ends ##############################
@@ -392,23 +345,23 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     # fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sortedSignatureList)))
     # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
-    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sortedSignatureList)))
+    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
 
-    if len(sortedSignatureList)<=2:
+    if len(sorted_signature_list)<=2:
         fig = plt.figure(figsize=(15, 15))
         plt.title('%s' % (jobname), y=1.25, fontsize=40, fontweight='bold')
     elif (maxProcessiveGroupLength>20):
-        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength,2 * len(sortedSignatureList)))
+        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)))
         plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
 
-    elif (len(sortedSignatureList)>maxProcessiveGroupLength):
-        fig = plt.figure(figsize=(2*maxProcessiveGroupLength, 1.5*len(sortedSignatureList)))
+    elif (len(sorted_signature_list)>maxProcessiveGroupLength):
+        fig = plt.figure(figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)))
         plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
-    elif (maxProcessiveGroupLength > len(sortedSignatureList)):
-        fig = plt.figure(figsize=(3*maxProcessiveGroupLength, 3* len(sortedSignatureList)))
+    elif (maxProcessiveGroupLength > len(sorted_signature_list)):
+        fig = plt.figure(figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)))
         plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
-    elif (maxProcessiveGroupLength == len(sortedSignatureList)):
-        fig = plt.figure(figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sortedSignatureList)))
+    elif (maxProcessiveGroupLength == len(sorted_signature_list)):
+        fig = plt.figure(figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
         plt.title('%s' % (jobname), y=1.15, fontsize=40, fontweight='bold')
 
     ax = plt.gca()
@@ -418,20 +371,20 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     #######################################################################
     #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
-    if (len(sortedProcessiveGroupLengthList)>1):
+    if (len(sorted_processsive_group_length_list)>1):
         plt.xlim([1,index+1])
         ax.set_xticks(np.arange(0,index+2,1))
     else:
-        plt.xlim([0,len(sortedProcessiveGroupLengthList)])
-        ax.set_xticks(np.arange(0,len(sortedProcessiveGroupLengthList),1))
+        plt.xlim([0,len(sorted_processsive_group_length_list)])
+        ax.set_xticks(np.arange(0,len(sorted_processsive_group_length_list),1))
 
-    if (len(sortedSignatureList)>1):
-        plt.ylim([1, len(sortedSignatureList)])
+    if (len(sorted_signature_list)>1):
+        plt.ylim([1, len(sorted_signature_list)])
     else:
-        plt.ylim([0, len(sortedSignatureList)])
+        plt.ylim([0, len(sorted_signature_list)])
     #######################################################################
 
-    ax.set_yticks(np.arange(0, len(sortedSignatureList) + 1, 1))
+    ax.set_yticks(np.arange(0, len(sorted_signature_list) + 1, 1))
 
     cmap = cm.get_cmap('YlOrRd')  # Looks better good
     # cmap = cm.get_cmap('seismic')  # not good
@@ -446,23 +399,21 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
     #######################################################################################
 
     ##########################################################################################
-    if (simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None):
+    if (numberofSimulations>0):
         ##########################################################################################
         #Plot the circles with color
-        for sigIndex, signature in enumerate(sortedSignatureList):
-            for lengthIndex, processiveGroupLength in enumerate(sortedProcessiveGroupLengthList):
+        for sigIndex, signature in enumerate(sorted_signature_list):
+            for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+                if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
+                    radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
+                    color=None
+                    if 'minus_log10_qvalue' in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]:
+                        color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
 
-                if signature in signature2ProcessiveGroupLength2RadiusDict:
-                    if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
-                        color=None
-                        radius = signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]
-                        if 'minus_log10_qvalue' in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]:
-                            color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
-
-                        if ((radius is not None) and (radius>0) and color):
-                            #Very important: You have to norm
-                            circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(norm(color)), fill=True)
-                            ax.add_artist(circle)
+                    if ((radius is not None) and (radius>0) and color):
+                        #Very important: You have to norm
+                        circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(norm(color)), fill=True)
+                        ax.add_artist(circle)
     else:
     #There is  no simulation data therefore no p values
     #######################################################################################
@@ -471,18 +422,17 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
         ##########################################################################################
         #Plot the circles without color
-        for sigIndex, signature in enumerate(sortedSignatureList):
-            for lengthIndex, processiveGroupLength in enumerate(sortedProcessiveGroupLengthList):
-                if signature in signature2ProcessiveGroupLength2RadiusDict:
-                    if processiveGroupLength in signature2ProcessiveGroupLength2RadiusDict[signature]:
-                        radius = signature2ProcessiveGroupLength2RadiusDict[signature][processiveGroupLength]
-                        circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5),radius,color="g", fill=True)
-                        ax.add_artist(circle)
+        for sigIndex, signature in enumerate(sorted_signature_list):
+            for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+                if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
+                    radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
+                    circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5),radius,color="g", fill=True)
+                    ax.add_artist(circle)
     ##########################################################################################
 
 
     ##########################################################################################
-    for lengthIndex, processiveGroupLength in enumerate(processiveGroupLengthList):
+    for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
         x.append(lengthIndex)
         y.append(lengthIndex)
         c.append(0.5)
@@ -502,18 +452,18 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 
     xlabels=None
     if (index is not None):
-        xlabels = sortedProcessiveGroupLengthList[0:index+1]
-    ylabels = sortedSignatureList
+        xlabels = sorted_processsive_group_length_list[0:index+1]
+    ylabels = sorted_signature_list
     ##########################################################################################
 
     # We can ploy color bar in a separate figure
     # plot_color_bar(outputDir, jobname,norm)
 
     ################### Put the color bar if there are simulations starts ###################
-    if (simulation2Signature2ProcessiveGroupLength2PropertiesDict is not None):
+    if (numberofSimulations>0):
         cb = plt.colorbar(sc)  # this works because of the scatter
-        cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=20)
-        cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=20)
+        cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=30)
+        cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=30)
 
         font = mpl.font_manager.FontProperties(size=30)
         cbax = cb.ax
@@ -522,7 +472,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
         text_x.set_font_properties(font)
         text_y.set_font_properties(font)
 
-        cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150)
+        # cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150)
+        cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=30)
     ################### Put the color bar if there are simulations ends #####################
 
     ##################################################################################
@@ -582,18 +533,17 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname
 ####################################################################################
 # processiveGroupProperties['processive_group_length'] = processiveGroupLength
 # processiveGroupProperties['number_of_processive_groups'] = observedValue
-# processiveGroupProperties['avg_sims'] = avg_sims
+# processiveGroupProperties['mean_sims'] = mean_sims
 # processiveGroupProperties['min_sims'] = min_sims
 # processiveGroupProperties['max_sims'] = max_sims
-# processiveGroupProperties['mean_sims'] = mean_sims
 # processiveGroupProperties['std_sims'] = std_sims
 # processiveGroupProperties['pvalue'] = pvalue
 # processiveGroupProperties['minus_log10_pvalue'] = minus_log10_pvalue
 # processiveGroupProperties['zscore'] = zscore
 # processiveGroupProperties['expectedValues'] = expectedValues
 def writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict,filePath):
-    L = sorted([(jobname,signature, processiveGroupLength,v1['number_of_processive_groups'],v1['radius'],v1['avg_sims'],v1['min_sims'],v1['max_sims'],v1['mean_sims'],v1['std_sims'],v1['pvalue'],v1['qvalue'],v1['minus_log10_qvalue'],v1['zscore'],v1['expectedValues']) for signature, v in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict.items() for processiveGroupLength, v1 in v.items()])
-    df = pd.DataFrame(L,columns=['tissue','signature', 'processsive_group_length','number_of_processive_groups','radius','avg_sims','min_sims','max_sims','mean_sims','std_sims','pvalue','qvalue','minus_log10_qvalue','zscore','expectedValues'])
+    L = sorted([(jobname,signature, processiveGroupLength,v1['number_of_processive_groups'],v1['radius'],v1['mean_sims'],v1['min_sims'],v1['max_sims'],v1['std_sims'],v1['pvalue'],v1['qvalue'],v1['minus_log10_qvalue'],v1['zscore'],v1['expectedValues']) for signature, v in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict.items() for processiveGroupLength, v1 in v.items()])
+    df = pd.DataFrame(L,columns=['tissue','signature', 'processsive_group_length','number_of_processive_groups','radius','mean_sims','min_sims','max_sims','std_sims','pvalue','qvalue','minus_log10_qvalue','zscore','expectedValues'])
 
     #write this dataframe
     df.to_csv(filePath, sep='\t', header=True, index=False)
@@ -605,14 +555,6 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
     if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
-
-    # ############################################################
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ############################################################
 
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
 
@@ -636,7 +578,29 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
     ############################################################
 
     ############################################################
-    plotRelationshipBetweenSignaturesandProcessiveGroupLengths(outputDir,jobname,originalSignature2ProcessiveGroupLength2PropertiesDict,simulation2Signature2ProcessiveGroupLength2PropertiesDict,verbose)
+    processivity_table_file_list=[]
+    processivity_df_list=[]
+    #Fill signature_processive_group_length_number_of_processive_groups_median_number_of_processive_groups_in_MB_df
+
+    for simNum in range(0,numberofSimulations+1):
+        filename="Sim%d_Processivity.txt" %(simNum)
+        filepath=os.path.join(outputDir,jobname,DATA,PROCESSIVITY,filename)
+        if os.path.exists(filepath):
+            processivity_table_file_list.append((simNum,filepath))
+
+    for (simNum,processivity_table_file) in processivity_table_file_list:
+        #Signature       Processsive_Group_Length        Number_of_Processive_Groups     Median_of_Number_of_Processive_Groups_in_MB
+        processivity_df=pd.read_csv(processivity_table_file, header=0, sep='\t')
+        processivity_df['Simulation_Number']=simNum
+        processivity_df=processivity_df[['Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_of_Number_of_Processive_Groups_in_MB']]
+        processivity_df_list.append(processivity_df)
+
+    # Vertically combine dfs
+    #signature_processive_group_length_number_of_processive_groups_median_number_of_processive_groups_in_MB_df
+    processivity_df = pd.concat(processivity_df_list)
+
+    #New way using dataframes
+    plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,jobname,processivity_df,numberofSimulations,verbose)
     ############################################################
 
 ###################################################################

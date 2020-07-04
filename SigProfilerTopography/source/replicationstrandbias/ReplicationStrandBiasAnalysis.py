@@ -58,6 +58,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedM
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
 
 from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_dictionary_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_dictionary_as_dataframe
+
 
 from SigProfilerTopography.source.commons.TopographyCommons import Type2ReplicationStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Signature2MutationType2ReplicationStrand2CountDict_Filename
@@ -858,13 +861,25 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     ############################################################################################################
     #####################################       Output starts      #############################################
     ############################################################################################################
-    #TODO Write as dataframe
-    writeDictionary(simNum2Type2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Type2ReplicationStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict, outputDir, jobname,Signature2MutationType2ReplicationStrand2CountDict_Filename, strandBias, None)
+    replication_strands = [LAGGING, LEADING]
+
+    write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict,
+                                                                      strandBias,
+                                                                      replication_strands,
+                                                                      outputDir,
+                                                                      jobname)
+
+
+    write_type_strand_bias_dictionary_as_dataframe(simNum2Type2ReplicationStrand2AccumulatedCountDict,
+                                                   strandBias,
+                                                   replication_strands,
+                                                   outputDir,
+                                                   jobname)
 
     if sample_based:
         writeDictionary(simNum2Sample2Type2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)
         writeDictionary(simNum2Type2Sample2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Type2Sample2ReplicationStrand2CountDict_Filename,strandBias,None)
+        #TODO write as dataframe if sample_based will be maintained
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################

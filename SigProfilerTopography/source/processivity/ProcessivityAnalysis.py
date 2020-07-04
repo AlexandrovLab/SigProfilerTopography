@@ -295,12 +295,12 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 pool.join()
                 ####################################################################################
 
-                ####################################################################################
                 signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-                filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' % (simNum)
-                # writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, ProcessiveGroupStructEncoder)
-                writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, None)
-                ####################################################################################
+
+                # ####################################################################################
+                # filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' % (simNum)
+                # writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname, filename,PROCESSIVITY, None)
+                # ####################################################################################
 
                 ####################################################################################
                 filename = 'Sim%d_Processivity.txt' % (simNum)
@@ -386,15 +386,18 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 pool.join()
                 ####################################################################################
 
-                ####################################################################################
                 signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-                filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' %(simNum)
-                # #For information
-                # if (simNum==0):
-                #     print('For original data signature2ProcessiveGroupLength2PropertiesDict')
-                #     print(signature2ProcessiveGroupLength2PropertiesDict)
-                writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname,filename, PROCESSIVITY,ProcessiveGroupStructEncoder)
-                #####################################################################
+
+                # ####################################################################################
+                # filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' %(simNum)
+                # writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname,filename, PROCESSIVITY,ProcessiveGroupStructEncoder)
+                # #####################################################################
+
+                ####################################################################################
+                filename = 'Sim%d_Processivity.txt' % (simNum)
+                filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
+                writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
+                ####################################################################################
 
     #####################################################################
 

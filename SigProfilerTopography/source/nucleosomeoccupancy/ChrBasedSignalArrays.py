@@ -87,7 +87,7 @@ def writeChrBasedOccupancySignalArray(inputList):
     chrLong = inputList[2]
     chromSize = inputList[3]
     chrBasedFileDF = inputList[4]
-    filename = inputList[5]
+    file_name_with_path = inputList[5]
     occupancy_type= inputList[6]
     max_signal=inputList[7]
     min_signal = inputList[8]
@@ -99,7 +99,7 @@ def writeChrBasedOccupancySignalArray(inputList):
     else:
         os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED), exist_ok=True)
 
-    filenameWoExtension = os.path.splitext(os.path.basename(filename))[0]
+    filenameWoExtension = os.path.splitext(os.path.basename(file_name_with_path))[0]
 
     if (np.finfo(np.float16).min<=min_signal) and (max_signal<=np.finfo(np.float16).max):
         signalArray = np.zeros(chromSize, dtype=np.float16)
@@ -304,7 +304,7 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
             inputList.append(chrLong)
             inputList.append(chromSize)
             inputList.append(chromBasedFileDF)
-            inputList.append(wig_file_name)
+            inputList.append(wig_file_path)
             inputList.append(occupancy_type)
             inputList.append(max_signal)
             inputList.append(min_signal)
@@ -754,7 +754,7 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
                 inputList.append(chrLong)
                 inputList.append(chromSize)
                 inputList.append(chromBasedFileDF)
-                inputList.append(bedfilename)
+                inputList.append(BEDFileWithPath)
                 inputList.append(occupancy_type)
                 inputList.append(max_signal)
                 inputList.append(min_signal)

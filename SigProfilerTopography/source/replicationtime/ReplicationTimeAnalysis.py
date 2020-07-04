@@ -194,7 +194,6 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
     #In my code ends are inclusive
     #twobitreader uses ends exlusive
     # seq_old_way = chrBasedGenome.get_slice(start, end+1)
-    # print('DEBUG JAN 14, 2020, %s start:%d end:%d seq_old_way:%s' %(chrLong,start,end,seq_old_way))
 
     seq = ''
     for i in range(start,end+1,1):
@@ -595,7 +594,6 @@ def fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile
         for name, chrBased_replicationtimedata_df in chrBased_grouped_decile_df:
             if (chrLong==name) and (chrBased_replicationtimedata_df is not None) and  (not chrBased_replicationtimedata_df.empty):
                 #what is chrBased_decile's type? DataFrame
-                # print('DEBUG decileIndex:%d %s chrBased_replicationtimedata_df.shape(%d,%d)' %(decileIndex,chrLong,chrBased_replicationtimedata_df.shape[0],chrBased_replicationtimedata_df.shape[1]))
                 chrBased_replicationtimedata_df.apply(fillArray,chrBasedDecileIndexArray=chrBasedReplicationTimeDataArrayWithDecileIndex,decileIndex=decileIndex, axis=1)
 
         # # Please note that although key exists if dataframe to be returned is empty dataframe it gives KeyError

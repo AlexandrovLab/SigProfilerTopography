@@ -435,19 +435,6 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sa
 #######################################################
 def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
 
-    #############################################
-    # # REPLICATIONTIME
-    # # Delete the output/jobname/DATA/REPLICATIONTIME if exists
-    # jobnamePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME)
-    #
-    # ################################################
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ################################################
-
     #Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
@@ -459,17 +446,7 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_
 #######################################################
 def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
-    # ###############################################
-    # # REPLICATIONSTRANDBIAS
-    # # Delete the output/jobname/DATA/REPLICATIONSTRANDBIAS if exists
-    # jobnamePath = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS)
-    #
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ################################################
+    os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
 
     smoothedWaveletRepliseqDataFilename = replicationTimeFilename
     valleysBEDFilename = replicationTimeValleyFilename
@@ -483,17 +460,8 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
 
 #######################################################
 def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-    # ###############################################
-    # # TRANSCRIPTIONSTRANDBIAS
-    # # Delete the output/jobname/DATA/TRANSCRIPTIONSTRANDBIAS if exists
-    # jobnamePath = os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS)
-    #
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ################################################
+
+    os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
 
     # computation_type=USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     transcriptionStrandBiasAnalysis(computation_type,sample_based,chromNamesList,outputDir,jobname,numofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
@@ -503,18 +471,6 @@ def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_
 
 #######################################################
 def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-
-    # ###############################################
-    # # PROCESSIVITY
-    # # Delete the output/jobname/DATA/PROCESSIVITY if exists
-    # jobnamePath = os.path.join(outputDir,jobname,DATA,PROCESSIVITY)
-    #
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ###############################################
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True

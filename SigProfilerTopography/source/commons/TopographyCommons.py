@@ -21,6 +21,9 @@ import scipy
 from scipy.stats import sem, t
 from scipy import mean
 
+import scipy.stats as stats
+
+
 #To handle warnings as errors
 # import warnings
 # warnings.filterwarnings("error")
@@ -37,6 +40,14 @@ LAGGING = 'Lagging'
 UNTRANSCRIBED_STRAND = 'UnTranscribed'
 TRANSCRIBED_STRAND = 'Transcribed'
 NONTRANSCRIBED_STRAND = 'NonTranscribed'
+
+LAGGING_VERSUS_LEADING='Lagging_Versus_Leading'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED='Transcribed_Versus_Untranscribed'
+GENIC_VERSUS_INTERGENIC='Genic_Versus_Intergenic'
+
+LAGGING_VERSUS_LEADING_P_VALUE='lagging_versus_leading_p_value'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE='transcribed_versus_untranscribed_p_value'
+GENIC_VERSUS_INTERGENIC_P_VALUE='genic_versus_intergenic_p_value'
 
 PLUS = '+'
 MINUS = '-'
@@ -398,6 +409,10 @@ DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
 
 BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
 
+
+AVERAGE_SIGNAL_ARRAY = 'AverageSignalArray'
+ACCUMULATED_COUNT_ARRAY = 'AccumulatedCountArray'
+ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 
 # ############################################################
 def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):
@@ -1551,6 +1566,7 @@ def writeSimulationBasedAverageNucleosomeOccupancy(
     for simNum in simNum2Type2AccumulatedSignalArrayDict:
         type2AccumulatedSignalArrayDict= simNum2Type2AccumulatedSignalArrayDict[simNum]
         type2AccumulatedCountArrayDict = simNum2Type2AccumulatedCountArrayDict[simNum]
+
         if (AGGREGATEDSUBSTITUTIONS in type2AccumulatedSignalArrayDict):
             writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDSUBSTITUTIONS],type2AccumulatedCountArrayDict[AGGREGATEDSUBSTITUTIONS],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
         if (AGGREGATEDINDELS in type2AccumulatedSignalArrayDict):
@@ -2413,6 +2429,513 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
 ########################################################################
+
+########################################################################
+#Main function for type
+#Fills a dictionary and writes it as a dataframe
+def  write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict, strand_bias, strands, outputDir, jobname):
+
+    type2Strand2ListDict = {}
+
+    ##################################################################################################
+    for simNum in simNum2Type2Strand2CountDict:
+        for my_type in simNum2Type2Strand2CountDict[simNum]:
+            for strand in simNum2Type2Strand2CountDict[simNum][my_type]:
+
+                if my_type in type2Strand2ListDict:
+                    if strand in type2Strand2ListDict[my_type]:
+                        strand_list=type2Strand2ListDict[my_type][strand]
+                        if (simNum==0):
+                            #Set real_data
+                            strand_list[0]=simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                        else:
+                            #Append to sims_data_list
+                            strand_list[1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+                    else:
+                        type2Strand2ListDict[my_type][strand]=[0,[]]
+                        if (simNum==0):
+                            type2Strand2ListDict[my_type][strand][0] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                        else:
+                            type2Strand2ListDict[my_type][strand][1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+                else:
+                    type2Strand2ListDict[my_type]={}
+                    type2Strand2ListDict[my_type][strand]=[0,[]]
+                    if (simNum==0):
+                        type2Strand2ListDict[my_type][strand][0] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                    else:
+                        type2Strand2ListDict[my_type][strand][1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+    ##################################################################################################
+
+    ##################################################################################################
+    # In strand_list we have
+    # real_data
+    # sims_data_list
+    #Add these to information strand_list
+    # mean_sims_data
+    # min_sims_data
+    # max_sims_data
+    #strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
+    for my_type in type2Strand2ListDict:
+        for strand in type2Strand2ListDict[my_type]:
+            sims_data_list=type2Strand2ListDict[my_type][strand][1]
+            mean_sims=np.nanmean(sims_data_list)
+            min_sims=np.min(sims_data_list)
+            max_sims=np.max(sims_data_list)
+            type2Strand2ListDict[my_type][strand].append(mean_sims)
+            type2Strand2ListDict[my_type][strand].append(min_sims)
+            type2Strand2ListDict[my_type][strand].append(max_sims)
+    ##################################################################################################
+
+
+    ##################################################################################################
+    #Calculate p-value only
+    for my_type in type2Strand2ListDict:
+        if strand_bias==REPLICATIONSTRANDBIAS:
+            lagging_strand=strands[0]
+            leading_strand=strands[1]
+
+            lagging_real_count=type2Strand2ListDict[my_type][lagging_strand][0]
+            # lagging_sims_list=type2Strand2ListDict[my_type][lagging_strand][1]
+            lagging_sims_mean_count = type2Strand2ListDict[my_type][lagging_strand][2]
+
+            leading_real_count=type2Strand2ListDict[my_type][leading_strand][0]
+            # leading_sims_list=type2Strand2ListDict[my_type][leading_strand][1]
+            leading_sims_mean_count = type2Strand2ListDict[my_type][leading_strand][2]
+
+            #Calculate p value
+            contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
+            oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+
+            #Set p_value
+            type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE]=lagging_versus_leading_p_value
+
+        elif strand_bias==TRANSCRIPTIONSTRANDBIAS:
+            transcribed_strand = strands[0]
+            untranscribed_strand = strands[1]
+            nontranscribed_strand = strands[2]
+
+            transcribed_real_count = type2Strand2ListDict[my_type][transcribed_strand][0]
+            # transcribed_sims_list = type2Strand2ListDict[my_type][transcribed_strand][1]
+            transcribed_sims_mean_count = type2Strand2ListDict[my_type][transcribed_strand][2]
+
+            untranscribed_real_count = type2Strand2ListDict[my_type][untranscribed_strand][0]
+            # untranscribed_sims_list = type2Strand2ListDict[my_type][untranscribed_strand][1]
+            untranscribed_sims_mean_count = type2Strand2ListDict[my_type][untranscribed_strand][2]
+
+            nontranscribed_real_count = type2Strand2ListDict[my_type][nontranscribed_strand][0]
+            # nontranscribed_sims_list = type2Strand2ListDict[my_type][nontranscribed_strand][1]
+            nontranscribed_sims_mean_count = type2Strand2ListDict[my_type][nontranscribed_strand][2]
+
+            # Calculate p value
+            contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
+            oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+
+            genic_real_count = transcribed_real_count + untranscribed_real_count
+            genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
+
+            # Calculate p value (transcribed + untranscribed) versus nontranscribed
+            contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
+            oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+
+            # Set p_values
+            type2Strand2ListDict[my_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
+            type2Strand2ListDict[my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
+
+    #Calculate q-value and significant_strand will be done during plotting figures
+    ##################################################################################################
+
+    ##################################################################################################
+    if strand_bias == TRANSCRIPTIONSTRANDBIAS:
+        type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
+
+        type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
+
+    elif strand_bias == REPLICATIONSTRANDBIAS:
+        type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
+    ##################################################################################################
+
+########################################################################
+
+
+##############################################
+#subfunction for type
+def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1=strands[0]
+    strand2=strands[1]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    L = sorted([(cancer_type, my_type,
+                 a[strand1][0], a[strand2][0],
+                 a[strand1][2], a[strand2][2],
+                 a[LAGGING_VERSUS_LEADING_P_VALUE],
+                 a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                 a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+                for my_type, a in type2Strand2ListDict.items()])
+    df = pd.DataFrame(L, columns=['cancer_type', 'type',
+                                  strand1_real_data, strand2_real_data,
+                                  strand1_mean_sims_data, strand2_mean_sims_data,
+                                  LAGGING_VERSUS_LEADING_P_VALUE,
+                                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+    df.to_csv(filepath, sep='\t', header=True, index=False)
+##############################################
+
+
+########################################################################
+#subfunction for type
+def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_type, strand_bias_subtype, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        L = sorted([(cancer_type, my_type,
+                     a[strand1][0], a[strand2][0],
+                     a[strand1][2], a[strand2][2],
+                     a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+                    for my_type, a in type2Strand2ListDict.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'type',
+                                      strand1_real_data, strand2_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data,
+                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    elif strand_bias_subtype==GENIC_VERSUS_INTERGENIC:
+        L = sorted([(cancer_type, my_type,
+                     (a[strand1][0] + a[strand2][0]), a[strand3][0],
+                     (a[strand1][2] + a[strand2][2]), a[strand3][2],
+                     a[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1],
+                     a[strand3][0], a[strand3][2], a[strand3][3], a[strand3][4], a[strand3][1])
+                    for my_type, a in type2Strand2ListDict.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'type',
+                                      'genic_real_count', 'intergenic_real_count',
+                                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                                      GENIC_VERSUS_INTERGENIC_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+########################################################################
+
+
+########################################################################
+#Main function for signature -- mutation type
+#Fills a dictionary and writes it as a dataframe
+def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2Strand2CountDict, strand_bias, strands, outputDir, jobname):
+
+    signature2MutationType2Strand2ListDict = {}
+
+    ##################################################################################################
+    for simNum in simNum2Signature2MutationType2Strand2CountDict:
+        for signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
+            for mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
+                for strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
+
+                    if signature in signature2MutationType2Strand2ListDict:
+                        if mutationType in signature2MutationType2Strand2ListDict[signature]:
+                            if strand in signature2MutationType2Strand2ListDict[signature][mutationType]:
+                                strand_list=signature2MutationType2Strand2ListDict[signature][mutationType][strand]
+                                if (simNum==0):
+                                    #Set real_data
+                                    strand_list[0]=simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                                else:
+                                    #Append to sims_data_list
+                                    strand_list[1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                            else:
+                                signature2MutationType2Strand2ListDict[signature][mutationType][strand]=[0,[]]
+                                if (simNum==0):
+                                    signature2MutationType2Strand2ListDict[signature][mutationType][strand][0] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                                else:
+                                    signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                        else:
+                            signature2MutationType2Strand2ListDict[signature][mutationType]={}
+                            signature2MutationType2Strand2ListDict[signature][mutationType][strand] = [0, []]
+                            if (simNum==0):
+                                signature2MutationType2Strand2ListDict[signature][mutationType][strand][0] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                            else:
+                                signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                    else:
+                        signature2MutationType2Strand2ListDict[signature] = {}
+                        signature2MutationType2Strand2ListDict[signature][mutationType] = {}
+                        signature2MutationType2Strand2ListDict[signature][mutationType][strand] = [0, []]
+                        if (simNum==0):
+                            signature2MutationType2Strand2ListDict[signature][mutationType][strand][0]=simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                        else:
+                            signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+    ##################################################################################################
+
+    ##################################################################################################
+    # In strand_list we have
+    # real_data
+    # sims_data_list
+    #Add these to information strand_list
+    # mean_sims_data
+    # min_sims_data
+    # max_sims_data
+    #strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
+    for signature in signature2MutationType2Strand2ListDict:
+        for mutation_type in signature2MutationType2Strand2ListDict[signature]:
+            for strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
+                sims_data_list=signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1]
+                mean_sims=np.nanmean(sims_data_list)
+                min_sims=np.min(sims_data_list)
+                max_sims=np.max(sims_data_list)
+                signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(mean_sims)
+                signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(min_sims)
+                signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(max_sims)
+    ##################################################################################################
+
+    ##################################################################################################
+    #Calculate p-value only
+    for signature in signature2MutationType2Strand2ListDict:
+        for mutation_type in signature2MutationType2Strand2ListDict[signature]:
+            if (strand_bias==REPLICATIONSTRANDBIAS):
+                lagging_strand=strands[0]
+                leading_strand=strands[1]
+
+                lagging_real_count=signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][0]
+                lagging_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][1]
+                lagging_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][2]
+
+                leading_real_count=signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][0]
+                leading_sims_list=signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][1]
+                leading_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][2]
+
+                #Calculate p value using Fisher's exact test
+                contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
+                oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+
+                #Set p_value
+                signature2MutationType2Strand2ListDict[signature][mutation_type][LAGGING_VERSUS_LEADING_P_VALUE]=lagging_versus_leading_p_value
+
+            elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
+                transcribed_strand = strands[0]
+                untranscribed_strand = strands[1]
+                nontranscribed_strand = strands[2]
+
+                transcribed_real_count = signature2MutationType2Strand2ListDict[signature][mutation_type][transcribed_strand][0]
+                transcribed_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][transcribed_strand][1]
+                transcribed_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][transcribed_strand][2]
+
+                untranscribed_real_count = signature2MutationType2Strand2ListDict[signature][mutation_type][untranscribed_strand][0]
+                untranscribed_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][untranscribed_strand][1]
+                untranscribed_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][untranscribed_strand][2]
+
+                nontranscribed_real_count = signature2MutationType2Strand2ListDict[signature][mutation_type][nontranscribed_strand][0]
+                nontranscribed_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][nontranscribed_strand][1]
+                nontranscribed_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][nontranscribed_strand][2]
+
+                # Calculate p value
+                contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
+                oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+
+                genic_real_count = transcribed_real_count + untranscribed_real_count
+                genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
+
+                #Calculate p value (transcribed + untranscribed) versus nontranscribed
+                contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
+                oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+
+                #Set p_values
+                signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
+                signature2MutationType2Strand2ListDict[signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
+
+    ##################################################################################################
+
+    ##################################################################################################
+    if (strand_bias==REPLICATIONSTRANDBIAS):
+        signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        write_signature_mutation_type_replication_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,signature_mutation_type_strand_table_filepath)
+    elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
+        signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED,signature_mutation_type_strand_table_filepath)
+
+        signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+    ##################################################################################################
+
+########################################################################
+
+
+########################################################################
+#sub function for signature -- mutation type
+def write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,cancer_type,strand_bias_subtype, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
+
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        L = sorted([(cancer_type, signature, mutation_type,
+                     b[strand1][0], b[strand2][0],
+                     b[strand1][2], b[strand2][2],
+                     b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                    for signature, a in signature2MutationType2Strand2ListDict.items()
+                    for mutation_type, b in a.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'mutation_type',
+                                      strand1_real_data, strand2_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data,
+                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    elif (strand_bias_subtype==GENIC_VERSUS_INTERGENIC):
+        L = sorted([(cancer_type, signature, mutation_type,
+                     (b[strand1][0] + b[strand2][0]), b[strand3][0],
+                     (b[strand1][2] + b[strand2][2]), b[strand3][2],
+                     b[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
+                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
+                    for signature, a in signature2MutationType2Strand2ListDict.items()
+                        for mutation_type, b in a.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'mutation_type',
+                                      'genic_real_count', 'intergenic_real_count',
+                                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                                      GENIC_VERSUS_INTERGENIC_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+########################################################################
+
+
+########################################################################
+#sub function for signature -- mutation type
+def write_signature_mutation_type_replication_dataframe(strands,signature2MutationType2Strand2ListDict,cancer_type,filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1=strands[0]
+    strand2=strands[1]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    L = sorted([(cancer_type, signature, mutation_type,
+                 b[strand1][0], b[strand2][0],
+                 b[strand1][2], b[strand2][2],
+                 b[LAGGING_VERSUS_LEADING_P_VALUE],
+                 b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                 b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                for signature, a in signature2MutationType2Strand2ListDict.items()
+                    for mutation_type, b in a.items()])
+    df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'mutation_type',
+                                  strand1_real_data, strand2_real_data,
+                                  strand1_mean_sims_data, strand2_mean_sims_data,
+                                  LAGGING_VERSUS_LEADING_P_VALUE,
+                                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list ])
+    df.to_csv(filepath, sep='\t', header=True, index=False)
+########################################################################
+
+
 
 ########################################################################
 def readDictionaryUsingPickle(filePath):

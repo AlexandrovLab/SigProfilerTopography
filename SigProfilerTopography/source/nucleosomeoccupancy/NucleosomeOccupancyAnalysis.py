@@ -174,7 +174,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, out
         #It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
 
-
     #Downloaded or created runtime
     if (os.path.exists(chrBasedSignalFile)):
         #Can this cause to deep sleep of processes?
@@ -1073,7 +1072,6 @@ def occupancy_analysis(genome,
                 jobIndex+=1
             ###############################################################
 
-            #print('len(poolInputList):%d SENT TO POOL.IMAP_UNORDERED' %(len(poolInputList)),flush=True)
 
             #######################################################################################################################
             for simulatonBased_SignalArrayAndCountArrayList in pool.imap_unordered(chrbased_data_fill_signal_count_arrays_for_all_mutations_imap_unordered, poolInputList):
@@ -1111,6 +1109,5 @@ def occupancy_analysis(genome,
                                                    simNum2Sample2Type2AccumulatedSignalArrayDict,
                                                    simNum2Sample2Type2AccumulatedCountArrayDict,
                                                    outputDir, jobname,library_file_memo)
-
 
 ########################################################################################

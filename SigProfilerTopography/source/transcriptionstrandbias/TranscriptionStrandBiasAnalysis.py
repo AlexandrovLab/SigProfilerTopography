@@ -46,7 +46,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import updateDiction
 
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
 from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
+
 from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_dictionary_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_dictionary_as_dataframe
+
 
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
@@ -407,13 +411,26 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
     #################################################################################################################
     ##########################################      Output starts      ##############################################
     #################################################################################################################
-    #############################################################################
-    writeDictionary(simNum2Type2TranscriptionStrand2AccumulatedCountDict,outputDir,jobname,Type2TranscriptionStrand2CountDict_Filename,strandBias,None)
-    writeDictionary(simNum2Signature2MutationType2TranscriptionStrand2AccumulatedCountDict,outputDir,jobname,Signature2MutationType2TranscriptionStrand2CountDict_Filename,strandBias,None)
+    transcription_atrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND, NONTRANSCRIBED_STRAND]
+
+    write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2TranscriptionStrand2AccumulatedCountDict,
+                                                                      strandBias,
+                                                                      transcription_atrands,
+                                                                      outputDir,
+                                                                      jobname)
+
+
+    write_type_strand_bias_dictionary_as_dataframe(simNum2Type2TranscriptionStrand2AccumulatedCountDict,
+                                                   strandBias,
+                                                   transcription_atrands,
+                                                   outputDir,
+                                                   jobname)
+
 
     if sample_based:
         writeDictionary(simNum2Sample2Type2TranscriptionStrand2AccumulatedCountDict,outputDir,jobname,Sample2Type2TranscriptionStrand2CountDict_Filename,strandBias,None)
         writeDictionary(simNum2Type2Sample2TranscriptionStrand2AccumulatedCountDict, outputDir, jobname,Type2Sample2TranscriptionStrand2CountDict_Filename, strandBias, None)
+        #TODO write as dataframe if sample_based will be maintained
     #################################################################################################################
     ##########################################      Output ends      ################################################
     #################################################################################################################
