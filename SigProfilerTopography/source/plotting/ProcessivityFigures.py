@@ -556,27 +556,6 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
     if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
 
-    simulation2Signature2ProcessiveGroupLength2PropertiesDict = None
-
-    ############################################################
-    if (numberofSimulations > 0):
-        simulation2Signature2ProcessiveGroupLength2PropertiesDict = readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations)
-    ############################################################
-
-    ############################################################
-    filename = 'Sim0_Signature2ProcessiveGroupLength2PropertiesDict.txt'
-    originalSignature2ProcessiveGroupLength2PropertiesDictFilePath = os.path.join(outputDir,jobname,DATA,PROCESSIVITY,filename)
-    originalSignature2ProcessiveGroupLength2PropertiesDict = readDictionary(originalSignature2ProcessiveGroupLength2PropertiesDictFilePath)
-    ############################################################
-
-    ############################################################
-    if (numberofSimulations > 0):
-        if verbose: print('\tVerbose Which simulations are available?: simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()')
-        if verbose: print('\tVerbose %s' %(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys()))
-        if verbose: print('\tVerbose Number of simulations: len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())')
-        if verbose: print('\tVerbose %d' %(len(simulation2Signature2ProcessiveGroupLength2PropertiesDict.keys())))
-    ############################################################
-
     ############################################################
     processivity_table_file_list=[]
     processivity_df_list=[]

@@ -145,9 +145,13 @@ from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import 
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import plot_heatmaps
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
+from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
+
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 
-
+from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
+from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
+from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
 
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
@@ -471,6 +475,8 @@ def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_
 
 #######################################################
 def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+
+    os.makedirs(os.path.join(outputDir,jobname,DATA,PROCESSIVITY),exist_ok=True)
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True
@@ -1410,24 +1416,20 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
     ############################################################
 
     ############################################################
-    #old way
     if ((replication_strand_bias and transcription_strand_bias) or (data_ready_plot_replication_strand_bias and data_ready_plot_transcription_strand_bias)):
         if delete_old:
             deleteOldFigures(outputDir, jobname, STRANDBIAS)
-        transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
+        # old way
+        # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
+        strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
+    elif (replication_strand_bias or data_ready_plot_replication_strand_bias):
+        strand_bias_list=[LAGGING_VERSUS_LEADING]
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
+    elif (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
+        strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
     ############################################################
-
-    # ############################################################
-    # #TODO new  way
-    # if (replication_strand_bias or data_ready_plot_replication_strand_bias):
-    #     replicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
-    #
-    # if (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
-    #     transcriptionStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
-    #
-    # if ((replication_strand_bias and transcription_strand_bias) or (data_ready_plot_replication_strand_bias and data_ready_plot_transcription_strand_bias)):
-    #     togetherTranscriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
-    # ############################################################
 
     ############################################################
     if (processivity or data_ready_plot_processivity):

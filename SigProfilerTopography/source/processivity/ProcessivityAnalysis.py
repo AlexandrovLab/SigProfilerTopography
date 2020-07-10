@@ -388,11 +388,6 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
                 signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
 
-                # ####################################################################################
-                # filename = 'Sim%d_Signature2ProcessiveGroupLength2PropertiesDict.txt' %(simNum)
-                # writeDictionary(signature2ProcessiveGroupLength2PropertiesDict, outputDir, jobname,filename, PROCESSIVITY,ProcessiveGroupStructEncoder)
-                # #####################################################################
-
                 ####################################################################################
                 filename = 'Sim%d_Processivity.txt' % (simNum)
                 filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)

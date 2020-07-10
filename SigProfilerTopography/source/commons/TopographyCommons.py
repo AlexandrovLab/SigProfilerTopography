@@ -37,6 +37,9 @@ current_abs_path = os.path.dirname(os.path.realpath(__file__))
 LEADING= 'Leading'
 LAGGING = 'Lagging'
 
+GENIC='Genic'
+INTERGENIC='Intergenic'
+
 UNTRANSCRIBED_STRAND = 'UnTranscribed'
 TRANSCRIBED_STRAND = 'Transcribed'
 NONTRANSCRIBED_STRAND = 'NonTranscribed'
@@ -48,6 +51,39 @@ GENIC_VERSUS_INTERGENIC='Genic_Versus_Intergenic'
 LAGGING_VERSUS_LEADING_P_VALUE='lagging_versus_leading_p_value'
 TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE='transcribed_versus_untranscribed_p_value'
 GENIC_VERSUS_INTERGENIC_P_VALUE='genic_versus_intergenic_p_value'
+
+LAGGING_VERSUS_LEADING_Q_VALUE='lagging_versus_leading_q_value'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE='transcribed_versus_untranscribed_q_value'
+GENIC_VERSUS_INTERGENIC_Q_VALUE='genic_versus_intergenic_q_value'
+
+TRANSCRIBED_REAL_COUNT='Transcribed_real_count'
+UNTRANSCRIBED_REAL_COUNT='UnTranscribed_real_count'
+
+GENIC_REAL_COUNT='genic_real_count'
+INTERGENIC_REAL_COUNT='intergenic_real_count'
+
+LAGGING_REAL_COUNT ='Lagging_real_count'
+LEADING_REAL_COUNT ='Leading_real_count'
+
+TRANSCRIBED_SIMULATIONS_MEAN_COUNT='Transcribed_mean_sims_count'
+UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT='UnTranscribed_mean_sims_count'
+
+GENIC_SIMULATIONS_MEAN_COUNT ='genic_mean_sims_count'
+INTERGENIC_SIMULATIONS_MEAN_COUNT ='intergenic_mean_sims_count'
+
+LAGGING_SIMULATIONS_MEAN_COUNT ='Lagging_mean_sims_count'
+LEADING_SIMULATIONS_MEAN_COUNT ='Leading_mean_sims_count'
+
+AT_LEAST_5_PERCENT_DIFF='5%'
+AT_LEAST_10_PERCENT_DIFF='10%'
+AT_LEAST_20_PERCENT_DIFF='20%'
+AT_LEAST_30_PERCENT_DIFF='30%'
+AT_LEAST_50_PERCENT_DIFF='50%'
+AT_LEAST_75_PERCENT_DIFF='75%'
+AT_LEAST_100_PERCENT_DIFF='100%'
+
+percentage_numbers = [10, 20, 30, 50, 75, 100]
+percentage_strings = [AT_LEAST_10_PERCENT_DIFF, AT_LEAST_20_PERCENT_DIFF, AT_LEAST_30_PERCENT_DIFF, AT_LEAST_50_PERCENT_DIFF, AT_LEAST_75_PERCENT_DIFF, AT_LEAST_100_PERCENT_DIFF]
 
 PLUS = '+'
 MINUS = '-'
