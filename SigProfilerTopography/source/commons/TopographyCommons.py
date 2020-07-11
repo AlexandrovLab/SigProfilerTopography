@@ -252,7 +252,7 @@ Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Ta
 Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
 #Table
-Table_MutationType_NumberofMutations_Filename='Table_MutationType_NumberofMutations.txt'
+Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename='Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
 Table_ChrLong_NumberofMutations_Filename='Table_ChrLong_NumberofMutations.txt'
 
 #For Subs
@@ -1063,12 +1063,12 @@ class NpEncoder(json.JSONEncoder):
 ##################################################################
 
 ##################################################################
-def writeUserFriendlySignatureBasedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename):
+def writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename):
 
-    allcutoffs_signature_numberofmutations_averageprobability = open(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), 'w')
+    signature_cutoff_numberofmutations_averageprobability = open(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), 'w')
 
     # header line
-    allcutoffs_signature_numberofmutations_averageprobability.write('cancer_type\tsignature\tcutoff\tnumber_of_mutations\taverage_probability\n')
+    signature_cutoff_numberofmutations_averageprobability.write('cancer_type\tsignature\tcutoff\tnumber_of_mutations\taverage_probability\n')
 
     sorted_signatures=sorted(signature2PropertiesListDict.keys(), key=natural_key)
     for signature in sorted_signatures:
@@ -1076,9 +1076,9 @@ def writeUserFriendlySignatureBasedCutoff(outputDir,jobname,DATA,signature2Prope
         cutoff=cutoff_numbeofmutations_averageprobability[0]
         number_of_mutations = cutoff_numbeofmutations_averageprobability[1]
         average_probability = cutoff_numbeofmutations_averageprobability[2]
-        allcutoffs_signature_numberofmutations_averageprobability.write('%s\t%s\t%s\t%s\t%s\n' %(jobname,signature,cutoff,number_of_mutations,average_probability))
+        signature_cutoff_numberofmutations_averageprobability.write('%s\t%s\t%s\t%s\t%s\n' %(jobname,signature,cutoff,number_of_mutations,average_probability))
 
-    allcutoffs_signature_numberofmutations_averageprobability.close()
+    signature_cutoff_numberofmutations_averageprobability.close()
 ##################################################################
 
 
@@ -1086,7 +1086,7 @@ def writeUserFriendlySignatureBasedCutoff(outputDir,jobname,DATA,signature2Prope
 #two header lines
 #rows will be cutoff
 #columns will be for each signature number_of_mutations and average_probability
-def writeUserFriendlyAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,number_of_samples,table_allcutoffs_signature_numberofmutations_averageprobability_filename):
+def writeAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename):
     signature_list=[]
     cutoff_list=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
 
@@ -1100,7 +1100,7 @@ def writeUserFriendlyAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2Number
     allcutoffs_signature_numberofmutations_averageprobability = open(os.path.join(outputDir,jobname,DATA, table_allcutoffs_signature_numberofmutations_averageprobability_filename), 'w')
 
     # 1st header line
-    allcutoffs_signature_numberofmutations_averageprobability.write('number_of_samples\t%d\t' %(number_of_samples))
+    allcutoffs_signature_numberofmutations_averageprobability.write('\t\t' )
     for signature in signature_list:
         allcutoffs_signature_numberofmutations_averageprobability.write('%s\t%s\t' %(signature,signature))
     allcutoffs_signature_numberofmutations_averageprobability.write('\n')
@@ -1126,7 +1126,18 @@ def writeUserFriendlyAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2Number
 
 
 ##################################################################
-def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesList,mutation_type,cutoffs,average_probability,num_of_sbs_required,num_of_id_required,num_of_dbs_required,mutationType2NumberofMutationsDict,chrLong2NumberofMutationsDict,cutoff_type):
+def fillCutoff2Signature2PropertiesListDictionary(outputDir,
+                                                  jobname,
+                                                  chromNamesList,
+                                                  mutation_type,
+                                                  cutoffs,
+                                                  average_probability,
+                                                  num_of_sbs_required,
+                                                  num_of_id_required,
+                                                  num_of_dbs_required,
+                                                  mutationType2PropertiesDict,
+                                                  chrLong2NumberofMutationsDict,
+                                                  cutoff_type):
 
     #Filled in the first part
     #PropertiesList consists of[sum_of_number of mutations, sum of probabilities]
@@ -1140,8 +1151,8 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
     #PropertiesList=[CufoffProbability NumberofMutations AverageMutationProbability]
     signature2PropertiesListDict={}
 
+    #This samples are for this mutation type
     all_samples=set()
-
 
     for chrLong in chromNamesList:
         chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,mutation_type,0,return_number_of_samples=True)
@@ -1153,10 +1164,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
             # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
             signatures = getSignatures(chrBased_mutation_df)
 
-            if mutation_type in mutationType2NumberofMutationsDict:
-                mutationType2NumberofMutationsDict[mutation_type] += chrBased_mutation_df.shape[0]
+            if mutation_type in mutationType2PropertiesDict:
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
             else:
-                mutationType2NumberofMutationsDict[mutation_type] = chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type] = {}
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations']=chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
 
             if chrLong in chrLong2NumberofMutationsDict:
                 chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
@@ -1230,11 +1246,10 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
 
 
     ####################################################################
-    number_of_samples=len(all_samples)
-    writeUserFriendlyAllCutoffs(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,number_of_samples,table_allcutoffs_signature_numberofmutations_averageprobability_filename)
+    writeAllCutoffs(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename)
     ####################################################################
 
-    #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=0.9
+    #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=required_probability
     sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
     for cutoff in sorted_cutoffs:
         for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
@@ -1277,23 +1292,8 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,jobname,chromNamesLi
     os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
 
     ####################################################################
-    writeUserFriendlySignatureBasedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename)
+    writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename)
     ####################################################################
-
-
-    # ####################################################################
-    # #Write dictionary as a dataframe starts
-    # filePath = os.path.join(outputDir, jobname, DATA, table_allcutoffs_signature_numberofmutations_averageprobability_filename)
-    #
-    # L = sorted([(cutoff, signature, numberofmutations_averageprobability_list[0],numberofmutations_averageprobability_list[1])
-    #             for cutoff, a in cutoff2Signature2NumberofMutationsAverageProbabilityListDict.items()
-    #              for signature, numberofmutations_averageprobability_list in a.items()])
-    # df = pd.DataFrame(L,columns=['cutoff','signature', 'number_of_mutations','average_probability'])
-    #
-    # #write this dataframe
-    # df.to_csv(filePath, sep='\t', header=True, index=False)
-    # #Write dictionary as a dataframe ends
-    # ####################################################################
 
 
     ####################################################################

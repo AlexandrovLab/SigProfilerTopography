@@ -202,7 +202,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
                 if expectedValues and (len(expectedValues) > 0) and (np.any(expectedValues)):
                     # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
-                    zstat, pvalue = ztest(expectedValues, [observedValue])
+                    try:
+                        zstat, pvalue = ztest(expectedValues, [observedValue])
+                    except FloatingPointError:
+                        print('FloatingPointError zstat, pvalue = ztest(%s, [%d])' % (expectedValues, observedValue))
                     # if pvalue is None or np.nan qvalue can not be calculated.
                     if (pvalue is not None) and (not np.isnan(pvalue)):
                         all_p_values.append(pvalue)

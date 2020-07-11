@@ -53,7 +53,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOC
 from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -1678,7 +1678,7 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
         isFigureAugmentation = True
 
     ############## Read necessary dictionaries starts ########################################
-    mutationtype_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_MutationType_NumberofMutations_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
     subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
@@ -1707,12 +1707,12 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     numberofIndels=0
     numberofDinucs=0
 
-    if (SUBS in mutationtype_numberofmutations_df['mutation_type'].unique()):
-        numberofSubs=mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==SUBS,'number_of_mutations'].values[0]
-    if (INDELS in mutationtype_numberofmutations_df['mutation_type'].unique()):
-        numberofIndels = mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==INDELS,'number_of_mutations'].values[0]
-    if (DINUCS in mutationtype_numberofmutations_df['mutation_type'].unique()):
-        numberofDinucs = mutationtype_numberofmutations_df.loc[ mutationtype_numberofmutations_df['mutation_type']==DINUCS,'number_of_mutations'].values[0]
+    if (SUBS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
+        numberofSubs=mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==SUBS,'number_of_mutations'].values[0]
+    if (INDELS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
+        numberofIndels = mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==INDELS,'number_of_mutations'].values[0]
+    if (DINUCS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
+        numberofDinucs = mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==DINUCS,'number_of_mutations'].values[0]
 
     #tissue based
     for mutationType in mutationTypes:

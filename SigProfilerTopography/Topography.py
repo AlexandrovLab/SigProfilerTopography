@@ -126,7 +126,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import readDictionar
 
 from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -144,7 +144,6 @@ from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import 
 
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import plot_heatmaps
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
-from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
 
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
@@ -1145,48 +1144,73 @@ def runAnalyses(genome,
                 cutoffs.append("%.2f" % (cufoff))
 
             # Initialize
-            mutationType2NumberofMutationsDict = {}
+            # mutationType2PropertiesListDict: PropertiesList consists of [NumberofMutations NumberofSamples SamplesList]
+            mutationType2PropertiesDict = {}
             chrLong2NumberofMutationsDict={}
 
             # We are reading original data to fill the signature2PropertiesListDict
-            subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                            chromNamesList, SUBS, cutoffs,
+            subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir,
+                                                                                            jobname,
+                                                                                            chromNamesList,
+                                                                                            SUBS,
+                                                                                            cutoffs,
                                                                                             average_probability,
                                                                                             num_of_sbs_required,
                                                                                             num_of_id_required,
                                                                                             num_of_dbs_required,
-                                                                                            mutationType2NumberofMutationsDict,
+                                                                                            mutationType2PropertiesDict,
                                                                                             chrLong2NumberofMutationsDict,
                                                                                             cutoff_type)
-            indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                               chromNamesList, INDELS,
-                                                                                               cutoffs, average_probability,
-                                                                                               num_of_sbs_required,
-                                                                                               num_of_id_required,
-                                                                                               num_of_dbs_required,
-                                                                                               mutationType2NumberofMutationsDict,
+            indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir,
+                                                                                            jobname,
+                                                                                            chromNamesList,
+                                                                                            INDELS,
+                                                                                            cutoffs,
+                                                                                            average_probability,
+                                                                                            num_of_sbs_required,
+                                                                                            num_of_id_required,
+                                                                                            num_of_dbs_required,
+                                                                                            mutationType2PropertiesDict,
                                                                                             chrLong2NumberofMutationsDict,
                                                                                             cutoff_type)
-            dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir, jobname,
-                                                                                               chromNamesList, DINUCS,
-                                                                                               cutoffs, average_probability,
-                                                                                               num_of_sbs_required,
-                                                                                               num_of_id_required,
-                                                                                               num_of_dbs_required,
-                                                                                               mutationType2NumberofMutationsDict,
+
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(outputDir,
+                                                                                            jobname,
+                                                                                            chromNamesList,
+                                                                                            DINUCS,
+                                                                                            cutoffs,
+                                                                                            average_probability,
+                                                                                            num_of_sbs_required,
+                                                                                            num_of_id_required,
+                                                                                            num_of_dbs_required,
+                                                                                            mutationType2PropertiesDict,
                                                                                             chrLong2NumberofMutationsDict,
                                                                                             cutoff_type)
 
             ####################################################################
-            # Write mutationType2NumberofMutationsDict dictionary as a dataframe starts
-            filePath = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_Filename)
+            #Add the last row
+            numberofMutations = 0
+            all_samples = set()
 
-            L = sorted([(mutation_type, number_of_mutations)
-                        for mutation_type, number_of_mutations in mutationType2NumberofMutationsDict.items()])
-            mutationtype_numberofmutations_df = pd.DataFrame(L, columns=['mutation_type', 'number_of_mutations'])
+            for mutation_type in mutationType2PropertiesDict:
+                numberofMutations += mutationType2PropertiesDict[mutation_type]['number_of_mutations']
+                samples_list = mutationType2PropertiesDict[mutation_type]['samples_list']
+                all_samples = all_samples.union(samples_list)
+
+            mutationType2PropertiesDict['All']={}
+            mutationType2PropertiesDict['All']['number_of_mutations'] = numberofMutations
+            mutationType2PropertiesDict['All']['number_of_samples'] = len(all_samples)
+            mutationType2PropertiesDict['All']['samples_list'] = list(all_samples)
+
+            # Write mutationType2PropertiesListDict dictionary as a dataframe starts
+            filePath = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename)
+
+            L = sorted([(mutation_type, a['number_of_mutations'], a['number_of_samples'], a['samples_list'])
+                        for mutation_type, a  in mutationType2PropertiesDict.items()])
+            mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame(L, columns=['mutation_type', 'number_of_mutations', 'number_of_samples', 'samples_list'])
 
             # write this dataframe
-            mutationtype_numberofmutations_df.to_csv(filePath, sep='\t', header=True, index=False)
+            mutationtype_numberofmutations_numberofsamples_sampleslist_df.to_csv(filePath, sep='\t', header=True, index=False)
             # Write dictionary as a dataframe ends
             ####################################################################
 
@@ -1231,7 +1255,7 @@ def runAnalyses(genome,
             #################################################################################
 
         else:
-            mutationtype_numberofmutations_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
+            mutationtype_numberofmutations_numberofsamples_sampleslist_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
             chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
             subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
             indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
@@ -1252,11 +1276,6 @@ def runAnalyses(genome,
 
     job_tuples=get_job_tuples(chrlong_numberofmutations_df,numofSimulations)
     print('len(job_tuples):%d' %(len(job_tuples)))
-
-    if (mutationtype_numberofmutations_df is not None) and (not mutationtype_numberofmutations_df.empty):
-        numberofMutations= mutationtype_numberofmutations_df['number_of_mutations'].sum()
-    else:
-        numberofMutations= 0
 
     if (nucleosome):
         #Nucleosome Occupancy
