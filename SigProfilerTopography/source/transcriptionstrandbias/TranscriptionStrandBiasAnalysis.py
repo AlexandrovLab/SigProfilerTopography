@@ -55,9 +55,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import write_type_st
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
-from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
 from SigProfilerTopography.source.commons.TopographyCommons import Type2TranscriptionStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Signature2MutationType2TranscriptionStrand2CountDict_Filename
@@ -325,17 +324,53 @@ def searchAllMutations(chrBased_simBased_combined_df,sample_based,subsSignature_
 ########################################################################
 
 
+########################################################################
+def searchAllMutations_simbased_chrombased_splitbased(outputDir,
+                                           jobname,
+                                           chrLong,
+                                           simNum,
+                                           splitIndex,
+                                           sample_based,
+                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                           verbose):
+
+    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
+
+    return searchAllMutations(chrBased_simBased_combined_df_split,
+                              sample_based,
+                              subsSignature_cutoff_numberofmutations_averageprobability_df,
+                              indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                              dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                              verbose)
+########################################################################
 
 ########################################################################
-def searchAllMutations_for_apply_async(outputDir, jobname, chrLong, simNum,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def searchAllMutations_simbased_chrombased(outputDir,
+                                       jobname,
+                                       chrLong,
+                                       simNum,
+                                       sample_based,
+                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       verbose):
+
     chrBased_simBased_combined_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, simNum)
-    return  searchAllMutations(chrBased_simBased_combined_df,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+
+    return  searchAllMutations(chrBased_simBased_combined_df,
+                               sample_based,
+                               subsSignature_cutoff_numberofmutations_averageprobability_df,
+                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                               verbose)
 ########################################################################
 
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     print('\n#################################################################################')
     print('--- TranscriptionStrandBias Analysis starts')
@@ -388,8 +423,16 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
         ################################
 
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutations_for_apply_async,
-                                    args=(outputDir, jobname, chrLong, simNum,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,),
+            jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased,
+                                    args=(outputDir,
+                                          jobname,
+                                          chrLong,
+                                          simNum,
+                                          sample_based,
+                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          verbose,),
                                     callback=accumulate_apply_async_result))
             print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
@@ -407,6 +450,46 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
 
     ###############################################################################
 
+    ###############################################################################
+    if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
+
+        ################################
+        jobs = []
+        ################################
+
+        for chrLong, simNum, splitIndex in job_tuples:
+            jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased_splitbased,
+                                    args=(outputDir,
+                                          jobname,
+                                          chrLong,
+                                          simNum,
+                                          splitIndex,
+                                          sample_based,
+                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          verbose,),
+                                    callback=accumulate_apply_async_result))
+            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+        ################################################################################
+
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose Transcription Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+        ##############################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+    ###############################################################################
 
     #################################################################################################################
     ##########################################      Output starts      ##############################################

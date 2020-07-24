@@ -695,9 +695,35 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df_spl
 
 
 ########################################################################
+def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(outputDir,jobname,chrLong,simNum,splitIndex,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose):
+
+    chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
+    chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
+
+    if (os.path.exists(chr_based_replication_time_file_path)):
+        chrBased_replication_array = np.load(chr_based_replication_time_file_path)
+    else:
+        chrBased_replication_array=None
+
+    if chrBased_replication_array is not None:
+        chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong,simNum, splitIndex)
+
+        return searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df_split,
+                                                          chrBased_replication_array,
+                                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          sample_based,
+                                                          verbose)
+    else:
+        return ({},{},{},{})
+########################################################################
+
+
+########################################################################
 # April 30, 2020
 # Read chromBased and simBased combined (SBS, DBS and ID) dataframe in the process
-def searchAllMutationsOnReplicationStrandArray_for_apply_async_read_data_in_the_process(outputDir,jobname,chrLong,simNum,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose):
+def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,jobname,chrLong,simNum,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
     chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
@@ -709,7 +735,13 @@ def searchAllMutationsOnReplicationStrandArray_for_apply_async_read_data_in_the_
 
     if chrBased_replication_array is not None:
         chrBased_simBased_combined_df=get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum)
-        return searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df,chrBased_replication_array,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose)
+        return searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df,
+                                                          chrBased_replication_array,
+                                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                          sample_based,
+                                                          verbose)
     else:
         return ({},{},{},{})
 ########################################################################
@@ -778,7 +810,7 @@ def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chrom
 # pool.apply_async:  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 # For each possible (chrLong,simNum) couple read the data and array on the worker process
 # Fastest, consumes more memory than others. 22/28 processes are running. For Combined_PACWG_nonPCAWG Skin_Melanoma after 1 hour all 28/28 running.
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
@@ -839,8 +871,16 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         ################################
 
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_for_apply_async_read_data_in_the_process,
-                                    args=(outputDir,jobname,chrLong,simNum,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample_based,verbose,),
+            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased,
+                                    args=(outputDir,
+                                          jobname,
+                                          chrLong,
+                                          simNum,
+                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          sample_based,
+                                          verbose,),
                                     callback=accumulate_apply_async_result))
             print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
@@ -855,6 +895,49 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         pool.close()
         pool.join()
         ################################
+    ###############################################################################
+
+    ###############################################################################
+    #July 23, 2020 starts
+    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
+
+        ################################
+        jobs = []
+        ################################
+
+        for chrLong, simNum, splitIndex in job_tuples:
+            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased,
+                                    args=(outputDir,
+                                          jobname,
+                                          chrLong,
+                                          simNum,
+                                          splitIndex,
+                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                          sample_based,
+                                          verbose,),
+                                    callback=accumulate_apply_async_result))
+            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+        ################################################################################
+
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose Replication Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+        ##############################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+    #July 23, 2020 ends
     ###############################################################################
 
 

@@ -80,8 +80,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import REPEAT
 from SigProfilerTopography.source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
@@ -657,10 +657,50 @@ def fillDictionaries_chromBased_simBased_for_all_mutations(
     return  simNum2Type2DecileIndex2NumberofMutationsDict, simNum2Sample2Type2DecileIndex2NumberofMutationsDict
 ##################################################################
 
+##################################################################
+def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_splitbased(outputDir,
+                                                                                        jobname,
+                                                                                        chrLong,
+                                                                                        chromSize,
+                                                                                        simNum,
+                                                                                        splitIndex,
+                                                                                        chrBased_grouped_decile_df_list,
+                                                                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                        sample_based,
+                                                                                        sample2NumberofSubsDict,
+                                                                                        sample2NumberofIndelsDict,
+                                                                                        sample2NumberofDinucsDict,
+                                                                                        sample2SubsSignature2NumberofMutationsDict,
+                                                                                        sample2IndelsSignature2NumberofMutationsDict,
+                                                                                        sample2DinucsSignature2NumberofMutationsDict,
+                                                                                        verbose):
+
+    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
+
+    return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray(chrLong,
+                                                                        chromSize,
+                                                                        simNum,
+                                                                        chrBased_grouped_decile_df_list,
+                                                                        chrBased_simBased_combined_df_split,
+                                                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                        sample_based,
+                                                                        sample2NumberofSubsDict,
+                                                                        sample2NumberofIndelsDict,
+                                                                        sample2NumberofDinucsDict,
+                                                                        sample2SubsSignature2NumberofMutationsDict,
+                                                                        sample2IndelsSignature2NumberofMutationsDict,
+                                                                        sample2DinucsSignature2NumberofMutationsDict,
+                                                                        verbose)
+##################################################################
+
 
 ##################################################################
 # May 10, 2020
-def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_from_apply_async(outputDir, jobname, chrLong, chromSize,simNum,chrBased_grouped_decile_df_list,
+def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased(outputDir, jobname, chrLong, chromSize,simNum,chrBased_grouped_decile_df_list,
                                                                                         subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                         indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                         dinucsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -870,6 +910,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
         outputDir,
         jobname,
         numofSimulations,
+        job_tuples,
         sample2NumberofSubsDict,
         sample2NumberofIndelsDict,
         sample2NumberofDinucsDict,
@@ -922,8 +963,13 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
 
         for simNum, chrLong in sim_num_chr_tuples:
             chromSize = chromSizesDict[chrLong]
-            jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_from_apply_async,
-                                 args=(outputDir, jobname, chrLong, chromSize,simNum,chrBased_grouped_decile_df_list,
+            jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased,
+                                 args=(outputDir,
+                                       jobname,
+                                       chrLong,
+                                       chromSize,
+                                       simNum,
+                                       chrBased_grouped_decile_df_list,
                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
                                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -951,6 +997,58 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
         ################################
 
     #######################################################################################################################
+
+    ######################## starts July 22 2020 ###############################
+    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+
+        ################################
+        numofProcesses = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
+
+        ################################
+        jobs=[]
+        ################################
+
+        ################################
+        for chrLong, simNum, splitIndex in job_tuples:
+            chromSize = chromSizesDict[chrLong]
+            jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_splitbased,
+                                 args=(outputDir,
+                                       jobname,
+                                       chrLong,
+                                       chromSize,
+                                       simNum,
+                                       splitIndex,
+                                       chrBased_grouped_decile_df_list,
+                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                       sample_based,
+                                       sample2NumberofSubsDict,
+                                       sample2NumberofIndelsDict,
+                                       sample2NumberofDinucsDict,
+                                       sample2SubsSignature2NumberofMutationsDict,
+                                       sample2IndelsSignature2NumberofMutationsDict,
+                                       sample2DinucsSignature2NumberofMutationsDict,
+                                       verbose,),
+                                 callback=accumulate_apply_async_result))
+
+            print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+        ################################
+
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose Replication Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+        ##############################################################################
+
+        ################################
+        pool.close()
+        pool.join()
+        ################################
+
+    ####################### ends July 22 2020   ###############################
 
 
     return simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict, simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict
@@ -1100,7 +1198,7 @@ def writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,decil
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,repliseqDataFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
+def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,repliseqDataFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
 
     print('\n#################################################################################')
     print('--- ReplicationTimeAnalysis starts')
@@ -1178,6 +1276,7 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
                                                                                                                             outputDir,
                                                                                                                             jobname,
                                                                                                                             numofSimulations,
+                                                                                                                            job_tuples,
                                                                                                                             sample2NumberofSubsDict,
                                                                                                                             sample2NumberofIndelsDict,
                                                                                                                             sample2NumberofDinucsDict,

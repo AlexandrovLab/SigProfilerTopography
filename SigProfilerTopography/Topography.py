@@ -436,18 +436,20 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sa
 #######################################################
 
 #######################################################
-def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
+def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,replicationTimeFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
 
     #Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
+    # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,replicationTimeFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
+    # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,replicationTimeFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
     ###############################################
 
 #######################################################
 
 
 #######################################################
-def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
 
@@ -455,19 +457,23 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_b
     valleysBEDFilename = replicationTimeValleyFilename
     peaksBEDFilename = replicationTimePeakFilename
 
+    # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+    # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
 
-    # computation_type=USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromNamesList,outputDir,jobname,numofSimulations,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+    # Supported computation types
+    # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+    # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 #######################################################
 
@@ -1274,8 +1280,10 @@ def runAnalyses(genome,
     print('#################################################################################')
     print('--- Run SigProfilerTopography Analysis starts')
 
-    job_tuples=get_job_tuples(chrlong_numberofmutations_df,numofSimulations)
-    print('len(job_tuples):%d' %(len(job_tuples)))
+    if (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+        job_tuples=get_job_tuples(chrlong_numberofmutations_df,numofSimulations)
+    else:
+        job_tuples=[]
 
     if (nucleosome):
         #Nucleosome Occupancy
@@ -1300,7 +1308,7 @@ def runAnalyses(genome,
 
         start_time = time.time()
 
-        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
+        runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,replication_time_signal_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
         print('#################################################################################')
         print("--- Run Replication Time Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Replication Time Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
@@ -1313,7 +1321,7 @@ def runAnalyses(genome,
 
         start_time = time.time()
 
-        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+        runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,replication_time_signal_file,replication_time_valley_file,replication_time_peak_file,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
         print('#################################################################################')
         print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Replication Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
@@ -1325,7 +1333,7 @@ def runAnalyses(genome,
             deleteOldData(outputDir,jobname,TRANSCRIPTIONSTRANDBIAS)
 
         start_time = time.time()
-        runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+        runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))
