@@ -251,6 +251,11 @@ Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Tabl
 Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
+#Tables to be used in udate mode
+Table_Update_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_SBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_Update_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_Update_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+
 #Table
 Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename='Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
 Table_ChrLong_NumberofMutations_Filename='Table_ChrLong_NumberofMutations.txt'
@@ -1583,46 +1588,64 @@ def computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray):
     return averageArray
 ########################################################################################
 
+
 ########################################################################################
-def writeSimulationBasedAverageNucleosomeOccupancy(
-        occupancy_type,
-        sample_based,
-        plusorMinus,
-        simNum2Type2AccumulatedSignalArrayDict,
-        simNum2Type2AccumulatedCountArrayDict,
-        simNum2Sample2Type2AccumulatedSignalArrayDict,
-        simNum2Sample2Type2AccumulatedCountArrayDict,
-        outputDir,
-        jobname,
-        library_file_memo):
+#July 26, 2020 Using Numpy Arrays
+def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
+                                                   sample_based,
+                                                   plusorMinus,
+                                                   subsSignatures,
+                                                   dinucsSignatures,
+                                                   indelsSignatures,
+                                                   allSims_subsSignature_accumulated_signal_np_array,
+                                                   allSims_dinucsSignature_accumulated_signal_np_array,
+                                                   allSims_indelsSignature_accumulated_signal_np_array,
+                                                   allSims_subsSignature_accumulated_count_np_array,
+                                                   allSims_dinucsSignature_accumulated_count_np_array,
+                                                   allSims_indelsSignature_accumulated_count_np_array,
+                                                   outputDir,
+                                                   jobname,
+                                                   numofSimulations,
+                                                   library_file_memo):
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type),exist_ok=True)
 
     ####################################################################################
-    for simNum in simNum2Type2AccumulatedSignalArrayDict:
-        type2AccumulatedSignalArrayDict= simNum2Type2AccumulatedSignalArrayDict[simNum]
-        type2AccumulatedCountArrayDict = simNum2Type2AccumulatedCountArrayDict[simNum]
+    for simNum in range(0, numofSimulations + 1):
 
-        if (AGGREGATEDSUBSTITUTIONS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDSUBSTITUTIONS],type2AccumulatedCountArrayDict[AGGREGATEDSUBSTITUTIONS],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
-        if (AGGREGATEDINDELS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDINDELS],type2AccumulatedCountArrayDict[AGGREGATEDINDELS], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
-        if (AGGREGATEDDINUCS in type2AccumulatedSignalArrayDict):
-            writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict[AGGREGATEDDINUCS],type2AccumulatedCountArrayDict[AGGREGATEDDINUCS], outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
-        writeSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedSignalArrayDict,type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,simNum)
-    ####################################################################################
+        subsSignature_accumulated_signal_np_array = allSims_subsSignature_accumulated_signal_np_array[simNum]
+        dinucsSignature_accumulated_signal_np_array =  allSims_dinucsSignature_accumulated_signal_np_array[simNum]
+        indelsSignature_accumulated_signal_np_array = allSims_indelsSignature_accumulated_signal_np_array[simNum]
 
+        subsSignature_accumulated_count_np_array = allSims_subsSignature_accumulated_count_np_array[simNum]
+        dinucsSignature_accumulated_count_np_array = allSims_dinucsSignature_accumulated_count_np_array[simNum]
+        indelsSignature_accumulated_count_np_array = allSims_indelsSignature_accumulated_count_np_array[simNum]
 
-    ####################################################################################
-    if sample_based:
-        for simNum in simNum2Sample2Type2AccumulatedSignalArrayDict:
-            sample2Type2AccumulatedSignalArrayDict = simNum2Sample2Type2AccumulatedSignalArrayDict[simNum]
-            sample2Type2AccumulatedCountArrayDict = simNum2Sample2Type2AccumulatedCountArrayDict[simNum]
-            ####################################################################################
-            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,AGGREGATEDSUBSTITUTIONS,simNum)
-            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,AGGREGATEDINDELS,simNum)
-            writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict, outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
-            writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedSignalArrayDict,sample2Type2AccumulatedCountArrayDict,outputDir,jobname,library_file_memo,simNum)
+        # Last row contains AGGREGATEDSUBSTITUTIONS
+        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,subsSignature_accumulated_signal_np_array[-1],subsSignature_accumulated_count_np_array[-1],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
+
+        # Last row contains AGGREGATEDDINUCS
+        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,dinucsSignature_accumulated_signal_np_array[-1],dinucsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
+
+        # Last row contains AGGREGATEDINDELS
+        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,indelsSignature_accumulated_signal_np_array[-1],indelsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
+
+        #Signatures
+        writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
+                                                           plusorMinus,
+                                                           subsSignatures,
+                                                           dinucsSignatures,
+                                                           indelsSignatures,
+                                                           subsSignature_accumulated_signal_np_array,
+                                                           dinucsSignature_accumulated_signal_np_array,
+                                                           indelsSignature_accumulated_signal_np_array,
+                                                           subsSignature_accumulated_count_np_array,
+                                                           dinucsSignature_accumulated_count_np_array,
+                                                           indelsSignature_accumulated_count_np_array,
+                                                           outputDir,
+                                                           jobname,
+                                                           library_file_memo,
+                                                           simNum)
     ####################################################################################
 
 ########################################################################################
@@ -1668,38 +1691,64 @@ def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutations
     averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
 ########################################################################################
 
+
 ########################################################################################
-def writeSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,type2AccumulatedAllChromsSignalArrayDict,type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,library_file_memo,simulationNumber):
+#July 26, 2020 Using Numpy Array
+def writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
+                                                           plusorMinus,
+                                                           subsSignatures,
+                                                           dinucsSignatures,
+                                                           indelsSignatures,
+                                                           subsSignature_accumulated_signal_np_array,
+                                                           dinucsSignature_accumulated_signal_np_array,
+                                                           indelsSignature_accumulated_signal_np_array,
+                                                           subsSignature_accumulated_count_np_array,
+                                                           dinucsSignature_accumulated_count_np_array,
+                                                           indelsSignature_accumulated_count_np_array,
+                                                           outputDir,
+                                                           jobname,
+                                                           library_file_memo,
+                                                           simNum):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED), exist_ok=True)
 
-    for type in type2AccumulatedAllChromsSignalArrayDict.keys():
-        if ((type!=AGGREGATEDSUBSTITUTIONS) and (type!=AGGREGATEDINDELS) and (type!=AGGREGATEDDINUCS)):
-            signalArray = type2AccumulatedAllChromsSignalArrayDict[type]
-            countArray = type2AccumulatedAllChromsCountArrayDict[type]
+    all_signatures=[subsSignatures,dinucsSignatures,indelsSignatures]
+    all_signal_arrays=[subsSignature_accumulated_signal_np_array,dinucsSignature_accumulated_signal_np_array,indelsSignature_accumulated_signal_np_array]
+    all_count_arrays= [subsSignature_accumulated_count_np_array,dinucsSignature_accumulated_count_np_array,indelsSignature_accumulated_count_np_array]
+
+    for signatures_index,signatures in enumerate(all_signatures,0):
+        number_of_signatures = signatures.size
+        signal_arrays=all_signal_arrays[signatures_index]
+        count_arrays=all_count_arrays[signatures_index]
+
+        #Why -1, because last one is aggregated mutations and it is not written here.
+        for signature_index in range(0,number_of_signatures-1):
+            signature = signatures[signature_index]
+            signalArray = signal_arrays[signature_index]
+            countArray = count_arrays[signature_index]
             averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray)
 
             #To provide filename with no space in signature name
             #signatureWithNoSpace = signature.replace(' ','')
 
-            if (simulationNumber==0):
+            if (simNum==0):
                 if library_file_memo is not None:
-                    accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (type,library_file_memo)
-                    accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (type,library_file_memo)
-                    averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' % (type,library_file_memo)
+                    accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (signature,library_file_memo)
+                    accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (signature,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_%s_AverageSignalArray.txt' % (signature,library_file_memo)
                 else:
-                    accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(type)
-                    accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(type)
-                    averageNucleosomeSignalFilename = '%s_AverageSignalArray.txt' %(type)
+                    accumulatedSignalFilename = '%s_AccumulatedSignalArray.txt' %(signature)
+                    accumulatedCountFilename = '%s_AccumulatedCountArray.txt' %(signature)
+                    averageNucleosomeSignalFilename = '%s_AverageSignalArray.txt' %(signature)
             else:
                 if library_file_memo is not None:
-                    accumulatedSignalFilename = '%s_sim%d_%s_AccumulatedSignalArray.txt' % (type, simulationNumber,library_file_memo)
-                    accumulatedCountFilename = '%s_sim%d_%s_AccumulatedCountArray.txt' % (type, simulationNumber,library_file_memo)
-                    averageNucleosomeSignalFilename = '%s_sim%d_%s_AverageSignalArray.txt' % (type, simulationNumber,library_file_memo)
+                    accumulatedSignalFilename = '%s_sim%d_%s_AccumulatedSignalArray.txt' % (signature, simNum,library_file_memo)
+                    accumulatedCountFilename = '%s_sim%d_%s_AccumulatedCountArray.txt' % (signature, simNum,library_file_memo)
+                    averageNucleosomeSignalFilename = '%s_sim%d_%s_AverageSignalArray.txt' % (signature, simNum,library_file_memo)
                 else:
-                    accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(type,simulationNumber)
-                    accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(type,simulationNumber)
-                    averageNucleosomeSignalFilename = '%s_sim%d_AverageSignalArray.txt' %(type,simulationNumber)
+                    accumulatedSignalFilename = '%s_sim%d_AccumulatedSignalArray.txt' %(signature,simNum)
+                    accumulatedCountFilename = '%s_sim%d_AccumulatedCountArray.txt' %(signature,simNum)
+                    averageNucleosomeSignalFilename = '%s_sim%d_AverageSignalArray.txt' %(signature,simNum)
 
             accumulatedSignalFilePath = os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED,accumulatedSignalFilename)
             accumulatedCountFilePath = os.path.join(outputDir,jobname,DATA,occupancy_type,SIGNATUREBASED,accumulatedCountFilename)
@@ -1709,6 +1758,8 @@ def writeSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinu
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
             averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
 ########################################################################################
+
+
 
 
 ########################################################################################
@@ -2469,7 +2520,7 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
 ########################################################################
 #Main function for type
 #Fills a dictionary and writes it as a dataframe
-def  write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict, strand_bias, strands, outputDir, jobname):
+def write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict, strand_bias, strands, outputDir, jobname,update_mode):
 
     type2Strand2ListDict = {}
 
@@ -2584,20 +2635,127 @@ def  write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        # old code
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
+        # new code
+        # write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED,type_strand_table_filepath, update_mode)
 
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        # old code
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
+        # new code
+        # write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath, update_mode)
 
     elif strand_bias == REPLICATIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        # old code
         write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
+        # new code
+        # write_type_replication_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, type_strand_table_filepath, update_mode)
     ##################################################################################################
 
 ########################################################################
 
+########################################################################
+#July 24, 2020
+def write_type_replication_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, type_strand_table_filepath, update_mode):
+    if update_mode:
+        if os.path.exists(type_strand_table_filepath):
+            type_strand_table_df = pd.read_csv(type_strand_table_filepath,sep='\t', header=0)
+
+            columns = type_strand_table_df.columns.values
+            my_types = type_strand_table_df['type'].unique()
+
+            for my_type in type2Strand2ListDict:
+                # Get type_df
+                type_df, column_names = get_replication_type_df(strands, my_type, type2Strand2ListDict,jobname)
+
+                if my_type in my_types:
+                    # update row in signature_mutation_type_strand_table_df
+                    type_strand_table_df.loc[type_strand_table_df['type'] == my_type, columns] = type_df[type_df['type'] == my_type].values[0]
+                else:
+                    type_strand_table_df.columns=column_names
+                    # append a new row to signature_mutation_type_strand_table_df
+                    type_strand_table_df=type_strand_table_df.append(type_df, ignore_index=True)
+
+            type_strand_table_df.to_csv(type_strand_table_filepath, sep='\t', header=True, index=False)
+
+        else:
+            write_type_replication_dataframe(strands, type2Strand2ListDict,jobname, type_strand_table_filepath)
+    else:
+        write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
+########################################################################
+
+########################################################################
+#July 24, 2020
+def write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, strand_bias_subtype,type_strand_table_filepath, update_mode):
+    if update_mode:
+        if os.path.exists(type_strand_table_filepath):
+            type_strand_table_df = pd.read_csv(type_strand_table_filepath,sep='\t', header=0)
+
+            columns = type_strand_table_df.columns.values
+            my_types = type_strand_table_df['type'].unique()
+
+            for my_type in type2Strand2ListDict:
+                # Get type_df
+                type_df,column_names = get_transcription_type_df(strands, my_type, type2Strand2ListDict,jobname, strand_bias_subtype)
+
+                if my_type in my_types:
+                    # update row in signature_mutation_type_strand_table_df
+                    type_strand_table_df.loc[type_strand_table_df['type'] == my_type, columns] = type_df[type_df['type'] == my_type].values[0]
+                else:
+                    # append a new row to signature_mutation_type_strand_table_df
+                    type_strand_table_df.columns=column_names
+                    type_strand_table_df=type_strand_table_df.append(type_df, ignore_index=True)
+
+            type_strand_table_df.to_csv(type_strand_table_filepath,sep='\t', header=True, index=False)
+
+        else:
+            write_type_transcription_dataframe(strands, type2Strand2ListDict,jobname, strand_bias_subtype, type_strand_table_filepath)
+    else:
+        write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, strand_bias_subtype, type_strand_table_filepath)
+########################################################################
+
+########################################################################
+#July 24, 2020
+def get_replication_type_df(strands, my_type_of_interest, type2Strand2ListDict,cancer_type):
+    strand1=strands[0]
+    strand2=strands[1]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    column_names = ['cancer_type', 'type',
+                  strand1_real_data, strand2_real_data,
+                  strand1_mean_sims_data, strand2_mean_sims_data,
+                  LAGGING_VERSUS_LEADING_P_VALUE,
+                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
+
+    L = sorted([(cancer_type, my_type,
+                 a[strand1][0], a[strand2][0],
+                 a[strand1][2], a[strand2][2],
+                 a[LAGGING_VERSUS_LEADING_P_VALUE],
+                 a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                 a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+                for my_type, a in type2Strand2ListDict.items()
+                 if my_type == my_type_of_interest ])
+
+    df = pd.DataFrame(L, columns=column_names)
+
+    return df,column_names
+########################################################################
 
 ##############################################
 #subfunction for type
@@ -2642,6 +2800,69 @@ def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type,
     df.to_csv(filepath, sep='\t', header=True, index=False)
 ##############################################
 
+#########################################################################
+#July 24, 2020 written using write_type_transcription_dataframe
+def get_transcription_type_df(strands, my_type_of_interest, type2Strand2ListDict,cancer_type, strand_bias_subtype):
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        column_names = ['cancer_type', 'type',
+                      strand1_real_data, strand2_real_data,
+                      strand1_mean_sims_data, strand2_mean_sims_data,
+                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
+        L = sorted([(cancer_type, my_type,
+                     a[strand1][0], a[strand2][0],
+                     a[strand1][2], a[strand2][2],
+                     a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+                    for my_type, a in type2Strand2ListDict.items()
+                     if my_type == my_type_of_interest])
+        df = pd.DataFrame(L, columns=column_names)
+
+    elif strand_bias_subtype==GENIC_VERSUS_INTERGENIC:
+        column_names=['cancer_type', 'type',
+                      'genic_real_count', 'intergenic_real_count',
+                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                      GENIC_VERSUS_INTERGENIC_P_VALUE,
+                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list]
+        L = sorted([(cancer_type, my_type,
+                     (a[strand1][0] + a[strand2][0]), a[strand3][0],
+                     (a[strand1][2] + a[strand2][2]), a[strand3][2],
+                     a[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1],
+                     a[strand3][0], a[strand3][2], a[strand3][3], a[strand3][4], a[strand3][1])
+                    for my_type, a in type2Strand2ListDict.items()
+                     if my_type == my_type_of_interest])
+        df = pd.DataFrame(L, columns=column_names)
+
+    return df,column_names
+########################################################################
 
 ########################################################################
 #subfunction for type
@@ -2716,7 +2937,7 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
 ########################################################################
 #Main function for signature -- mutation type
 #Fills a dictionary and writes it as a dataframe
-def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2Strand2CountDict, strand_bias, strands, outputDir, jobname):
+def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2Strand2CountDict, strand_bias, strands, outputDir, jobname,update_mode):
 
     signature2MutationType2Strand2ListDict = {}
 
@@ -2841,19 +3062,151 @@ def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Sig
     if (strand_bias==REPLICATIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
-        write_signature_mutation_type_replication_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,signature_mutation_type_strand_table_filepath)
+        write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath)
+        # write_signature_mutation_type_replication_dataframe_with_update_mode(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath,update_mode)
+
     elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
-        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED,signature_mutation_type_strand_table_filepath)
+        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
+        # write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath,update_mode)
 
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+        # write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath,update_mode)
     ##################################################################################################
 
 ########################################################################
 
+
+########################################################################
+#July 24, 2020
+def write_signature_mutation_type_replication_dataframe_with_update_mode(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath,update_mode):
+    if update_mode:
+        if os.path.exists(signature_mutation_type_strand_table_filepath):
+            signature_mutation_type_strand_table_df = pd.read_csv(signature_mutation_type_strand_table_filepath,sep='\t', header=0)
+
+            columns = signature_mutation_type_strand_table_df.columns.values
+            signatures = signature_mutation_type_strand_table_df['signature'].unique()
+
+            for signature in signature2MutationType2Strand2ListDict:
+                # Get signature_df
+                signature_df, column_names = get_replication_signature_df(strands, signature, signature2MutationType2Strand2ListDict,jobname)
+
+                if signature in signatures:
+                    # update row in signature_mutation_type_strand_table_df
+                    signature_mutation_type_strand_table_df.loc[signature_mutation_type_strand_table_df['signature'] == signature, columns] = signature_df[signature_df['signature'] == signature].values[0]
+                else:
+                    # append a new row to signature_mutation_type_strand_table_df
+                    #Before append their column names must be the same.
+                    signature_mutation_type_strand_table_df.columns=column_names
+                    signature_mutation_type_strand_table_df=signature_mutation_type_strand_table_df.append(signature_df, ignore_index=True)
+
+            #write the dataframe
+            signature_mutation_type_strand_table_df.to_csv(signature_mutation_type_strand_table_filepath, sep='\t', header=True, index=False)
+
+        else:
+            write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath)
+    else:
+        write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
+########################################################################
+
+
+########################################################################
+#July 24, 2020
+def write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,cancer_type,strand_bias_subtype, filepath,update_mode):
+    if update_mode:
+        if os.path.exists(filepath):
+            signature_mutation_type_strand_table_df = pd.read_csv(filepath,sep='\t', header=0)
+
+            columns = signature_mutation_type_strand_table_df.columns.values
+            signatures = signature_mutation_type_strand_table_df['signature'].unique()
+
+            for signature in signature2MutationType2Strand2ListDict:
+                # Get signature_df
+                signature_df, column_names = get_transcription_signature_df(strands, signature, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype)
+
+                if signature in signatures:
+                    # update row in signature_mutation_type_strand_table_df
+                    signature_mutation_type_strand_table_df.loc[signature_mutation_type_strand_table_df['signature'] == signature, columns] = signature_df[signature_df['signature'] == signature].values[0]
+                else:
+                    # append a new row to signature_mutation_type_strand_table_df
+                    signature_mutation_type_strand_table_df.columns = column_names
+                    signature_mutation_type_strand_table_df=signature_mutation_type_strand_table_df.append(signature_df, ignore_index=True)
+
+            signature_mutation_type_strand_table_df.to_csv(filepath,sep='\t', header=True, index=False)
+
+        else:
+            write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype, filepath)
+    else:
+        write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype, filepath)
+########################################################################
+
+########################################################################
+def get_transcription_signature_df(strands, signature_of_interest, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype):
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        column_names=['cancer_type', 'signature', 'mutation_type',
+                                      strand1_real_data, strand2_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data,
+                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
+        L = sorted([(cancer_type, signature, mutation_type,
+                     b[strand1][0], b[strand2][0],
+                     b[strand1][2], b[strand2][2],
+                     b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                    for signature, a in signature2MutationType2Strand2ListDict.items()
+                     if signature == signature_of_interest
+                      for mutation_type, b in a.items()])
+        df = pd.DataFrame(L, columns=column_names)
+
+    elif (strand_bias_subtype==GENIC_VERSUS_INTERGENIC):
+        column_names = ['cancer_type', 'signature', 'mutation_type',
+                        'genic_real_count', 'intergenic_real_count',
+                        'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                        GENIC_VERSUS_INTERGENIC_P_VALUE,
+                        strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data,strand1_sims_data_list,
+                        strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data,strand2_sims_data_list,
+                        strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data,strand3_sims_data_list]
+        L = sorted([(cancer_type, signature, mutation_type,
+                     (b[strand1][0] + b[strand2][0]), b[strand3][0],
+                     (b[strand1][2] + b[strand2][2]), b[strand3][2],
+                     b[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
+                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
+                    for signature, a in signature2MutationType2Strand2ListDict.items()
+                     if signature == signature_of_interest
+                      for mutation_type, b in a.items()])
+        df = pd.DataFrame(L, columns=column_names)
+
+    return df, column_names
+########################################################################
 
 ########################################################################
 #sub function for signature -- mutation type
@@ -2925,6 +3278,50 @@ def write_signature_mutation_type_transcription_dataframe(strands,signature2Muta
                                       strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
         df.to_csv(filepath, sep='\t', header=True, index=False)
 ########################################################################
+
+
+########################################################################
+#July 24, 2020 written using write_signature_mutation_type_replication_dataframe
+def get_replication_signature_df(strands, signature_of_interest, signature2MutationType2Strand2ListDict,cancer_type):
+    strand1 = strands[0]
+    strand2 = strands[1]
+
+    strand1_real_data = "%s_real_count" % (strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data = "%s_real_count" % (strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    column_names=['cancer_type', 'signature', 'mutation_type',
+                                  strand1_real_data, strand2_real_data,
+                                  strand1_mean_sims_data, strand2_mean_sims_data,
+                                  LAGGING_VERSUS_LEADING_P_VALUE,
+                                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data,
+                                  strand1_max_sims_data, strand1_sims_data_list,
+                                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data,
+                                  strand2_max_sims_data, strand2_sims_data_list]
+
+    L = sorted([(cancer_type, signature, mutation_type,
+                 b[strand1][0], b[strand2][0],
+                 b[strand1][2], b[strand2][2],
+                 b[LAGGING_VERSUS_LEADING_P_VALUE],
+                 b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                 b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                for signature, a in signature2MutationType2Strand2ListDict.items()
+                 if signature == signature_of_interest
+                  for mutation_type, b in a.items()])
+    df = pd.DataFrame(L, columns=column_names)
+
+    return df,column_names
+########################################################################
+
+
 
 
 ########################################################################

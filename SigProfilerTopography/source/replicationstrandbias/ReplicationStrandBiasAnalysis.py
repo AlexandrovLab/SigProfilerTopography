@@ -810,7 +810,7 @@ def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chrom
 # pool.apply_async:  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 # For each possible (chrLong,simNum) couple read the data and array on the worker process
 # Fastest, consumes more memory than others. 22/28 processes are running. For Combined_PACWG_nonPCAWG Skin_Melanoma after 1 hour all 28/28 running.
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
@@ -946,18 +946,21 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
     ############################################################################################################
     replication_strands = [LAGGING, LEADING]
 
+    #update_mode implemented
     write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict,
                                                                       strandBias,
                                                                       replication_strands,
                                                                       outputDir,
-                                                                      jobname)
+                                                                      jobname,
+                                                                      update_mode)
 
-
+    #update_mode not implemented yet
     write_type_strand_bias_dictionary_as_dataframe(simNum2Type2ReplicationStrand2AccumulatedCountDict,
                                                    strandBias,
                                                    replication_strands,
                                                    outputDir,
-                                                   jobname)
+                                                   jobname,
+                                                   update_mode)
 
     if sample_based:
         writeDictionary(simNum2Sample2Type2ReplicationStrand2AccumulatedCountDict,outputDir,jobname,Sample2Type2ReplicationStrand2CountDict_Filename,strandBias,None)

@@ -370,7 +370,7 @@ def searchAllMutations_simbased_chrombased(outputDir,
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode):
 
     print('\n#################################################################################')
     print('--- TranscriptionStrandBias Analysis starts')
@@ -451,7 +451,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
     ###############################################################################
 
     ###############################################################################
-    if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
 
         ################################
         numofProcesses = multiprocessing.cpu_count()
@@ -500,14 +500,15 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
                                                                       strandBias,
                                                                       transcription_atrands,
                                                                       outputDir,
-                                                                      jobname)
-
+                                                                      jobname,
+                                                                      update_mode)
 
     write_type_strand_bias_dictionary_as_dataframe(simNum2Type2TranscriptionStrand2AccumulatedCountDict,
                                                    strandBias,
                                                    transcription_atrands,
                                                    outputDir,
-                                                   jobname)
+                                                   jobname,
+                                                   update_mode)
 
 
     if sample_based:
