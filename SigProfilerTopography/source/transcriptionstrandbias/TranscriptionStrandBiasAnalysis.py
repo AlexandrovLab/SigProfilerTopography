@@ -22,9 +22,7 @@
 
 import multiprocessing
 import numpy as np
-import pandas as pd
 import os
-import math
 
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
@@ -41,16 +39,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_S
 from SigProfilerTopography.source.commons.TopographyCommons import NONTRANSCRIBED_STRAND
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
 
-from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries_simulations_integrated
-from SigProfilerTopography.source.commons.TopographyCommons import updateDictionaries_simulations_integrated_for_list_comprehension
-
-from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
-from SigProfilerTopography.source.commons.TopographyCommons import accumulate_simulations_integrated_for_each_tuple
-
-from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_dictionary_as_dataframe
-from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_dictionary_as_dataframe
-
+from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
 
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
@@ -58,152 +48,92 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
-from SigProfilerTopography.source.commons.TopographyCommons import Type2TranscriptionStrand2CountDict_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Signature2MutationType2TranscriptionStrand2CountDict_Filename
-
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2Type2TranscriptionStrand2CountDict_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Type2Sample2TranscriptionStrand2CountDict_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
-from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
-from SigProfilerTopography.source.commons.TopographyCommons import MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE
+
+from SigProfilerTopography.source.commons.TopographyCommons import C2A
+from SigProfilerTopography.source.commons.TopographyCommons import C2G
+from SigProfilerTopography.source.commons.TopographyCommons import C2T
+from SigProfilerTopography.source.commons.TopographyCommons import T2A
+from SigProfilerTopography.source.commons.TopographyCommons import T2C
+from SigProfilerTopography.source.commons.TopographyCommons import T2G
 
 
 ########################################################################
 #April 24, 2020
-def searchAllMutationUsingTranscriptionStrandColumn_using_list_comprehension(mutation_row,
-                                                                                  simNum2Type2TranscriptionStrand2CountDict,
-                                                                                  simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                                                                  simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                                                                  simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  sample_based,df_columns):
+#Updated July 29, 2020
+def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                            six_mutation_types_np_array,
+                                                                            subs_signatures_cutoffs,
+                                                                            dinucs_signatures_cutoffs,
+                                                                            indels_signatures_cutoffs,
+                                                                            df_columns_subs_signatures_mask_array,
+                                                                            df_columns_dinucs_signatures_mask_array,
+                                                                            df_columns_indels_signatures_mask_array,
+                                                                            six_mutation_types_default_zeros_array,
+                                                                            subs_signatures_default_zeros_array,
+                                                                            dinucs_signatures_default_zeros_array,
+                                                                            indels_signatures_default_zeros_array,
+                                                                            subs_signatures_mutation_types_default_zeros_array,
+                                                                            all_types_transcribed_np_array,
+                                                                            all_types_untranscribed_np_array,
+                                                                            all_types_nontranscribed_np_array,
+                                                                          subs_signature_mutation_type_transcribed_np_array,
+                                                                          subs_signature_mutation_type_untranscribed_np_array,
+                                                                          subs_signature_mutation_type_nontranscribed_np_array,
+                                                                            sample_based,
+                                                                            df_columns):
 
-    mutationType = None
 
-    indexofTranscriptionStrand = df_columns.index(TRANSCRIPTIONSTRAND)
+
+    indexofTranscriptionStrand = np.where(df_columns == TRANSCRIPTIONSTRAND)[0][0]
+    indexofSample = np.where(df_columns == SAMPLE)[0][0]
+    indexofType = np.where(df_columns == TYPE)[0][0]
+
     mutationTranscriptionStrand = mutation_row[indexofTranscriptionStrand]
-
-    indexofSample = df_columns.index(SAMPLE)
     mutationSample = mutation_row[indexofSample]
-
-    ##########################################
-    indexofType = df_columns.index(TYPE)
-    my_type=mutation_row[indexofType]
-
-    if (my_type==SUBS):
-        signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df
-    elif (my_type==INDELS):
-        signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df
-    elif (my_type==DINUCS):
-        signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df
-
-    if (my_type==SUBS):
-        #e.g.: C>A
-        indexofMutation = df_columns.index(MUTATION)
-        mutationType = mutation_row[indexofMutation]
-    ##########################################
-
-    #Values on TranscriptionStrand column
-    # N --> Non-transcribed
-    # T --> Transcribed
-    # U --> Untranscribed
-    # Q --> Question Not known
-
-    if (mutationTranscriptionStrand == 'U'):
-        updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                UNTRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df,
-                                df_columns)
-
-    elif (mutationTranscriptionStrand == 'T'):
-        updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                TRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df,
-                                df_columns)
-    elif (mutationTranscriptionStrand == 'B'):
-        updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                               simNum2Type2TranscriptionStrand2CountDict,
-                               simNum2Sample2Type2TranscriptionStrand2CountDict,
-                               simNum2Type2Sample2TranscriptionStrand2CountDict,
-                               simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                               UNTRANSCRIBED_STRAND,
-                               signature_cutoff_numberofmutations_averageprobability_df,
-                               df_columns)
-        updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                TRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df,
-                                df_columns)
-    elif (mutationTranscriptionStrand == 'N'):
-        updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                NONTRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df,
-                                df_columns)
-
-########################################################################
-
-########################################################################
-#April 5, 2020
-def searchAllMutationUsingTranscriptionStrandColumn_using_apply(
-        mutation_row,
-        simNum2Type2TranscriptionStrand2CountDict,
-        simNum2Sample2Type2TranscriptionStrand2CountDict,
-        simNum2Type2Sample2TranscriptionStrand2CountDict,
-        simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-        subsSignature_cutoff_numberofmutations_averageprobability_df,
-        indelsSignature_cutoff_numberofmutations_averageprobability_df,
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-        sample_based):
+    my_type = mutation_row[indexofType]
 
     mutationType = None
-    mutationTranscriptionStrand = mutation_row[TRANSCRIPTIONSTRAND]
-    mutationSample = mutation_row[SAMPLE]
+    subs_signatures_mutation_types_mask_array=subs_signatures_mutation_types_default_zeros_array
 
     ##########################################
-    type=mutation_row[TYPE]
-
-    if (type==SUBS):
-        signature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df
-    elif (type==INDELS):
-        signature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df
-    elif (type==DINUCS):
-        signature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df
-
-    if (type==SUBS):
+    if (my_type==SUBS):
         #e.g.: C>A
-        mutationType = mutation_row[MUTATION]
+        indexofMutation = np.where(df_columns == MUTATION)[0][0]
+        mutationType = mutation_row[indexofMutation]
+
+        six_mutation_types_mask_array= np.where(six_mutation_types_np_array == mutationType, 1, 0)
+
+        probabilities = mutation_row[df_columns_subs_signatures_mask_array]
+        threshold_mask_array = np.greater_equal(probabilities, subs_signatures_cutoffs)
+        # Convert True into 1, and False into 0
+        subs_signatures_mask_array = threshold_mask_array.astype(int)
+
+        #Concetanate
+        all_types_mask_array= np.concatenate((six_mutation_types_mask_array, subs_signatures_mask_array, dinucs_signatures_default_zeros_array, indels_signatures_default_zeros_array), axis=None)
+
+        #multiply subs_signatures_mask_array times six_mutation_types_mask_array
+        # Add one more dimension to subs_signatures_mask_array and six_mutation_types_mask_array
+        subs_signatures_mask_array_2d = np.array([subs_signatures_mask_array])
+        six_mutation_types_mask_array_2d = np.array([six_mutation_types_mask_array])
+        subs_signatures_mutation_types_mask_array = subs_signatures_mask_array_2d.T * six_mutation_types_mask_array_2d
+    elif (my_type == DINUCS):
+        probabilities = mutation_row[df_columns_dinucs_signatures_mask_array]
+        threshold_mask_array = np.greater_equal(probabilities, dinucs_signatures_cutoffs)
+        # Convert True into 1, and False into 0
+        dinucs_signatures_mask_array = threshold_mask_array.astype(int)
+
+        #Concetanate
+        all_types_mask_array= np.concatenate((six_mutation_types_default_zeros_array, subs_signatures_default_zeros_array, dinucs_signatures_mask_array, indels_signatures_default_zeros_array), axis=None)
+
+    elif (my_type == INDELS):
+        probabilities = mutation_row[df_columns_indels_signatures_mask_array]
+        threshold_mask_array = np.greater_equal(probabilities, indels_signatures_cutoffs)
+        # Convert True into 1, and False into 0
+        indels_signatures_mask_array = threshold_mask_array.astype(int)
+
+        #Concetanate
+        all_types_mask_array= np.concatenate((six_mutation_types_default_zeros_array, subs_signatures_default_zeros_array, dinucs_signatures_default_zeros_array, indels_signatures_mask_array), axis=None)
     ##########################################
 
     #Values on TranscriptionStrand column
@@ -213,114 +143,106 @@ def searchAllMutationUsingTranscriptionStrandColumn_using_apply(
     # Q --> Question Not known
 
     if (mutationTranscriptionStrand == 'U'):
-        updateDictionaries_simulations_integrated(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                UNTRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df)
+        all_types_untranscribed_np_array += all_types_mask_array
+        subs_signature_mutation_type_untranscribed_np_array += subs_signatures_mutation_types_mask_array
 
     elif (mutationTranscriptionStrand == 'T'):
-        updateDictionaries_simulations_integrated(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                TRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df)
+        all_types_transcribed_np_array += all_types_mask_array
+        subs_signature_mutation_type_transcribed_np_array += subs_signatures_mutation_types_mask_array
+
     elif (mutationTranscriptionStrand == 'B'):
-        updateDictionaries_simulations_integrated(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                               simNum2Type2TranscriptionStrand2CountDict,
-                               simNum2Sample2Type2TranscriptionStrand2CountDict,
-                               simNum2Type2Sample2TranscriptionStrand2CountDict,
-                               simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                               UNTRANSCRIBED_STRAND,
-                               signature_cutoff_numberofmutations_averageprobability_df)
-        updateDictionaries_simulations_integrated(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                TRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df)
+        all_types_untranscribed_np_array += all_types_mask_array
+        all_types_transcribed_np_array += all_types_mask_array
+        subs_signature_mutation_type_untranscribed_np_array += subs_signatures_mutation_types_mask_array
+        subs_signature_mutation_type_transcribed_np_array += subs_signatures_mutation_types_mask_array
+
     elif (mutationTranscriptionStrand == 'N'):
-        updateDictionaries_simulations_integrated(mutation_row,
-                                mutationType,
-                                mutationSample,
-                                sample_based,
-                                simNum2Type2TranscriptionStrand2CountDict,
-                                simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                NONTRANSCRIBED_STRAND,
-                                signature_cutoff_numberofmutations_averageprobability_df)
+        all_types_nontranscribed_np_array += all_types_mask_array
+        subs_signature_mutation_type_nontranscribed_np_array += subs_signatures_mutation_types_mask_array
 ########################################################################
 
 
 ########################################################################
 # April 30, 2020
-def searchAllMutations(chrBased_simBased_combined_df,sample_based,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-
-    ################################################################################
-    simNum2Type2TranscriptionStrand2CountDict = {}
-    simNum2Sample2Type2TranscriptionStrand2CountDict = {}
-    simNum2Type2Sample2TranscriptionStrand2CountDict = {}
-    simNum2Signature2MutationType2TranscriptionStrand2CountDict = {}
-    ################################################################################
+def searchAllMutations(chrBased_simBased_combined_df,
+            sim_num,
+            six_mutation_types_np_array,
+            subs_signatures,
+            dinucs_signatures,
+            indels_signatures,
+            subs_signatures_cutoffs,
+            dinucs_signatures_cutoffs,
+            indels_signatures_cutoffs,
+            all_types_transcribed_np_array,
+            all_types_untranscribed_np_array,
+            all_types_nontranscribed_np_array,
+            subs_signature_mutation_type_transcribed_np_array,
+            subs_signature_mutation_type_untranscribed_np_array,
+            subs_signature_mutation_type_nontranscribed_np_array,
+            sample_based,
+            verbose):
 
     ################################################################################
     if ((chrBased_simBased_combined_df is not None) and (not chrBased_simBased_combined_df.empty)):
         if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
-        # #####################################################################################
-        # #Using Apply
-        # chrBased_simBased_combined_df_split.apply(searchAllMutationUsingTranscriptionStrandColumn_using_apply,
-        #                              simNum2Type2TranscriptionStrand2CountDict=simNum2Type2TranscriptionStrand2CountDict,
-        #                              simNum2Sample2Type2TranscriptionStrand2CountDict=simNum2Sample2Type2TranscriptionStrand2CountDict,
-        #                              simNum2Type2Sample2TranscriptionStrand2CountDict=simNum2Type2Sample2TranscriptionStrand2CountDict,
-        #                              simNum2Signature2MutationType2TranscriptionStrand2CountDict=simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-        #                             subsSignature_cutoff_numberofmutations_averageprobability_df=subsSignature_cutoff_numberofmutations_averageprobability_df,
-        #                             indelsSignature_cutoff_numberofmutations_averageprobability_df=indelsSignature_cutoff_numberofmutations_averageprobability_df,
-        #                             dinucsSignature_cutoff_numberofmutations_averageprobability_df=dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-        #                              sample_based=sample_based,
-        #                              axis=1)
-        # #####################################################################################
+        #df_columns numpy array
+        df_columns = chrBased_simBased_combined_df.columns.values
+
+        ###############################################################################
+        ################################ Initialization ###############################
+        ###############################################################################
+        df_columns_subs_signatures_mask_array = np.isin(df_columns,subs_signatures)
+        df_columns_dinucs_signatures_mask_array=np.isin(df_columns,dinucs_signatures)
+        df_columns_indels_signatures_mask_array= np.isin(df_columns, indels_signatures)
+
+        six_mutation_types_default_zeros_array= np.zeros(six_mutation_types_np_array.size,dtype=int)
+        subs_signatures_default_zeros_array = np.zeros(subs_signatures.size,dtype=int)
+        dinucs_signatures_default_zeros_array = np.zeros(dinucs_signatures.size,dtype=int)
+        indels_signatures_default_zeros_array = np.zeros(indels_signatures.size,dtype=int)
+        subs_signatures_mutation_types_default_zeros_array= np.zeros((subs_signatures.size,six_mutation_types_np_array.size),dtype=int)
+        ###############################################################################
+        ################################ Initialization ###############################
+        ###############################################################################
+
 
         #####################################################################################
-        # Using list comprehension
-        df_columns = list(chrBased_simBased_combined_df.columns.values)
-        [searchAllMutationUsingTranscriptionStrandColumn_using_list_comprehension(mutation_row,
-                                                                                  simNum2Type2TranscriptionStrand2CountDict,
-                                                                                  simNum2Sample2Type2TranscriptionStrand2CountDict,
-                                                                                  simNum2Type2Sample2TranscriptionStrand2CountDict,
-                                                                                  simNum2Signature2MutationType2TranscriptionStrand2CountDict,
-                                                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  sample_based,
-                                                                                  df_columns) for mutation_row in chrBased_simBased_combined_df.values]
+        #July 28, 2020
+        #Using Numpy Array
+        [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                            six_mutation_types_np_array,
+                                                                            subs_signatures_cutoffs,
+                                                                            dinucs_signatures_cutoffs,
+                                                                            indels_signatures_cutoffs,
+                                                                            df_columns_subs_signatures_mask_array,
+                                                                            df_columns_dinucs_signatures_mask_array,
+                                                                            df_columns_indels_signatures_mask_array,
+                                                                            six_mutation_types_default_zeros_array,
+                                                                            subs_signatures_default_zeros_array,
+                                                                            dinucs_signatures_default_zeros_array,
+                                                                            indels_signatures_default_zeros_array,
+                                                                            subs_signatures_mutation_types_default_zeros_array,
+                                                                            all_types_transcribed_np_array,
+                                                                            all_types_untranscribed_np_array,
+                                                                            all_types_nontranscribed_np_array,
+                                                                          subs_signature_mutation_type_transcribed_np_array,
+                                                                          subs_signature_mutation_type_untranscribed_np_array,
+                                                                          subs_signature_mutation_type_nontranscribed_np_array,
+                                                                            sample_based,
+                                                                            df_columns) for mutation_row in chrBased_simBased_combined_df.values]
+
         #####################################################################################
 
         if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ################################################################################
 
-    return (simNum2Type2TranscriptionStrand2CountDict,
-            simNum2Sample2Type2TranscriptionStrand2CountDict,
-            simNum2Type2Sample2TranscriptionStrand2CountDict,
-            simNum2Signature2MutationType2TranscriptionStrand2CountDict)
+    return (sim_num,
+            all_types_transcribed_np_array,
+            all_types_untranscribed_np_array,
+            all_types_nontranscribed_np_array,
+            subs_signature_mutation_type_transcribed_np_array,
+            subs_signature_mutation_type_untranscribed_np_array,
+            subs_signature_mutation_type_nontranscribed_np_array)
 ########################################################################
 
 
@@ -330,19 +252,43 @@ def searchAllMutations_simbased_chrombased_splitbased(outputDir,
                                            chrLong,
                                            simNum,
                                            splitIndex,
+                                          six_mutation_types_np_array,
+                                          subs_signatures,
+                                          dinucs_signatures,
+                                          indels_signatures,
+                                          subs_signatures_cutoffs,
+                                          dinucs_signatures_cutoffs,
+                                          indels_signatures_cutoffs,
+                                          all_types_np_array_size,
                                            sample_based,
-                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                            verbose):
+
+    #Initialization
+    all_types_transcribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    all_types_untranscribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    all_types_nontranscribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    subs_signature_mutation_type_transcribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_untranscribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_nontranscribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
 
     return searchAllMutations(chrBased_simBased_combined_df_split,
+                              simNum,
+                              six_mutation_types_np_array,
+                              subs_signatures,
+                              dinucs_signatures,
+                              indels_signatures,
+                              subs_signatures_cutoffs,
+                              dinucs_signatures_cutoffs,
+                              indels_signatures_cutoffs,
+                              all_types_transcribed_np_array,
+                              all_types_untranscribed_np_array,
+                              all_types_nontranscribed_np_array,
+                              subs_signature_mutation_type_transcribed_np_array,
+                              subs_signature_mutation_type_untranscribed_np_array,
+                              subs_signature_mutation_type_nontranscribed_np_array,
                               sample_based,
-                              subsSignature_cutoff_numberofmutations_averageprobability_df,
-                              indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                              dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                               verbose)
 ########################################################################
 
@@ -351,58 +297,96 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                        jobname,
                                        chrLong,
                                        simNum,
+                                       six_mutation_types_np_array,
+                                       subs_signatures,
+                                       dinucs_signatures,
+                                       indels_signatures,
+                                       subs_signatures_cutoffs,
+                                       dinucs_signatures_cutoffs,
+                                       indels_signatures_cutoffs,
+                                       all_types_np_array_size,
                                        sample_based,
-                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                       indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                       dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                        verbose):
+
+    #Initialization
+    all_types_transcribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    all_types_untranscribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    all_types_nontranscribed_np_array = np.zeros((all_types_np_array_size), dtype=int)
+    subs_signature_mutation_type_transcribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_untranscribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_nontranscribed_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
 
     chrBased_simBased_combined_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, simNum)
 
     return  searchAllMutations(chrBased_simBased_combined_df,
+                               simNum,
+                               six_mutation_types_np_array,
+                               subs_signatures,
+                               dinucs_signatures,
+                               indels_signatures,
+                               subs_signatures_cutoffs,
+                               dinucs_signatures_cutoffs,
+                               indels_signatures_cutoffs,
+                               all_types_transcribed_np_array,
+                               all_types_untranscribed_np_array,
+                               all_types_nontranscribed_np_array,
+                               subs_signature_mutation_type_transcribed_np_array,
+                               subs_signature_mutation_type_untranscribed_np_array,
+                               subs_signature_mutation_type_nontranscribed_np_array,
                                sample_based,
-                               subsSignature_cutoff_numberofmutations_averageprobability_df,
-                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                verbose)
 ########################################################################
 
 
 ########################################################################
 #main function
-def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode):
+def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     print('\n#################################################################################')
     print('--- TranscriptionStrandBias Analysis starts')
 
-    strandBias = TRANSCRIPTIONSTRANDBIAS
-
-    ###############################################################################
-    #Accumulate Results
-    simNum2Type2TranscriptionStrand2AccumulatedCountDict = {}
-    simNum2Sample2Type2TranscriptionStrand2AccumulatedCountDict = {}
-    simNum2Type2Sample2TranscriptionStrand2AccumulatedCountDict = {}
-    simNum2Signature2MutationType2TranscriptionStrand2AccumulatedCountDict = {}
-    ###############################################################################
+    #########################################################################################
+    six_mutation_types_np_array = np.array([C2A, C2G, C2T, T2A, T2C, T2G])
+    subs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
+    dinucs_signatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
+    indels_signatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
+    subs_signatures_cutoffs = subsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
+    dinucs_signatures_cutoffs = dinucsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
+    indels_signatures_cutoffs = indelsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
+    all_types_np_array = np.concatenate((six_mutation_types_np_array,subs_signatures,dinucs_signatures,indels_signatures), axis=None)
+    all_types_np_array_size = six_mutation_types_np_array.size + subs_signatures.size + dinucs_signatures.size + indels_signatures.size
+    #########################################################################################
 
     #########################################################################################
-    def accumulate_apply_async_result(result_tuple):
-        simNum2Type2Strand2CountDict = result_tuple[0]
-        simNum2Sample2Type2Strand2CountDict = result_tuple[1]
-        simNum2Type2Sample2Strand2CountDict = result_tuple[2]
-        simNum2Signature2MutationType2Strand2CountDict = result_tuple[3]
+    # July 28, 2020
+    all_sims_all_types_transcribed_np_array = np.zeros((numofSimulations+1,all_types_np_array_size),dtype=int)
+    all_sims_all_types_untranscribed_np_array = np.zeros((numofSimulations+1,all_types_np_array_size),dtype=int)
+    all_sims_all_types_nontranscribed_np_array = np.zeros((numofSimulations+1,all_types_np_array_size),dtype=int)
+    all_sims_subs_signature_mutation_type_transcribed_np_array = np.zeros((numofSimulations+1,subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    all_sims_subs_signature_mutation_type_untranscribed_np_array= np.zeros((numofSimulations+1,subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    all_sims_subs_signature_mutation_type_nontranscribed_np_array= np.zeros((numofSimulations+1,subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    #########################################################################################
+
+    #########################################################################################
+    # Accumulate Numpy Arrays
+    # July 27, 2020
+    def accumulate_np_arrays(result_tuple):
+        sim_num = result_tuple[0]
+        all_types_transcribed_np_array = result_tuple[1]
+        all_types_untranscribed_np_array = result_tuple[2]
+        all_types_nontranscribed_np_array = result_tuple[3]
+        subs_signature_mutation_type_transcribed_np_array = result_tuple[4]
+        subs_signature_mutation_type_untranscribed_np_array = result_tuple[5]
+        subs_signature_mutation_type_nontranscribed_np_array = result_tuple[6]
 
         print('MONITOR ACCUMULATE', flush=True)
 
-        accumulate_simulations_integrated_for_each_tuple(
-            simNum2Type2Strand2CountDict,
-            simNum2Sample2Type2Strand2CountDict,
-            simNum2Type2Sample2Strand2CountDict,
-            simNum2Signature2MutationType2Strand2CountDict,
-            simNum2Type2TranscriptionStrand2AccumulatedCountDict,
-            simNum2Sample2Type2TranscriptionStrand2AccumulatedCountDict,
-            simNum2Type2Sample2TranscriptionStrand2AccumulatedCountDict,
-            simNum2Signature2MutationType2TranscriptionStrand2AccumulatedCountDict)
+        all_sims_all_types_transcribed_np_array[sim_num] += all_types_transcribed_np_array
+        all_sims_all_types_untranscribed_np_array[sim_num] += all_types_untranscribed_np_array
+        all_sims_all_types_nontranscribed_np_array[sim_num] += all_types_nontranscribed_np_array
+        all_sims_subs_signature_mutation_type_transcribed_np_array[sim_num] += subs_signature_mutation_type_transcribed_np_array
+        all_sims_subs_signature_mutation_type_untranscribed_np_array[sim_num] += subs_signature_mutation_type_untranscribed_np_array
+        all_sims_subs_signature_mutation_type_nontranscribed_np_array[sim_num] += subs_signature_mutation_type_nontranscribed_np_array
     #########################################################################################
 
     ###############################################################################
@@ -428,12 +412,17 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
                                           jobname,
                                           chrLong,
                                           simNum,
+                                          six_mutation_types_np_array,
+                                          subs_signatures,
+                                          dinucs_signatures,
+                                          indels_signatures,
+                                          subs_signatures_cutoffs,
+                                          dinucs_signatures_cutoffs,
+                                          indels_signatures_cutoffs,
+                                          all_types_np_array_size,
                                           sample_based,
-                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                           verbose,),
-                                    callback=accumulate_apply_async_result))
+                                    callback=accumulate_np_arrays))
             print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
@@ -469,12 +458,17 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
                                           chrLong,
                                           simNum,
                                           splitIndex,
+                                          six_mutation_types_np_array,
+                                          subs_signatures,
+                                          dinucs_signatures,
+                                          indels_signatures,
+                                          subs_signatures_cutoffs,
+                                          dinucs_signatures_cutoffs,
+                                          indels_signatures_cutoffs,
+                                          all_types_np_array_size,
                                           sample_based,
-                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                           verbose,),
-                                    callback=accumulate_apply_async_result))
+                                    callback=accumulate_np_arrays))
             print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
@@ -494,27 +488,35 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
     #################################################################################################################
     ##########################################      Output starts      ##############################################
     #################################################################################################################
-    transcription_atrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND, NONTRANSCRIBED_STRAND]
+    strand_bias = TRANSCRIPTIONSTRANDBIAS
 
-    write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2TranscriptionStrand2AccumulatedCountDict,
-                                                                      strandBias,
-                                                                      transcription_atrands,
-                                                                      outputDir,
-                                                                      jobname,
-                                                                      update_mode)
+    transcription_strands = [TRANSCRIBED_STRAND,
+                             UNTRANSCRIBED_STRAND,
+                             NONTRANSCRIBED_STRAND]
 
-    write_type_strand_bias_dictionary_as_dataframe(simNum2Type2TranscriptionStrand2AccumulatedCountDict,
-                                                   strandBias,
-                                                   transcription_atrands,
-                                                   outputDir,
-                                                   jobname,
-                                                   update_mode)
+    all_sims_subs_signature_mutation_type_strand_np_arrays_list =[all_sims_subs_signature_mutation_type_transcribed_np_array,
+                     all_sims_subs_signature_mutation_type_untranscribed_np_array,
+                     all_sims_subs_signature_mutation_type_nontranscribed_np_array]
 
 
-    if sample_based:
-        writeDictionary(simNum2Sample2Type2TranscriptionStrand2AccumulatedCountDict,outputDir,jobname,Sample2Type2TranscriptionStrand2CountDict_Filename,strandBias,None)
-        writeDictionary(simNum2Type2Sample2TranscriptionStrand2AccumulatedCountDict, outputDir, jobname,Type2Sample2TranscriptionStrand2CountDict_Filename, strandBias, None)
-        #TODO write as dataframe if sample_based will be maintained
+    write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_subs_signature_mutation_type_strand_np_arrays_list,
+                                                                    six_mutation_types_np_array,
+                                                                    subs_signatures,
+                                                                    strand_bias,
+                                                                    transcription_strands,
+                                                                    outputDir,
+                                                                    jobname)
+
+    all_sims_all_types_strand_np_arrays_list =[all_sims_all_types_transcribed_np_array,
+                                            all_sims_all_types_untranscribed_np_array,
+                                            all_sims_all_types_nontranscribed_np_array]
+
+    write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_arrays_list,
+                                                all_types_np_array,
+                                                strand_bias,
+                                                transcription_strands,
+                                                outputDir,
+                                                jobname)
     #################################################################################################################
     ##########################################      Output ends      ################################################
     #################################################################################################################

@@ -58,18 +58,15 @@ from SigProfilerTopography.source.commons.TopographyCommons import getReplicatio
 from SigProfilerTopography.source.commons.TopographyCommons import available_nucleosome_biosamples
 from SigProfilerTopography.source.commons.TopographyCommons import available_replication_time_biosamples
 
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
+from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
+from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
 from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
+
 from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATION
-
 from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
-
-from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
 
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE1
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE2
@@ -84,7 +81,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_A
 from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-from SigProfilerTopography.source.commons.TopographyCommons import USING_IMAP_UNORDERED
 
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
 from SigProfilerTopography.source.commons.TopographyCommons import ID
@@ -115,16 +111,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import current_abs_p
 
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
-from SigProfilerTopography.source.commons.TopographyCommons import doesSimulationsAlreadyExists
 from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
 from SigProfilerTopography.source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
 from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
 from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_type_context_for_probabilities_file
-
-
-from SigProfilerTopography.source.commons.TopographyCommons import readDictionary
-
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
 
 from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
@@ -133,15 +123,13 @@ from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSig
 from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_Update_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_Update_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_Update_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
 from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
+from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import debug_old_replicationStrandBiasAnalysis
+
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
@@ -446,14 +434,28 @@ def runReplicationTimeAnalysis(genome,outputDir,jobname,numofSimulations,job_tup
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    replicationTimeAnalysis(computation_type,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,replicationTimeFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path)
+    replicationTimeAnalysis(computation_type,
+                            sample_based,
+                            genome,
+                            chromSizesDict,
+                            chromNamesList,
+                            outputDir,
+                            jobname,
+                            numofSimulations,
+                            job_tuples,
+                            replicationTimeFilename,
+                            subsSignature_cutoff_numberofmutations_averageprobability_df,
+                            indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                            verbose,
+                            matrix_generator_path)
     ###############################################
 
 #######################################################
 
 
 #######################################################
-def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode):
+def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,replicationTimeFilename,replicationTimeValleyFilename,replicationTimePeakFilename,chromSizesDict,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
 
@@ -464,20 +466,44 @@ def runReplicationStrandBiasAnalysis(outputDir,jobname,numofSimulations,job_tupl
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    replicationStrandBiasAnalysis(computation_type,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode)
+    replicationStrandBiasAnalysis(computation_type,
+                                  sample_based,
+                                  chromSizesDict,
+                                  chromNamesList,
+                                  outputDir,
+                                  jobname,
+                                  numofSimulations,
+                                  job_tuples,
+                                  smoothedWaveletRepliseqDataFilename,
+                                  valleysBEDFilename,
+                                  peaksBEDFilename,
+                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                  verbose)
     ###############################################
 
 #######################################################
 
 #######################################################
-def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode):
+def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,job_tuples,sample_based,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
 
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    transcriptionStrandBiasAnalysis(computation_type,sample_based,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,update_mode)
+    transcriptionStrandBiasAnalysis(computation_type,
+                                    sample_based,
+                                    chromNamesList,
+                                    outputDir,
+                                    jobname,
+                                    numofSimulations,
+                                    job_tuples,
+                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    verbose)
     ###############################################
 #######################################################
 
@@ -618,8 +644,7 @@ def runAnalyses(genome,
                 data_ready_plot_processivity=False,
                 remove_outliers=False,
                 quantileValue=0.97,
-                delete_old=False,
-                update_mode=False):
+                delete_old=False):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -1278,26 +1303,6 @@ def runAnalyses(genome,
     ###################################################################################################################
     ################################################# Full Mode ends ##################################################
     ###################################################################################################################
-    if (update_mode):
-        subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cutoff','signature','number_of_mutations','average_probability'])
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cutoff','signature','number_of_mutations','average_probability'])
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cutoff','signature','number_of_mutations','average_probability'])
-
-        if os.path.exists(os.path.join(outputDir, jobname, DATA,Table_Update_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename)):
-            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_Update_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
-
-        if os.path.exists(os.path.join(outputDir, jobname, DATA,Table_Update_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename)):
-            indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_Update_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
-
-        if os.path.exists(os.path.join(outputDir, jobname, DATA,Table_Update_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename)):
-            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_Update_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
-    ###################################################################################################################
-    #################################### Update-Mode starts ###########################################################
-    ###################################################################################################################
-
-    ###################################################################################################################
-    #################################### Update-Mode ends #############################################################
-    ###################################################################################################################
 
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis starts ######################################
@@ -1360,8 +1365,7 @@ def runAnalyses(genome,
                                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                         verbose,
-                                         update_mode)
+                                         verbose)
 
         print('#################################################################################')
         print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
@@ -1384,8 +1388,7 @@ def runAnalyses(genome,
                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                          verbose,
-                                          update_mode)
+                                          verbose)
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
         print("--- Run Transcription Strand Bias Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type))

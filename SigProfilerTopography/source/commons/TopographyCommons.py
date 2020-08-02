@@ -251,11 +251,6 @@ Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Tabl
 Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
-#Tables to be used in udate mode
-Table_Update_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_SBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_Update_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_Update_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_Update_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
-
 #Table
 Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename='Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
 Table_ChrLong_NumberofMutations_Filename='Table_ChrLong_NumberofMutations.txt'
@@ -1486,73 +1481,10 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,mutation_type,simulationNu
         return chrBased_mutation_df
 ##################################################################
 
-##################################################################
-def doesSimulationsAlreadyExists(outputDir,jobname,numofSimulations):
-    if (numofSimulations>0):
-        for simNum in range(1,numofSimulations+1):
-            sim='sim%d' %(simNum)
-            simDir=os.path.join(outputDir,jobname,DATA,CHRBASED,sim)
-            if os.path.exists(simDir):
-                numberoffiles=len([name for name in os.listdir(simDir) if os.path.isfile(os.path.join(simDir,name))])
-                if numberoffiles==0:
-                    return False
-            else:
-                return False
-        return True
-    else:
-        return False
-##################################################################
-
 
 ##########################################################################################
 ############### Common functions for Nucleosome Occupancy Analysis starts ################
 ##########################################################################################
-
-########################################################################################
-# April 12, 2020
-# simNum2Type2ArrayDict comes for each (chr,sim,split) tuple
-# Accumulate simNum2Type2ArrayDict in simNum2Type2AccumulatedArrayDict
-def accumulateChrBasedSimBasedSplitBasedArrays(simNum2Type2ArrayDict, simNum2Type2AccumulatedArrayDict):
-    for simNum in simNum2Type2ArrayDict:
-        for my_type in simNum2Type2ArrayDict[simNum]:
-            if simNum in simNum2Type2AccumulatedArrayDict:
-                if my_type in simNum2Type2AccumulatedArrayDict[simNum]:
-                    simNum2Type2AccumulatedArrayDict[simNum][my_type]+=simNum2Type2ArrayDict[simNum][my_type]
-                else:
-                    simNum2Type2AccumulatedArrayDict[simNum][my_type]=simNum2Type2ArrayDict[simNum][my_type]
-            else:
-                simNum2Type2AccumulatedArrayDict[simNum] = {}
-                simNum2Type2AccumulatedArrayDict[simNum][my_type] =simNum2Type2ArrayDict[simNum][my_type]
-########################################################################################
-
-
-
-
-
-########################################################################################
-# April 12, 2020
-# Cleaner Version
-#Accumulate simNum2Sample2Type2ArrayDict in simNum2Sample2Type2AccumulatedArrayDict
-def accumulateChrBasedSimBasedSplitBasedSampleBasedArrays(simNum2Sample2Type2ArrayDict,simNum2Sample2Type2AccumulatedArrayDict):
-    for simNum in simNum2Sample2Type2ArrayDict:
-        for sample in simNum2Sample2Type2ArrayDict[simNum]:
-            for my_type in simNum2Sample2Type2ArrayDict[simNum][sample]:
-                if simNum in simNum2Sample2Type2AccumulatedArrayDict:
-                    if sample in simNum2Sample2Type2AccumulatedArrayDict[simNum]:
-                        if my_type in simNum2Sample2Type2AccumulatedArrayDict[simNum][sample]:
-                            simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] += simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
-                        else:
-                            simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
-                    else:
-                        simNum2Sample2Type2AccumulatedArrayDict[simNum][sample]={}
-                        simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
-                else:
-                    simNum2Sample2Type2AccumulatedArrayDict[simNum] = {}
-                    simNum2Sample2Type2AccumulatedArrayDict[simNum][sample] = {}
-                    simNum2Sample2Type2AccumulatedArrayDict[simNum][sample][my_type] = simNum2Sample2Type2ArrayDict[simNum][sample][my_type]
-########################################################################################
-
-
 
 
 ########################################################################################
@@ -2050,420 +1982,6 @@ def updateSignalArraysForListComprehension(row,signalArrayDict):
 ######################################################################
 
 
-##################################################################
-#Updated April 14, 2020
-def updateDictionary(simNum2Type2Strand2CountDict,simNum,mutationType,strand):
-    if simNum in simNum2Type2Strand2CountDict:
-        if (mutationType in simNum2Type2Strand2CountDict[simNum]):
-            if strand in simNum2Type2Strand2CountDict[simNum][mutationType]:
-                simNum2Type2Strand2CountDict[simNum][mutationType][strand] += 1
-            else:
-                simNum2Type2Strand2CountDict[simNum][mutationType][strand] = 1
-        else:
-            simNum2Type2Strand2CountDict[simNum][mutationType] = {}
-            simNum2Type2Strand2CountDict[simNum][mutationType][strand] = 1
-    else:
-        simNum2Type2Strand2CountDict[simNum] = {}
-        simNum2Type2Strand2CountDict[simNum][mutationType] = {}
-        simNum2Type2Strand2CountDict[simNum][mutationType][strand] = 1
-##################################################################
-
-##################################################################
-#Updated April 14, 2020
-def updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum,signature_or_mutationType,mutationSample,strand):
-    if simNum in simNum2Sample2Type2Strand2CountDict:
-        if (mutationSample in simNum2Sample2Type2Strand2CountDict[simNum]):
-            if signature_or_mutationType in simNum2Sample2Type2Strand2CountDict[simNum][mutationSample]:
-                if strand in simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType]:
-                    simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType][strand] += 1
-                else:
-                    simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType][strand] = 1
-            else:
-                simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType] = {}
-                simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType][strand] = 1
-        else:
-            simNum2Sample2Type2Strand2CountDict[simNum][mutationSample] = {}
-            simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType] = {}
-            simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType][strand] = 1
-    else:
-        simNum2Sample2Type2Strand2CountDict[simNum] = {}
-        simNum2Sample2Type2Strand2CountDict[simNum][mutationSample] = {}
-        simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType] = {}
-        simNum2Sample2Type2Strand2CountDict[simNum][mutationSample][signature_or_mutationType][strand] = 1
-##################################################################
-
-##################################################################
-# Updated April 14, 2020
-# my_type can be signature or mutationType
-def updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,my_type,mutationSample,strand):
-    if simNum in simNum2Type2Sample2Strand2CountDict:
-        if my_type in simNum2Type2Sample2Strand2CountDict[simNum]:
-            if mutationSample in simNum2Type2Sample2Strand2CountDict[simNum][my_type]:
-                if strand in simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample]:
-                    simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] += 1
-                else:
-                    simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] = 1
-            else:
-                simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample]= {}
-                simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] = 1
-        else:
-            simNum2Type2Sample2Strand2CountDict[simNum][my_type]={}
-            simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample]={}
-            simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] =1
-    else:
-        simNum2Type2Sample2Strand2CountDict[simNum] = {}
-        simNum2Type2Sample2Strand2CountDict[simNum][my_type] = {}
-        simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample] = {}
-        simNum2Type2Sample2Strand2CountDict[simNum][my_type][mutationSample][strand] = 1
-##################################################################
-
-
-########################################################################
-# April 23, 2020
-# Updated For List Comprehension
-def updateDictionaries_simulations_integrated_for_list_comprehension(mutation_row,
-                        mutationType,
-                        mutationSample,
-                        sample_based,
-                        simNum2Type2Strand2CountDict,
-                        simNum2Sample2Type2Strand2CountDict,
-                        simNum2Type2Sample2Strand2CountDict,
-                        simNum2Signature2MutationType2Strand2CountDict,
-                        strand,
-                        signature_cutoff_numberofmutations_averageprobability_df,
-                        df_columns):
-
-    indexofSimulationNumber = df_columns.index(SIMULATION_NUMBER)
-    simNum = mutation_row[indexofSimulationNumber]
-
-    #################################################################################################
-    # Update1: update mutationType in type2Strand2CountDict
-    if (mutationType is not None):
-        updateDictionary(simNum2Type2Strand2CountDict,simNum,mutationType,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update2: signature in type2Strand2CountDict
-    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-        #[cutoff numberofMutations averageProbability]
-        cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
-        indexofSignature = df_columns.index(signature)
-        signature_prob = mutation_row[indexofSignature]
-        if (signature_prob >= cutoff):
-            if simNum in simNum2Type2Strand2CountDict:
-                if signature in simNum2Type2Strand2CountDict[simNum]:
-                    if strand in simNum2Type2Strand2CountDict[simNum][signature]:
-                        simNum2Type2Strand2CountDict[simNum][signature][strand] += 1
-                    else:
-                        simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-                else:
-                    simNum2Type2Strand2CountDict[simNum][signature] = {}
-                    simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-            else:
-                simNum2Type2Strand2CountDict[simNum] = {}
-                simNum2Type2Strand2CountDict[simNum][signature] = {}
-                simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-    #################################################################################################
-
-
-    #################################################################################################
-    #Update3 signature2MutationType2Strand2CountDict
-    if (mutationType is not None):
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            indexofSignature = df_columns.index(signature)
-            signature_prob = mutation_row[indexofSignature]
-            if (signature_prob >= cutoff):
-                if simNum in simNum2Signature2MutationType2Strand2CountDict:
-                    if signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
-                        if mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
-                            if strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
-                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] +=1
-                            else:
-                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-
-                        else:
-                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
-                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-                    else:
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]={}
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-                else:
-                    simNum2Signature2MutationType2Strand2CountDict[simNum] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-    #################################################################################################
-
-    #################################################################################################
-    # Update4: sample and mutationType in sample2Type2Strand2CountDict
-    if sample_based:
-        if (mutationType is not None):
-            updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update5: sample and signature in sample2Type2Strand2CountDict
-    if sample_based:
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            #[cutoff numberofMutations averageProbability]
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            indexofSignature = df_columns.index(signature)
-            signature_prob = mutation_row[indexofSignature]
-            if (signature_prob >= cutoff):
-                updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum, signature, mutationSample, strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
-    if sample_based:
-        if (simNum2Type2Sample2Strand2CountDict is not None) and (mutationType is not None):
-            updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
-    if sample_based:
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            #[cutoff numberofMutations averageProbability]
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            indexofSignature = df_columns.index(signature)
-            signature_prob = mutation_row[indexofSignature]
-            if (signature_prob >= cutoff):
-                if (simNum2Type2Sample2Strand2CountDict is not None):
-                    updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,signature,mutationSample,strand)
-    #################################################################################################
-
-
-########################################################################
-
-
-########################################################################
-#Updated April 14, 2020
-def updateDictionaries_simulations_integrated(mutation_row,
-                        mutationType,
-                        mutationSample,
-                        sample_based,
-                        simNum2Type2Strand2CountDict,
-                        simNum2Sample2Type2Strand2CountDict,
-                        simNum2Type2Sample2Strand2CountDict,
-                        simNum2Signature2MutationType2Strand2CountDict,
-                        strand,
-                        signature_cutoff_numberofmutations_averageprobability_df):
-
-    simNum = mutation_row[SIMULATION_NUMBER]
-
-    #################################################################################################
-    # Update1: update mutationType in type2Strand2CountDict
-    if (mutationType is not None):
-        updateDictionary(simNum2Type2Strand2CountDict,simNum,mutationType,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update2: signature in type2Strand2CountDict
-    for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-        #[cutoff numberofMutations averageProbability]
-        cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
-        if (mutation_row[signature] >= cutoff):
-            if simNum in simNum2Type2Strand2CountDict:
-                if signature in simNum2Type2Strand2CountDict[simNum]:
-                    if strand in simNum2Type2Strand2CountDict[simNum][signature]:
-                        simNum2Type2Strand2CountDict[simNum][signature][strand] += 1
-                    else:
-                        simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-                else:
-                    simNum2Type2Strand2CountDict[simNum][signature] = {}
-                    simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-            else:
-                simNum2Type2Strand2CountDict[simNum] = {}
-                simNum2Type2Strand2CountDict[simNum][signature] = {}
-                simNum2Type2Strand2CountDict[simNum][signature][strand] = 1
-    #################################################################################################
-
-
-    #################################################################################################
-    #Update3 signature2MutationType2Strand2CountDict
-    if (mutationType is not None):
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            if (mutation_row[signature] >= cutoff):
-                if simNum in simNum2Signature2MutationType2Strand2CountDict:
-                    if signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
-                        if mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
-                            if strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
-                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] +=1
-                            else:
-                                simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-
-                        else:
-                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
-                            simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-                    else:
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]={}
-                        simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-                else:
-                    simNum2Signature2MutationType2Strand2CountDict[simNum] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType] = {}
-                    simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand] = 1
-    #################################################################################################
-
-    #################################################################################################
-    # Update4: sample and mutationType in sample2Type2Strand2CountDict
-    if sample_based:
-        if (mutationType is not None):
-            updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    # Update5: sample and signature in sample2Type2Strand2CountDict
-    if sample_based:
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            #[cutoff numberofMutations averageProbability]
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            if (mutation_row[signature] >= cutoff):
-                updateSampleBasedDictionary(simNum2Sample2Type2Strand2CountDict,simNum, signature, mutationSample, strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update6 sample and mutationType type2Sample2TranscriptionStrand2CountDict
-    if sample_based:
-        if (simNum2Type2Sample2Strand2CountDict is not None) and (mutationType is not None):
-            updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,mutationType,mutationSample,strand)
-    #################################################################################################
-
-    #################################################################################################
-    #Update7: sample and signature in type2Sample2TranscriptionStrand2CountDict
-    if sample_based:
-        for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-            #[cutoff numberofMutations averageProbability]
-            cutoff = float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['cutoff'].values[0])
-            if (mutation_row[signature] >= cutoff):
-                if (simNum2Type2Sample2Strand2CountDict is not None):
-                    updateTypeBasedDictionary(simNum2Type2Sample2Strand2CountDict,simNum,signature,mutationSample,strand)
-    #################################################################################################
-
-########################################################################
-
-
-########################################################################
-#Updated April 14, 2020
-def accumulate_simulations_integrated_for_each_tuple(
-    simNum2Type2Strand2CountDict,
-    simNum2Sample2Type2Strand2CountDict,
-    simNum2Type2Sample2Strand2CountDict,
-    simNum2Signature2MutationType2Strand2CountDict,
-    simNum2Type2Strand2AccumulatedCountDict,
-    simNum2Sample2Type2Strand2AccumulatedCountDict,
-    simNum2Type2Sample2Strand2AccumulatedCountDict,
-    simNum2Signature2MutationType2Strand2AccumulatedCountDict):
-
-    # Accumulate1 simNum2Type2Strand2CountDict in simNum2Type2Strand2AccumulatedCountDict
-    for simNum in simNum2Type2Strand2CountDict:
-        for my_type in simNum2Type2Strand2CountDict[simNum]:
-            for strand in simNum2Type2Strand2CountDict[simNum][my_type]:
-                if simNum in simNum2Type2Strand2AccumulatedCountDict:
-                    if my_type in simNum2Type2Strand2AccumulatedCountDict[simNum]:
-                        if strand in simNum2Type2Strand2AccumulatedCountDict[simNum][my_type]:
-                            simNum2Type2Strand2AccumulatedCountDict[simNum][my_type][strand] += simNum2Type2Strand2CountDict[simNum][my_type][strand]
-                        else:
-                            simNum2Type2Strand2AccumulatedCountDict[simNum][my_type][strand] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
-                    else:
-                        simNum2Type2Strand2AccumulatedCountDict[simNum][my_type] = {}
-                        simNum2Type2Strand2AccumulatedCountDict[simNum][my_type][strand] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
-                else:
-                    simNum2Type2Strand2AccumulatedCountDict[simNum] = {}
-                    simNum2Type2Strand2AccumulatedCountDict[simNum][my_type] = {}
-                    simNum2Type2Strand2AccumulatedCountDict[simNum][my_type][strand] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
-
-
-
-    # Accumulate2 chrBasedSample2Type2ReplicationStrand2CountDict in accumulatedAllChromosomesSample2Type2ReplicationStrand2CountDict
-    for simNum in simNum2Sample2Type2Strand2CountDict:
-        for sample in simNum2Sample2Type2Strand2CountDict[simNum]:
-            for my_type in simNum2Sample2Type2Strand2CountDict[simNum][sample]:
-                for strand in simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type]:
-
-                    if simNum in simNum2Sample2Type2Strand2AccumulatedCountDict:
-                        if sample in simNum2Sample2Type2Strand2AccumulatedCountDict[simNum]:
-                            if my_type in simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample]:
-                                if strand in simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type]:
-                                    simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type][strand] += simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type][strand]
-                                else:
-                                    simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type][strand] = simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type][strand]
-                            else:
-                                simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type] = {}
-                                simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type][strand] = simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type][strand]
-                        else:
-                            simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample] = {}
-                            simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type] = {}
-                            simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type][strand] = simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type][strand]
-                    else:
-                        simNum2Sample2Type2Strand2AccumulatedCountDict[simNum] = {}
-                        simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample] = {}
-                        simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type] = {}
-                        simNum2Sample2Type2Strand2AccumulatedCountDict[simNum][sample][my_type][strand] = simNum2Sample2Type2Strand2CountDict[simNum][sample][my_type][strand]
-
-
-    # Accumulate3 simNum2Type2Sample2Strand2CountDict in simNum2Type2Sample2Strand2AccumulatedCountDict
-    for simNum in simNum2Type2Sample2Strand2CountDict:
-        for my_type in simNum2Type2Sample2Strand2CountDict[simNum]:
-            for sample in simNum2Type2Sample2Strand2CountDict[simNum][my_type]:
-                for strand in simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample]:
-
-                    if simNum in simNum2Type2Sample2Strand2AccumulatedCountDict:
-                        if my_type in simNum2Type2Sample2Strand2AccumulatedCountDict[simNum]:
-                            if sample in simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type]:
-                                if strand in simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample]:
-                                    simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample][strand] += simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample][strand]
-                                else:
-                                    simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample][strand] = simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample][strand]
-                            else:
-                                simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample] = {}
-                                simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample][strand] = simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample][strand]
-                        else:
-                            simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type] = {}
-                            simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample] = {}
-                            simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample][strand] = simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample][strand]
-                    else:
-                        simNum2Type2Sample2Strand2AccumulatedCountDict[simNum] = {}
-                        simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type] = {}
-                        simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample] = {}
-                        simNum2Type2Sample2Strand2AccumulatedCountDict[simNum][my_type][sample][strand] = simNum2Type2Sample2Strand2CountDict[simNum][my_type][sample][strand]
-
-
-
-    #Accumulate4 simNum2Signature2MutationType2Strand2CountDict in simNum2Signature2MutationType2ReplicationStrand2AccumulatedCountDict
-    for simNum in simNum2Signature2MutationType2Strand2CountDict:
-        for signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
-            for mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
-                for strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
-
-                    if simNum in simNum2Signature2MutationType2Strand2AccumulatedCountDict:
-                        if signature in simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum]:
-                            if mutationType in simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature]:
-                                if strand in simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType]:
-                                    simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType][strand] += simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
-                                else:
-                                    simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType][strand] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
-                            else:
-                                simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType]={}
-                                simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType][strand] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
-                        else:
-                            simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature] = {}
-                            simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType] = {}
-                            simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType][strand] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
-                    else:
-                        simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum] = {}
-                        simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature] = {}
-                        simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType] = {}
-                        simNum2Signature2MutationType2Strand2AccumulatedCountDict[simNum][signature][mutationType][strand] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
-
-########################################################################
-
-
 ########################################################################
 #To write samples with signatures with at least 10K eligible mutations
 def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
@@ -2520,37 +2038,47 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
 ########################################################################
 #Main function for type
 #Fills a dictionary and writes it as a dataframe
-def write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict, strand_bias, strands, outputDir, jobname,update_mode):
+def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_arrays_list,
+                                                all_types_np_array,
+                                                strand_bias,
+                                                strands,
+                                                outputDir,
+                                                jobname):
 
+    #Fill type2Strand2ListDict using all_sims_all_types_strand_np_arrays_list
     type2Strand2ListDict = {}
 
     ##################################################################################################
-    for simNum in simNum2Type2Strand2CountDict:
-        for my_type in simNum2Type2Strand2CountDict[simNum]:
-            for strand in simNum2Type2Strand2CountDict[simNum][my_type]:
+    for strand_index, strand in enumerate(strands,0):
+        all_sims_all_types_strand_np_array = all_sims_all_types_strand_np_arrays_list[strand_index]
+        num_of_sims, num_of_types = all_sims_all_types_strand_np_array.shape
+
+        for sim_index in range(0,num_of_sims):
+            for type_index in range(0,num_of_types):
+                my_type = all_types_np_array[type_index]
 
                 if my_type in type2Strand2ListDict:
                     if strand in type2Strand2ListDict[my_type]:
                         strand_list=type2Strand2ListDict[my_type][strand]
-                        if (simNum==0):
+                        if (sim_index==0):
                             #Set real_data
-                            strand_list[0]=simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                            strand_list[0]=all_sims_all_types_strand_np_array[sim_index, type_index]
                         else:
                             #Append to sims_data_list
-                            strand_list[1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+                            strand_list[1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
                     else:
                         type2Strand2ListDict[my_type][strand]=[0,[]]
-                        if (simNum==0):
-                            type2Strand2ListDict[my_type][strand][0] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                        if (sim_index==0):
+                            type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
                         else:
-                            type2Strand2ListDict[my_type][strand][1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+                            type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
                 else:
                     type2Strand2ListDict[my_type]={}
                     type2Strand2ListDict[my_type][strand]=[0,[]]
-                    if (simNum==0):
-                        type2Strand2ListDict[my_type][strand][0] = simNum2Type2Strand2CountDict[simNum][my_type][strand]
+                    if (sim_index==0):
+                        type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
                     else:
-                        type2Strand2ListDict[my_type][strand][1].append(simNum2Type2Strand2CountDict[simNum][my_type][strand])
+                        type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
     ##################################################################################################
 
     ##################################################################################################
@@ -2635,126 +2163,18 @@ def write_type_strand_bias_dictionary_as_dataframe(simNum2Type2Strand2CountDict,
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
-        # old code
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
-        # new code
-        # write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED,type_strand_table_filepath, update_mode)
 
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
-        # old code
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
-        # new code
-        # write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath, update_mode)
 
     elif strand_bias == REPLICATIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
-        # old code
         write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
-        # new code
-        # write_type_replication_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, type_strand_table_filepath, update_mode)
     ##################################################################################################
 
-########################################################################
-
-########################################################################
-#July 24, 2020
-def write_type_replication_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, type_strand_table_filepath, update_mode):
-    if update_mode:
-        if os.path.exists(type_strand_table_filepath):
-            type_strand_table_df = pd.read_csv(type_strand_table_filepath,sep='\t', header=0)
-
-            columns = type_strand_table_df.columns.values
-            my_types = type_strand_table_df['type'].unique()
-
-            for my_type in type2Strand2ListDict:
-                # Get type_df
-                type_df, column_names = get_replication_type_df(strands, my_type, type2Strand2ListDict,jobname)
-
-                if my_type in my_types:
-                    # update row in signature_mutation_type_strand_table_df
-                    type_strand_table_df.loc[type_strand_table_df['type'] == my_type, columns] = type_df[type_df['type'] == my_type].values[0]
-                else:
-                    type_strand_table_df.columns=column_names
-                    # append a new row to signature_mutation_type_strand_table_df
-                    type_strand_table_df=type_strand_table_df.append(type_df, ignore_index=True)
-
-            type_strand_table_df.to_csv(type_strand_table_filepath, sep='\t', header=True, index=False)
-
-        else:
-            write_type_replication_dataframe(strands, type2Strand2ListDict,jobname, type_strand_table_filepath)
-    else:
-        write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
-########################################################################
-
-########################################################################
-#July 24, 2020
-def write_type_transcription_dataframe_with_update_mode(strands, type2Strand2ListDict, jobname, strand_bias_subtype,type_strand_table_filepath, update_mode):
-    if update_mode:
-        if os.path.exists(type_strand_table_filepath):
-            type_strand_table_df = pd.read_csv(type_strand_table_filepath,sep='\t', header=0)
-
-            columns = type_strand_table_df.columns.values
-            my_types = type_strand_table_df['type'].unique()
-
-            for my_type in type2Strand2ListDict:
-                # Get type_df
-                type_df,column_names = get_transcription_type_df(strands, my_type, type2Strand2ListDict,jobname, strand_bias_subtype)
-
-                if my_type in my_types:
-                    # update row in signature_mutation_type_strand_table_df
-                    type_strand_table_df.loc[type_strand_table_df['type'] == my_type, columns] = type_df[type_df['type'] == my_type].values[0]
-                else:
-                    # append a new row to signature_mutation_type_strand_table_df
-                    type_strand_table_df.columns=column_names
-                    type_strand_table_df=type_strand_table_df.append(type_df, ignore_index=True)
-
-            type_strand_table_df.to_csv(type_strand_table_filepath,sep='\t', header=True, index=False)
-
-        else:
-            write_type_transcription_dataframe(strands, type2Strand2ListDict,jobname, strand_bias_subtype, type_strand_table_filepath)
-    else:
-        write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, strand_bias_subtype, type_strand_table_filepath)
-########################################################################
-
-########################################################################
-#July 24, 2020
-def get_replication_type_df(strands, my_type_of_interest, type2Strand2ListDict,cancer_type):
-    strand1=strands[0]
-    strand2=strands[1]
-
-    strand1_real_data="%s_real_count" %(strand1)
-    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
-    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
-    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
-    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
-
-    strand2_real_data="%s_real_count" %(strand2)
-    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
-    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
-    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
-    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
-
-    column_names = ['cancer_type', 'type',
-                  strand1_real_data, strand2_real_data,
-                  strand1_mean_sims_data, strand2_mean_sims_data,
-                  LAGGING_VERSUS_LEADING_P_VALUE,
-                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
-
-    L = sorted([(cancer_type, my_type,
-                 a[strand1][0], a[strand2][0],
-                 a[strand1][2], a[strand2][2],
-                 a[LAGGING_VERSUS_LEADING_P_VALUE],
-                 a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
-                 a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
-                for my_type, a in type2Strand2ListDict.items()
-                 if my_type == my_type_of_interest ])
-
-    df = pd.DataFrame(L, columns=column_names)
-
-    return df,column_names
 ########################################################################
 
 ##############################################
@@ -2800,69 +2220,6 @@ def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type,
     df.to_csv(filepath, sep='\t', header=True, index=False)
 ##############################################
 
-#########################################################################
-#July 24, 2020 written using write_type_transcription_dataframe
-def get_transcription_type_df(strands, my_type_of_interest, type2Strand2ListDict,cancer_type, strand_bias_subtype):
-    strand1=strands[0]
-    strand2=strands[1]
-    strand3=strands[2]
-
-    strand1_real_data="%s_real_count" %(strand1)
-    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
-    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
-    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
-    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
-
-    strand2_real_data="%s_real_count" %(strand2)
-    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
-    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
-    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
-    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
-
-    strand3_real_data = "%s_real_count" %(strand3)
-    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
-    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
-    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
-    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
-
-    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-        column_names = ['cancer_type', 'type',
-                      strand1_real_data, strand2_real_data,
-                      strand1_mean_sims_data, strand2_mean_sims_data,
-                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
-                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
-        L = sorted([(cancer_type, my_type,
-                     a[strand1][0], a[strand2][0],
-                     a[strand1][2], a[strand2][2],
-                     a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
-                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
-                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
-                    for my_type, a in type2Strand2ListDict.items()
-                     if my_type == my_type_of_interest])
-        df = pd.DataFrame(L, columns=column_names)
-
-    elif strand_bias_subtype==GENIC_VERSUS_INTERGENIC:
-        column_names=['cancer_type', 'type',
-                      'genic_real_count', 'intergenic_real_count',
-                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
-                      GENIC_VERSUS_INTERGENIC_P_VALUE,
-                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
-                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list]
-        L = sorted([(cancer_type, my_type,
-                     (a[strand1][0] + a[strand2][0]), a[strand3][0],
-                     (a[strand1][2] + a[strand2][2]), a[strand3][2],
-                     a[GENIC_VERSUS_INTERGENIC_P_VALUE],
-                     a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
-                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1],
-                     a[strand3][0], a[strand3][2], a[strand3][3], a[strand3][4], a[strand3][1])
-                    for my_type, a in type2Strand2ListDict.items()
-                     if my_type == my_type_of_interest])
-        df = pd.DataFrame(L, columns=column_names)
-
-    return df,column_names
-########################################################################
 
 ########################################################################
 #subfunction for type
@@ -2937,47 +2294,58 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
 ########################################################################
 #Main function for signature -- mutation type
 #Fills a dictionary and writes it as a dataframe
-def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Signature2MutationType2Strand2CountDict, strand_bias, strands, outputDir, jobname,update_mode):
+def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_subs_signature_mutation_type_strand_np_arrays_list,
+                                                                    six_mutation_types_np_array,
+                                                                    subs_signatures_np_array,
+                                                                    strand_bias,
+                                                                    strands,
+                                                                    outputDir,
+                                                                    jobname):
 
+    #Fill signature2MutationType2Strand2ListDict using np_arrays_list
     signature2MutationType2Strand2ListDict = {}
 
     ##################################################################################################
-    for simNum in simNum2Signature2MutationType2Strand2CountDict:
-        for signature in simNum2Signature2MutationType2Strand2CountDict[simNum]:
-            for mutationType in simNum2Signature2MutationType2Strand2CountDict[simNum][signature]:
-                for strand in simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType]:
+    for strand_index, strand in enumerate(strands,0):
+        all_sims_subs_signature_mutation_type_strand_np_array = all_sims_subs_signature_mutation_type_strand_np_arrays_list[strand_index]
+        num_of_sims, num_of_subs_signatures, num_of_mutation_types = all_sims_subs_signature_mutation_type_strand_np_array.shape
+
+        for sim_index in range(0,num_of_sims):
+            for subs_signature_index in range(0,num_of_subs_signatures):
+                signature = subs_signatures_np_array[subs_signature_index]
+                for mutation_type_index in range(0,num_of_mutation_types):
+                    mutation_type = six_mutation_types_np_array[mutation_type_index]
 
                     if signature in signature2MutationType2Strand2ListDict:
-                        if mutationType in signature2MutationType2Strand2ListDict[signature]:
-                            if strand in signature2MutationType2Strand2ListDict[signature][mutationType]:
-                                strand_list=signature2MutationType2Strand2ListDict[signature][mutationType][strand]
-                                if (simNum==0):
-                                    #Set real_data
-                                    strand_list[0]=simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                        if mutation_type in signature2MutationType2Strand2ListDict[signature]:
+                            if strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
+                                strand_list = signature2MutationType2Strand2ListDict[signature][mutation_type][strand]
+                                if sim_index==0:
+                                    strand_list[0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                                 else:
-                                    #Append to sims_data_list
-                                    strand_list[1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                                    strand_list[1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
                             else:
-                                signature2MutationType2Strand2ListDict[signature][mutationType][strand]=[0,[]]
-                                if (simNum==0):
-                                    signature2MutationType2Strand2ListDict[signature][mutationType][strand][0] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand]=[0,[]]
+                                if (sim_index==0):
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                                 else:
-                                    signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
                         else:
-                            signature2MutationType2Strand2ListDict[signature][mutationType]={}
-                            signature2MutationType2Strand2ListDict[signature][mutationType][strand] = [0, []]
-                            if (simNum==0):
-                                signature2MutationType2Strand2ListDict[signature][mutationType][strand][0] = simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                            signature2MutationType2Strand2ListDict[signature][mutation_type]={}
+                            signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
+                            if (sim_index==0):
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                             else:
-                                signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
+
                     else:
-                        signature2MutationType2Strand2ListDict[signature] = {}
-                        signature2MutationType2Strand2ListDict[signature][mutationType] = {}
-                        signature2MutationType2Strand2ListDict[signature][mutationType][strand] = [0, []]
-                        if (simNum==0):
-                            signature2MutationType2Strand2ListDict[signature][mutationType][strand][0]=simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand]
+                        signature2MutationType2Strand2ListDict[signature]={}
+                        signature2MutationType2Strand2ListDict[signature][mutation_type]={}
+                        signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
+                        if (sim_index==0):
+                            signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                         else:
-                            signature2MutationType2Strand2ListDict[signature][mutationType][strand][1].append(simNum2Signature2MutationType2Strand2CountDict[simNum][signature][mutationType][strand])
+                            signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
     ##################################################################################################
 
     ##################################################################################################
@@ -3055,7 +2423,6 @@ def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Sig
                 #Set p_values
                 signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
                 signature2MutationType2Strand2ListDict[signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
-
     ##################################################################################################
 
     ##################################################################################################
@@ -3063,150 +2430,20 @@ def write_signature_mutation_type_strand_bias_dictionary_as_dataframe(simNum2Sig
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath)
-        # write_signature_mutation_type_replication_dataframe_with_update_mode(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath,update_mode)
 
     elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
-        # write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath,update_mode)
 
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
-        # write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath,update_mode)
     ##################################################################################################
 
 ########################################################################
 
 
-########################################################################
-#July 24, 2020
-def write_signature_mutation_type_replication_dataframe_with_update_mode(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath,update_mode):
-    if update_mode:
-        if os.path.exists(signature_mutation_type_strand_table_filepath):
-            signature_mutation_type_strand_table_df = pd.read_csv(signature_mutation_type_strand_table_filepath,sep='\t', header=0)
-
-            columns = signature_mutation_type_strand_table_df.columns.values
-            signatures = signature_mutation_type_strand_table_df['signature'].unique()
-
-            for signature in signature2MutationType2Strand2ListDict:
-                # Get signature_df
-                signature_df, column_names = get_replication_signature_df(strands, signature, signature2MutationType2Strand2ListDict,jobname)
-
-                if signature in signatures:
-                    # update row in signature_mutation_type_strand_table_df
-                    signature_mutation_type_strand_table_df.loc[signature_mutation_type_strand_table_df['signature'] == signature, columns] = signature_df[signature_df['signature'] == signature].values[0]
-                else:
-                    # append a new row to signature_mutation_type_strand_table_df
-                    #Before append their column names must be the same.
-                    signature_mutation_type_strand_table_df.columns=column_names
-                    signature_mutation_type_strand_table_df=signature_mutation_type_strand_table_df.append(signature_df, ignore_index=True)
-
-            #write the dataframe
-            signature_mutation_type_strand_table_df.to_csv(signature_mutation_type_strand_table_filepath, sep='\t', header=True, index=False)
-
-        else:
-            write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath)
-    else:
-        write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
-########################################################################
-
-
-########################################################################
-#July 24, 2020
-def write_signature_mutation_type_transcription_dataframe_with_update_mode(strands,signature2MutationType2Strand2ListDict,cancer_type,strand_bias_subtype, filepath,update_mode):
-    if update_mode:
-        if os.path.exists(filepath):
-            signature_mutation_type_strand_table_df = pd.read_csv(filepath,sep='\t', header=0)
-
-            columns = signature_mutation_type_strand_table_df.columns.values
-            signatures = signature_mutation_type_strand_table_df['signature'].unique()
-
-            for signature in signature2MutationType2Strand2ListDict:
-                # Get signature_df
-                signature_df, column_names = get_transcription_signature_df(strands, signature, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype)
-
-                if signature in signatures:
-                    # update row in signature_mutation_type_strand_table_df
-                    signature_mutation_type_strand_table_df.loc[signature_mutation_type_strand_table_df['signature'] == signature, columns] = signature_df[signature_df['signature'] == signature].values[0]
-                else:
-                    # append a new row to signature_mutation_type_strand_table_df
-                    signature_mutation_type_strand_table_df.columns = column_names
-                    signature_mutation_type_strand_table_df=signature_mutation_type_strand_table_df.append(signature_df, ignore_index=True)
-
-            signature_mutation_type_strand_table_df.to_csv(filepath,sep='\t', header=True, index=False)
-
-        else:
-            write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype, filepath)
-    else:
-        write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype, filepath)
-########################################################################
-
-########################################################################
-def get_transcription_signature_df(strands, signature_of_interest, signature2MutationType2Strand2ListDict,cancer_type, strand_bias_subtype):
-    strand1=strands[0]
-    strand2=strands[1]
-    strand3=strands[2]
-
-    strand1_real_data="%s_real_count" %(strand1)
-    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
-    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
-    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
-    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
-
-    strand2_real_data="%s_real_count" %(strand2)
-    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
-    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
-    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
-    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
-
-    strand3_real_data = "%s_real_count" %(strand3)
-    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
-    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
-    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
-    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
-
-    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-        column_names=['cancer_type', 'signature', 'mutation_type',
-                                      strand1_real_data, strand2_real_data,
-                                      strand1_mean_sims_data, strand2_mean_sims_data,
-                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
-                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list]
-        L = sorted([(cancer_type, signature, mutation_type,
-                     b[strand1][0], b[strand2][0],
-                     b[strand1][2], b[strand2][2],
-                     b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
-                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
-                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
-                    for signature, a in signature2MutationType2Strand2ListDict.items()
-                     if signature == signature_of_interest
-                      for mutation_type, b in a.items()])
-        df = pd.DataFrame(L, columns=column_names)
-
-    elif (strand_bias_subtype==GENIC_VERSUS_INTERGENIC):
-        column_names = ['cancer_type', 'signature', 'mutation_type',
-                        'genic_real_count', 'intergenic_real_count',
-                        'genic_mean_sims_count', 'intergenic_mean_sims_count',
-                        GENIC_VERSUS_INTERGENIC_P_VALUE,
-                        strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data,strand1_sims_data_list,
-                        strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data,strand2_sims_data_list,
-                        strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data,strand3_sims_data_list]
-        L = sorted([(cancer_type, signature, mutation_type,
-                     (b[strand1][0] + b[strand2][0]), b[strand3][0],
-                     (b[strand1][2] + b[strand2][2]), b[strand3][2],
-                     b[GENIC_VERSUS_INTERGENIC_P_VALUE],
-                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
-                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
-                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
-                    for signature, a in signature2MutationType2Strand2ListDict.items()
-                     if signature == signature_of_interest
-                      for mutation_type, b in a.items()])
-        df = pd.DataFrame(L, columns=column_names)
-
-    return df, column_names
-########################################################################
 
 ########################################################################
 #sub function for signature -- mutation type
@@ -3418,156 +2655,10 @@ def copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numberofSimulat
 #########################################################################
 
 
-########################################################################
-#for control purposes
-def checkForSumInMutationType2Strand2CountDict(mutationType2Strand2CountDict,mutationType2Sample2Strand2CountDict):
-
-    controlMutationType2Strand2CountDict = {}
-
-    #Accumulate controlMutationType2Strand2CountDict
-    for mutationType, sample2Strand2CountDict in mutationType2Sample2Strand2CountDict.items():
-        if mutationType not in controlMutationType2Strand2CountDict:
-            controlMutationType2Strand2CountDict[mutationType] = {}
-        for sample, strand2CountDict in sample2Strand2CountDict.items():
-            for strand, count in strand2CountDict.items():
-                if strand in controlMutationType2Strand2CountDict[mutationType]:
-                    controlMutationType2Strand2CountDict[mutationType][strand] += count
-                else:
-                    controlMutationType2Strand2CountDict[mutationType][strand] = count
-
-
-    #Now check whether they havethe same counts or not
-    for mutationType, strand2CountDict in mutationType2Strand2CountDict.items():
-        for strand, count in strand2CountDict.items():
-            if controlMutationType2Strand2CountDict[mutationType][strand] != count:
-                return False;
-
-    return True
-########################################################################
-
-
-########################################################################
-#for control purposes
-def checkForSumInMutationProbability2Signature2Strand2CountDict(mutationProbability2Signature2Strand2CountDict,mutationProbability2Signature2Sample2Strand2CountDict):
-
-    controlMutationProbability2Signature2Strand2CountDict = {}
-
-    #Accumulate controlMutationProbability2Signature2Strand2CountDict
-    for mutationProbability, signature2Sample2Strand2CountDict in mutationProbability2Signature2Sample2Strand2CountDict.items():
-        if mutationProbability not in controlMutationProbability2Signature2Strand2CountDict:
-            controlMutationProbability2Signature2Strand2CountDict[mutationProbability] = {}
-        for signature, sample2Strand2CountDict in signature2Sample2Strand2CountDict.items():
-            if signature not in controlMutationProbability2Signature2Strand2CountDict[mutationProbability]:
-                controlMutationProbability2Signature2Strand2CountDict[mutationProbability][signature] = {}
-            for sample, strand2CountDict in sample2Strand2CountDict.items():
-                for strand, count in strand2CountDict.items():
-                     if strand not in controlMutationProbability2Signature2Strand2CountDict[mutationProbability][signature]:
-                        controlMutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] = count
-                     else:
-                        controlMutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] += count
-
-    #Now check whether they have the same counts or not
-    for mutationProbability, signature2Strand2CountDict in mutationProbability2Signature2Strand2CountDict.items():
-        for signature, strand2CountDict in signature2Strand2CountDict.items():
-            for strand, count in strand2CountDict.items():
-                if controlMutationProbability2Signature2Strand2CountDict[mutationProbability][signature][strand] != count:
-                    return False;
-
-    return True
-########################################################################
-
-########################################################################
-# A helper function
-# Maybe can be used later
-#accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict is full
-#accumulatedAllChromosomesMutationProbability2Signature2RatioDict is empty, filled in this function
-def calculateRatio(accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict,accumulatedAllChromosomesMutationProbability2Signature2RatioDict,strandList):
-    numeratorStrand = strandList[0]
-    denominatorStrand = strandList[1]
-
-    for mutationProbability, signature2StrandCountDict in accumulatedAllChromosomesMutationProbability2Signature2StrandCountDict.items():
-        accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability] = {}
-        for signature, strandCountDict in signature2StrandCountDict.items():
-            if ((numeratorStrand in strandCountDict) and (denominatorStrand in strandCountDict)):
-                if((strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
-                    accumulatedAllChromosomesMutationProbability2Signature2RatioDict[mutationProbability][signature] = (strandCountDict[numeratorStrand]) / (strandCountDict[numeratorStrand] + strandCountDict[denominatorStrand])
-########################################################################
-
-
-########################################################################
-# A helper function
-# Maybe can be used later
-#mutationProbability2Signature2ReplicationStrand2CountDict contains all the accumulated counts for all chromosomes
-#Ratio is laggingCount/(laggingCount + leadingCount)
-#Ratio is the transcribed/ (transcribed + non_transcribed)
-# strandNameList = [LAGGING,LEADING] for replicationStrandAnalysis
-# strandNameList = [TRANSCRIBED_STRAND, NON_TRANSCRIBED_STRAND]    for transcribedStrandAnalysis
-def convert(mutationProbability2Signature2Strand2CountDict, strandNameList):
-    signature2SumofMutationProbabilitiesDict = {}
-    signature2MutationProbability2RatioDict = {}
-    signature2WeightedAverageRatioDict = {}
-    signature2StdErrorDict = {}
-
-    numeratorStrand = strandNameList[0]
-    denominatorStrand = strandNameList[1]
-
-    #Fill signature2WeightedAverageRatioDict
-    for mutationProbability, signature2Strand2CountDict in mutationProbability2Signature2Strand2CountDict.items():
-        for signature, strand2CountDict in signature2Strand2CountDict.items():
-            #Only once
-            if signature not in signature2MutationProbability2RatioDict:
-                signature2MutationProbability2RatioDict[signature] = {}
-
-            if ((numeratorStrand in strand2CountDict) and (denominatorStrand in strand2CountDict)):
-                #In order to consider there must be at least ONE_THOUSAND mutations on the leading and lagging strands
-                # In order to consider there must be at least ONE_THOUSAND mutations on the transcribed and non-transcribed strands
-                if (strand2CountDict[numeratorStrand]+strand2CountDict[denominatorStrand] >= SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
-                    if signature in signature2SumofMutationProbabilitiesDict:
-                        signature2SumofMutationProbabilitiesDict[signature] += mutationProbability
-                    else:
-                        signature2SumofMutationProbabilitiesDict[signature] = mutationProbability
-
-                    ratio = (strand2CountDict[numeratorStrand])/(strand2CountDict[numeratorStrand] + strand2CountDict[denominatorStrand])
-                    signature2MutationProbability2RatioDict[signature][mutationProbability]= ratio
-                    #First Accumulate
-                    if signature in signature2WeightedAverageRatioDict:
-                        signature2WeightedAverageRatioDict[signature] += mutationProbability * ratio
-                    else:
-                        signature2WeightedAverageRatioDict[signature] = mutationProbability * ratio
-
-    #Then divide by sumofMutationProbabilities
-    for signature in signature2WeightedAverageRatioDict.keys():
-        if (signature2SumofMutationProbabilitiesDict[signature]!=0):
-            signature2WeightedAverageRatioDict[signature] /= signature2SumofMutationProbabilitiesDict[signature]
-        else:
-            # print('debug starts')
-            # print('For signature: %s signature2SumofMutationProbabilitiesDict[%s] is zero' %(signature,signature))
-            # print('debug ends')
-            signature2WeightedAverageRatioDict[signature] = 0
-
-    #Calculate the signature2StdErrorDict
-    for signature, weightedAverageRatio in signature2WeightedAverageRatioDict.items():
-        variance= 0
-        sampleSize = 0
-        if signature in signature2MutationProbability2RatioDict:
-            mutationProbability2RatioDict = signature2MutationProbability2RatioDict[signature]
-            for mutationProbability,ratio in mutationProbability2RatioDict.items():
-                difference = weightedAverageRatio-ratio
-                variance += difference**2
-                sampleSize +=1
-
-            stddev = math.sqrt(variance/sampleSize)
-            stderr = stddev/math.sqrt(sampleSize)
-            signature2StdErrorDict[signature] = stderr
-
-    return signature2WeightedAverageRatioDict,signature2StdErrorDict, signature2SumofMutationProbabilitiesDict
-########################################################################
-
-
-#################################################################
+############################################################
 #JAN 20, 2020
 # From DataPreparationCommons.py
-
+############################################################
 
 ############################################################
 #Same for Release and old_PCAWG Matlab Probabilities
@@ -3841,3 +2932,4 @@ def readProbabilities(probabilitiesFile,verbose):
 
     return probabilities_df
 ############################################################
+
