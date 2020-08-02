@@ -956,7 +956,8 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime(computationT
     ####################### ends July 22 2020   ###############################
 
 
-    return simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict, simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict
+    return simNum2Type2DecileIndex2AccumulatedNumberofMutationsDict, \
+           simNum2Sample2Type2DecileIndex2AccumulatedNumberofMutationsDict
 ##################################################################
 
 
