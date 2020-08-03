@@ -93,24 +93,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import decideFileTyp
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
 
-##############################################################################################################
-#main function
-def occupancyAnalysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose):
-
-    print('\n#################################################################################')
-    print('--- %s Analysis starts' %(occupancy_type))
-    print('--- Computation Type:%s' % (computationType))
-    print('--- Occupancy Type:%s' % (occupancy_type))
-    print('--- Library file with path: %s\n' %library_file_with_path)
-
-    #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig (linux only) otherwise no
-    #By the way pyBigWig can be imported in unix, linux like os not available in windows
-    #Using HM and CTCF bed files preparing chr based signal array runtime
-    #Using ATAC-seq wig files preparing chr based signal array runtime
-    occupancy_analysis(genome,computationType,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
-    print('--- %s Analysis ends' %(occupancy_type))
-    print('#################################################################################\n')
-##############################################################################################################
 
 
 ########################################################################################
@@ -567,11 +549,14 @@ def fillSignalArrayAndCountArray_using_list_comp(
 ########################################################################################
 
 
+
+
 ########################################################################################
+#main function
 #Using pyBigWig for bigBed and bigWig files starts Optional for unix, linux
 #Using chrBasedSignalArrays for big files
 #Using dataframes for small bed files
-def occupancy_analysis(genome,
+def occupancyAnalysis(genome,
                        computation_type,
                         occupancy_type,
                         sample_based,
@@ -590,6 +575,17 @@ def occupancy_analysis(genome,
                         remove_outliers,
                         quantileValue,
                         verbose):
+
+    print('\n#################################################################################')
+    print('--- %s Analysis starts' %(occupancy_type))
+    print('--- Computation Type:%s' % (computation_type))
+    print('--- Occupancy Type:%s' % (occupancy_type))
+    print('--- Library file with path: %s\n' %library_file_with_path)
+
+    #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig (linux only) otherwise no
+    #By the way pyBigWig can be imported in unix, linux like os not available in windows
+    #Using HM and CTCF bed files preparing chr based signal array runtime
+    #Using ATAC-seq wig files preparing chr based signal array runtime
 
     if sample_based:
         ##########################################################################
@@ -619,7 +615,6 @@ def occupancy_analysis(genome,
     # numofProcesses = multiprocessing.cpu_count()
     # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1)
     ##########################################################################
-
 
     ##########################################################################
     #July 26, 2020
@@ -831,5 +826,8 @@ def occupancy_analysis(genome,
                                                    numofSimulations,
                                                    library_file_memo)
     ##################################################################################
+
+    print('--- %s Analysis ends' %(occupancy_type))
+    print('#################################################################################\n')
 
 ########################################################################################
