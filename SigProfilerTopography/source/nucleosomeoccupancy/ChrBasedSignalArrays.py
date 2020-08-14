@@ -775,6 +775,7 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
 #Read all data at once, filter w.r.t. a quantileValue and write chrom based in parallel
 #This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation in parallel
 #For in house use, also has sequential write version
+#quantileValue set as 0.97 For  GM12878 and K562 MNase-seq data
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 

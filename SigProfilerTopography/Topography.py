@@ -189,82 +189,195 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
             mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',expand=True)[1]
         ##########################################################################################
 
+        # ##########################################################################################
+        # numofProcesses = multiprocessing.cpu_count()
+        # pool = multiprocessing.Pool(numofProcesses)
+        #
+        # poolInputList = []
+        #
+        # for simNum in range(startSimNum,endSimNum+1):
+        #     simName = 'sim%d' %(simNum)
+        #     for chrShort in chromShortNamesList:
+        #         chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+        #         if (simNum==0):
+        #             matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files',partialDirname)
+        #         else:
+        #             matrix_generator_output_dir_path = os.path.join(inputDir,'output','simulations',simName,mutation_type_context,'output','vcf_files',partialDirname)
+        #
+        #         if (os.path.exists(matrix_generator_output_dir_path)):
+        #             chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+        #             inputList = []
+        #             inputList.append(chrShort)
+        #             inputList.append(outputDir)
+        #             inputList.append(jobname)
+        #             inputList.append(chr_based_mutation_filepath)
+        #             inputList.append(mutations_probabilities_df)
+        #             inputList.append(mutation_type_context_for_probabilities)
+        #             inputList.append(mutation_type_context)
+        #             inputList.append(simNum)
+        #             inputList.append(PCAWG)
+        #             poolInputList.append(inputList)
+        #
+        # #TODO Right now it uses only one processor
+        # #TODO I guess this happens when sim data is big
+        # #TODO Use pool.imap_unordered or pool.apply_async with big chunksize and monitor performance
+        # pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
+        #
+        # pool.close()
+        # pool.join()
+        # ##########################################################################################
+
+        ############################################################################################
+        ##############################  pool.apply_async starts ####################################
+        ############################################################################################
+
+        ################################
         numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(numofProcesses)
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
 
-        poolInputList = []
+        ################################
+        jobs = []
+        ################################
 
-        for simNum in range(startSimNum,endSimNum+1):
-            simName = 'sim%d' %(simNum)
-            for chrShort in chromShortNamesList:
-                chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
-                if (simNum==0):
-                    matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files',partialDirname)
-                else:
-                    matrix_generator_output_dir_path = os.path.join(inputDir,'output','simulations',simName,mutation_type_context,'output','vcf_files',partialDirname)
+        sim_nums = range(startSimNum,endSimNum+1)
+        sim_num_chr_tuples = ((sim_num, chrShort) for sim_num in sim_nums for chrShort in chromShortNamesList)
 
-                if (os.path.exists(matrix_generator_output_dir_path)):
-                    chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
-                    inputList = []
-                    inputList.append(chrShort)
-                    inputList.append(outputDir)
-                    inputList.append(jobname)
-                    inputList.append(chr_based_mutation_filepath)
-                    inputList.append(mutations_probabilities_df)
-                    inputList.append(mutation_type_context_for_probabilities)
-                    inputList.append(mutation_type_context)
-                    inputList.append(simNum)
-                    inputList.append(PCAWG)
-                    poolInputList.append(inputList)
+        for simNum, chrShort in sim_num_chr_tuples:
+            simName = 'sim%d' % (simNum)
+            chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+            if (simNum == 0):
+                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'vcf_files', partialDirname)
+            else:
+                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'simulations', simName,mutation_type_context, 'output', 'vcf_files',partialDirname)
+            if (os.path.exists(matrix_generator_output_dir_path)):
+                chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+                inputList = []
+                inputList.append(chrShort)
+                inputList.append(outputDir)
+                inputList.append(jobname)
+                inputList.append(chr_based_mutation_filepath)
+                inputList.append(mutations_probabilities_df)
+                inputList.append(mutation_type_context_for_probabilities)
+                inputList.append(mutation_type_context)
+                inputList.append(simNum)
+                inputList.append(PCAWG)
+                jobs.append(pool.apply_async(readChrBasedMutationsMergeWithProbabilitiesAndWrite,args=(inputList,)))
+        ################################################################################
 
-        #TODO Right now it uses only one processor
-        #TODO I guess this happens when sim data is big
-        #TODO Use pool.imap_unordered or pool.apply_async with big chunksize and monitor performance
-        pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose Transcription Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+        ##############################################################################
 
+        ################################
         pool.close()
         pool.join()
+        ################################
+
+        ############################################################################################
+        ##############################  pool.apply_async ends ######################################
+        ############################################################################################
+
     ###########################################################################################
 
     ###########################################################################################
     elif (mutations_probabilities_file_path is None):
         #For Information
-        print('mutations_probabilities_file_path:%s does not exist.' %(mutations_probabilities_file_path))
+        print('There is a situation/problem: mutations_probabilities_file_path:%s does not exist.' %(mutations_probabilities_file_path))
+
+        # ##########################################################################################
+        # numofProcesses = multiprocessing.cpu_count()
+        # pool = multiprocessing.Pool(numofProcesses)
+        #
+        # poolInputList = []
+        #
+        # for simNum in range(startSimNum,endSimNum+1):
+        #     simName = 'sim%d' %(simNum)
+        #     for chrShort in chromShortNamesList:
+        #         chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+        #         if (simNum==0):
+        #             matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files',partialDirname)
+        #         else:
+        #             matrix_generator_output_dir_path = os.path.join(inputDir,'output','simulations',simName,mutation_type_context,'output','vcf_files',partialDirname)
+        #
+        #         if (os.path.exists(matrix_generator_output_dir_path)):
+        #             chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+        #             inputList = []
+        #             inputList.append(chrShort)
+        #             inputList.append(outputDir)
+        #             inputList.append(jobname)
+        #             inputList.append(chr_based_mutation_filepath)
+        #             inputList.append(None)
+        #             inputList.append(mutation_type_context_for_probabilities)
+        #             inputList.append(mutation_type_context)
+        #             inputList.append(simNum)
+        #             inputList.append(PCAWG)
+        #             poolInputList.append(inputList)
+        #
+        # #TODO Right now it uses only one processor
+        # #TODO I guess this happens when sim data is big
+        # #TODO Use pool.imap_unordered or pool.apply_async with big chunksize and monitor performance
+        # pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
+        #
+        # pool.close()
+        # pool.join()
+        # ##########################################################################################
+
+        ############################################################################################
+        ##############################  pool.apply_async starts ####################################
+        ############################################################################################
+
+        ################################
         numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(numofProcesses)
+        pool = multiprocessing.Pool(processes=numofProcesses)
+        ################################
 
-        poolInputList = []
+        ################################
+        jobs = []
+        ################################
 
-        for simNum in range(startSimNum,endSimNum+1):
-            simName = 'sim%d' %(simNum)
-            for chrShort in chromShortNamesList:
-                chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
-                if (simNum==0):
-                    matrix_generator_output_dir_path = os.path.join(inputDir,'output','vcf_files',partialDirname)
-                else:
-                    matrix_generator_output_dir_path = os.path.join(inputDir,'output','simulations',simName,mutation_type_context,'output','vcf_files',partialDirname)
+        sim_nums = range(startSimNum,endSimNum+1)
+        sim_num_chr_tuples = ((sim_num, chrShort) for sim_num in sim_nums for chrShort in chromShortNamesList)
 
-                if (os.path.exists(matrix_generator_output_dir_path)):
-                    chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
-                    inputList = []
-                    inputList.append(chrShort)
-                    inputList.append(outputDir)
-                    inputList.append(jobname)
-                    inputList.append(chr_based_mutation_filepath)
-                    inputList.append(None)
-                    inputList.append(mutation_type_context_for_probabilities)
-                    inputList.append(mutation_type_context)
-                    inputList.append(simNum)
-                    inputList.append(PCAWG)
-                    poolInputList.append(inputList)
+        for simNum, chrShort in sim_num_chr_tuples:
+            simName = 'sim%d' % (simNum)
+            chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+            if (simNum == 0):
+                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'vcf_files', partialDirname)
+            else:
+                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'simulations', simName,mutation_type_context, 'output', 'vcf_files',partialDirname)
+            if (os.path.exists(matrix_generator_output_dir_path)):
+                chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+                inputList = []
+                inputList.append(chrShort)
+                inputList.append(outputDir)
+                inputList.append(jobname)
+                inputList.append(chr_based_mutation_filepath)
+                inputList.append(None)
+                inputList.append(mutation_type_context_for_probabilities)
+                inputList.append(mutation_type_context)
+                inputList.append(simNum)
+                inputList.append(PCAWG)
+                jobs.append(pool.apply_async(readChrBasedMutationsMergeWithProbabilitiesAndWrite,args=(inputList,)))
+        ################################################################################
 
-        #TODO Right now it uses only one processor
-        #TODO I guess this happens when sim data is big
-        #TODO Use pool.imap_unordered or pool.apply_async with big chunksize and monitor performance
-        pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
+        ##############################################################################
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\tVerbose Transcription Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
+        ##############################################################################
 
+        ################################
         pool.close()
         pool.join()
+        ################################
+
+        ############################################################################################
+        ##############################  pool.apply_async ends ######################################
+        ############################################################################################
+
     ###########################################################################################
 
 ############################################################
@@ -724,22 +837,22 @@ def runAnalyses(genome,
         print('--- id_probabilities:%s' %id_probabilities)
 
     print('--- numofSimulations:%d' %numofSimulations)
-    print('--- \nepigenomics_files:%s' %epigenomics_files)
+    print('\n--- epigenomics_files:%s' %epigenomics_files)
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples)
     print('--- epigenomics_dna_elements:%s' %epigenomics_dna_elements)
     print('--- number of epigenomics_files:%d' %len(epigenomics_files))
 
-    print('--- \nnucleosome_biosample:%s' %nucleosome_biosample)
+    print('\n--- nucleosome_biosample:%s' %nucleosome_biosample)
     print('--- nucleosome_file:%s' % nucleosome_file)
 
-    print('--- \nreplication_time_biosample:%s' % replication_time_biosample)
+    print('\n--- replication_time_biosample:%s' % replication_time_biosample)
     print('--- replication_time_signal_file:%s' % replication_time_signal_file)
     print('--- replication_time_valley_file:%s' % replication_time_valley_file)
     print('--- replication_time_peak_file:%s' % replication_time_peak_file)
 
-    print('--- \nmutation_types_contexts:%s' %mutation_types_contexts)
-    print('--- \nmutation_types_contexts_for_signature_probabilities:%s' %mutation_types_contexts_for_signature_probabilities)
+    print('\n--- mutation_types_contexts:%s' %mutation_types_contexts)
+    print('--- mutation_types_contexts_for_signature_probabilities:%s' %mutation_types_contexts_for_signature_probabilities)
     print('--- computation_type:%s\n' %computation_type)
     if sample_based:
         print('--- Sample Based Analysis.')
@@ -1078,7 +1191,10 @@ def runAnalyses(genome,
                                                                                        sbs_probabilities,
                                                                                        mutation_type_context_for_probabilities,
                                                                                        startSimNum,
-                                                                                       endSimNum, SNV,PCAWG,verbose)
+                                                                                       endSimNum,
+                                                                                       SNV,
+                                                                                       PCAWG,
+                                                                                       verbose)
 
             # ID
             # if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
@@ -1166,6 +1282,7 @@ def runAnalyses(genome,
             #################################################################################
             print('#################################################################################')
             print('--- Fill tables/dictionaries using original data starts')
+            start_time = time.time()
             ##################################################################################
             # For each signature we will find a cutoff value for mutations with average probability >=0.9
             # Our aim is to have at most 10% false positive rate in mutations
@@ -1285,6 +1402,8 @@ def runAnalyses(genome,
                                                   num_of_dbs_required)
 
             ##################################################################################
+            print("--- Fill tables/dictionaries using original data: %s seconds" % (time.time() - start_time))
+            print("--- Fill tables/dictionaries using original data: %f minutes" % (float((time.time() - start_time) / 60)))
             print('--- Fill tables/dictionaries using original data ends')
             print('#################################################################################\n')
             #################################################################################
@@ -1295,6 +1414,7 @@ def runAnalyses(genome,
             subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
             indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
             dinucsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t',header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+
         #######################################################################################################
         ################################### Fifth Step Fill Table ends ########################################
         #######################################################################################################

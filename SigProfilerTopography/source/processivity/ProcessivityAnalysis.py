@@ -129,15 +129,17 @@ def findProcessiveGroups(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_
     #They must be resulted from same signature
     #They must be on the same strand
     if (sorted_sampleBased_chrBased_spms_df is not None):
+        #As long as mutation, signature, and pyrimidine strands are the same continue to accumlate, when even one of them is not the same calculate cumsum and start again
         sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION] != sorted_sampleBased_chrBased_spms_df[MUTATION].shift(1)) |
                                                            (sorted_sampleBased_chrBased_spms_df['Signature'] != sorted_sampleBased_chrBased_spms_df['Signature'].shift(1)) |
                                                            (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND] != sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift(1))) .cumsum()
 
-
+        #Create a new dataframe for each subgroup
         series_new = sorted_sampleBased_chrBased_spms_df.groupby('subgroup', as_index=False).apply(myfuncUpdated)
         columns = ['ProcessiveGroupLength', 'Distance', 'Signature', 'Probability']
         df = series_new.apply(pd.Series)
         df.columns = columns
+        #Remove rows with processive groups of length 1
         df = df[df['ProcessiveGroupLength'].ne(1)]
 
         df.apply(fillDict,

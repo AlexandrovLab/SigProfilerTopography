@@ -2682,10 +2682,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 # Sample Names    MutationTypes   DBS2    DBS4    DBS5    DBS6    DBS9    DBS11
                 # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 #Add new columns
                 # MatrixGenerator generates Q:A[AC>TT]A
@@ -2699,10 +2699,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 # Sample Names    MutationTypes   ID1     ID2     ID3     ID4     ID5     ID6     ID8     ID9     ID13
                 # LUAD-US_SP50518 1:Del:C:0       0.002114485363152394    0.0     0.4891560241408412      0.01586903032961574     0.2531175852230711      0.0     0.23974287494331953     0.0     0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 #Add new column
                 # MatrixGenerator generates N:1:Ins:T:5
@@ -2720,10 +2720,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 # Sample    Mutation   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40
                 # LUAD-US_SP50518 A[C>A]A 0.005281537126491598    1.091660854697097e-06   0.0     0.0     0.12212513236310162     0.0022549935716281717   0.0     0.0     0.0     0.0     0.8703372452779239
                 mutations_with_genomic_positions_df.columns = [SAMPLE,CHROM,START,MUTATIONLONG,PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype(str)
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype(str)
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype(str)
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 #Add new column
                 # Add Context Column from T:TG[C>T]GC to  G[C>T]G
@@ -2737,8 +2737,16 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                     # TODO More correct way is to assign half of B as T and other half of B as U
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] == 'B', MUTATION] = 'N:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
-                else:
+                elif (mutation_type_context_for_probabilities==SBS96):
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                else:
+                    #TODO to be updated as needed
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+
+            #Set dtype as 'category'
+            mutations_with_genomic_positions_df[MUTATION]=mutations_with_genomic_positions_df[MUTATION].astype('category')
+            mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND]=mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND].astype('category')
+
             return mutations_with_genomic_positions_df
 
     return None
@@ -2771,6 +2779,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
         if PCAWG:
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
+            chr_based_mutation_df[SAMPLE]= chr_based_mutation_df[SAMPLE].astype('category')
 
         #For Release SigProfilerTopography Python Package
         # For SNV
@@ -2782,7 +2791,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         if simNum>=1:
             # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
+            chr_based_mutation_df[SAMPLE]= chr_based_mutation_df[SAMPLE].astype('category')
         ############################################################################
+
 
         ############################################################################
         merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
