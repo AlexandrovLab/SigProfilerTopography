@@ -55,15 +55,19 @@ from SigProfilerTopography.source.commons.TopographyCommons import getSample2Sub
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+
 plt.rcParams.update({'figure.max_open_warning': 0})
 
 ########################################################
 def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalizedMutationDensityList, sample, signature, analysesType,indelType,barcolor,
-                                                    outputDir,jobname,isFigureAugmentation,
+                                                    outputDir,jobname,
                                                     sample2NumberofMutationsDict,
                                                     signature_cutoff_numberofmutations_averageprobability_df,
                                                     sample2Signature2NumberofMutationsDict,
-                                                    numberofSimulations):
+                                                    numberofSimulations,
+                                                    plot_mode):
 
     #################################################################################
     ############################# For Simulations starts ############################
@@ -100,52 +104,98 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     ax = plt.gca()
     # This code makes the background white.
     ax.set_facecolor('white')
-    for edge_i in ['left']:
-        ax.spines[edge_i].set_edgecolor("black")
-        ax.spines[edge_i].set_linewidth(3)
-        # This code draws line only between [0,1]
-        ax.spines[edge_i].set_bounds(0, 1)
 
-    width = 0.9  # the width of the bars
-
+    ####################################################
     # Note x get labels w.r.t. the order given here, 0 means get the 0th label from  xticks
     x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    # plt.xticks(np.arange(10),('1st', '2nd', '3rd', '4th', '5th','6th','7th','8th','9th','10th'),rotation=20)
-    plt.yticks(np.arange(0, 1.01, step=0.2))
+    width = 0.9  # the width of the bars
+    bars=plt.bar(x, normalizedMutationDensityList, width, label='Real Somatic Mutations', color=barcolor, edgecolor="black", linewidth=3, zorder=1)
 
+    # plt.xticks(np.arange(10),('1st', '2nd', '3rd', '4th', '5th','6th','7th','8th','9th','10th'),rotation=20)
     # also works
     # plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
 
-    plt.bar(x, normalizedMutationDensityList, width, color=barcolor, edgecolor="black", linewidth=3, zorder=1)
-
     if simulationsMeans is not None:
-        plt.plot(x, simulationsMeans, 'o--', color='navy', label='Average Simulations Aggregated indels', linewidth=1.0, zorder =2)
+        sims_dashed_line=plt.plot(x, simulationsMeans, 'o--', color='navy', label='Simulated Somatic Mutations', linewidth=5, zorder =2)
         if (simulationsLows is not None) and (simulationsHighs is not None):
             # if (len(simulationsLows)==len(simulationsHighs)):
             plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor='lightblue', zorder =2)
+    ####################################################
 
-    # This code puts some extra space below 0 and above 1.0
-    plt.ylim(-0.01, 1.01)
-
-    plt.tick_params(axis='y', which='major', labelsize=40, width=3, length=10)
-    plt.tick_params(axis='y', which='minor', labelsize=40, width=3, length=10)
-
-    plt.tick_params(
-        axis='x',  # changes apply to the x-axis
-        which='both',  # both major and minor ticks are affected
-        bottom=False,  # ticks along the bottom edge are off
-        top=False,  # ticks along the top edge are off
-        labelbottom=False)  # labels along the bottom edge are off
 
     ####################################################
-    if (isFigureAugmentation):
-        plt.title(jobname + ' ' + title, fontsize=40, fontweight='bold')
-    else:
+    if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
         plt.title(title, fontsize=40, fontweight='bold')
+        plt.xlabel('Early <--- Replication Time ---> Late', fontsize=40, fontweight='semibold')
+        plt.ylabel(ylabel, fontsize=40, fontweight='semibold')
+
+        # Set label locations.
+        plt.yticks(np.arange(0, 1.01, step=0.2))
+        # This code puts some extra space below 0 and above 1.0
+        plt.ylim(-0.01, 1.01)
+
+        plt.tick_params(axis='y', which='major', labelsize=40, width=3, length=10)
+        plt.tick_params(axis='y', which='minor', labelsize=40, width=3, length=10)
+
+        for edge_i in ['left']:
+            ax.spines[edge_i].set_edgecolor("black")
+            ax.spines[edge_i].set_linewidth(3)
+            # This code draws line only between [0,1]
+            # This is not needed
+            # ax.spines[edge_i].set_bounds(0, 1)
+
+        plt.tick_params(
+            axis='x',  # changes apply to the x-axis
+            which='both',  # both major and minor ticks are affected
+            bottom=False,  # ticks along the bottom edge are off
+            top=False,  # ticks along the top edge are off
+            labelbottom=False)  # labels along the bottom edge are off
+
+        legend = ax.legend((bars[0], sims_dashed_line[0]), ('Real', 'Simulated'), prop={'size': 30}, loc='upper left',bbox_to_anchor=(0.03, 0.9))
+
+        if (legend is not None):
+            frame = legend.get_frame()
+            frame.set_facecolor('white')
+            frame.set_edgecolor('black')
+
+
+    elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+        # set axis ticks
+        # ax.tick_params(axis='both', which='both', length=0)
+        ax.tick_params(axis='x', which='both', length=0)
+        ax.tick_params(axis='y', which='both', length=0)
+        # set axis labels
+        plt.setp(ax.get_xticklabels(), visible=False)
+        plt.setp(ax.get_yticklabels(), visible=False)
+        ax.spines["bottom"].set_color('black')
+        ax.spines["left"].set_color('black')
+        ax.spines["top"].set_color('black')
+        ax.spines["right"].set_color('black')
+
+
+        # First way
+        # from matplotlib.patches import Patch
+        # from matplotlib.lines import Line2D
+        # legend_elements = [Patch(facecolor=barcolor, edgecolor='black',label='Real'),Line2D([0], [0], linestyle='--',  linewidth=5, color='navy', label='Simulated')]
+        # legend = ax.legend(handles=legend_elements, prop={'size': 35}, loc='upper right')
+
+        # Second way
+        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='upper center')
+        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='best')
+
+        # to put the legend's upper right-hand corner at (0.8,1) optimized for SBS6 in BreastCancer560 data for SigProfilerTopography Overview Figure
+        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='upper right', bbox_to_anchor = (0.8, 1))
+        # to put the legend's upper left corner at (x,y) optimized for SBS2 in BreastCancer560 data for Replication Overview Figure
+        legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 43}, loc='upper left', bbox_to_anchor = (0.02, 0.9))
+
+        if (legend is not None):
+            frame = legend.get_frame()
+            frame.set_facecolor('white')
+            frame.set_edgecolor('black')
+
     ####################################################
 
-    plt.xlabel('Early <--- Replication Time ---> Late', fontsize=40, fontweight='semibold')
-    plt.ylabel(ylabel, fontsize=40, fontweight='semibold')
+
 
     ########################################################################
     if sample is None:
@@ -180,7 +230,6 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     if (sample is None):
         # figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType, figureName)
         figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, figureName)
-
     else:
         # os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType), exist_ok=True)
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME), exist_ok=True)
@@ -255,7 +304,7 @@ def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesT
 
 
 #########################################################
-def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulations,sample_based,isFigureAugmentation,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict):
+def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         # We check such file exists or not
         normalizedMutationData = readNormalizedMutationData(None, signature, outputDir, jobname)
@@ -267,15 +316,15 @@ def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulatio
             if not all(v == 0.0 for v in normalizedMutationData):
                 # print('For %s: plot signature based replication time figure' % signature)
                 plotNormalizedMutationDensityFigureWithSimulations(signature,
-                                                                   'Normalized\nsingle point mutation density',
+                                                                   'Normalized\nsingle base substitution density',
                                                                    normalizedMutationData, None, signature,
                                                                    analysesType, None,
                                                                    color, outputDir, jobname,
-                                                                   isFigureAugmentation,
                                                                    sample2NumberofMutationsDict,
                                                                    signature_cutoff_numberofmutations_averageprobability_df,
                                                                    sample2Signature2NumberofMutationsDict,
-                                                                   numberofSimulations)
+                                                                   numberofSimulations,
+                                                                   plot_mode)
 
     if sample_based:
         for sample in sample2Signature2NumberofMutationsDict:
@@ -288,19 +337,19 @@ def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulatio
                     # use all generator for all true check
                     if not all(v == 0.0 for v in normalizedMutationData):
                         plotNormalizedMutationDensityFigureWithSimulations('%s_%s' % (signature, sample),
-                                                                           'Normalized\nsingle point mutation density',
+                                                                           'Normalized\nsingle base substitution density',
                                                                            normalizedMutationData, sample, signature,
                                                                            analysesType, None,
                                                                            color, outputDir, jobname,
-                                                                           isFigureAugmentation,
                                                                            sample2NumberofMutationsDict,
                                                                            signature_cutoff_numberofmutations_averageprobability_df,
                                                                            sample2Signature2NumberofMutationsDict,
-                                                                           numberofSimulations)
+                                                                           numberofSimulations,
+                                                                           plot_mode)
 #########################################################
 
 #########################################################
-def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,jobname,numberofSimulations,sample_based,isFigureAugmentation,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict):
+def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
     if (analysesType == INDELBASED):
         normalizedMutationData = readNormalizedMutationData(None,indelType,outputDir,jobname)
     else:
@@ -310,11 +359,12 @@ def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,job
         normalizedMutationData = normalizedMutationData.iloc[0].tolist()
         plotNormalizedMutationDensityFigureWithSimulations(title, '\nNormalized mutation density',
                                                            normalizedMutationData, None, None, analysesType, indelType,
-                                                           color,outputDir, jobname, isFigureAugmentation,
+                                                           color,outputDir, jobname,
                                                            sample2NumberofMutationsDict,
                                                            signature_cutoff_numberofmutations_averageprobability_df,
                                                            sample2Signature2NumberofMutationsDict,
-                                                           numberofSimulations)
+                                                           numberofSimulations,
+                                                           plot_mode)
 
     ######## Sample Based starts ########
     if sample_based:
@@ -328,16 +378,17 @@ def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,job
                 plotNormalizedMutationDensityFigureWithSimulations('%s %s' % (sample,title),
                                                                    '\nNormalized mutation density',
                                                                    normalizedMutationData, sample, None, analysesType, indelType,
-                                                                   color, outputDir, jobname, isFigureAugmentation,
+                                                                   color, outputDir, jobname,
                                                                    sample2NumberofMutationsDict,
                                                                    signature_cutoff_numberofmutations_averageprobability_df,
                                                                    sample2Signature2NumberofMutationsDict,
-                                                                   numberofSimulations)
+                                                                   numberofSimulations,
+                                                                   plot_mode)
     ######## Sample Based ends #########
 #########################################################
 
 ##################################################################
-def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes):
+def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode):
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,REPLICATIONTIME)
     print('Topography.py jobnamePath:%s ' %jobnamePath)
@@ -349,10 +400,6 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
     #     except OSError as e:
     #         print('Error: %s - %s.' % (e.filename, e.strerror))
     # ############################################################
-
-    isFigureAugmentation = False
-    if (figureAugmentation == 'augmentation'):
-        isFigureAugmentation = True
 
 
     ##########################################################################################
@@ -384,16 +431,16 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugm
     ##########################  Plot figures starts  #########################################
     ##########################################################################################
     if (SBS96 in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Substitutions','yellowgreen',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,sample_based,isFigureAugmentation,sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict)
-        plotSignatureFigures('yellowgreen',SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,isFigureAugmentation, sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict)
+        plotAllMutationTypesFigures('Aggregated Substitutions','yellowgreen',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('yellowgreen',SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
     if (ID in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Indels','indianred',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,sample_based,isFigureAugmentation,sample2NumberofIndelsDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict)
-        plotAllMutationTypesFigures(MICROHOMOLOGY,'indianred',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations,sample_based, isFigureAugmentation, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict)
-        plotAllMutationTypesFigures(REPEAT, 'indianred',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,sample_based,isFigureAugmentation, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict)
-        plotSignatureFigures('indianred', SIGNATUREBASED, outputDir, jobname, numberofSimulations, sample_based, isFigureAugmentation,sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict)
+        plotAllMutationTypesFigures('Aggregated Indels','indianred',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofIndelsDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures(MICROHOMOLOGY,'indianred',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures(REPEAT, 'indianred',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('indianred', SIGNATUREBASED, outputDir, jobname, numberofSimulations, sample_based,sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
     if (DBS in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Dinucs','crimson',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,isFigureAugmentation,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict)
-        plotSignatureFigures('crimson', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based, isFigureAugmentation,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict)
+        plotAllMutationTypesFigures('Aggregated Dinucs','crimson',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('crimson', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
     ##########################################################################################
     ##########################  Plot figures ends  ###########################################
     ##########################################################################################

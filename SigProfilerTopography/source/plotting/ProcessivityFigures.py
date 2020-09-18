@@ -574,7 +574,7 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
         #Signature       Processsive_Group_Length        Number_of_Processive_Groups     Median_of_Number_of_Processive_Groups_in_MB
         processivity_df=pd.read_csv(processivity_table_file, header=0, sep='\t')
         processivity_df['Simulation_Number']=simNum
-        processivity_df=processivity_df[['Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_of_Number_of_Processive_Groups_in_MB']]
+        processivity_df=processivity_df[['Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_Distance', 'Median_of_Number_of_Processive_Groups_in_MB']]
         processivity_df_list.append(processivity_df)
 
     # Vertically combine dfs

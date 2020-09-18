@@ -82,6 +82,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
+
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
@@ -143,6 +146,8 @@ from SigProfilerTopography.source.plotting.ProcessivityFigures import processivi
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
 from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
 from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
+
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
@@ -316,9 +321,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         #             inputList.append(PCAWG)
         #             poolInputList.append(inputList)
         #
-        # #TODO Right now it uses only one processor
-        # #TODO I guess this happens when sim data is big
-        # #TODO Use pool.imap_unordered or pool.apply_async with big chunksize and monitor performance
+        # I guess it uses only one processor when sim data is big
         # pool.map(readChrBasedMutationsMergeWithProbabilitiesAndWrite, poolInputList)
         #
         # pool.close()
@@ -621,15 +624,15 @@ def runTranscriptionStradBiasAnalysis(outputDir,jobname,numofSimulations,job_tup
 
 
 #######################################################
-def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-
+def runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,processivity_calculation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     os.makedirs(os.path.join(outputDir,jobname,DATA,PROCESSIVITY),exist_ok=True)
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True
     # considerProbabilityInProcessivityAnalysis = False
     computation_type=USING_APPLY_ASYNC
-    processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+    print('processivity_calculation_type:%s' %processivity_calculation_type)
+    processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,processivity_calculation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
     ###############################################
 #######################################################
 
@@ -756,7 +759,9 @@ def runAnalyses(genome,
                 data_ready_plot_processivity=False,
                 remove_outliers=False,
                 quantileValue=0.97,
-                delete_old=False):
+                delete_old=False,
+                plot_mode=PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
+                processivity_calculation_type=CONSIDER_DISTANCE):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -1519,7 +1524,8 @@ def runAnalyses(genome,
             deleteOldData(outputDir,jobname,PROCESSIVITY)
 
         start_time = time.time()
-        runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+
+        runProcessivityAnalysis(mutation_types_contexts,outputDir,jobname,numofSimulations,chromNamesList,computation_type,processivity_calculation_type,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
         print('#################################################################################')
         print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
         print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1563,7 +1569,7 @@ def runAnalyses(genome,
         print('#################################################################################')
         print('--- Plot figures starts')
         start_time = time.time()
-        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias, transcription_strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome,data_ready_plot_replication_time,data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias,data_ready_plot_processivity,delete_old)
+        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias, transcription_strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome,data_ready_plot_replication_time,data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias,data_ready_plot_processivity,delete_old,plot_mode)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1584,10 +1590,7 @@ def runAnalyses(genome,
 
 ##############################################################
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias,transcription_strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome, data_ready_plot_replication_time, data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias, data_ready_plot_processivity,delete_old):
-
-    #Internally Set
-    figureAugmentation = 'noaugmentation'
+def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias,transcription_strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome, data_ready_plot_replication_time, data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias, data_ready_plot_processivity,delete_old,plot_mode):
 
     jobnameSamplesPath = os.path.join(outputDir,jobname,FIGURE,SAMPLES)
     print('Topography.py jobnameSamplesPath:%s ' %jobnameSamplesPath)
@@ -1606,14 +1609,14 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
-        occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose)
+        occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
     ############################################################
 
     ############################################################
     if (replication_time or data_ready_plot_replication_time):
         if delete_old:
             deleteOldFigures(outputDir, jobname, REPLICATIONTIME)
-        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes)
+        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode)
     ############################################################
 
     ############################################################
@@ -1623,13 +1626,13 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
     elif (replication_strand_bias or data_ready_plot_replication_strand_bias):
         strand_bias_list=[LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
     elif (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
     ############################################################
 
     ############################################################
@@ -1661,7 +1664,7 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
         for idx, epigenomics_file in enumerate(epigenomics_files):
             epigenomics_file_basename = os.path.basename(epigenomics_file)
             epigenomics_file_memo= epigenomics_files_memos[idx]
-            jobs.append(pool.apply_async(occupancyAverageSignalFigures,args=(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,)))
+            jobs.append(pool.apply_async(occupancyAverageSignalFigures,args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
 
         if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
 

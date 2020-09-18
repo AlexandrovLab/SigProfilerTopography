@@ -92,6 +92,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_100_
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+
 SIGNATURE='signature'
 CANCER_TYPE='cancer_type'
 MUTATION_TYPE='mutation_type'
@@ -789,18 +792,8 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
 ##################################################################
 #Only this method supports simulations
 #key can be a sample or a signature
-def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,isKeySample,numberofMutations,N,x_axis_labels,strand1_values,strand2_values,strand1_simulations_median_values ,strand2_simulations_median_values , fdr_bh_adjusted_pvalues, strand1Name, strand2Name, mutationsOrSignatures, color1, color2, figureName, width):
-    # print('############# for debug starts Nov 12, 2018 ################')
-    # print('Sample:%s --- Strand1:%s --- Strand2:%s --- mutationsOrSignatures:%s' %(sample,strand1Name,strand2Name,mutationsOrSignatures))
-    # print('strand1_values: %s' %(strand1_values))
-    # print('strand2_values: %s' %(strand2_values))
-    # print('strand1_simulations_median_values: %s' %(strand1_simulations_median_values))
-    # print('strand2_simulations_median_values: %s' %(strand2_simulations_median_values))
-    # print('fdr_bh_adjusted_pvalues: %s' %(fdr_bh_adjusted_pvalues))
-    # print('############# for debug ends Nov 12, 2018 ################')
-
+def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,isKeySample,numberofMutations,N,x_axis_labels,strand1_values,strand2_values,strand1_simulations_median_values ,strand2_simulations_median_values , fdr_bh_adjusted_pvalues, strand1Name, strand2Name, mutationsOrSignatures, color1, color2, figureName, width,plot_mode):
     #Here we can take into difference between strand1_values and strand2_values while deciding on significance
-
 
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
@@ -816,15 +809,6 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     rects3=None
     rects4=None
 
-    ##############################
-    #To make the bar width not too wide
-    if len(ind)<6:
-        maxn = 6
-        ax.set_xlim(-0.5, maxn - 0.5)
-    ##############################
-
-    ax.get_yaxis().set_major_formatter(mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-
     rects1 = ax.bar(ind, strand1_values, width=width, color=color1)
     rects2 = ax.bar(ind + width, strand2_values, width=width, color=color2)
 
@@ -833,63 +817,86 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     if ((strand2_simulations_median_values is not None) and strand2_simulations_median_values):
         rects4 = ax.bar(ind +3*width, strand2_simulations_median_values, width=width, color=color2, hatch = '///')
 
-    # # Provide average or medians of the simulatons values
-    # if (strand1_simulations_median_values is not None):
-    #     ax.plot(ind,strand1_simulations_median_values,color=color1, marker='o', linestyle='dashed')
-    # if (strand2_simulations_median_values is not None):
-    #     ax.plot(ind + width, strand2_simulations_median_values, color=color2, marker='o', linestyle='dashed')
-
-    ax.tick_params(axis='x', labelsize=35)
-    ax.tick_params(axis='y', labelsize=35)
-
-    if len(x_axis_labels)>6 :
-        ax.set_xticklabels(x_axis_labels, fontsize=15,rotation=90)
-    else:
-        ax.set_xticklabels(x_axis_labels, fontsize=35)
-
-    locs, labels = plt.yticks()
-    ax.set_ylim(0, locs[-1] + 5000)
 
     # add some text for labels, title and axes ticks
-    # ax.set_ylabel('Number of mutations', fontsize=30)
-    if key is not None:
-        ax.set_title('%s %s vs. %s %s' %(key,strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
-    else:
-        ax.set_title('%s vs. %s %s' %(strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
 
+    ###########################################################################
+    if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
+        ax.tick_params(axis='x', labelsize=35)
+        ax.tick_params(axis='y', labelsize=35)
 
-    #set the x axis tick locations
-    if (numberofSimulations>0):
-        ax.set_xticks(ind + (3 * width)/2)
-        simulationsStrand1Name = 'Simulated %s' %(strand1Name)
-        simulationsStrand2Name = 'Simulated %s' % (strand2Name)
+        locs, labels = plt.yticks()
+        ax.set_ylim(0, locs[-1] + 5000)
 
-        # legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
-        #                    (strand1Name, strand2Name, simulationsStrand1Name, simulationsStrand2Name),
-        #                    prop={'size': 25}, bbox_to_anchor = (0, 1.21), ncol = 2, loc = 'upper left')
+        ##############################
+        # To make the bar width not too wide
+        if len(ind) < 6:
+            maxn = 6
+            ax.set_xlim(-0.5, maxn - 0.5)
+        ##############################
 
-        if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
-            if ((len(rects1)>0) and (len(rects2)>0) and (len(rects3)>0) and (len(rects4)>0)):
-                legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
-                           (strand1Name, strand2Name, simulationsStrand1Name, simulationsStrand2Name),
-                           prop={'size': 20}, ncol = 2, loc = 'best')
+        #set title
+        if key is not None:
+            ax.set_title('%s %s vs. %s %s' %(key,strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
+        else:
+            ax.set_title('%s vs. %s %s' %(strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
 
-    else:
-        #Old way with no simulations
-        ax.set_xticks(ind + width/2)
+        #set x tick labels
+        if len(x_axis_labels) > 6:
+            ax.set_xticklabels(x_axis_labels, fontsize=15, rotation=90)
+        else:
+            ax.set_xticklabels(x_axis_labels, fontsize=35)
 
-        if ((rects1 is not None) and (rects2 is not None)):
-            if ((len(rects1)>0) and (len(rects2)>0)):
-                legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, loc='upper right')
+        # Set the ylabel
+        plt.ylabel('Number of single base substitutions', fontsize=35, fontweight='normal')
 
-    #Set the ylabel
-    plt.ylabel('Number of single point mutations', fontsize=35, fontweight='normal')
+        # set the x axis tick locations
+        if (numberofSimulations > 0):
+            ax.set_xticks(ind + (3 * width) / 2)
+            realStrand1Name = 'Real %s' % (strand1Name)
+            realStrand2Name = 'Real %s' % (strand2Name)
+            simulationsStrand1Name = 'Simulated %s' % (strand1Name)
+            simulationsStrand2Name = 'Simulated %s' % (strand2Name)
+            if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
+                if ((len(rects1) > 0) and (len(rects2) > 0) and (len(rects3) > 0) and (len(rects4) > 0)):
+                    legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 20}, ncol=2, loc='best')
+        else:
+            # Old way with no simulations
+            ax.set_xticks(ind + width / 2)
+            if ((rects1 is not None) and (rects2 is not None)):
+                if ((len(rects1) > 0) and (len(rects2) > 0)):
+                    legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25},loc='upper right')
 
-    #Legend place is modified here.
-    # ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 30}, loc='upper left')
+    elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+        # set axis ticks
+        # ax.tick_params(axis='both', which='both', length=0)
+        ax.tick_params(axis='x', which='both', length=0)
+        ax.tick_params(axis='y', which='both', length=0)
+        # set axis labels
+        plt.setp(ax.get_xticklabels(), visible=False)
+        plt.setp(ax.get_yticklabels(), visible=False)
+        if (numberofSimulations > 0):
+            realStrand1Name = 'Real %s' % (strand1Name)
+            realStrand2Name = 'Real %s' % (strand2Name)
+            simulationsStrand1Name = 'Simulated %s' % (strand1Name)
+            simulationsStrand2Name = 'Simulated %s' % (strand2Name)
+
+            if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
+                if ((len(rects1) > 0) and (len(rects2) > 0) and (len(rects3) > 0) and (len(rects4) > 0)):
+                    #For SigProfilerTopography Overview Figure
+                    # legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 35}, ncol=2, loc='best')
+                    #For Replication Time and Strand Bias Overview Figure
+                    legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 30}, ncol=1, loc='best')
+
+        else:
+            if ((rects1 is not None) and (rects2 is not None)):
+                if ((len(rects1) > 0) and (len(rects2) > 0)):
+                    legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 35},loc='upper right')
+    ###########################################################################
 
     #To make the barplot background white
     ax.set_facecolor('white')
+    #To makes spines black like a rectangle with black stroke
     ax.spines["bottom"].set_color('black')
     ax.spines["left"].set_color('black')
     ax.spines["top"].set_color('black')
@@ -993,7 +1000,8 @@ def plotBarPlotsUsingDataframes(outputDir,
                  color1,
                  color2,
                  title,
-                 figureName):
+                 figureName,
+                 plot_mode):
 
     # signature_transcribed_versus_untranscribed_df column names here
     # ['cancer_type', 'signature', 'mutation_type',
@@ -1083,7 +1091,8 @@ def plotBarPlotsUsingDataframes(outputDir,
                                          color1,
                                          color2,
                                          figureName,
-                                         width)
+                                         width,
+                                         plot_mode)
 
 # July 5, 2020 ends
 ##################################################################
@@ -1127,7 +1136,7 @@ def write_signature_dictionaries_as_dataframes(signature2mutation_type2strand2pe
 # April 20, 2020
 # July 4, 2020 starts
 # Using dataframes
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,figureAugmentation,numberofSimulations,strand_bias_list,sample_based):
+def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode):
 
     #######################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
@@ -1869,7 +1878,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,f
                                                      mutationsOrSignatures,
                                                      color1, color2,
                                                      figureName,
-                                                     width)
+                                                     width,
+                                                     plot_mode)
 
     #######################################################
     ################# Plot types ends #####################
@@ -1892,7 +1902,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,f
                      'royalblue',
                      'yellowgreen',
                      'All Mutations',
-                     'mutationtypes_transcription_strand_bias')
+                     'mutationtypes_transcription_strand_bias',
+                      plot_mode)
 
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
         plotBarPlotsUsingDataframes(outputDir,
@@ -1908,7 +1919,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,f
                      'cyan',
                      'gray',
                      'All Mutations',
-                     'mutationtypes_genic_versus_intergenic_strand_bias')
+                     'mutationtypes_genic_versus_intergenic_strand_bias',
+                      plot_mode)
 
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         plotBarPlotsUsingDataframes(outputDir,
@@ -1924,7 +1936,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,f
                     'indianred',
                     'goldenrod',
                     'All Mutations',
-                    'mutationtypes_replication_strand_bias')
+                    'mutationtypes_replication_strand_bias',
+                     plot_mode)
     #################################################################
     ########### Plot sub signatures mutation types ends #############
     #################################################################

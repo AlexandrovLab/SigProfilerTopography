@@ -69,6 +69,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import Sample2Dinucs
 from SigProfilerTopography.source.commons.TopographyCommons import BIOSAMPLE_UNDECLARED
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+
 # plusOrMinus = 1000
 # windowSize = plusOrMinus*2+1
 
@@ -401,7 +404,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
 ########################## Plot Figure starts  ##############################
 #############################################################################
 #Called by plotSignatureBasedFigures
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,isFigureAugmentation,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
+def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         figurenameEnd='_NucleosomeOccupancy.png'
@@ -479,42 +482,74 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
         listofLegends = []
 
-        original = plt.plot(x, realAverage, color=color, label=label,linewidth=3)
+        if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+            label='Real'
+        original = plt.plot(x, realAverage, color=color, label=label,linewidth=5)
         listofLegends.append(original[0])
 
         if (simulationsSignatureBasedMeans is not None):
             label = 'Average Simulations %s' %(label)
-            simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle,  label=label, linewidth=3)
+            if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+                label='Simulated'
+            simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle,  label=label, linewidth=5)
             listofLegends.append(simulations[0])
             if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
                 plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor=fillcolor)
+
 
         if ((simulationsSignatureBasedLows is not None) and (not np.all(np.isnan(simulationsSignatureBasedLows)))):
             min_list.append(np.nanmin(simulationsSignatureBasedLows))
         if ((simulationsSignatureBasedHighs is not None) and (not np.all(np.isnan(simulationsSignatureBasedHighs)))):
             max_list.append(np.nanmax(simulationsSignatureBasedHighs))
 
-        plt.legend(loc= 'lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor='white',framealpha=0)
+        ##############################################################################
+        if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
+            plt.legend(loc='best', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white',facecolor='white', framealpha=0)
 
-        #put the number of snps
-        tobeWrittenText = "{:,}".format(numberofMutations)
-        tobeWrittenText=tobeWrittenText + " " + text
-        plt.text(0.99, 0.99, tobeWrittenText, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
+            #put the number of snps
+            tobeWrittenText = "{:,}".format(numberofMutations)
+            tobeWrittenText=tobeWrittenText + " " + text
+            plt.text(0.99, 0.99, tobeWrittenText, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
-        #put the library filename
-        plt.text(0.01, 0.99, libraryFilename, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, fontsize=24)
+            #put the library filename
+            plt.text(0.01, 0.99, libraryFilename, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, fontsize=24)
+
+            # This code provides the x and y tick marks and labels
+            # plt.xticks(np.arange(-1000, +1001, step=500), fontsize=30)
+            plt.xticks(np.arange(-plusOrMinus, plusOrMinus + 1, step=500), fontsize=30)
+
+            # July 27, 2018
+            # plt.xlim((-1000, 1000))
+            plt.xlim((-plusOrMinus, plusOrMinus))
+
+            # This code puts the tick marks
+            plt.tick_params(axis='both', which='major', labelsize=30, width=3, length=10)
+            plt.tick_params(axis='both', which='minor', labelsize=30, width=3, length=10)
+
+            plt.title(title, fontsize=40, fontweight='bold')
+
+            plt.xlabel(xlabel, fontsize=32, fontweight='semibold')
+            plt.ylabel(ylabel, fontsize=32, fontweight='semibold')
+        elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+            # legend=ax.legend(loc='upper left', handles=listofLegends, prop={'size': 35}, shadow=False, edgecolor='black',facecolor='white', framealpha=0)
+            legend = ax.legend(handles=listofLegends, prop={'size': 35}, loc='upper left')
+            if (legend is not None):
+                frame = legend.get_frame()
+                frame.set_facecolor('white')
+                frame.set_edgecolor('black')
+
+            # set axis ticks
+            # ax.tick_params(axis='both', which='both', length=0)
+            ax.tick_params(axis='x', which='both', length=0)
+            ax.tick_params(axis='y', which='both', length=0)
+            # set axis labels
+            plt.setp(ax.get_xticklabels(), visible=False)
+            plt.setp(ax.get_yticklabels(), visible=False)
+        ##############################################################################
 
         #Put vertical line at x=0
         # plt.axvline(x=0, ymin=0, ymax=1, color='gray', linestyle='--')
         plt.axvline(x=0, color='gray', linestyle='--')
-
-        # This code provides the x and y tick marks and labels
-        # plt.xticks(np.arange(-1000, +1001, step=500), fontsize=30)
-        plt.xticks(np.arange(-plusOrMinus, plusOrMinus+1, step=500), fontsize=30)
-
-        #July 27, 2018
-        # plt.xlim((-1000, 1000))
-        plt.xlim((-plusOrMinus, plusOrMinus))
 
         #Let's not set ylim for HMs
         # ###################################################################################
@@ -556,18 +591,6 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         #     ax.set_yticklabels(yticklabels)
         #     plt.ylim((ymin-0.01,ymax+0.01))
         # ###################################################################################
-
-        # This code puts the tick marks
-        plt.tick_params(axis='both', which='major', labelsize=30,width=3,length=10)
-        plt.tick_params(axis='both', which='minor', labelsize=30,width=3,length=10)
-
-        if (isFigureAugmentation):
-            plt.title(jobname + ' ' + title, fontsize=40,fontweight='bold')
-        else:
-            plt.title(title, fontsize=40,fontweight='bold')
-
-        plt.xlabel(xlabel,fontsize=32,fontweight='semibold')
-        plt.ylabel(ylabel,fontsize=32,fontweight='semibold')
 
         filename = figurename.replace(' ', '') + figurenameEnd
 
@@ -879,7 +902,7 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
 
 
 #########################################################
-def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
+def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,outputDir,jobname,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         ylabel = 'Average nucleosome signal'
     elif (occupancy_type==EPIGENOMICSOCCUPANCY):
@@ -889,7 +912,7 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         ylabel = 'Average epigenomics signal'
 
     if (mutationType==SBS96):
-        xlabel = 'Interval around single point mutation (bp)'
+        xlabel = 'Interval around single base substitution (bp)'
         label = 'Aggregated Substitutions'
         text = 'subs'
         color = 'royalblue'
@@ -904,7 +927,7 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         linestyle='dashed'
         # linestyle='dotted'
     elif (mutationType==DBS):
-        xlabel = 'Interval around dinuc (bp)'
+        xlabel = 'Interval around double base substitution (bp)'
         label = 'Aggregated Dinucs'
         text = 'dinucs'
         color = 'crimson'
@@ -918,8 +941,8 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None, signature,
                                                                           signatureBasedNumberofMutations,
                                                                           xlabel,ylabel,label,text,
-                                                                          outputDir, jobname, isFigureAugmentation,
-                                                                          numberofSimulations, color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+                                                                          outputDir, jobname,
+                                                                          numberofSimulations, color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode)
 
     # SampleBased Subs SignatureBased Nucleosome Occupancy Figures
     for sample in sample2Signature2NumberofMutationsDict:
@@ -928,8 +951,8 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
             plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,
                                                                               sampleBasedSignatureBasedNumberofMutations,
                                                                               xlabel,ylabel,label,text,
-                                                                              outputDir, jobname, isFigureAugmentation,
-                                                                              numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+                                                                              outputDir, jobname,
+                                                                              numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode)
 #########################################################
 
 
@@ -1662,7 +1685,7 @@ def plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,
 
 
 #########################################################
-def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose):
+def occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         ylabel='Average nucleosome signal'
     else:
@@ -1672,10 +1695,6 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
     #######################################################################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type), exist_ok=True)
     #######################################################################################################################
-
-    isFigureAugmentation = False
-    if (figureAugmentation=='augmentation'):
-        isFigureAugmentation = True
 
     ############## Read necessary dictionaries starts ########################################
     mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
@@ -1727,15 +1746,15 @@ def occupancyAverageSignalFigures(outputDir,jobname,figureAugmentation,numberofS
         if (SBS96 in mutationTypes):
             #Subs Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo))
-            plotSignatureBasedFigures(SBS96,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(SBS96,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode)
         if (ID in mutationTypes):
             #Indels Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()),libraryFilenameMemo))
-            plotSignatureBasedFigures(ID,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(ID,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode)
         if (DBS in mutationTypes):
             # Dinucs Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo))
-            plotSignatureBasedFigures(DBS,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,isFigureAugmentation,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose)
+            plotSignatureBasedFigures(DBS,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,numberofSimulations,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode)
     #############################################################################################################################################
 
     ##############################################################
