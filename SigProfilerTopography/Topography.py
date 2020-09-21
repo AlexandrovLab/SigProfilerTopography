@@ -84,6 +84,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_A
 
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
+
+from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNAL
+from SigProfilerTopography.source.commons.TopographyCommons import NO_SIGNAL
 
 from SigProfilerTopography.source.commons.TopographyCommons import SBS96
 from SigProfilerTopography.source.commons.TopographyCommons import ID
@@ -148,6 +152,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_
 from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
 
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+
 
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
@@ -524,7 +529,7 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
 #For others USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM is better
 def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,library_file_with_path,library_file_memo,chromSizesDict,chromNamesList,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                        computation_type,occupancy_type,plusorMinus,remove_outliers,quantileValue,verbose):
+                         computation_type,occupancy_type,occupancy_calculation_type,plusorMinus,remove_outliers,quantileValue,verbose):
 
     #######################################################################
     #We have to exclude for Topography provided nucleosome occupancy files
@@ -539,7 +544,7 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sa
 
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    occupancyAnalysis(genome,computation_type,occupancy_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
+    occupancyAnalysis(genome,computation_type,occupancy_type,occupancy_calculation_type,sample_based,plusorMinus,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,library_file_with_path,library_file_memo,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,remove_outliers,quantileValue,verbose)
 #######################################################
 
 #######################################################
@@ -761,7 +766,8 @@ def runAnalyses(genome,
                 quantileValue=0.97,
                 delete_old=False,
                 plot_mode=PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
-                processivity_calculation_type=CONSIDER_DISTANCE):
+                occupancy_calculation_type=MISSING_SIGNAL,
+                processivity_calculation_type=CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -1448,7 +1454,7 @@ def runAnalyses(genome,
 
         start_time = time.time()
 
-        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,plusorMinus_nucleosome,remove_outliers,quantileValue,verbose)
+        runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,nucleosome_file,None,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,occupancy_calculation_type,plusorMinus_nucleosome,remove_outliers,quantileValue,verbose)
         print('#################################################################################')
         print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
         print("--- Run Nucleosome Occupancy Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),nucleosome_file))
@@ -1550,7 +1556,7 @@ def runAnalyses(genome,
             else:
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
 
-            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,plusorMinus_epigenomics,remove_outliers,quantileValue,verbose)
+            runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sample_based,epigenomics_file,epigenomics_file_memo,chromSizesDict,chromNamesList,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,computation_type,occupancy_type,occupancy_calculation_type,plusorMinus_epigenomics,remove_outliers,quantileValue,verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))
             print("--- Run Epigenomics Analyses: %f minutes --- %s" %(float((time.time()-start_time)/60),epigenomics_file))

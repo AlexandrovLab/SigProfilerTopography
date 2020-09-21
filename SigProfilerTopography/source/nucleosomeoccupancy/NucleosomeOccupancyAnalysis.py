@@ -93,13 +93,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import decideFileTyp
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
 
-
+from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNAL
 
 ########################################################################################
 # April 27, 2020
 # requires chrBased_simBased_combined_df_split which can be real split or whole in fact
 # This is common for pool.imap_unordered and pool.apply_async variations
 def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
+                                                             occupancy_calculation_type,
                                                              outputDir,
                                                              jobname,
                                                              chrLong,
@@ -270,7 +271,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 indelsSignature_accumulated_count_np_array,
                 plusorMinus,
                 sample_based,
-                df_columns) for row in chrBased_simBased_combined_df_split[df_columns].values]
+                df_columns,
+                occupancy_calculation_type) for row in chrBased_simBased_combined_df_split[df_columns].values]
 
 
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
@@ -307,6 +309,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 # For apply_async
 # Read chromBased simBased combined mutations df in the process
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occupancy_type,
+                                                                            occupancy_calculation_type,
                                                                             outputDir,
                                                                             jobname,
                                                                             chrLong,
@@ -326,6 +329,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occu
     chrBased_simBased_mutations_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, simNum)
 
     return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
+                                                                    occupancy_calculation_type,
                                                                     outputDir,
                                                                     jobname,
                                                                     chrLong,
@@ -348,7 +352,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occu
 #May 19, 2020
 # For apply_async split using poolInputList
 # Read chromBased simBased combined mutations df split in the process
-def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type, outputDir, jobname, chrLong, simNum, splitIndex,
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type, occupancy_calculation_type, outputDir, jobname, chrLong, simNum, splitIndex,
                                                                                   chromSizesDict, library_file_with_path,
                                                                                   library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
                                                                                   subsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -357,15 +361,24 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
 
-    return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type, outputDir, jobname, chrLong, simNum,
-                                                                    chrBased_simBased_combined_df_split, chromSizesDict,
-                                                                    library_file_with_path, library_file_type,
+    return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
+                                                                    occupancy_calculation_type,
+                                                                    outputDir,
+                                                                    jobname,
+                                                                    chrLong,
+                                                                    simNum,
+                                                                    chrBased_simBased_combined_df_split,
+                                                                    chromSizesDict,
+                                                                    library_file_with_path,
+                                                                    library_file_type,
                                                                     sample2NumberofSubsDict,
                                                                     sample2SubsSignature2NumberofMutationsDict,
                                                                     subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                     indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                     dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                    plusorMinus, sample_based, verbose)
+                                                                    plusorMinus,
+                                                                    sample_based,
+                                                                    verbose)
 ########################################################################################
 
 
@@ -396,7 +409,8 @@ def fillSignalArrayAndCountArray_using_list_comp(
         indelsSignature_accumulated_count_np_array,
         plusOrMinus,
         sample_based,
-        df_columns):
+        df_columns,
+        occupancy_calculation_type):
 
     indexofType = np.where(df_columns == TYPE)[0][0]
     indexofStart = np.where(df_columns == START)[0][0]
@@ -525,8 +539,9 @@ def fillSignalArrayAndCountArray_using_list_comp(
     # sample = mutation_row_sample
     # simulationNumber= mutation_row_simulation_number
 
+    #September 18, 2020 NO SIGNAL caseis added
     #Vectorize July 25, 2020
-    #Fill dictionaries using window_array
+    #Fill numpy arrays using window_array
     if (window_array is not None) and (np.any(window_array)):
         probabilities = row[signatures_mask_array]
         threshold_mask_array = np.greater_equal(probabilities, cutoffs)
@@ -543,7 +558,12 @@ def fillSignalArrayAndCountArray_using_list_comp(
 
         to_be_accumulated_array = mask_array_1xnumofsignatures.T * window_array_1x2001
         accumulated_signal_np_array += to_be_accumulated_array
-        accumulated_count_np_array += (to_be_accumulated_array>0)
+
+        #default
+        if occupancy_calculation_type==MISSING_SIGNAL:
+            accumulated_count_np_array += (to_be_accumulated_array>0)
+        else:
+            accumulated_count_np_array += 1
     ##########################################################
 
 ########################################################################################
@@ -559,6 +579,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
 def occupancyAnalysis(genome,
                        computation_type,
                         occupancy_type,
+                        occupancy_calculation_type,
                         sample_based,
                         plusorMinus,
                         chromSizesDict,
@@ -723,6 +744,7 @@ def occupancyAnalysis(genome,
         for simNum, chrLong in sim_num_chr_tuples:
             jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations,
                                          args=(occupancy_type,
+                                               occupancy_calculation_type,
                                                outputDir,
                                                jobname,
                                                chrLong,
@@ -773,6 +795,7 @@ def occupancyAnalysis(genome,
         for chrLong, simNum, splitIndex in job_tuples:
             jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
                                          args=(occupancy_type,
+                                               occupancy_calculation_type,
                                                outputDir,
                                                jobname,
                                                chrLong,

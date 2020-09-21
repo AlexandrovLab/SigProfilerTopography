@@ -71,6 +71,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE
 
 # plusOrMinus = 1000
 # windowSize = plusOrMinus*2+1
@@ -413,6 +414,12 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
     else:
         figurenameEnd='_EpigenomicsOccupancy.png'
 
+    if plot_mode== PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
+        real_label='Real %s' %(label)
+        simulated_label = 'Simulated %s' % (label)
+    elif (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT) or (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE):
+        real_label='Real'
+        simulated_label = 'Simulated'
 
     min_list=[]
     max_list=[]
@@ -482,16 +489,11 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
         listofLegends = []
 
-        if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
-            label='Real'
-        original = plt.plot(x, realAverage, color=color, label=label,linewidth=5)
+        original = plt.plot(x, realAverage, color=color, label=real_label,linewidth=5)
         listofLegends.append(original[0])
 
         if (simulationsSignatureBasedMeans is not None):
-            label = 'Average Simulations %s' %(label)
-            if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
-                label='Simulated'
-            simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle,  label=label, linewidth=5)
+            simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle,  label=simulated_label, linewidth=5)
             listofLegends.append(simulations[0])
             if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
                 plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs),facecolor=fillcolor)
@@ -504,7 +506,8 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
         ##############################################################################
         if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
-            plt.legend(loc='best', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white',facecolor='white', framealpha=0)
+            # plt.legend(loc='best', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white',facecolor='white', framealpha=0)
+            plt.legend(loc='lower left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white',facecolor='white', framealpha=0)
 
             #put the number of snps
             tobeWrittenText = "{:,}".format(numberofMutations)
@@ -530,6 +533,34 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 
             plt.xlabel(xlabel, fontsize=32, fontweight='semibold')
             plt.ylabel(ylabel, fontsize=32, fontweight='semibold')
+
+        elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE:
+            plt.legend(loc='upper left', handles=listofLegends, prop={'size': 24}, shadow=False, edgecolor='white',facecolor='white', framealpha=0)
+
+            #put the number of mutations
+            tobeWrittenText = "{:,}".format(numberofMutations)
+            tobeWrittenText=tobeWrittenText + " " + text
+            plt.text(0.99, 0.99, tobeWrittenText, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
+
+            #put the library filename
+            # plt.text(0.01, 0.99, libraryFilename, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes, fontsize=24)
+
+            # July 27, 2018
+            # plt.xlim((-1000, 1000))
+            plt.xlim((-plusOrMinus, plusOrMinus))
+
+            # put/set axis ticks
+            plt.tick_params(axis='both', which='major', labelsize=30, width=3, length=10)
+            plt.tick_params(axis='both', which='minor', labelsize=30, width=3, length=10)
+
+            # put/set axis labels
+            plt.setp(ax.get_xticklabels(), visible=True)
+            plt.setp(ax.get_yticklabels(), visible=True)
+
+            plt.title(title, fontsize=40, fontweight='bold')
+            plt.xlabel(xlabel, fontsize=32, fontweight='semibold')
+            plt.ylabel(ylabel, fontsize=32, fontweight='semibold')
+
         elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
             # legend=ax.legend(loc='upper left', handles=listofLegends, prop={'size': 35}, shadow=False, edgecolor='black',facecolor='white', framealpha=0)
             legend = ax.legend(handles=listofLegends, prop={'size': 35}, loc='upper left')
@@ -618,7 +649,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
 #############################################################################
 ############################ Plot Figure ####################################
 #############################################################################
-def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
+def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,plot_mode):
     if mutationType==SBS96:
         to_be_added_to_the_filename='SBS%s' %(mutationType)
     else:
@@ -717,13 +748,26 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     listofLegends = []
 
+    if (plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL):
+        if (SBS96 == mutationType):
+            real_label = 'Real Aggregated SBSs'
+            simulated_label = 'Simulated Aggregated SBSs'
+        elif (DBS == mutationType):
+            real_label = 'Real Aggregated DBSs'
+            simulated_label = 'Simulated Aggregated DBSs'
+        elif (ID == mutationType):
+            real_label = 'Real Aggregated IDs'
+            simulated_label = 'Simulated Aggregated IDs'
+    elif ((plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT) or (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE)):
+        real_label = 'Real'
+        simulated_label = 'Simulated'
+
     ##############################################################
     if (realAggregatedSubstitutions is not None):
-        aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label='Aggregated substitutions',linewidth=3,zorder=10)
+        aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label,linewidth=3, zorder=10)
         listofLegends.append(aggSubs[0])
-
     if (simulationsAggregatedSubstitutionsMedians is not None):
-        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label='Average Simulations Aggregated Substitutions',linewidth=3,zorder=10)
+        simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label=simulated_label, linewidth=3,zorder=10)
         listofLegends.append(simsAggSubs[0])
         if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
@@ -731,11 +775,10 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     ##############################################################
     if (realAggregatedIndels is not None):
-        aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label='Aggregated indels',linewidth=3,zorder=10)
+        aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label,linewidth=3,zorder=10)
         listofLegends.append(aggIndels[0])
-
     if simulationsAggregatedIndelsMedians is not None:
-        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dashed',label='Average Simulations Aggregated Indels', linewidth=3,zorder=10)
+        simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dashed',label=simulated_label, linewidth=3,zorder=10)
         listofLegends.append(simsAggIndels[0])
         if (simulationsAggregatedIndelsLows is not None) and (simulationsAggregatedIndelsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
@@ -743,11 +786,10 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     ##############################################################
     if (realAggregatedDinucs is not None):
-        aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label='Aggregated dinucs',linewidth=3,zorder=10)
+        aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label,linewidth=3,zorder=10)
         listofLegends.append(aggDinucs[0])
-
     if simulationsAggregatedDinucsMedians is not None:
-        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashed',label='Average Simulations Aggregated Dinucs', linewidth=3,zorder=10)
+        simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashed',label=simulated_label, linewidth=3,zorder=10)
         listofLegends.append(simsAggDinucs[0])
         if (simulationsAggregatedDinucsLows is not None) and (simulationsAggregatedDinucsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
@@ -913,22 +955,25 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
 
     if (mutationType==SBS96):
         xlabel = 'Interval around single base substitution (bp)'
-        label = 'Aggregated Substitutions'
+        # label = 'Single Base Substitutions'
+        label = 'SBSs'
         text = 'subs'
         color = 'royalblue'
         fillcolor = 'lightblue'
         linestyle='dashed'
     elif (mutationType==ID):
-        xlabel = 'Interval around indel (bp)'
-        label = 'Aggregated Indels'
+        xlabel = 'Interval around insertion and deletion (bp)'
+        # label = 'Insertions and Deletions'
+        label = 'IDs'
         text = 'indels'
         color = 'darkgreen'
         fillcolor = 'lightgreen'
         linestyle='dashed'
         # linestyle='dotted'
     elif (mutationType==DBS):
-        xlabel = 'Interval around double base substitution (bp)'
-        label = 'Aggregated Dinucs'
+        xlabel = 'Interval around doublet base substitution (bp)'
+        # label = 'Doublet Base Substitutions'
+        label = 'DBSs'
         text = 'dinucs'
         color = 'crimson'
         fillcolor = 'lightpink'
@@ -1736,7 +1781,7 @@ def occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_b
     #tissue based
     for mutationType in mutationTypes:
         if verbose: print('\tVerbose Worker pid %s Plot all mutations pooled %s\t%s' %(str(os.getpid()),str(mutationType),libraryFilenameMemo))
-        plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
+        plotAllMutationsPooledWithSimulations('Interval around variant (bp)',ylabel,None,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,plot_mode)
     ##############################################################
 
     #############################################################################################################################################

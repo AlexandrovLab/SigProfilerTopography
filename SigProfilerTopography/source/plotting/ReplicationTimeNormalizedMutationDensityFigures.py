@@ -151,13 +151,6 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
             top=False,  # ticks along the top edge are off
             labelbottom=False)  # labels along the bottom edge are off
 
-        legend = ax.legend((bars[0], sims_dashed_line[0]), ('Real', 'Simulated'), prop={'size': 30}, loc='upper left',bbox_to_anchor=(0.03, 0.9))
-
-        if (legend is not None):
-            frame = legend.get_frame()
-            frame.set_facecolor('white')
-            frame.set_edgecolor('black')
-
 
     elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
         # set axis ticks
@@ -171,17 +164,6 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
         ax.spines["left"].set_color('black')
         ax.spines["top"].set_color('black')
         ax.spines["right"].set_color('black')
-
-
-        # First way
-        # from matplotlib.patches import Patch
-        # from matplotlib.lines import Line2D
-        # legend_elements = [Patch(facecolor=barcolor, edgecolor='black',label='Real'),Line2D([0], [0], linestyle='--',  linewidth=5, color='navy', label='Simulated')]
-        # legend = ax.legend(handles=legend_elements, prop={'size': 35}, loc='upper right')
-
-        # Second way
-        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='upper center')
-        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='best')
 
         # to put the legend's upper right-hand corner at (0.8,1) optimized for SBS6 in BreastCancer560 data for SigProfilerTopography Overview Figure
         # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='upper right', bbox_to_anchor = (0.8, 1))
