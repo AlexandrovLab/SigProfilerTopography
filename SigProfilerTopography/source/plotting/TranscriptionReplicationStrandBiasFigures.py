@@ -1700,14 +1700,14 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
 
     for strand_bias in strand_bias_list:
 
-        # plot_six_mutations_sbs_signatures_figures(subsSignatures,
+        # plot_six_mutations_sbs_signatures_figures_old_way(subsSignatures,
         #                                 strand_bias,
         #                                 strandbias_figures_outputDir,
         #                                 SIGNIFICANCE_LEVEL,
         #                                 signature2mutation_type2strand2percentagedict,
         #                                 percentage_strings)
 
-        plot_six_mutations_sbs_signatures_figures_eriks_way(subsSignatures,
+        plot_six_mutations_sbs_signatures_figures(subsSignatures,
                                         strand_bias,
                                         strandbias_figures_outputDir,
                                         SIGNIFICANCE_LEVEL,
@@ -2203,9 +2203,6 @@ def plot_dbs_and_id_signatures_figures(signature_type,
 
 ############################################################################################################################
 
-############################################################################################################################
-#Inspired by Erik's way
-############################################################################################################################
 
 
 ############################################################################################################################
@@ -2256,8 +2253,7 @@ def plot_legend(strandbias_figures_outputDir):
 
 ############################################################################################################################
 #Sep 19, 2020
-#Inspired by Erik's way
-def plot_six_mutations_sbs_signatures_figures_eriks_way(sbs_signatures,
+def plot_six_mutations_sbs_signatures_figures(sbs_signatures,
             strand_bias,
             strandbias_figures_outputDir,
             significance_level,
@@ -2323,7 +2319,7 @@ def plot_six_mutations_sbs_signatures_figures_eriks_way(sbs_signatures,
         ##################################################################################
 
         ##################################################################################
-        #Colors from Erik's code to be consistent
+        #Colors from SigProfilerPlotting tool to be consistent
         colors = [[3 / 256, 189 / 256, 239 / 256],
                   [1 / 256, 1 / 256, 1 / 256],
                   [228 / 256, 41 / 256, 38 / 256],
@@ -2556,7 +2552,7 @@ def plot_six_mutations_sbs_signatures_figures_eriks_way(sbs_signatures,
 
 
 ############################################################################################################################
-def plot_six_mutations_sbs_signatures_figures(sbs_signatures,
+def plot_six_mutations_sbs_signatures_figures_old_way(sbs_signatures,
             strand_bias,
             strandbias_figures_outputDir,
             significance_level,
