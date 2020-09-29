@@ -241,6 +241,21 @@ FIXED_STEP='fixedStep'
 VARIABLE_STEP='variableStep'
 
 ###################################################################################################
+COMBINE_P_VALUES_METHOD_FISHER='fisher'
+COMBINE_P_VALUES_METHOD_STOUFFER='stouffer'
+WEIGHTED_AVERAGE_METHOD='WEIGHTED_AVERAGE_METHOD'
+COLORBAR_SEISMIC='seismic'
+COLORBAR_DISCREET='discreet'
+NUCLEOSOME_BIOSAMPLE="K562"
+TABLES='tables'
+DETAILED='detailed'
+NUCLEOSOME_DNA_ELEMENT='Nucleosome'
+ATAC_DNA_ELEMENT='ATAC'
+###################################################################################################
+
+
+
+###################################################################################################
 #Tables
 Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_SBS_Signature_NumberofMutations_AverageProbability.txt"
 Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_ID_Signature_NumberofMutations_AverageProbability.txt"
@@ -450,8 +465,7 @@ DEFAULT_HISTONE_OCCUPANCY_FILE4 = 'ENCFF154XFN_H3K27ac_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE5 = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
 DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
 
-BIOSAMPLE_UNDECLARED='Biosample_Undeclared'
-
+UNDECLARED = 'Undeclared'
 
 AVERAGE_SIGNAL_ARRAY = 'AverageSignalArray'
 ACCUMULATED_COUNT_ARRAY = 'AccumulatedCountArray'
@@ -460,6 +474,7 @@ ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
+
 
 # ############################################################
 def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):

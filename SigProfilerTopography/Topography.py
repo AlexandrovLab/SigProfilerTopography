@@ -75,7 +75,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTO
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE5
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE6
 
-from SigProfilerTopography.source.commons.TopographyCommons import BIOSAMPLE_UNDECLARED
+from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
@@ -140,8 +140,8 @@ from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBia
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
+from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import compute_fold_change_with_p_values_plot_heatmaps
 
-from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import plot_heatmaps
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
 
@@ -152,6 +152,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_
 from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
 
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+
+from SigProfilerTopography.source.commons.TopographyCommons import COMBINE_P_VALUES_METHOD_FISHER
+from SigProfilerTopography.source.commons.TopographyCommons import WEIGHTED_AVERAGE_METHOD
+from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEISMIC
 
 
 ############################################################
@@ -725,7 +729,7 @@ def runAnalyses(genome,
                 epigenomics_biosamples=None,
                 epigenomics_dna_elements=None,
                 epigenomics_dir_name=None,
-                nucleosome_biosample=K562,
+                nucleosome_biosample=None,
                 nucleosome_file=None,
                 replication_time_biosample=MCF7,
                 replication_time_signal_file=None,
@@ -767,7 +771,12 @@ def runAnalyses(genome,
                 delete_old=False,
                 plot_mode=PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
                 occupancy_calculation_type=MISSING_SIGNAL,
-                processivity_calculation_type=CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER):
+                processivity_calculation_type=CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER,
+                combine_p_values_method=COMBINE_P_VALUES_METHOD_FISHER,
+                fold_change_window_size=100,
+                depleted_fold_change=0.9,
+                enriched_fold_change=1.1,
+                heatmap_colorbar=COLORBAR_SEISMIC):
 
     # ucsc hg19 chromosome names:
     # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
@@ -936,25 +945,31 @@ def runAnalyses(genome,
     ###############################################
 
     ###############################################
-    # We need set nucleosome_file
+    # We need to set nucleosome_file
     # By default nucleosome_biosample=K562 and nucleosome_file is None
     # Here we set filename with extension not full path
     #There can be 2 cases:
     #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
     #Case 2 : nucleosome_biosample is NOT an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
 
-    #Case1: nucleosome_biosample is not None, nucleosome_file is a filename without fullpath
-    if ((nucleosome_file is None) and (nucleosome_biosample in available_nucleosome_biosamples)):
-        #Sets the filename without the full path
-        nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-    #Case2: nucleosome_biosample is set to None, nucleosome_file is a filename with fullpath
-    else:
-        # We expect that user has provided nucleosome file with full path
-        nucleosome_biosample = None
+    #Case1:nucleosome_file is None (Use Default)
+    if (nucleosome_file is None):
+        if nucleosome_biosample is None:
+            #Set to default
+            nucleosome_biosample=K562
 
-    # For using SigProfilerTopography Nucleosme Files
-    if (nucleosome) and (nucleosome_biosample in available_nucleosome_biosamples):
-        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+        if (nucleosome_biosample in available_nucleosome_biosamples):
+            #Sets the filename without the full path
+            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+
+        # For using SigProfilerTopography Nucleosme Files
+        if ((nucleosome_file is not None) and nucleosome):
+            check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+    #Case2: nucleosome_file is a filename with fullpath (User provided)
+    elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
+        # We expect that user has provided nucleosome file with full path
+        nucleosome_biosample = UNDECLARED
     ###############################################
 
     ###############################################
@@ -989,7 +1004,7 @@ def runAnalyses(genome,
         epigenomics_files_memos = epigenomics_file_memos_created
 
     if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
-        epigenomics_biosamples = [BIOSAMPLE_UNDECLARED]
+        epigenomics_biosamples = [UNDECLARED]
     ###############################################
 
     #################################################################################
@@ -1575,7 +1590,40 @@ def runAnalyses(genome,
         print('#################################################################################')
         print('--- Plot figures starts')
         start_time = time.time()
-        plotFigures(outputDir, jobname, numofSimulations, sample_based,mutation_types_contexts,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias, transcription_strand_bias,processivity,plusorMinus_epigenomics,plusorMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome,data_ready_plot_replication_time,data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias,data_ready_plot_processivity,delete_old,plot_mode)
+        plotFigures(outputDir,
+                    jobname,
+                    numofSimulations,
+                    sample_based,
+                    mutation_types_contexts,
+                    epigenomics_files,
+                    epigenomics_files_memos,
+                    epigenomics_biosamples,
+                    epigenomics_dna_elements,
+                    epigenomics_dir_name,
+                    nucleosome_file,
+                    nucleosome_biosample,
+                    epigenomics,
+                    nucleosome,
+                    replication_time,
+                    replication_strand_bias,
+                    transcription_strand_bias,
+                    processivity,
+                    plusorMinus_epigenomics,
+                    plusorMinus_nucleosome,
+                    verbose,
+                    data_ready_plot_epigenomics,
+                    data_ready_plot_nucleosome,
+                    data_ready_plot_replication_time,
+                    data_ready_plot_replication_strand_bias,
+                    data_ready_plot_transcription_strand_bias,
+                    data_ready_plot_processivity,
+                    delete_old,
+                    plot_mode,
+                    combine_p_values_method,
+                    fold_change_window_size,
+                    depleted_fold_change,
+                    enriched_fold_change,
+                    heatmap_colorbar)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1596,7 +1644,40 @@ def runAnalyses(genome,
 
 ##############################################################
 #Plot Figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_files,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,epigenomics_dir_name,nucleosome_file,epigenomics,nucleosome,replication_time,replication_strand_bias,transcription_strand_bias,processivity,plusOrMinus_epigenomics,plusOrMinus_nucleosome,verbose,data_ready_plot_epigenomics,data_ready_plot_nucleosome, data_ready_plot_replication_time, data_ready_plot_replication_strand_bias,data_ready_plot_transcription_strand_bias, data_ready_plot_processivity,delete_old,plot_mode):
+def plotFigures(outputDir,
+                jobname,
+                numberofSimulations,
+                sample_based,
+                mutationTypes,
+                epigenomics_files,
+                epigenomics_files_memos,
+                epigenomics_biosamples,
+                epigenomics_dna_elements,
+                epigenomics_dir_name,
+                nucleosome_file,
+                nucleosome_biosample,
+                epigenomics,
+                nucleosome,
+                replication_time,
+                replication_strand_bias,
+                transcription_strand_bias,
+                processivity,
+                plusOrMinus_epigenomics,
+                plusOrMinus_nucleosome,
+                verbose,
+                data_ready_plot_epigenomics,
+                data_ready_plot_nucleosome,
+                data_ready_plot_replication_time,
+                data_ready_plot_replication_strand_bias,
+                data_ready_plot_transcription_strand_bias,
+                data_ready_plot_processivity,
+                delete_old,
+                plot_mode,
+                combine_p_values_method,
+                fold_change_window_size,
+                depleted_fold_change,
+                enriched_fold_change,
+                heatmap_colorbar):
 
     jobnameSamplesPath = os.path.join(outputDir,jobname,FIGURE,SAMPLES)
     print('Topography.py jobnameSamplesPath:%s ' %jobnameSamplesPath)
@@ -1661,32 +1742,50 @@ def plotFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes
         #Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
-        #################################################################
-        pool = multiprocessing.Pool(numofProcesses)
-        jobs=[]
-
-        #Please note that epigenomics_file_memo is not None
-        #If None then it is created from filename.
-        for idx, epigenomics_file in enumerate(epigenomics_files):
-            epigenomics_file_basename = os.path.basename(epigenomics_file)
-            epigenomics_file_memo= epigenomics_files_memos[idx]
-            jobs.append(pool.apply_async(occupancyAverageSignalFigures,args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
-
-        if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
-
-        # wait for all jobs to finish
-        for job in jobs:
-            if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
-
-        pool.close()
-        pool.join()
-        #################################################################
+        # TODO uncomment after  code is complete starts
+        # #################################################################
+        # pool = multiprocessing.Pool(numofProcesses)
+        # jobs=[]
+        #
+        # #Please note that epigenomics_file_memo is not None
+        # #If None then it is created from filename.
+        # for idx, epigenomics_file in enumerate(epigenomics_files):
+        #     epigenomics_file_basename = os.path.basename(epigenomics_file)
+        #     epigenomics_file_memo= epigenomics_files_memos[idx]
+        #     jobs.append(pool.apply_async(occupancyAverageSignalFigures,
+        #                                  args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+        #
+        # if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
+        #
+        # # wait for all jobs to finish
+        # for job in jobs:
+        #     if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
+        #
+        # pool.close()
+        # pool.join()
+        # #################################################################
+        # TODO uncomment after  code is complete ends
 
         # original old call
         # sequential
         # occupancyAverageSignalFigures(outputDir, jobname, figureAugmentation, numberofSimulations,sample_based, mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose)
 
-        plot_heatmaps(outputDir,jobname,numberofSimulations,epigenomics_files_memos,epigenomics_biosamples,epigenomics_dna_elements,occupancy_type,plusOrMinus_epigenomics,verbose)
+        compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
+                                              fold_change_window_size,
+                                              depleted_fold_change,
+                                              enriched_fold_change,
+                                              heatmap_colorbar,
+                                              outputDir,
+                                              jobname,
+                                              numberofSimulations,
+                                              nucleosome_file,
+                                              nucleosome_biosample,
+                                              epigenomics_files_memos,
+                                              epigenomics_biosamples,
+                                              epigenomics_dna_elements,
+                                              plusOrMinus_epigenomics,
+                                              plusOrMinus_nucleosome,
+                                              verbose)
     ############################################################
 
 ##############################################################
