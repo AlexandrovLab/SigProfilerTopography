@@ -335,39 +335,47 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ############### Plotting starts ###################################
     ###################################################################
 
-    ####################################################
-    #Used for scatter plot
-    x = []
-    y = []
-    c = []
-    ####################################################
 
     ####################################################
-    # create a new figure
-    # fig = plt.figure(figsize=(maxProcessiveGroupLength, len(sortedSignatureList)), dpi=300)
-
-    # fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sortedSignatureList)))
-    # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
     if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
 
     if len(sorted_signature_list)<=2:
-        fig = plt.figure(figsize=(15, 15))
-        plt.title('%s' % (jobname), y=1.25, fontsize=40, fontweight='bold')
+        # Horizontal ColorBar at the end
+        fig,(ax, cax)  = plt.subplots(nrows=2,figsize=(15, 15),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Vertical ColorBar on the right
+        # fig = plt.figure(figsize=(15, 15))
+        # plt.title('%s' % (jobname), y=1.25, fontsize=40, fontweight='bold')
     elif (maxProcessiveGroupLength>20):
-        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
-
+        # Horizontal ColorBar at the end
+        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Vertical ColorBar on the right
+        # fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 2 * len(sorted_signature_list)))
+        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
     elif (len(sorted_signature_list)>maxProcessiveGroupLength):
-        fig = plt.figure(figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
+        # Horizontal ColorBar at the end
+        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Vertical ColorBar on the right
+        # fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 1.5 * len(sorted_signature_list)))
+        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
     elif (maxProcessiveGroupLength > len(sorted_signature_list)):
-        fig = plt.figure(figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
+        # Horizontal ColorBar at the end
+        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Vertical ColorBar on the right
+        # fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sorted_signature_list)))
+        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
     elif (maxProcessiveGroupLength == len(sorted_signature_list)):
-        fig = plt.figure(figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.15, fontsize=40, fontweight='bold')
+        # Horizontal ColorBar at the end
+        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Vertical ColorBar on the right
+        # fig = plt.figure(figsize=(2.5 * maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
+        # plt.title('%s' % (jobname), y=1.15, fontsize=40, fontweight='bold')
 
-    ax = plt.gca()
+    # Horizontal ColorBar at the end
+    fig.suptitle(jobname,fontsize=50, fontweight='bold')
+
+    # Vertical ColorBar on the right
+    # ax = plt.gca()
+
     ax.set_aspect(1.0)  # make aspect ratio square
     ####################################################
 
@@ -385,17 +393,18 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         plt.ylim([1, len(sorted_signature_list)])
     else:
         plt.ylim([0, len(sorted_signature_list)])
-    #######################################################################
 
     ax.set_yticks(np.arange(0, len(sorted_signature_list) + 1, 1))
+    #######################################################################
 
+    #######################################################################
     cmap = cm.get_cmap('YlOrRd')  # Looks better good
-    # cmap = cm.get_cmap('seismic')  # not good
-
+    v_min = 2
+    v_max = 20
     #Very important: You have to normalize
-    # norm = Normalize(min_minus_log10_qvalue, max_minus_log10_qvalue)
-    # norm = Normalize(2, 50)
-    norm = Normalize(2, 20)
+    bounds = np.arange(v_min, v_max+1, 2)
+    norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
+    #######################################################################
 
     #######################################################################################
     ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is None ends ########
@@ -433,21 +442,12 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                     ax.add_artist(circle)
     ##########################################################################################
 
-
-    ##########################################################################################
-    for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
-        x.append(lengthIndex)
-        y.append(lengthIndex)
-        c.append(0.5)
-
-    #This code defines the ticks on the color bar
-    # plot the scatter plot
-    # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=min_minus_log10_qvalue, vmax=max_minus_log10_qvalue, edgecolors='black')
-    # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=2, vmax=50, edgecolors='black')
-    sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=2, vmax=20, edgecolors='black')
-
     ax.set_facecolor('white')
+    #When there are subplots, this is needed.
+    ax.grid(color='black')
+
     plt.grid(color='black')
+
 
     for edge, spine in ax.spines.items():
         spine.set_visible(True)
@@ -459,33 +459,52 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ylabels = sorted_signature_list
     ##########################################################################################
 
-    # We can ploy color bar in a separate figure
-    # plot_color_bar(outputDir, jobname,norm)
-
     ################### Put the color bar if there are simulations starts ###################
     if (numberofSimulations>0):
-        cb = plt.colorbar(sc)  # this works because of the scatter
-        cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=30)
-        cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=30)
+        ##########################################################################################
+        # Horizontal ColorBar at the end
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm, ticks=bounds, spacing='proportional',orientation='horizontal')
+        cb.set_label("-log10 (q-value)", horizontalalignment='center', rotation=0, fontsize=50, labelpad=20)
+        cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=40)
+        cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=40)
 
-        font = mpl.font_manager.FontProperties(size=30)
         cbax = cb.ax
+        cbax.tick_params(labelsize=40)
         text_x = cbax.xaxis.label
         text_y = cbax.yaxis.label
+        font = mpl.font_manager.FontProperties(size=40)
         text_x.set_font_properties(font)
         text_y.set_font_properties(font)
+        ##########################################################################################
 
-        # cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150)
-        cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=30)
+        # #########################################################################################
+        # Vertical ColorBar on the right
+        # #Used for scatter plot
+        # x = []
+        # y = []
+        # c = []
+        #
+        # for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+        #     x.append(lengthIndex)
+        #     y.append(lengthIndex)
+        #     c.append(0.5)
+        #
+        # #This code defines the ticks on the color bar
+        # # plot the scatter plot
+        # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
+        # cb = plt.colorbar(sc)  # this works because of the scatter
+        # cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=30)
+        # #########################################################################################
+
+
     ################### Put the color bar if there are simulations ends #####################
 
     ##################################################################################
     # CODE GOES HERE TO CENTER X-AXIS LABELS...
     ax.set_xticklabels([])
     mticks = ax.get_xticks()
-
     ax.set_xticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='x', which='minor', length=0,labelsize=40)
+    ax.tick_params(axis='x', which='minor', length=0,labelsize=50)
 
     if xlabels is not None:
         ax.set_xticklabels(xlabels, minor=True)
@@ -504,7 +523,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ax.set_yticklabels([])
     mticks = ax.get_yticks()
     ax.set_yticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='y', which='minor', length=0,labelsize=40)
+    ax.tick_params(axis='y', which='minor', length=0,labelsize=50)
     ax.set_yticklabels(ylabels, minor=True) # fontsize
 
     plt.tick_params(

@@ -1742,29 +1742,27 @@ def plotFigures(outputDir,
         #Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
-        # TODO uncomment after  code is complete starts
-        # #################################################################
-        # pool = multiprocessing.Pool(numofProcesses)
-        # jobs=[]
-        #
-        # #Please note that epigenomics_file_memo is not None
-        # #If None then it is created from filename.
-        # for idx, epigenomics_file in enumerate(epigenomics_files):
-        #     epigenomics_file_basename = os.path.basename(epigenomics_file)
-        #     epigenomics_file_memo= epigenomics_files_memos[idx]
-        #     jobs.append(pool.apply_async(occupancyAverageSignalFigures,
-        #                                  args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
-        #
-        # if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
-        #
-        # # wait for all jobs to finish
-        # for job in jobs:
-        #     if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
-        #
-        # pool.close()
-        # pool.join()
-        # #################################################################
-        # TODO uncomment after  code is complete ends
+        #################################################################
+        pool = multiprocessing.Pool(numofProcesses)
+        jobs=[]
+
+        #Please note that epigenomics_file_memo is not None
+        #If None then it is created from filename.
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_basename = os.path.basename(epigenomics_file)
+            epigenomics_file_memo= epigenomics_files_memos[idx]
+            jobs.append(pool.apply_async(occupancyAverageSignalFigures,
+                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+
+        if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
+
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
+
+        pool.close()
+        pool.join()
+        #################################################################
 
         # original old call
         # sequential
