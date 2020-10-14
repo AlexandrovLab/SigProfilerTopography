@@ -42,15 +42,12 @@ from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedM
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import ALL
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import K562
 from SigProfilerTopography.source.commons.TopographyCommons import MCF7
 
-from SigProfilerTopography.source.commons.TopographyCommons import GM12878_NUCLEOSOME_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import K562_NUCLEOSOME_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 
 from SigProfilerTopography.source.commons.TopographyCommons import getNucleosomeFile
 from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
@@ -68,12 +65,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
 from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
 from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
 
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE1
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE2
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE3
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE4
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE5
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_HISTONE_OCCUPANCY_FILE6
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27ME3_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K36ME3_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K9ME3_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27AC_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME1_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME3_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
@@ -394,6 +393,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
 
 ############################################################
 
+
 #######################################################
 #JAN 9, 2020
 def check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file):
@@ -473,6 +473,8 @@ def check_download_replication_time_files(replication_time_signal_file,replicati
 
 #######################################################
 
+
+
 #######################################################
 #Nov25, 2019
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
@@ -536,13 +538,7 @@ def runOccupancyAnalyses(genome,outputDir,jobname,numofSimulations,job_tuples,sa
                          computation_type,occupancy_type,occupancy_calculation_type,plusorMinus,remove_outliers,quantileValue,verbose):
 
     #######################################################################
-    #We have to exclude for Topography provided nucleosome occupancy files
-    exclude_from_check=False
-
-    if (os.path.basename(library_file_with_path)==GM12878_NUCLEOSOME_OCCUPANCY_FILE) or (os.path.basename(library_file_with_path)==K562_NUCLEOSOME_OCCUPANCY_FILE):
-        exclude_from_check=True
-
-    if (not exclude_from_check) and (not os.path.exists(library_file_with_path)):
+    if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES) and (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
     #######################################################################
 
@@ -664,7 +660,7 @@ def deleteOldData(outputDir,jobname,occupancy_type):
 #######################################################
 def deleteOldFigures(outputDir, jobname, occupancy_type):
 
-    jobnamePath = os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type)
+    jobnamePath = os.path.join(outputDir, jobname, FIGURE, occupancy_type)
     print('Topography.py jobnamePath:%s ' %jobnamePath)
 
     ############################################################
@@ -724,14 +720,14 @@ def runAnalyses(genome,
                 dbs_probabilities=None,
                 mutation_types_contexts=None,
                 mutation_types_contexts_for_signature_probabilities=None,
-                epigenomics_files=[DEFAULT_HISTONE_OCCUPANCY_FILE1,DEFAULT_HISTONE_OCCUPANCY_FILE2,DEFAULT_HISTONE_OCCUPANCY_FILE3,DEFAULT_HISTONE_OCCUPANCY_FILE4,DEFAULT_HISTONE_OCCUPANCY_FILE5,DEFAULT_HISTONE_OCCUPANCY_FILE6],
+                epigenomics_files=[DEFAULT_H3K27ME3_OCCUPANCY_FILE,DEFAULT_H3K36ME3_OCCUPANCY_FILE,DEFAULT_H3K9ME3_OCCUPANCY_FILE,DEFAULT_H3K27AC_OCCUPANCY_FILE,DEFAULT_H3K4ME1_OCCUPANCY_FILE,DEFAULT_H3K4ME3_OCCUPANCY_FILE,DEFAULT_CTCF_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE],
                 epigenomics_files_memos=None,
                 epigenomics_biosamples=None,
                 epigenomics_dna_elements=None,
                 epigenomics_dir_name=None,
                 nucleosome_biosample=None,
                 nucleosome_file=None,
-                replication_time_biosample=MCF7,
+                replication_time_biosample=None,
                 replication_time_signal_file=None,
                 replication_time_valley_file=None,
                 replication_time_peak_file=None,
@@ -746,10 +742,10 @@ def runAnalyses(genome,
                 sample_based=False,
                 plot_figures=True,
                 full_mode=True,
-                sim_data_ready=False,
-                matgen_data_ready=False,
-                prob_merged_data_ready=False,
-                tables_ready=False,
+                step1_sim_data=True,
+                step2_matgen_data=True,
+                step3_prob_merged_data=True,
+                step4_tables=True,
                 cutoff_type=STRINGENT,
                 average_probability=0.9,
                 num_of_sbs_required=5000,
@@ -771,23 +767,11 @@ def runAnalyses(genome,
                 delete_old=False,
                 plot_mode=PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
                 occupancy_calculation_type=MISSING_SIGNAL,
-                processivity_calculation_type=CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER,
+                processivity_calculation_type=CONSIDER_DISTANCE,
                 combine_p_values_method=COMBINE_P_VALUES_METHOD_FISHER,
-                fold_change_window_size=100,
-                depleted_fold_change=0.9,
-                enriched_fold_change=1.1,
-                heatmap_colorbar=COLORBAR_SEISMIC):
+                fold_change_window_size=100):
 
-    # ucsc hg19 chromosome names:
-    # 'chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chrX', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr20', 'chrY', 'chr19', 'chr22', 'chr21', 'chrM'
-    # ensembl GRCh37 chromosome names:
-    # '1', '2', '3', '4', '5', '6', '7', 'X', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '20', 'Y', '19', '22', '21', 'MT'
-
-    # default library files (nucleosome occupancy and replication time) are all in hg19
-    # hg19 wgEncodeSydhNsomeGm12878Sig.bigWig from http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeSydhNsome
-    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig
-    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed
-    # hg19 SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed
+    current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
@@ -815,6 +799,137 @@ def runAnalyses(genome,
     if mutation_types_contexts_for_signature_probabilities is None:
         mutation_types_contexts_for_signature_probabilities=mutation_types_contexts
     ###################################################
+
+
+    #################################################################################
+    ################################## Setting starts ###############################
+    ################## Set full path library files starts ###########################
+    #################################################################################
+    if genome is None:
+        genome=GRCh37
+
+    ###############################################
+    if strand_bias:
+        replication_strand_bias=True
+        transcription_strand_bias=True
+    ###############################################
+
+    ###############################################
+    # We need full path of the library files
+    default_epigenomics_files = [DEFAULT_H3K27ME3_OCCUPANCY_FILE,
+                                 DEFAULT_H3K36ME3_OCCUPANCY_FILE,
+                                 DEFAULT_H3K9ME3_OCCUPANCY_FILE,
+                                 DEFAULT_H3K27AC_OCCUPANCY_FILE,
+                                 DEFAULT_H3K4ME1_OCCUPANCY_FILE,
+                                 DEFAULT_H3K4ME3_OCCUPANCY_FILE,
+                                 DEFAULT_CTCF_OCCUPANCY_FILE,
+                                 DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
+
+    if (set(epigenomics_files) == set(default_epigenomics_files)):
+        # Set default
+        # Order in default_epigenomics_files and epigenomics_files_memos must match
+        epigenomics_files = default_epigenomics_files
+        epigenomics_files_memos = [os.path.splitext(os.path.basename(DEFAULT_H3K27ME3_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_H3K36ME3_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_H3K9ME3_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_H3K27AC_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_H3K4ME1_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_H3K4ME3_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_CTCF_OCCUPANCY_FILE))[0],
+                                   os.path.splitext(os.path.basename(DEFAULT_ATAC_SEQ_OCCUPANCY_FILE))[0]]
+
+        # Defines columns in the heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_dna_elements=['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
+
+        # Defines rows in the detailed heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_biosamples = ['breast_epithelium']
+
+        for file_index, filename in enumerate(epigenomics_files):
+            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+    ###############################################
+
+    ###############################################
+    # We need to set nucleosome_file
+    # By default nucleosome_biosample=K562 and nucleosome_file is None
+    # Here we set filename with extension not full path
+    #There can be 2 cases:
+    #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
+    #Case 2 : nucleosome_biosample is NOT an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
+
+    #Case1: File is not set, Biosample is not set
+    if (nucleosome_file is None) and (nucleosome_biosample is None):
+        nucleosome_biosample = K562
+        nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+        if nucleosome:
+            check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+    #Case2: File is not set, Biosample is set
+    elif (nucleosome_file is None) and (nucleosome_biosample is not None):
+        if (nucleosome_biosample in available_nucleosome_biosamples):
+            #Sets the filename without the full path
+            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+            if (nucleosome):
+                check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+    #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+    elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
+        # We expect that user has provided nucleosome file with full path
+        nucleosome_biosample = UNDECLARED
+    #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+    #Do nothing use as it is
+    ###############################################
+
+    ###############################################
+    #We need full path of the library files
+    #By default replication_time_biosample=MCF7 and signal, valley, peak files are None
+    #Case1: Files are not set, Biosample is not set
+    if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+        replication_time_biosample=MCF7
+        replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
+        if (replication_time or replication_strand_bias):
+            # For using SigProfilerTopography Provided Replication Time Files
+            check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+
+    #Case2: Files are not set, Biosample is set
+    elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
+        if (replication_time_biosample in available_replication_time_biosamples):
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample)
+            if (replication_time or replication_strand_bias):
+                # For using SigProfilerTopography Provided Replication Time Files
+                check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+
+    #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+    elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
+        replication_time_biosample = UNDECLARED
+    #Case4: Files are set. Biosample is set. Use as it is. Do nothing.
+    ###############################################
+
+    ###############################################
+    # data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
+    epigenomics_file_memos_created = []
+
+    # Run for each epigenomics file
+    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
+            epigenomics_file_memos_created.append(epigenomics_file_memo)
+
+    # Used for plotting
+    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
+        epigenomics_files_memos = epigenomics_file_memos_created
+
+    if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
+        epigenomics_biosamples = [UNDECLARED]
+    ###############################################
+
+    #################################################################################
+    ################## Set full path library files ends #############################
+    ################################## Setting ends #################################
+    #################################################################################
+
 
     print('#################################################################################')
     # print('--- %s' %platform.platform())
@@ -911,106 +1026,10 @@ def runAnalyses(genome,
     print('--- For Genome: %s' %(genome))
     print('--- Chromosome names: %s' %(chromNamesList))
     print('--- Chromosome short names: %s' % (chromShortNamesList))
-    current_abs_path = os.path.dirname(os.path.realpath(__file__))
     print('--- current_abs_path: %s ' % current_abs_path)
     print('#################################################################################\n')
     #################################################################################
 
-    #################################################################################
-    ################################## Setting starts ###############################
-    ################## Set full path library files starts ###########################
-    #################################################################################
-
-    ###############################################
-    if strand_bias:
-        replication_strand_bias=True
-        transcription_strand_bias=True
-    ###############################################
-
-    ###############################################
-    # We need full path of the library files
-    default_epigenomics_files = [DEFAULT_HISTONE_OCCUPANCY_FILE1, DEFAULT_HISTONE_OCCUPANCY_FILE2,
-                                 DEFAULT_HISTONE_OCCUPANCY_FILE3, DEFAULT_HISTONE_OCCUPANCY_FILE4,
-                                 DEFAULT_HISTONE_OCCUPANCY_FILE5, DEFAULT_HISTONE_OCCUPANCY_FILE6]
-    if (set(epigenomics_files) == set(default_epigenomics_files)):
-        # Set default
-        # Make the order correctly
-        epigenomics_files = default_epigenomics_files
-        epigenomics_files_memos = ['H3K27me3_Breast_Epithelium', 'H3K36me3_Breast_Epithelium',
-                                   'H3K9me3_Breast_Epithelium', 'H3K27ac_Breast_Epithelium',
-                                   'H3K4me1_Breast_Epithelium', 'H3K4me3_Breast_Epithelium']
-        epigenomics_biosamples = ['Breast_Epithelium']
-        for file_index, filename in enumerate(epigenomics_files):
-            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-    ###############################################
-
-    ###############################################
-    # We need to set nucleosome_file
-    # By default nucleosome_biosample=K562 and nucleosome_file is None
-    # Here we set filename with extension not full path
-    #There can be 2 cases:
-    #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
-    #Case 2 : nucleosome_biosample is NOT an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
-
-    #Case1:nucleosome_file is None (Use Default)
-    if (nucleosome_file is None):
-        if nucleosome_biosample is None:
-            #Set to default
-            nucleosome_biosample=K562
-
-        if (nucleosome_biosample in available_nucleosome_biosamples):
-            #Sets the filename without the full path
-            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-
-        # For using SigProfilerTopography Nucleosme Files
-        if ((nucleosome_file is not None) and nucleosome):
-            check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
-
-    #Case2: nucleosome_file is a filename with fullpath (User provided)
-    elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
-        # We expect that user has provided nucleosome file with full path
-        nucleosome_biosample = UNDECLARED
-    ###############################################
-
-    ###############################################
-    #We need full path of the library files
-    #By default replication_time_biosample=MCF7 and signal, valley, peak files are None
-    if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample in available_replication_time_biosamples):
-        replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
-
-    #User has provided replication time files
-    #User must provide replication files with full paths
-    elif (replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None):
-        replication_time_biosample=None
-
-    #For replication time and replication strand bias
-    if (replication_time or replication_strand_bias) and (replication_time_biosample in available_replication_time_biosamples):
-        #For using SigProfilerTopography Provided Replication Time Files
-        check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file)
-    ###############################################
-
-    ###############################################
-    # data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
-    epigenomics_file_memos_created = []
-
-    # Run for each epigenomics file
-    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-        for idx, epigenomics_file in enumerate(epigenomics_files):
-            epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
-            epigenomics_file_memos_created.append(epigenomics_file_memo)
-
-    # Used for plotting
-    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-        epigenomics_files_memos = epigenomics_file_memos_created
-
-    if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
-        epigenomics_biosamples = [UNDECLARED]
-    ###############################################
-
-    #################################################################################
-    ################## Set full path library files ends #############################
-    ################################## Setting ends #################################
-    #################################################################################
 
 
     ###################################################################################################################
@@ -1019,9 +1038,9 @@ def runAnalyses(genome,
     if full_mode:
 
         ###################################################################################################
-        ####################### First Step SigProfilerMatrixGenerator for original data starts ############
+        ######################### SigProfilerMatrixGenerator for original data starts #####################
         ###################################################################################################
-        if (not matgen_data_ready):
+        if (step2_matgen_data):
 
             # Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
             print('#################################################################################')
@@ -1041,14 +1060,14 @@ def runAnalyses(genome,
             print("--- SigProfilerMatrixGenerator for original data: %f minutess ---" % float((time.time() - start_time) / 60))
             print('#################################################################################\n')
         ###################################################################################################
-        ####################### First Step SigProfilerMatrixGenerator for original data ends ##############
+        ######################### SigProfilerMatrixGenerator for original data ends #######################
         ###################################################################################################
 
 
         ###################################################################################################################
-        ################################## Second Step Simulations if any starts ##########################################
+        ################################## First Step Simulations if any starts ###########################################
         ###################################################################################################################
-        if ((numofSimulations > 0) and (not sim_data_ready)):
+        if ((numofSimulations > 0) and (step1_sim_data)):
 
             ###################################################################################################
             ############################  SigProfilerSimulator for n simulations starts #######################
@@ -1078,14 +1097,14 @@ def runAnalyses(genome,
             ###################################################################################################
 
         ###################################################################################################################
-        ################################## Second Step Simulations if any ends ############################################
+        ################################## First Step Simulations if any ends #############################################
         ###################################################################################################################
 
 
         ###################################################################################################################
-        ################################## Third Step Matrix Generator for n simulations starts ###########################
+        ################################## Second Step Matrix Generator for n simulations starts ##########################
         ###################################################################################################################
-        if (not matgen_data_ready):
+        if (step2_matgen_data):
 
             if (numofSimulations > 0):
                 ###################################################################################################
@@ -1186,14 +1205,14 @@ def runAnalyses(genome,
                 ###################################################################################################
 
         ###################################################################################################################
-        ################################## Third Step Matrix Generator for n simulations ends #############################
+        ################################## Second Step Matrix Generator for n simulations ends ############################
         ###################################################################################################################
 
 
         ###################################################################################################################
-        ###########  Fourth Step Merge chrom based matrix generator generated files with probabilities starts #############
+        ########### Third Step Merge chrom based matrix generator generated files with probabilities starts ###############
         ###################################################################################################################
-        if (not prob_merged_data_ready):
+        if (step3_prob_merged_data):
             ####################################################################################################################
             ##################  Merge original chr based files with Mutation Probabilities starts ##############################
             ####################################################################################################################
@@ -1297,14 +1316,14 @@ def runAnalyses(genome,
             ####################################################################################################################
 
         ###################################################################################################################
-        ###########  Fourth Step Merge chrom based matrix generator generated files with probabilities ends ###############
+        ########### Third Step Merge chrom based matrix generator generated files with probabilities ends #################
         ###################################################################################################################
 
 
         #######################################################################################################
-        ################################### Fifth Step Fill Table Starts ######################################
+        ################################### Fourth Step Fill Table Starts #####################################
         #######################################################################################################
-        if (not tables_ready):
+        if (step4_tables):
             #################################################################################
             print('#################################################################################')
             print('--- Fill tables/dictionaries using original data starts')
@@ -1442,7 +1461,7 @@ def runAnalyses(genome,
             dinucsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t',header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
 
         #######################################################################################################
-        ################################### Fifth Step Fill Table ends ########################################
+        ################################### Fourth Step Fill Table ends #######################################
         #######################################################################################################
 
     ###################################################################################################################
@@ -1620,10 +1639,7 @@ def runAnalyses(genome,
                     delete_old,
                     plot_mode,
                     combine_p_values_method,
-                    fold_change_window_size,
-                    depleted_fold_change,
-                    enriched_fold_change,
-                    heatmap_colorbar)
+                    fold_change_window_size)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1674,21 +1690,8 @@ def plotFigures(outputDir,
                 delete_old,
                 plot_mode,
                 combine_p_values_method,
-                fold_change_window_size,
-                depleted_fold_change,
-                enriched_fold_change,
-                heatmap_colorbar):
+                fold_change_window_size):
 
-    jobnameSamplesPath = os.path.join(outputDir,jobname,FIGURE,SAMPLES)
-    print('Topography.py jobnameSamplesPath:%s ' %jobnameSamplesPath)
-
-    ############################################################
-    if (os.path.exists(jobnameSamplesPath)):
-        try:
-            shutil.rmtree(jobnameSamplesPath)
-        except OSError as e:
-            print('Error: %s - %s.' % (e.filename, e.strerror))
-    ############################################################
 
     ############################################################
     if (nucleosome or data_ready_plot_nucleosome):
@@ -1770,9 +1773,6 @@ def plotFigures(outputDir,
 
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
-                                              depleted_fold_change,
-                                              enriched_fold_change,
-                                              heatmap_colorbar,
                                               outputDir,
                                               jobname,
                                               numberofSimulations,

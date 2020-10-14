@@ -208,6 +208,7 @@ def findProcessiveGroupsWithDistance(simNum,chrLong,sample,sorted_sampleBased_ch
 
         ################################
         #As long as mutation, signature, and pyrimidine strands are the same continue to accumlate, if one of them is not the same calculate cumsum and start again
+        #If there are 4 consecutive rows with same mutatio, signature and pyrimidine strand, subgroup will be 4
         sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION].ne(sorted_sampleBased_chrBased_spms_df[MUTATION].shift())) |
                                                             (sorted_sampleBased_chrBased_spms_df['Signature'].ne(sorted_sampleBased_chrBased_spms_df['Signature'].shift())) |
                                                             (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift()))) .cumsum()
@@ -234,7 +235,6 @@ def findProcessiveGroupsWithDistance(simNum,chrLong,sample,sorted_sampleBased_ch
 
         ################################
         if considerProbabilityInProcessivityAnalysis:
-            # # Remove rows with processive groups of length 1
             df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
         ################################
 
@@ -260,16 +260,19 @@ def findMedians(signature2ProcessiveGroupLength2GroupSizeListDict):
 
             processiveGroupDistanceArray = processiveGroupDistanceArray[processiveGroupDistanceArray != 0]
             if (processiveGroupDistanceArray.size>0):
-                median_distance = np.median(processiveGroupDistanceArray)
-                processiveGroupDistanceArray = (1/processiveGroupDistanceArray) * processiveGroupLength * 1000000
-                median = np.median(processiveGroupDistanceArray)
                 numberofProcessiveGroups = len(processiveGroupDistanceArray)
+                median_distance_between_last_first_mutations = np.median(processiveGroupDistanceArray)
+                median_distance_between_consecutive_mutations = np.median(processiveGroupDistanceArray/(processiveGroupLength-1))
+
+                number_of_mutations_within_1MB_array = (1/processiveGroupDistanceArray) * processiveGroupLength * 1000000
+                median_number_of_mutations_within_1MB = np.median(number_of_mutations_within_1MB_array)
 
                 processiveGroupDict={}
-                processiveGroupDict['processiveGroupLength']=processiveGroupLength
-                processiveGroupDict['numberofProcessiveGroups']=numberofProcessiveGroups
-                processiveGroupDict['medianDistance'] = median_distance
-                processiveGroupDict['medianofNumberofProcessiveGroupsinMB'] = median
+                processiveGroupDict['processive_group_length']=processiveGroupLength
+                processiveGroupDict['number_of_processive_groups']=numberofProcessiveGroups
+                processiveGroupDict['median_distance_between_last_first_mutations'] = median_distance_between_last_first_mutations
+                processiveGroupDict['median_distance_between_consecutive_mutations'] = median_distance_between_consecutive_mutations
+                processiveGroupDict['median_number_of_mutations_within_1MB'] = median_number_of_mutations_within_1MB
 
                 signature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength] = processiveGroupDict
 
@@ -303,8 +306,18 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
 ####################################################################################
 #This method can be customized for other dictionaries
 def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath):
-    L = sorted([(signature, processiveGroupLength, v1['numberofProcessiveGroups'],v1['medianDistance'], v1['medianofNumberofProcessiveGroupsinMB']) for signature, v in signature2ProcessiveGroupLength2PropertiesDict.items() for processiveGroupLength, v1 in v.items()])
-    df = pd.DataFrame(L,columns=['Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_Distance', 'Median_of_Number_of_Processive_Groups_in_MB'])
+    L = sorted([(signature,
+                 processiveGroupLength,
+                 v1['number_of_processive_groups'],
+                 v1['median_distance_between_last_first_mutations'],
+                 v1['median_distance_between_consecutive_mutations'],
+                 v1['median_number_of_mutations_within_1MB']) for signature, v in signature2ProcessiveGroupLength2PropertiesDict.items() for processiveGroupLength, v1 in v.items()])
+    df = pd.DataFrame(L,columns=['Signature',
+                                 'Processsive_Group_Length',
+                                 'Number_of_Processive_Groups',
+                                 'Median_Distance_Between_Last_First_Mutations',
+                                 'Median_Distance_Between_Consecutive_Mutations',
+                                 'Median_Number_of_Mutations_Within_1MB'])
 
     #write this dataframe
     df.to_csv(filePath, sep='\t', header=True, index=False)
@@ -326,7 +339,6 @@ def writeCountDictionaryAsADataframe(signature2ProcessiveGroupLength2CountDict,f
 def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,processivity_calculation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
-
         #####################################################################
         if verbose: print('\tVerbose computation_type:%s' % (computation_type))
 
@@ -392,7 +404,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                         chrBased_spms_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
                         chrBased_spms_df['Signature'] = (chrBased_spms_df.loc[:, signatures]).idxmax(axis=1)
 
-                        # Add new column. We take the that signatures's highest probability
+                        # Add new column. We take the probability of signature with highest probability
                         chrBased_spms_df['Probability'] = chrBased_spms_df[signatures].max(axis=1)
 
                         # Drop the signatures columns
@@ -444,22 +456,19 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                 pool.join()
                 ####################################################################################
 
-
-                if processivity_calculation_type == CONSIDER_COUNT:
+                if (processivity_calculation_type == CONSIDER_COUNT):
                     ####################################################################################
                     filename = 'Sim%d_Processivity.txt' % (simNum)
                     filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
                     writeCountDictionaryAsADataframe(signature2ProcessiveGroupLength2DistanceListDict,filePath)
                     ####################################################################################
-                elif processivity_calculation_type == CONSIDER_DISTANCE:
+                elif (processivity_calculation_type == CONSIDER_DISTANCE) or (processivity_calculation_type == CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER):
                     ####################################################################################
                     filename = 'Sim%d_Processivity.txt' % (simNum)
                     filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
                     signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
                     writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
                     ####################################################################################
-
-
 
         else:
             for simNum in range(0,numofSimulations+1):

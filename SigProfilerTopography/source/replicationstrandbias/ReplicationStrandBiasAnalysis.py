@@ -762,7 +762,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
         subs_signature_mutation_type_leading_np_array = result_tuple[3]
         subs_signature_mutation_type_lagging_np_array = result_tuple[4]
 
-        print('MONITOR ACCUMULATE', flush=True)
+        # print('MONITOR ACCUMULATE', flush=True)
 
         all_sims_all_types_leading_np_array[sim_num] += all_types_leading_np_array
         all_sims_all_types_lagging_np_array[sim_num] += all_types_lagging_np_array
@@ -805,7 +805,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                           sample_based,
                                           verbose,),
                                     callback=accumulate_np_arrays))
-            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
         ##############################################################################
@@ -851,7 +851,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                           sample_based,
                                           verbose,),
                                     callback=accumulate_np_arrays))
-            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
         ##############################################################################

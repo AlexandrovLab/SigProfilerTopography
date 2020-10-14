@@ -679,7 +679,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         dinucs_signature_decile_index_accumulated_np_array = result_tuple[2]
         indels_signature_decile_index_accumulated_np_array = result_tuple[3]
 
-        print('MONITOR ACCUMULATE', flush=True)
+        # print('MONITOR ACCUMULATE', flush=True)
 
         all_sims_subs_signature_decile_index_accumulated_np_array[sim_num] += subs_signature_decile_index_accumulated_np_array
         all_sims_dinucs_signature_decile_index_accumulated_np_array[sim_num] += dinucs_signature_decile_index_accumulated_np_array
@@ -721,7 +721,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        sample_based,
                                        verbose,),
                                  callback=accumulate_np_arrays))
-            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
         ##############################################################################
@@ -771,7 +771,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
-            print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################
 
         ##############################################################################

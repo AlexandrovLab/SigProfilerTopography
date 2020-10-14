@@ -155,6 +155,9 @@ GM12813='GM12813'
 GM12878_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
 K562_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeK562Sig.bigWig'
 
+#ATAC-Seq File
+BREAST_EPITHELIUM_ATAC_SEQ="ENCFF035ICJ_breast-epithelium_Normal_ATAC-seq.wig"
+
 #REPLICATION  TIME FILES
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 MCF7_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
@@ -215,6 +218,8 @@ GM12812_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12812PkRep1.bed'
 GM12813_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1.wig'
 GM12813_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813ValleysRep1.bed'
 GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
+
+SIGPROFILERTOPOGRAPHY_DEFAULT_FILES=[GM12878_NUCLEOSOME_OCCUPANCY_FILE,K562_NUCLEOSOME_OCCUPANCY_FILE,BREAST_EPITHELIUM_ATAC_SEQ]
 
 available_nucleosome_biosamples=[GM12878,K562]
 available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
@@ -291,9 +296,9 @@ DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBas
 
 ONE_DIRECTORY_UP = '..'
 
+#These are used for getting chromosome names
 GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
 GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
-
 MM9ChromSizesDictFilename = 'mm9ChromSizesDict.txt'
 MM10ChromSizesDictFilename = 'mm10ChromSizesDict.txt'
 
@@ -326,7 +331,6 @@ PLOTTING = 'plotting'
 TRANSCRIPTIONSTRANDBIAS = 'transcription_strand_bias'
 REPLICATIONSTRANDBIAS = 'replication_strand_bias'
 
-ALL = 'all'
 SAMPLES = 'samples'
 
 TRANSCRIPTION_LABEL = 'Transcription'
@@ -458,12 +462,14 @@ SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
 
-DEFAULT_HISTONE_OCCUPANCY_FILE1 = 'ENCFF291WFP_H3K27me3_breast_epithelium.bed'
-DEFAULT_HISTONE_OCCUPANCY_FILE2 = 'ENCFF906MJM_H3K36me3_breast_epithelium.bed'
-DEFAULT_HISTONE_OCCUPANCY_FILE3 = 'ENCFF065FJK_H3K9me3_breast_epithelium.bed'
-DEFAULT_HISTONE_OCCUPANCY_FILE4 = 'ENCFF154XFN_H3K27ac_breast_epithelium.bed'
-DEFAULT_HISTONE_OCCUPANCY_FILE5 = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
-DEFAULT_HISTONE_OCCUPANCY_FILE6 = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
+DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_H3K27me3_breast_epithelium.bed'
+DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_H3K36me3_breast_epithelium.bed'
+DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_H3K9me3_breast_epithelium.bed'
+DEFAULT_H3K27AC_OCCUPANCY_FILE = 'ENCFF154XFN_H3K27ac_breast_epithelium.bed'
+DEFAULT_H3K4ME1_OCCUPANCY_FILE = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
+DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
+DEFAULT_CTCF_OCCUPANCY_FILE = 'ENCFF782GCQ_breast_epithelium_Normal_CTCF-human.bed'
+DEFAULT_ATAC_SEQ_OCCUPANCY_FILE = 'ENCFF035ICJ_breast_epithelium_Normal_ATAC-seq.wig'
 
 UNDECLARED = 'Undeclared'
 
@@ -474,7 +480,6 @@ ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
-
 
 # ############################################################
 def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):
@@ -602,11 +607,11 @@ def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,spl
         #################################
         if (splitIndex<len(split_start_end_tuples)):
             split_start, split_end = split_start_end_tuples[splitIndex]
-            print('MONITOR %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
+            # print('MONITOR %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
             chrBased_simBased_combined_df_split = chrBased_simBased_combined_df.iloc[split_start:split_end, :]
             return chrBased_simBased_combined_df_split
         else:
-            print('MONITOR %s simNum:%d splitIndex:%d Does not exists ' % (chrLong, simNum, splitIndex), flush=True)
+            # print('MONITOR %s simNum:%d splitIndex:%d Does not exists ' % (chrLong, simNum, splitIndex), flush=True)
             return None
         #################################
     else:

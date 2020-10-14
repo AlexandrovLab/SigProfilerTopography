@@ -379,7 +379,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
         subs_signature_mutation_type_untranscribed_np_array = result_tuple[5]
         subs_signature_mutation_type_nontranscribed_np_array = result_tuple[6]
 
-        print('MONITOR ACCUMULATE', flush=True)
+        # print('MONITOR ACCUMULATE', flush=True)
 
         all_sims_all_types_transcribed_np_array[sim_num] += all_types_transcribed_np_array
         all_sims_all_types_untranscribed_np_array[sim_num] += all_types_untranscribed_np_array
@@ -423,7 +423,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
                                           sample_based,
                                           verbose,),
                                     callback=accumulate_np_arrays))
-            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
         ##############################################################################
@@ -469,7 +469,7 @@ def transcriptionStrandBiasAnalysis(computationType,sample_based,chromNamesList,
                                           sample_based,
                                           verbose,),
                                     callback=accumulate_np_arrays))
-            print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################################################################
 
         ##############################################################################

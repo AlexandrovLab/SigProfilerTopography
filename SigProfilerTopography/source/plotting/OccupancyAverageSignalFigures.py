@@ -42,7 +42,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import ALL
 from SigProfilerTopography.source.commons.TopographyCommons import HEATMAPS
 
 from SigProfilerTopography.source.commons.TopographyCommons import SIGNATUREBASED
@@ -409,7 +408,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
         else:
             filename = '%s_AllInOne_%s_%s.png' %(signature,libraryFilenameMemo,filenameEnd)
 
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type, filename)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
 
         fig.savefig(figureFile)
         plt.clf()
@@ -649,7 +648,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         #######################################################################
         # new code
         if (sample is None):
-            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type, filename)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
         else:
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type, filename)
@@ -926,7 +925,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 
     ######################################################################################
     if (sample is None):
-        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,occupancy_type,filename)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,occupancy_type,filename)
     else:
         os.makedirs(os.path.join(outputDir, jobname,FIGURE,SAMPLES,sample,occupancy_type), exist_ok=True)
         figureFile = os.path.join(outputDir,jobname,FIGURE,SAMPLES,sample,occupancy_type,filename)
@@ -1340,10 +1339,10 @@ def plot_heatmap_rows_signatures(heatmap_type,
     elif signatureType==ID:
         signatures = ['ALL INDELS' if AGGREGATEDINDELS in signature else signature for signature in signatures]
 
-
-    print('signatures: %s' %(signatures))
-    print('dna_elements: %s' %(dna_elements))
-    print('average_fold_change_array: %s' %(average_fold_change_array))
+    if verbose:
+        print('signatures: %s' %(signatures))
+        print('dna_elements: %s' %(dna_elements))
+        print('average_fold_change_array: %s' %(average_fold_change_array))
 
     ##########################################################################
     # fig, ax = plt.subplots() #does not plot and blocks multiprocessing
@@ -1357,7 +1356,7 @@ def plot_heatmap_rows_signatures(heatmap_type,
 
     #extra space for the y-axis labels which are signatures
     fig, ax = plt.subplots(figsize=(10+4*len(dna_elements), 4*len(signatures)))
-    text_fontsize = 4*len(dna_elements)
+    text_fontsize = 6*len(dna_elements)
 
     try:
         if verbose: print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
@@ -1477,9 +1476,6 @@ def accumulate(signature,
 #Sep24, 2020
 def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           fold_change_window_size,
-                                          depleted_fold_change,
-                                          enriched_fold_change,
-                                          heatmap_colorbar,
                                           outputDir,
                                           jobname,
                                           numberofSimulations,
@@ -1526,9 +1522,6 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                                     fold_change_window_size,
                                                     plusOrMinus_epigenomics,
                                                     plusOrMinus_nucleosome,
-                                                    depleted_fold_change,
-                                                    enriched_fold_change,
-                                                    heatmap_colorbar,
                                                     outputDir,
                                                     jobname,
                                                     numberofSimulations,
@@ -1552,9 +1545,6 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                     fold_change_window_size,
                                                     epigenomics_center,
                                                     nucleosome_center,
-                                                    depleted_fold_change,
-                                                    enriched_fold_change,
-                                                    heatmap_colorbar,
                                                     outputDir,
                                                     jobname,
                                                     numberofSimulations,
@@ -1576,10 +1566,10 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     signatures.extend(id_signatures)
     ###########################################
 
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, EPIGENOMICSOCCUPANCY,HEATMAPS,TABLES), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED), exist_ok=True)
-    heatmaps_output_dir = os.path.join(outputDir, jobname, FIGURE, ALL, EPIGENOMICSOCCUPANCY,HEATMAPS)
-    heatmaps_detailed_output_dir = os.path.join(outputDir, jobname, FIGURE, ALL, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,TABLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED), exist_ok=True)
+    heatmaps_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS)
+    heatmaps_detailed_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED)
 
     #####################################################################################
     # Step1 Calculate p value using z-test
@@ -1732,10 +1722,11 @@ def breakdown_signatures(signature2dna_element2avg_fold_change_dict,sbs_signatur
 ########################################################
 #Used for search for dna_elements
 #Used for search for biosamples
-def get_element_within(str_list,look_in_str,nucleosome_file):
-    for look_for_str in str_list:
-         if look_for_str in look_in_str:
-            return look_for_str
+def get_element_within(look_in_str,str_list,nucleosome_file):
+    if str_list:
+        for look_for_str in str_list:
+             if look_for_str in look_in_str:
+                return look_for_str
     if (nucleosome_file is not None) and (look_in_str in nucleosome_file):
         return NUCLEOSOME_DNA_ELEMENT
     print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(look_in_str))
@@ -1778,7 +1769,7 @@ def calculate_fold_change_real_over_sim(center,
     dna_element_to_be_read=None
 
     if occupancy_type==EPIGENOMICSOCCUPANCY:
-        biosample=get_element_within(epigenomics_biosamples,epigenomics_file_memo,nucleosome_file)
+        biosample=get_element_within(epigenomics_file_memo,epigenomics_biosamples,nucleosome_file)
         dna_element=epigenomics_file_memo
         dna_element_to_be_read = epigenomics_file_memo
     elif occupancy_type==NUCLEOSOMEOCCUPANCY:
@@ -1828,11 +1819,11 @@ def calculate_fold_change_real_over_sim(center,
             num_of_sims = rows
 
             #One sample way
-            print('stackedSimulationsSignatureBased.shape')
-            print(stackedSimulationsSignatureBased.shape)
+            # print('stackedSimulationsSignatureBased.shape')
+            # print(stackedSimulationsSignatureBased.shape)
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased[:,start:end]
-            print('stackedSimulationsSignatureBased_of_interest.shape')
-            print(stackedSimulationsSignatureBased_of_interest.shape)
+            # print('stackedSimulationsSignatureBased_of_interest.shape')
+            # print(stackedSimulationsSignatureBased_of_interest.shape)
 
             #Get rid of rows with all nans
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
@@ -1842,22 +1833,22 @@ def calculate_fold_change_real_over_sim(center,
             avg_sim_signal = np.nanmean(simulationsHorizontalMeans)
             min_sim_signal = np.nanmin(simulationsHorizontalMeans)
             max_sim_signal = np.nanmax(simulationsHorizontalMeans)
-            print('avg_sim_signal:%f' %(avg_sim_signal))
+            # print('avg_sim_signal:%f' %(avg_sim_signal))
 
-            print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
-            print('Before')
-            print('simulationsHorizontalMeans.shape')
-            print(simulationsHorizontalMeans.shape)
+            # print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
+            # print('Before')
+            # print('simulationsHorizontalMeans.shape')
+            # print(simulationsHorizontalMeans.shape)
 
             #Get rid of nans in simulationsHorizontalMeans
             #simulationsHorizontalMeans is used in p-value calculation
             simulationsHorizontalMeans = simulationsHorizontalMeans[~np.isnan(simulationsHorizontalMeans)]
-            print('After')
-            print('simulationsHorizontalMeans.shape')
-            print(simulationsHorizontalMeans.shape)
+            # print('After')
+            # print('simulationsHorizontalMeans.shape')
+            # print(simulationsHorizontalMeans.shape)
             num_of_sims_with_not_nan_avgs=simulationsHorizontalMeans.shape[0]
-            print('number of not nan simulations:%d' %num_of_sims_with_not_nan_avgs)
-            print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
+            # print('number of not nan simulations:%d' %num_of_sims_with_not_nan_avgs)
+            # print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
             # print(np.argwhere(np.isnan(simulationsHorizontalMeans)))
             # print(simulationsHorizontalMeans)
     ####################################################################################################################
@@ -1888,16 +1879,16 @@ def calculate_fold_change_real_over_sim(center,
 
     if (avg_real_signal is not None) and (avg_sim_signal is not None):
         fold_change = avg_real_signal / avg_sim_signal
-        print('avg_real_signal:%f' % (avg_real_signal))
-        print('avg_sim_signal:%f' % (avg_sim_signal))
-        print('fold change:%f' % (fold_change))
+        # print('avg_real_signal:%f' % (avg_real_signal))
+        # print('avg_sim_signal:%f' % (avg_sim_signal))
+        # print('fold change:%f' % (fold_change))
 
         if (simulationsHorizontalMeans is not None):
             # zstat, pvalue_ztest_1sample = ztest(simulationsHorizontalMeans, value=avg_real_signal)
             # if there is only one simulation mean in simulationsHorizontalMeans, then pvalue is nan
             zstat, pvalue = ztest(simulationsHorizontalMeans,[avg_real_signal])
-            print('%s %s %s  avg_real_signal:%f avg_sim_signal:%f min_sim_signal:%f max_sim_signal:%f fold_change:%f p_value: %.2E' %(signature, jobname, dna_element,avg_real_signal,avg_sim_signal,min_sim_signal,max_sim_signal, fold_change, Decimal(pvalue) ))
-            print('###############################################################################################################################')
+            # print('%s %s %s  avg_real_signal:%f avg_sim_signal:%f min_sim_signal:%f max_sim_signal:%f fold_change:%f p_value: %.2E' %(signature, jobname, dna_element,avg_real_signal,avg_sim_signal,min_sim_signal,max_sim_signal, fold_change, Decimal(pvalue) ))
+            # print('###############################################################################################################################')
 
         return [jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count, list(simulationsHorizontalMeans)]
     else:
@@ -2049,14 +2040,13 @@ def step1_calculate_p_value(fold_change_window_size,
     pool.join()
     #######################################################################
 
-
-    print('##############################################################')
-    print('Step1 Getting p-values')
+    # print('##############################################################')
+    # print('Step1 Getting p-values')
     # Write dictionary as a dataframe
     df_filename = 'Step1_Signature_Biosample_DNAElement_PValue.txt'
     filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
     write_dictionary_as_dataframe_step1_p_value(signature2Biosample2DNAElement2PValueDict,filepath)
-    print('##############################################################')
+    # print('##############################################################')
 
     return signature2Biosample2DNAElement2PValueDict
 ########################################################
@@ -2080,7 +2070,7 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             # dna_element_long <-- epigenomics_file_memo
             # dna_element_long <-- os.path.basename(nucleosome_file)
             for dna_element_long in signature2Biosample2DNAElement2PValueDict[signature][biosample]:
-                dna_element = get_element_within(epigenomics_dna_elements, dna_element_long,nucleosome_file)
+                dna_element = get_element_within(dna_element_long,epigenomics_dna_elements,nucleosome_file)
                 complete_list = signature2Biosample2DNAElement2PValueDict[signature][biosample][dna_element_long]
 
                 # p value complete list has [signature, cancer_type, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, list(simulationsHorizontalMeans)]
@@ -2128,9 +2118,14 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             p_value_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][1]
 
             avg_fold_change= np.nanmean(fold_change_list)
-
             p_values_array=np.asarray(p_value_list)
-            test_statistic,combined_p_value=scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
+
+            try:
+                test_statistic,combined_p_value=scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
+            except FloatingPointError:
+                print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list))
+                if len(p_value_list)>0:
+                    combined_p_value=p_value_list[0]
 
             signature2dna_element2combined_p_value_list_dict[signature][dna_element]=[fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 
@@ -2180,12 +2175,12 @@ def step3_apply_multiple_tests_correction(signature2dna_element2combined_p_value
     if(all_p_values_array.size>0):
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
 
-    print('#######################################')
-    print('len(all_p_values):%d' %len(all_p_values))
+    # print('#######################################')
+    # print('len(all_p_values):%d' %len(all_p_values))
 
-    if ((all_FDR_BH_adjusted_p_values is not None) and (all_FDR_BH_adjusted_p_values.size>0)):
-        print('len(all_FDR_BH_adjusted_p_values):%d' %(len(all_FDR_BH_adjusted_p_values)))
-    print('#######################################')
+    # if ((all_FDR_BH_adjusted_p_values is not None) and (all_FDR_BH_adjusted_p_values.size>0)):
+        # print('len(all_FDR_BH_adjusted_p_values):%d' %(len(all_FDR_BH_adjusted_p_values)))
+    # print('#######################################')
 
     for element_index, element_name in enumerate(all_p_values_element_names,0):
         signature, dna_element = element_name
@@ -2272,7 +2267,7 @@ def occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_b
         ylabel='Average epigenomics signal'
 
     #######################################################################################################################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, occupancy_type), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type), exist_ok=True)
     #######################################################################################################################
 
     ############## Read necessary dictionaries starts ########################################

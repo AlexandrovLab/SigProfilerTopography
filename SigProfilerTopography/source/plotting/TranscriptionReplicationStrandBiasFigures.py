@@ -33,7 +33,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import sixMutationTy
 from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import ALL
 from SigProfilerTopography.source.commons.TopographyCommons import SCATTERPLOTS
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
 
@@ -238,7 +237,7 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
 
     if sample is None:
         figureName = 'all_mutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
 
     else:
         figureName = 'all_mutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
@@ -336,7 +335,7 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
 
     if sample is None:
         figureName = 'all_mutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
 
     else:
         figureName = 'all_mutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
@@ -469,7 +468,7 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
 
         if sample is None:
             figureName = 'all_%s_signatures_%s_scatterplots.png' % (signatureType, STRANDBIAS)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
         else:
             figureName = 'all_%s_signatures_%s_%d_%s_scatterplots.png' % (
             signatureType, sample, numberofMutations, STRANDBIAS)
@@ -583,7 +582,7 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
 
         if sample is None:
             figureName = 'all_%s_signatures_%s_scatterplots.png' % (signatureType, STRANDBIAS)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS,figureName)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
         else:
             figureName = 'all_%s_signatures_%s_%d_%s_scatterplots.png' % (
             signatureType, sample, numberofMutations, STRANDBIAS)
@@ -686,7 +685,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         newMutationType = mutationType.replace('>', '2')
 
         figureName = newMutationType + '_MutationType_' + STRANDBIAS + '.png'
-        figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTERPLOTS,figureName)
         fig.savefig(figureFile)
         plt.cla()
         plt.close(fig)
@@ -779,7 +778,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
                 plt.title(jobname + ' ' + signature)
 
             figureName = signature.replace(' ','') + '_Signature_' + STRANDBIAS + '.png'
-            figureFile = os.path.join(outputDir,jobname,FIGURE,ALL,STRANDBIAS,SCATTERPLOTS,figureName)
+            figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTERPLOTS,figureName)
             fig.savefig(figureFile)
             plt.cla()
             plt.close(fig)
@@ -965,10 +964,10 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
 
     if (key is None):
         figureName = '%s.png' %(figureName)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, figureName)
     elif (not isKeySample):
         figureName = '%s_%s.png' %(key,figureName)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, figureName)
     else:
         figureName = '%s_%s_%d.png' %(figureName,key,numberofMutations)
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS), exist_ok=True)
@@ -1136,8 +1135,8 @@ def write_signature_dictionaries_as_dataframes(signature2mutation_type2strand2pe
 def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode):
 
     #######################################################################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-    strandbias_figures_outputDir= os.path.join(outputDir, jobname, FIGURE, ALL, STRANDBIAS)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
+    strandbias_figures_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
     #######################################################################
 
     ##########################################################################################
@@ -1245,7 +1244,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             p_values_list.append(row[GENIC_VERSUS_INTERGENIC_P_VALUE])
 
 
-    print('len(p_values_list): %d' %(len(p_values_list)))
+    # print('len(p_values_list): %d' %(len(p_values_list)))
     #######################################################################
 
     #######################################################################
@@ -1253,7 +1252,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
         # all_p_values_array = np.asarray(p_values_list)
         # rejected, all_FDR_BH_adjusted_p_values = statsmodels.stats.multitest.fdrcorrection(all_p_values_array, alpha=0.05, method='indep', is_sorted=False)
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
-        print('(len(all_FDR_BH_adjusted_p_values): %d' % (len(all_FDR_BH_adjusted_p_values)))
+        # print('(len(all_FDR_BH_adjusted_p_values): %d' % (len(all_FDR_BH_adjusted_p_values)))
 
         #Add None q_values
         if LAGGING_VERSUS_LEADING in strand_bias_list:
@@ -1273,7 +1272,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             (cancer_type, signature, mutation_type, versus_type)=element_name
             q_value=all_FDR_BH_adjusted_p_values[element_index]
 
-            print('%s %s %s %s -----  q_value: %f' %(cancer_type,signature,mutation_type,versus_type,q_value))
+            # print('%s %s %s %s -----  q_value: %f' %(cancer_type,signature,mutation_type,versus_type,q_value))
 
             if (signature is not None) and (versus_type==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
                 signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[CANCER_TYPE]==cancer_type) &
@@ -2020,14 +2019,14 @@ def plot_dbs_and_id_signatures_figures(signature_type,
                         if (lagging_percentage is not None) and (leading_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='indianred', fill=True)
                                 ax.add_artist(circle)
 
                         elif (leading_percentage is not None) and (lagging_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='goldenrod', fill=True)
                                 ax.add_artist(circle)
 
@@ -2049,7 +2048,6 @@ def plot_dbs_and_id_signatures_figures(signature_type,
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius_lagging, color='goldenrod', fill=True)
                                 ax.add_artist(circle)
 
-
                 elif (strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
                     if row_signature in type2strand2percentagedict:
                         transcribed_percentage=None
@@ -2063,13 +2061,13 @@ def plot_dbs_and_id_signatures_figures(signature_type,
                         if (transcribed_percentage is not None) and (untranscribed_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='royalblue', fill=True)
                                 ax.add_artist(circle)
                         elif (untranscribed_percentage is not None) and (transcribed_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='yellowgreen', fill=True)
                                 ax.add_artist(circle)
                         elif (transcribed_percentage is not None) and (untranscribed_percentage is not None):
@@ -2103,13 +2101,13 @@ def plot_dbs_and_id_signatures_figures(signature_type,
                         if (genic_percentage is not None) and (intergenic_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='cyan', fill=True)
                                 ax.add_artist(circle)
                         elif (intergenic_percentage is not None) and (genic_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
+                                # print('Plot circle at x=%d y=%d for %s %s' % (percentage_diff_index, row_signature_index, row_signature,percentage_string))
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius, color='gray', fill=True)
                                 ax.add_artist(circle)
                         elif (genic_percentage is not None) and (intergenic_percentage is not None):
@@ -2421,12 +2419,12 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                 if (lagging_percentage is not None) and (leading_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius, color='indianred', fill=True))
                                 elif (leading_percentage is not None) and (lagging_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius, color='goldenrod', fill=True))
 
                                 elif (lagging_percentage is not None) and (leading_percentage is not None):
@@ -2458,13 +2456,13 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                 if (genic_percentage is not None) and (intergenic_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='cyan',fill=True))
 
                                 elif (intergenic_percentage is not None) and (genic_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='gray',fill=True))
 
                                 elif (genic_percentage is not None) and (intergenic_percentage is not None):
@@ -2497,13 +2495,13 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                 if (transcribed_percentage is not None) and (untranscribed_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='royalblue',fill=True))
 
                                 elif (untranscribed_percentage is not None) and (transcribed_percentage is None):
                                     radius = 0.49
                                     if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
+                                        # print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * len(percentage_strings) + percentage_diff_index, row_sbs_signature_index,row_sbs_signature, mutation_type, percentage_string))
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='yellowgreen',fill=True))
 
                                 elif (transcribed_percentage is not None) and (untranscribed_percentage is not None):
@@ -2532,299 +2530,6 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
 
         plt.cla()
         plt.close(plot1)
-        ##################################################################################
-
-############################################################################################################################
-
-
-############################################################################################################################
-#depreceated
-def plot_six_mutations_sbs_signatures_figures_old_way(sbs_signatures,
-            strand_bias,
-            strandbias_figures_outputDir,
-            significance_level,
-            signature2mutation_type2strand2percentagedict,
-            percentage_strings):
-
-    mutation_types=sixMutationTypes
-
-    #####################################################################
-    if strand_bias==LAGGING_VERSUS_LEADING:
-        strands=replicationStrands
-    elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
-        strands=transcriptionStrands
-    elif strand_bias==GENIC_VERSUS_INTERGENIC:
-        strands=genicVersusIntergenicStrands
-    #####################################################################
-
-    #####################################################################
-    rows_sbs_signatures=[]
-
-    #Fill rows_sbs_signatures
-    for signature in sbs_signatures:
-        if signature in signature2mutation_type2strand2percentagedict:
-            for mutation_type in signature2mutation_type2strand2percentagedict[signature]:
-                for strand in strands:
-                    if strand in signature2mutation_type2strand2percentagedict[signature][mutation_type]:
-                        for percentage_string in percentage_strings:
-                            if percentage_string in signature2mutation_type2strand2percentagedict[signature][mutation_type][strand]:
-                                if signature not in rows_sbs_signatures:
-                                    rows_sbs_signatures.append(signature)
-    #####################################################################
-
-    #####################################################################
-    rows_sbs_signatures=sorted(rows_sbs_signatures,key=natural_key,reverse=True)
-    #####################################################################
-
-    #####################################################################
-    xticklabels_list = percentage_strings * 6
-    #####################################################################
-
-    if (len(rows_sbs_signatures)>0):
-        #####################################################################
-        #New plot (width,height)
-        fig, ax = plt.subplots(figsize=(len(xticklabels_list), len(rows_sbs_signatures)+3))
-
-        #make aspect ratio square
-        ax.set_aspect(1.0)
-        #####################################################################
-
-        ######################################################################################################################################
-        for percentage_diff_index, percentage_string in enumerate(percentage_strings):
-             for mutation_type_index, mutation_type in enumerate(mutation_types):
-                for row_sbs_signature_index, row_sbs_signature in enumerate(rows_sbs_signatures):
-                    if (strand_bias==LAGGING_VERSUS_LEADING):
-                        if row_sbs_signature in signature2mutation_type2strand2percentagedict:
-                            if mutation_type in signature2mutation_type2strand2percentagedict[row_sbs_signature]:
-                                lagging_percentage = None
-                                leading_percentage = None
-
-                                if (LAGGING in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][LAGGING][percentage_string]==1):
-                                    lagging_percentage = 100
-                                if (LEADING in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][LEADING][percentage_string]==1):
-                                    leading_percentage = 100
-
-                                if (lagging_percentage is not None) and (leading_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius, color='indianred', fill=True)
-                                        ax.add_artist(circle)
-                                elif (leading_percentage is not None) and (lagging_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (
-                                        mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index, row_sbs_signature,mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius, color='goldenrod', fill=True)
-                                        ax.add_artist(circle)
-                                elif (lagging_percentage is not None) and (leading_percentage is not None):
-                                    radius_lagging = 0.49
-                                    radius_leading = 0.49
-                                    if (radius_lagging > radius_leading):
-                                        # First lagging
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='goldenrod', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second leading
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True)
-                                        ax.add_artist(circle)
-                                    else:
-                                        # First leading
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second lagging
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='goldenrod', fill=True)
-                                        ax.add_artist(circle)
-
-
-                    elif (strand_bias == GENIC_VERSUS_INTERGENIC):
-                        if row_sbs_signature in signature2mutation_type2strand2percentagedict:
-                            if mutation_type in signature2mutation_type2strand2percentagedict[row_sbs_signature]:
-                                genic_percentage = None
-                                intergenic_percentage = None
-
-                                if (GENIC in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][GENIC][percentage_string]==1):
-                                    genic_percentage = 100
-                                if (INTERGENIC in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][INTERGENIC][percentage_string]==1):
-                                    intergenic_percentage = 100
-
-                                if (genic_percentage is not None) and (intergenic_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (
-                                        mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index,
-                                        row_sbs_signature, mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='cyan',fill=True)
-                                        ax.add_artist(circle)
-                                elif (intergenic_percentage is not None) and (genic_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (
-                                        mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index,
-                                        row_sbs_signature, mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='gray',fill=True)
-                                        ax.add_artist(circle)
-                                elif (genic_percentage is not None) and (intergenic_percentage is not None):
-                                    radius_genic = 0.49
-                                    radius_intergenic = 0.49
-                                    if (radius_genic > radius_intergenic):
-                                        # First genic
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second intergenic
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic,color='gray', fill=True)
-                                        ax.add_artist(circle)
-                                    else:
-                                        # First intergenic
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic, color='gray', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second genic
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True)
-                                        ax.add_artist(circle)
-
-                    elif (strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-                        if row_sbs_signature in signature2mutation_type2strand2percentagedict:
-                            if mutation_type in signature2mutation_type2strand2percentagedict[row_sbs_signature]:
-                                transcribed_percentage = None
-                                untranscribed_percentage = None
-
-                                if (TRANSCRIBED_STRAND in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][TRANSCRIBED_STRAND][percentage_string]==1):
-                                    transcribed_percentage = 100
-                                if (UNTRANSCRIBED_STRAND in signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type]) and (signature2mutation_type2strand2percentagedict[row_sbs_signature][mutation_type][UNTRANSCRIBED_STRAND][percentage_string]==1):
-                                    untranscribed_percentage = 100
-
-                                if (transcribed_percentage is not None) and (untranscribed_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (
-                                        mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index,
-                                        row_sbs_signature, mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='royalblue',fill=True)
-                                        ax.add_artist(circle)
-                                elif (untranscribed_percentage is not None) and (transcribed_percentage is None):
-                                    radius = 0.49
-                                    if (radius > 0):
-                                        print('Plot circle at x=%d y=%d for %s %s %s' % (
-                                        mutation_type_index * 6 + percentage_diff_index, row_sbs_signature_index,
-                                        row_sbs_signature, mutation_type, percentage_string))
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius, color='yellowgreen',fill=True)
-                                        ax.add_artist(circle)
-                                elif (transcribed_percentage is not None) and (untranscribed_percentage is not None):
-                                    radius_transcribed = 0.49
-                                    radius_untranscribed = 0.49
-                                    if (radius_transcribed > radius_untranscribed):
-                                        # First transcribed
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second untranscribed
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True)
-                                        ax.add_artist(circle)
-                                    else:
-                                        # First untranscribed
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True)
-                                        ax.add_artist(circle)
-                                        # Second transcribed
-                                        circle = plt.Circle((mutation_type_index * 6 + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True)
-                                        ax.add_artist(circle)
-        ######################################################################################################################################
-
-
-        ##################################################################################
-        # CODE GOES HERE TO CENTER X-AXIS LABELS...
-        ax.set_xlim([0,len(mutation_types)*len(percentage_strings)])
-        ax.set_xticklabels([])
-
-        ax.tick_params(axis='x', which='minor', length=0, labelsize=20)
-        #major ticks
-        ax.set_xticks(np.arange(0, len(mutation_types)*len(percentage_strings), 1))
-        #minor ticks
-        ax.set_xticks(np.arange(0, len(mutation_types)*len(percentage_strings), 1)+0.5,minor=True)
-
-        ax.set_xticklabels(xticklabels_list,minor=True)
-
-        #Jul 7, 2020
-        if strand_bias==LAGGING_VERSUS_LEADING:
-            fig.suptitle('Lagging versus Leading Strand Bias', fontsize=30)
-        elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
-            fig.suptitle('Transcribed versus Untranscribed Strand Bias', fontsize=30)
-        elif strand_bias==GENIC_VERSUS_INTERGENIC:
-            fig.suptitle('Genic versus Intergenic Strand Bias', fontsize=30)
-
-        ax.set_xlabel('                   C>A                            C>G                            C>T                            T>A                            T>C                            T>G                   ', fontsize=30, labelpad=10)
-        ax.xaxis.set_label_position('top')
-        ax.xaxis.set_ticks_position('top')
-
-        #C>A
-        xranges = [(0, 6)]
-        yrange = (0, len(rows_sbs_signatures))
-        ax.broken_barh(xranges, yrange, facecolors='lightblue',zorder=1)
-
-        #C>G
-        xranges = [(6,12)]
-        yrange = (0, len(rows_sbs_signatures))
-        ax.broken_barh(xranges, yrange, facecolors='silver',zorder=1)
-
-        #C>T
-        xranges = [(12,18)]
-        yrange = (0, len(rows_sbs_signatures))
-        # ax.broken_barh(xranges, yrange, facecolors='lightsalmon',zorder=1)
-        ax.broken_barh(xranges, yrange, facecolors='lightcoral',zorder=1)
-
-        #T>A
-        xranges = [(18,24)]
-        yrange = (0, len(rows_sbs_signatures))
-        ax.broken_barh(xranges, yrange, facecolors='lightgray',zorder=1)
-
-        #T>C
-        xranges = [(24,30)]
-        yrange = (0, len(rows_sbs_signatures))
-        ax.broken_barh(xranges, yrange, facecolors='lightgreen',zorder=1)
-
-        #T>G
-        xranges = [(30,36)]
-        yrange = (0, len(rows_sbs_signatures))
-        ax.broken_barh(xranges, yrange, facecolors='lavenderblush',zorder=1)
-
-        plt.tick_params(
-            axis='x',  # changes apply to the x-axis
-            which='major',  # both major and minor ticks are affected
-            bottom=False,  # ticks along the bottom edge are off
-            top=False)  # labels along the bottom edge are off
-        ##################################################################################
-
-
-        ##################################################################################
-        # CODE GOES HERE TO CENTER Y-AXIS LABELS...
-        ax.set_ylim([0,len(rows_sbs_signatures)])
-        ax.set_yticklabels([])
-
-        ax.tick_params(axis='y', which='minor', length=0, labelsize=30)
-        #major ticks
-        ax.set_yticks(np.arange(0, len(rows_sbs_signatures), 1))
-        #minor ticks
-        ax.set_yticks(np.arange(0, len(rows_sbs_signatures), 1)+0.5,minor=True)
-        ax.set_yticklabels(rows_sbs_signatures, minor=True)  # fontsize
-
-        plt.tick_params(
-            axis='y',  # changes apply to the x-axis
-            which='major',  # both major and minor ticks are affected
-            left=False)  # labels along the bottom edge are off
-        ##################################################################################
-
-        ##################################################################################
-        # Gridlines based on major ticks
-        ax.grid(which='major', color='black', zorder=3)
-        ax.grid(True)
-        ##################################################################################
-
-        ##################################################################################
-        # create the directory if it does not exists
-        filename = 'SBS_Signatures_%s_with_circles_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
-        figFile = os.path.join(strandbias_figures_outputDir, filename)
-        fig.savefig(figFile)
-        fig.tight_layout()
-
-        plt.cla()
-        plt.close(fig)
         ##################################################################################
 
 ############################################################################################################################

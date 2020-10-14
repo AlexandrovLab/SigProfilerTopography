@@ -35,7 +35,6 @@ from matplotlib.colors import Normalize
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import ALL
 from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
 from SigProfilerTopography.source.commons.TopographyCommons import USING_ONE_SAMPLE_TTEST
 from SigProfilerTopography.source.commons.TopographyCommons import USING_NULL_DISTRIBUTION
@@ -97,10 +96,10 @@ def plot_color_bar(outputDir,jobname,norm):
 
     ##################################################################################
     #create the directory if it does not exists
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
     filename = '%s_Processivity_ColorBar.png' %(jobname)
 
-    figFile = os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY, filename)
+    figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
     fig.savefig(figFile)
     plt.cla()
     plt.close(fig)
@@ -340,41 +339,41 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
 
     if len(sorted_signature_list)<=2:
-        # Horizontal ColorBar at the end
-        fig,(ax, cax)  = plt.subplots(nrows=2,figsize=(15, 15),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Vertical ColorBar on the right
-        # fig = plt.figure(figsize=(15, 15))
-        # plt.title('%s' % (jobname), y=1.25, fontsize=40, fontweight='bold')
+        # Subplot way
+        # fig,(ax, cax)  = plt.subplots(nrows=2,figsize=(15, 15),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Figure way
+        fig = plt.figure(figsize=(15, 15))
+        plt.title('%s' % (jobname), y=1.25, fontsize=60, fontweight='bold')
     elif (maxProcessiveGroupLength>20):
-        # Horizontal ColorBar at the end
-        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Vertical ColorBar on the right
-        # fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 2 * len(sorted_signature_list)))
-        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
+        # Subplot way
+        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Figure way
+        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 2 * len(sorted_signature_list)))
+        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
     elif (len(sorted_signature_list)>maxProcessiveGroupLength):
-        # Horizontal ColorBar at the end
-        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Vertical ColorBar on the right
-        # fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 1.5 * len(sorted_signature_list)))
-        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
+        # Subplot way
+        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Figure way
+        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 1.5 * len(sorted_signature_list)))
+        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
     elif (maxProcessiveGroupLength > len(sorted_signature_list)):
-        # Horizontal ColorBar at the end
-        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Vertical ColorBar on the right
-        # fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sorted_signature_list)))
-        # plt.title('%s' % (jobname), y=1.1, fontsize=40, fontweight='bold')
+        # Subplot way
+        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Figure way
+        fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sorted_signature_list)))
+        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
     elif (maxProcessiveGroupLength == len(sorted_signature_list)):
-        # Horizontal ColorBar at the end
-        fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Vertical ColorBar on the right
-        # fig = plt.figure(figsize=(2.5 * maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
-        # plt.title('%s' % (jobname), y=1.15, fontsize=40, fontweight='bold')
+        # Subplot way
+        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
+        # Figure way
+        fig = plt.figure(figsize=(2.5 * maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
+        plt.title('%s' % (jobname), y=1.15, fontsize=60, fontweight='bold')
 
-    # Horizontal ColorBar at the end
-    fig.suptitle(jobname,fontsize=50, fontweight='bold')
+    # Subplot way
+    # fig.suptitle(jobname,fontsize=50, fontweight='bold')
 
-    # Vertical ColorBar on the right
-    # ax = plt.gca()
+    # Figure way
+    ax = plt.gca()
 
     ax.set_aspect(1.0)  # make aspect ratio square
     ####################################################
@@ -448,7 +447,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
     plt.grid(color='black')
 
-
     for edge, spine in ax.spines.items():
         spine.set_visible(True)
         spine.set_color('black')
@@ -461,13 +459,37 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
     ################### Put the color bar if there are simulations starts ###################
     if (numberofSimulations>0):
-        ##########################################################################################
-        # Horizontal ColorBar at the end
-        cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm, ticks=bounds, spacing='proportional',orientation='horizontal')
-        cb.set_label("-log10 (q-value)", horizontalalignment='center', rotation=0, fontsize=50, labelpad=20)
-        cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=40)
-        cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=40)
 
+        # ##########################################################################################
+        # #Horizontal Colorbar
+        # cax = fig.add_axes([0.25, 0.05, 0.5,0.02])  # has to be as a list - starts with x, y coordinates for start and then width and height in % of figure width
+        # cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm, ticks=bounds, spacing='proportional',orientation='horizontal')
+        # cb.set_label("-log10 (q-value)", horizontalalignment='center', rotation=0, fontsize=50, labelpad=20)
+        # cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=40)
+        # cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=40)
+        # ##########################################################################################
+
+        #########################################################################################
+        #Vertical Colorbar
+        #Used for scatter plot
+        x = []
+        y = []
+        c = []
+
+        for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+            x.append(lengthIndex)
+            y.append(lengthIndex)
+            c.append(0.5)
+
+        #This code defines the ticks on the color bar
+        # plot the scatter plot
+        sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
+        cb = plt.colorbar(sc)  # this works because of the scatter
+        cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=50)
+        #########################################################################################
+
+        ##########################################################################################
+        #common for horizontal colorbar and vertical colorbar
         cbax = cb.ax
         cbax.tick_params(labelsize=40)
         text_x = cbax.xaxis.label
@@ -476,25 +498,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         text_x.set_font_properties(font)
         text_y.set_font_properties(font)
         ##########################################################################################
-
-        # #########################################################################################
-        # Vertical ColorBar on the right
-        # #Used for scatter plot
-        # x = []
-        # y = []
-        # c = []
-        #
-        # for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
-        #     x.append(lengthIndex)
-        #     y.append(lengthIndex)
-        #     c.append(0.5)
-        #
-        # #This code defines the ticks on the color bar
-        # # plot the scatter plot
-        # sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
-        # cb = plt.colorbar(sc)  # this works because of the scatter
-        # cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=30)
-        # #########################################################################################
 
 
     ################### Put the color bar if there are simulations ends #####################
@@ -534,10 +537,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
     ##################################################################################
     #create the directory if it does not exists
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
     filename = '%s_Processivity.png' %(jobname)
 
-    figFile = os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY, filename)
+    figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
     fig.savefig(figFile)
     plt.cla()
     plt.close(fig)
@@ -547,7 +550,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ############### Plotting ends #####################################
     ###################################################################
 
-    filePath=os.path.join(outputDir, jobname, FIGURE, ALL, PROCESSIVITY,'%s_Signatures_Processivity.txt' %(jobname))
+    filePath=os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY,'%s_Signatures_Processivity.txt' %(jobname))
     writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict, filePath)
 ###################################################################
 
@@ -575,7 +578,7 @@ def writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2Processi
 ###################################################################
 def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
 
-    jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,PROCESSIVITY)
+    jobnamePath = os.path.join(outputDir,jobname,FIGURE,PROCESSIVITY)
     if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
 
     ############################################################
@@ -593,7 +596,13 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
         #Signature       Processsive_Group_Length        Number_of_Processive_Groups     Median_of_Number_of_Processive_Groups_in_MB
         processivity_df=pd.read_csv(processivity_table_file, header=0, sep='\t')
         processivity_df['Simulation_Number']=simNum
-        processivity_df=processivity_df[['Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_Distance', 'Median_of_Number_of_Processive_Groups_in_MB']]
+        processivity_df=processivity_df[['Simulation_Number',
+                                         'Signature',
+                                         'Processsive_Group_Length',
+                                         'Number_of_Processive_Groups',
+                                         'Median_Distance_Between_Last_First_Mutations',
+                                         'Median_Distance_Between_Consecutive_Mutations',
+                                         'Median_Number_of_Mutations_Within_1MB']]
         processivity_df_list.append(processivity_df)
 
     # Vertically combine dfs

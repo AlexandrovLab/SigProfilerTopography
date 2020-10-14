@@ -95,6 +95,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_
 
 from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNAL
 
+from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+
 ########################################################################################
 # April 27, 2020
 # requires chrBased_simBased_combined_df_split which can be real split or whole in fact
@@ -569,6 +572,56 @@ def fillSignalArrayAndCountArray_using_list_comp(
 ########################################################################################
 
 
+#######################################################
+#October 13, 2020
+def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,atac_seq_file,chromNamesList):
+    current_abs_path = os.path.dirname(os.path.abspath(__file__))
+    # print(current_abs_path)
+
+    os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED),exist_ok=True)
+    chrombased_npy_path = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+    # print(chrombased_npy_path)
+
+    if os.path.isabs(chrombased_npy_path):
+        # print('%s an absolute path.' %(chrombased_npy_path))
+        os.chdir(chrombased_npy_path)
+
+        atac_seq_filename_wo_extension = os.path.splitext(os.path.basename(atac_seq_file))[0]
+
+        for chrLong in chromNamesList:
+            # GM12878 and K562 comes from woman samples therefore there is no chrY
+            if chrLong != 'chrY':
+                # filename = '%s_signal_wgEncodeSydhNsome%sSig.npy' %(chrLong,cell_line)
+                filename = '%s_signal_%s.npy' % (chrLong, atac_seq_filename_wo_extension)
+
+                chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
+                if not os.path.exists(chrbased_npy_array_path):
+                    print('Does not exists: %s' % (chrbased_npy_array_path))
+                    try:
+                        # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
+                        print('Downloading %s_signal_%s.npy under %s' % (
+                        chrLong, atac_seq_filename_wo_extension, chrbased_npy_array_path))
+
+                        # wget -c Continue getting a partially-downloaded file
+                        # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                        # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                        cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                        # print(cmd)
+                        os.system(cmd)
+                    except:
+                        # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                        print("The UCSD ftp site is not responding...")
+
+    else:
+        #It has to be an absolute path
+        print('%s is not an absolute path.' %(chrombased_npy_path))
+
+
+    #go back
+    os.chdir(current_abs_path)
+#######################################################
+
+
 
 
 ########################################################################################
@@ -658,47 +711,54 @@ def occupancyAnalysis(genome,
     ##########################################################################
 
     ##############################################################
-    #What is the type of the signal_file_with_path?
-    #If it is a bed file read signal_file_with_path here
-    file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
+    # This code reads the file abd preaore chrbased signal files
+    # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
+    # No need for preparing here
+    if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES):
+        #What is the type of the signal_file_with_path?
+        #If it is a bed file read signal_file_with_path here
+        file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
-    if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
-        library_file_type=BIGWIG
-        #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
-    elif ((file_extension.lower()=='.bigbed') or (file_extension.lower()=='.bb')):
-        library_file_type=BIGBED
-        #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
-    elif (file_extension.lower()=='.bed'):
-        library_file_type=BED
-        readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
-    elif ((file_extension.lower()=='.narrowpeak') or (file_extension.lower()=='.np')):
-        library_file_type=NARROWPEAK
-        readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
-    elif (file_extension.lower()=='.wig'):
-        library_file_type=WIG
-        #For inhouse preparation
-        #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
-        #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
-        isFileTypeBEDGRAPH=decideFileType(library_file_with_path)
-        if isFileTypeBEDGRAPH:
-            if verbose: start_time = time.time()
-            #Read by chunks
-            # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
-            #Read at once
-            readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue)
-            if verbose: print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)))
+        if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
+            library_file_type=BIGWIG
+            #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
+        elif ((file_extension.lower()=='.bigbed') or (file_extension.lower()=='.bb')):
+            library_file_type=BIGBED
+            #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
+        elif (file_extension.lower()=='.bed'):
+            library_file_type=BED
+            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
+        elif ((file_extension.lower()=='.narrowpeak') or (file_extension.lower()=='.np')):
+            library_file_type=NARROWPEAK
+            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
+        elif (file_extension.lower()=='.wig'):
+            library_file_type=WIG
+            #For inhouse preparation
+            #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
+            #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
+            isFileTypeBEDGRAPH=decideFileType(library_file_with_path)
+            if isFileTypeBEDGRAPH:
+                if verbose: start_time = time.time()
+                #Read by chunks
+                # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
+                #Read at once
+                readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue)
+                if verbose: print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)))
 
-            #For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
-            # start_time = time.time()
-            # readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type,verbose)
-            # print('Without pool Took %f seconds' %((time.time() - start_time)))
+                #For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
+                # start_time = time.time()
+                # readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type,verbose)
+                # print('Without pool Took %f seconds' %((time.time() - start_time)))
+            else:
+                readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, library_file_with_path,occupancy_type,quantileValue,remove_outliers)
+        elif (file_extension.lower()=='.bedgraph'):
+            library_file_type = BEDGRAPH
+            readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path,occupancy_type, remove_outliers, verbose, quantileValue)
         else:
-            readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, library_file_with_path,occupancy_type,quantileValue,remove_outliers)
-    elif (file_extension.lower()=='.bedgraph'):
-        library_file_type = BEDGRAPH
-        readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path,occupancy_type, remove_outliers, verbose, quantileValue)
-    else:
-        library_file_type=LIBRARY_FILE_TYPE_OTHER
+            library_file_type=LIBRARY_FILE_TYPE_OTHER
+
+    elif os.path.basename(library_file_with_path)==DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
+        check_download_chrbased_npy_atac_seq_files(outputDir, jobname, occupancy_type,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,chromNamesList)
     ##############################################################
 
 
@@ -712,7 +772,7 @@ def occupancyAnalysis(genome,
         dinucsSignature_accumulated_count_np_array=simulatonBased_SignalArrayAndCountArrayList[5]
         indelsSignature_accumulated_count_np_array=simulatonBased_SignalArrayAndCountArrayList[6]
 
-        print('simNum:%s ACCUMULATION' %(simNum))
+        # print('simNum:%s ACCUMULATION' %(simNum))
         #Accumulation
         allSims_subsSignature_accumulated_signal_np_array[simNum] += subsSignature_accumulated_signal_np_array
         allSims_dinucsSignature_accumulated_signal_np_array[simNum] += dinucsSignature_accumulated_signal_np_array
@@ -762,7 +822,7 @@ def occupancyAnalysis(genome,
                                                verbose,),
                                          callback=accumulate_apply_async_result_vectorization))
 
-            print('MONITOR %s %d len(jobs):%d' %(chrLong,simNum,len(jobs)),flush=True)
+            # print('MONITOR %s %d len(jobs):%d' %(chrLong,simNum,len(jobs)),flush=True)
         ################################
 
         ##############################################################################
@@ -814,7 +874,7 @@ def occupancyAnalysis(genome,
                                                verbose,),
                                          callback=accumulate_apply_async_result_vectorization))
 
-            print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
+            # print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
         ################################
 
         ##############################################################################

@@ -27,7 +27,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import ALL
 from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
 
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
@@ -91,7 +90,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     #################################################################################
 
     ##################### legacy code starts ##########################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, REPLICATIONTIME), exist_ok=True)
 
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
@@ -210,12 +209,9 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
 
     ########################################################################
     if (sample is None):
-        # figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, analysesType, figureName)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, ALL, REPLICATIONTIME, figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, REPLICATIONTIME, figureName)
     else:
-        # os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType), exist_ok=True)
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME), exist_ok=True)
-        # figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, analysesType, figureName)
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, figureName)
     ########################################################################
 
@@ -372,20 +368,7 @@ def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,job
 ##################################################################
 def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode):
 
-    jobnamePath = os.path.join(outputDir,jobname,FIGURE,ALL,REPLICATIONTIME)
-    print('Topography.py jobnamePath:%s ' %jobnamePath)
-
-    # ############################################################
-    # if (os.path.exists(jobnamePath)):
-    #     try:
-    #         shutil.rmtree(jobnamePath)
-    #     except OSError as e:
-    #         print('Error: %s - %s.' % (e.filename, e.strerror))
-    # ############################################################
-
-
     ##########################################################################################
-
     subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
