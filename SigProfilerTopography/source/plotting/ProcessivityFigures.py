@@ -319,12 +319,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' % (maxProcessiveGroupLength))
     if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' % (len(sorted_processsive_group_length_list)))
 
-    index = None
-    if ((len(sorted_processsive_group_length_list) > 0) and (maxProcessiveGroupLength > 0)):
-        # Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
-        index = sorted_processsive_group_length_list.index(maxProcessiveGroupLength)
-        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' % (sorted_processsive_group_length_list[index]))
-        if verbose: print('\tVerbose ##########################################')
     ###################################################################
     ############### For information ends ##############################
     ###################################################################
@@ -333,225 +327,208 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ###################################################################
     ############### Plotting starts ###################################
     ###################################################################
-
-
-    ####################################################
-    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
-
-    if len(sorted_signature_list)<=2:
-        # Subplot way
-        # fig,(ax, cax)  = plt.subplots(nrows=2,figsize=(15, 15),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Figure way
-        fig = plt.figure(figsize=(15, 15))
-        plt.title('%s' % (jobname), y=1.25, fontsize=60, fontweight='bold')
-    elif (maxProcessiveGroupLength>20):
-        # Subplot way
-        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2 * maxProcessiveGroupLength,2 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Figure way
-        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 2 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
-    elif (len(sorted_signature_list)>maxProcessiveGroupLength):
-        # Subplot way
-        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2*maxProcessiveGroupLength, 1.5*len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Figure way
-        fig = plt.figure(figsize=(2 * maxProcessiveGroupLength, 1.5 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
-    elif (maxProcessiveGroupLength > len(sorted_signature_list)):
-        # Subplot way
-        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(3*maxProcessiveGroupLength, 3* len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Figure way
-        fig = plt.figure(figsize=(3 * maxProcessiveGroupLength, 3 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.1, fontsize=60, fontweight='bold')
-    elif (maxProcessiveGroupLength == len(sorted_signature_list)):
-        # Subplot way
-        # fig,(ax, cax) = plt.subplots(nrows=2,figsize=(2.5*maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)),gridspec_kw={"height_ratios":[1, 0.05]})
-        # Figure way
-        fig = plt.figure(figsize=(2.5 * maxProcessiveGroupLength, 2.5 * len(sorted_signature_list)))
-        plt.title('%s' % (jobname), y=1.15, fontsize=60, fontweight='bold')
-
-    # Subplot way
-    # fig.suptitle(jobname,fontsize=50, fontweight='bold')
-
-    # Figure way
-    ax = plt.gca()
-
-    ax.set_aspect(1.0)  # make aspect ratio square
-    ####################################################
-
-
-    #######################################################################
-    #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
-    if (len(sorted_processsive_group_length_list)>1):
-        plt.xlim([1,index+1])
-        ax.set_xticks(np.arange(0,index+2,1))
-    else:
-        plt.xlim([0,len(sorted_processsive_group_length_list)])
-        ax.set_xticks(np.arange(0,len(sorted_processsive_group_length_list),1))
-
-    if (len(sorted_signature_list)>1):
-        plt.ylim([1, len(sorted_signature_list)])
-    else:
-        plt.ylim([0, len(sorted_signature_list)])
-
-    ax.set_yticks(np.arange(0, len(sorted_signature_list) + 1, 1))
-    #######################################################################
-
-    #######################################################################
-    cmap = cm.get_cmap('YlOrRd')  # Looks better good
-    v_min = 2
-    v_max = 20
-    #Very important: You have to normalize
-    bounds = np.arange(v_min, v_max+1, 2)
-    norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
-    #######################################################################
-
-    #######################################################################################
-    ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is None ends ########
-    #######################################################################################
-
-    ##########################################################################################
-    if (numberofSimulations>0):
-        ##########################################################################################
-        #Plot the circles with color
-        for sigIndex, signature in enumerate(sorted_signature_list):
-            for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
-                if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
-                    radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
-                    color=None
-                    if 'minus_log10_qvalue' in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]:
-                        color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
-
-                    if ((radius is not None) and (radius>0) and color):
-                        #Very important: You have to norm
-                        circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(norm(color)), fill=True)
-                        ax.add_artist(circle)
-    else:
-    #There is  no simulation data therefore no p values
-    #######################################################################################
-    ######  simulation2Signature2ProcessiveGroupLength2PropertiesDict is None starts ######
-    #######################################################################################
-
-        ##########################################################################################
-        #Plot the circles without color
-        for sigIndex, signature in enumerate(sorted_signature_list):
-            for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
-                if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
-                    radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
-                    circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5),radius,color="g", fill=True)
-                    ax.add_artist(circle)
-    ##########################################################################################
-
-    ax.set_facecolor('white')
-    #When there are subplots, this is needed.
-    ax.grid(color='black')
-
-    plt.grid(color='black')
-
-    for edge, spine in ax.spines.items():
-        spine.set_visible(True)
-        spine.set_color('black')
-
-    xlabels=None
-    if (index is not None):
-        xlabels = sorted_processsive_group_length_list[0:index+1]
-    ylabels = sorted_signature_list
-    ##########################################################################################
-
-    ################### Put the color bar if there are simulations starts ###################
-    if (numberofSimulations>0):
-
-        # ##########################################################################################
-        # #Horizontal Colorbar
-        # cax = fig.add_axes([0.25, 0.05, 0.5,0.02])  # has to be as a list - starts with x, y coordinates for start and then width and height in % of figure width
-        # cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap, norm=norm, ticks=bounds, spacing='proportional',orientation='horizontal')
-        # cb.set_label("-log10 (q-value)", horizontalalignment='center', rotation=0, fontsize=50, labelpad=20)
-        # cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=40)
-        # cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=40)
-        # ##########################################################################################
-
-        #########################################################################################
-        #Vertical Colorbar
-        #Used for scatter plot
-        x = []
-        y = []
-        c = []
-
-        for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
-            x.append(lengthIndex)
-            y.append(lengthIndex)
-            c.append(0.5)
-
-        #This code defines the ticks on the color bar
-        # plot the scatter plot
-        sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
-        cb = plt.colorbar(sc)  # this works because of the scatter
-        cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=50)
-        #########################################################################################
-
-        ##########################################################################################
-        #common for horizontal colorbar and vertical colorbar
-        cbax = cb.ax
-        cbax.tick_params(labelsize=40)
-        text_x = cbax.xaxis.label
-        text_y = cbax.yaxis.label
-        font = mpl.font_manager.FontProperties(size=40)
-        text_x.set_font_properties(font)
-        text_y.set_font_properties(font)
-        ##########################################################################################
-
-
-    ################### Put the color bar if there are simulations ends #####################
-
-    ##################################################################################
-    # CODE GOES HERE TO CENTER X-AXIS LABELS...
-    ax.set_xticklabels([])
-    mticks = ax.get_xticks()
-    ax.set_xticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='x', which='minor', length=0,labelsize=50)
-
-    if xlabels is not None:
-        ax.set_xticklabels(xlabels, minor=True)
-
-    ax.xaxis.set_ticks_position('top')
-
-    plt.tick_params(
-        axis='x',  # changes apply to the x-axis
-        which='major',  # both major and minor ticks are affected
-        bottom=False,  # ticks along the bottom edge are off
-        top=False)  # labels along the bottom edge are off
-    ##################################################################################
-
-    ##################################################################################
-    # CODE GOES HERE TO CENTER Y-AXIS LABELS...
-    ax.set_yticklabels([])
-    mticks = ax.get_yticks()
-    ax.set_yticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
-    ax.tick_params(axis='y', which='minor', length=0,labelsize=50)
-    ax.set_yticklabels(ylabels, minor=True) # fontsize
-
-    plt.tick_params(
-        axis='y',  # changes apply to the x-axis
-        which='major',  # both major and minor ticks are affected
-        left=False)  # labels along the bottom edge are off
-    ##################################################################################
-
-    ##################################################################################
-    #create the directory if it does not exists
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
-    filename = '%s_Processivity.png' %(jobname)
-
-    figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
-    fig.savefig(figFile)
-    plt.cla()
-    plt.close(fig)
-    ##################################################################################
-
+    plot_processivity_figure(outputDir,
+                             jobname,
+                             numberofSimulations,
+                             sorted_signature_list,
+                             sorted_processsive_group_length_list,
+                             maxProcessiveGroupLength,
+                             signature_radius_df,
+                             signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict,
+                             verbose)
     ###################################################################
     ############### Plotting ends #####################################
     ###################################################################
 
     filePath=os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY,'%s_Signatures_Processivity.txt' %(jobname))
     writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict, filePath)
+###################################################################
+
+
+
+###################################################################
+def plot_processivity_figure(outputDir,
+                             jobname,
+                             numberofSimulations,
+                             sorted_signature_list,
+                             sorted_processsive_group_length_list,
+                             maxProcessiveGroupLength,
+                             signature_radius_df,
+                             signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict,
+                             verbose):
+
+    index = None
+    if ((len(sorted_processsive_group_length_list) > 0) and (maxProcessiveGroupLength > 0)):
+        # Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
+        index = sorted_processsive_group_length_list.index(maxProcessiveGroupLength)
+        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' % (sorted_processsive_group_length_list[index]))
+        if verbose: print('\tVerbose ##########################################')
+
+    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
+
+    if (len(sorted_signature_list)>0):
+        plot1, panel1 = plt.subplots(figsize=(10+1.5*len(sorted_processsive_group_length_list), 10+1.5*len(sorted_signature_list)))
+        plt.rc('axes', edgecolor='lightgray')
+
+        #make aspect ratio square
+        panel1.set_aspect(1.0)
+
+        #set title
+        panel1.text(len(sorted_processsive_group_length_list)*3, len(sorted_signature_list)+2.5, jobname,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
+
+        panel1.set_aspect(1.0)  # make aspect ratio square
+
+        #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
+        if (len(sorted_processsive_group_length_list)>1):
+            panel1.set_xlim([1,index+1])
+            panel1.set_xticks(np.arange(0,index+2,1))
+        else:
+            panel1.set_xlim([0,len(sorted_processsive_group_length_list)])
+            panel1.set_xticks(np.arange(0,len(sorted_processsive_group_length_list),1))
+
+        if (len(sorted_signature_list)>1):
+            panel1.set_ylim([1, len(sorted_signature_list)])
+        else:
+            panel1.set_ylim([0, len(sorted_signature_list)])
+
+        panel1.set_yticks(np.arange(0, len(sorted_signature_list) + 1, 1))
+        #######################################################################
+
+        #######################################################################
+        cmap = cm.get_cmap('YlOrRd')  # Looks better good
+        v_min = 2
+        v_max = 20
+        #Very important: You have to normalize
+        norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
+        #######################################################################
+
+        ##########################################################################################
+        if (numberofSimulations>0):
+            #Plot the circles with color
+            for sigIndex, signature in enumerate(sorted_signature_list):
+                for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+                    if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
+                        radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
+                        color=None
+                        if 'minus_log10_qvalue' in signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]:
+                            color=signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict[signature][processiveGroupLength]['minus_log10_qvalue']
+
+                        if ((radius is not None) and (radius>0) and color):
+                            #Very important: You have to norm
+                            circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5), radius, color=cmap(norm(color)), fill=True)
+                            panel1.add_patch(circle)
+
+        else:
+            #There is  no simulation data therefore no p values
+            #Plot the circles without color
+            for sigIndex, signature in enumerate(sorted_signature_list):
+                for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+                    if (signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values > 0):
+                        radius = signature_radius_df[(signature_radius_df['Signature'] == signature) & (signature_radius_df['Processsive_Group_Length'] == processiveGroupLength)]['Radius'].values[0]
+                        circle = plt.Circle((lengthIndex + 0.5, sigIndex + 0.5),radius,color="g", fill=True)
+                        panel1.add_patch(circle)
+        ##########################################################################################
+
+        panel1.set_facecolor('white')
+        #When there are subplots, this is needed.
+        panel1.grid(color='black')
+
+        panel1.grid(color='black')
+
+        for edge, spine in panel1.spines.items():
+            spine.set_visible(True)
+            spine.set_color('black')
+
+        xlabels=None
+        if (index is not None):
+            xlabels = sorted_processsive_group_length_list[0:index+1]
+        ylabels = sorted_signature_list
+        ##########################################################################################
+
+        ################### Put the color bar if there are simulations starts ###################
+        if (numberofSimulations>0):
+
+            #########################################################################################
+            #Vertical Colorbar
+            #Used for scatter plot
+            x = []
+            y = []
+            c = []
+
+            for lengthIndex, processiveGroupLength in enumerate(sorted_processsive_group_length_list):
+                x.append(lengthIndex)
+                y.append(lengthIndex)
+                c.append(0.5)
+
+            #This code defines the ticks on the color bar
+            # plot the scatter plot
+            sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
+            cb = plt.colorbar(sc)  # this works because of the scatter
+            # cb.set_label("-log10 (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=50)
+
+            ax = cb.ax
+            ax.text(3.5, 0.5, '-log10 (q-value)',fontsize=50)
+            #########################################################################################
+
+            ##########################################################################################
+            #common for horizontal colorbar and vertical colorbar
+            cbax = cb.ax
+            cbax.tick_params(labelsize=40)
+            text_x = cbax.xaxis.label
+            text_y = cbax.yaxis.label
+            font = mpl.font_manager.FontProperties(size=40)
+            text_x.set_font_properties(font)
+            text_y.set_font_properties(font)
+            ##########################################################################################
+
+        ################### Put the color bar if there are simulations ends #####################
+
+        ##################################################################################
+        # CODE GOES HERE TO CENTER X-AXIS LABELS...
+        panel1.set_xticklabels([])
+        mticks = panel1.get_xticks()
+        panel1.set_xticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
+        panel1.tick_params(axis='x', which='minor', length=0,labelsize=50)
+
+        if xlabels is not None:
+            panel1.set_xticklabels(xlabels, minor=True)
+
+        panel1.xaxis.set_ticks_position('top')
+
+        plt.tick_params(
+            axis='x',  # changes apply to the x-axis
+            which='major',  # both major and minor ticks are affected
+            bottom=False,  # ticks along the bottom edge are off
+            top=False)  # labels along the bottom edge are off
+        ##################################################################################
+
+        ##################################################################################
+        # CODE GOES HERE TO CENTER Y-AXIS LABELS...
+        panel1.set_yticklabels([])
+        mticks = panel1.get_yticks()
+        panel1.set_yticks((mticks[:-1] + mticks[1:]) / 2, minor=True)
+        panel1.tick_params(axis='y', which='minor', length=0,labelsize=50)
+        panel1.set_yticklabels(ylabels, minor=True) # fontsize
+
+        plt.tick_params(
+            axis='y',  # changes apply to the x-axis
+            which='major',  # both major and minor ticks are affected
+            left=False)  # labels along the bottom edge are off
+        ##################################################################################
+
+        ##################################################################################
+        #create the directory if it does not exists
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
+        filename = '%s_Processivity.png' %(jobname)
+
+        figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
+        plot1.savefig(figFile)
+        plot1.tight_layout()
+
+        plt.cla()
+        plt.close(plot1)
+        ##################################################################################
+
 ###################################################################
 
 

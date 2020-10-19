@@ -1696,13 +1696,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
 
     for strand_bias in strand_bias_list:
 
-        # plot_six_mutations_sbs_signatures_figures_old_way(subsSignatures,
-        #                                 strand_bias,
-        #                                 strandbias_figures_outputDir,
-        #                                 SIGNIFICANCE_LEVEL,
-        #                                 signature2mutation_type2strand2percentagedict,
-        #                                 percentage_strings)
-
         plot_six_mutations_sbs_signatures_circle_figures(subsSignatures,
                                         strand_bias,
                                         strandbias_figures_outputDir,

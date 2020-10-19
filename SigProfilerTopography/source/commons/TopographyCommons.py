@@ -224,9 +224,6 @@ SIGPROFILERTOPOGRAPHY_DEFAULT_FILES=[GM12878_NUCLEOSOME_OCCUPANCY_FILE,K562_NUCL
 available_nucleosome_biosamples=[GM12878,K562]
 available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
 
-GRCh37_hg19_NCBIREFSEQCURATED = 'GRCh37_hg19_NCBIRefSeqCurated'
-GRCh37_ENSEMBL = 'GRCh37_transcripts.txt'
-
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
 
@@ -1014,55 +1011,6 @@ def getChromSizesDict(genome):
 
     return chromSizesDict
 ###################################################################
-
-
-###################################################################
-def readTrancriptsENSEMBL(genome):
-
-    if (genome==GRCh37):
-        transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_ENSEMBL)
-
-    if (os.path.exists(transcriptsFilenamePath)):
-        ensembl_transcripts_df = pd.read_csv(transcriptsFilenamePath, header=0,sep='\t')
-
-        #Gene stable ID  Transcript stable ID    Chromosome/scaffold name        Strand  Transcript start (bp)   Transcript end (bp)     Transcript type
-
-        #Change the column name     Chromosome/scaffold name    -->     chrom
-        #                           Strand                      -->     strand
-        #                           Transcript start (bp)       -->     txStart
-        #                           Transcript end (bp)         -->     txEnd
-        ensembl_transcripts_df.rename(columns={'Chromosome/scaffold name': 'chrom', 'Strand': 'strand', 'Transcript start (bp)':'txStart', 'Transcript end (bp)':'txEnd'}, inplace=True)
-        print('Chromosome names in transcripts data: %s' % (ensembl_transcripts_df['chrom'].unique()))
-
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.shape)
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.head())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.tail())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.info())
-
-        return ensembl_transcripts_df
-    else:
-        return None
-# Gene stable ID	Transcript stable ID	Chromosome/scaffold name	Strand	Transcript start (bp)	Transcript end (bp)	Transcript type
-###################################################################
-
-###################################################################
-#Not used anymore
-def readTranscriptsNCBI():
-    transcriptsFilenamePath = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,TRANSCRIPTS,GRCh37_hg19_NCBIREFSEQCURATED)
-
-    if (os.path.exists(transcriptsFilenamePath)):
-        GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df = pd.read_csv(transcriptsFilenamePath, header = 0, sep='\t')
-        print('debug GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df starts')
-        print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.columns.values)
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.shape)
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.head())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.tail())
-        # print(GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df.info())
-        print('debug GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df ends')
-        return GRCh37_hg19_NCBI_Curated_RefSeq_Curated_Transcripts_df
-    else:
-        return None
-##################################################################
 
 
 ##################################################################
@@ -2834,6 +2782,10 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             print('##############################')
             print('There is a situation/problem. For simNum:%s chr:%s All mutation context type: %s mutations are not merged with signature probabilities'  %(simNum,chrShort,mutation_type_context))
             print('For simNum:%s chr:%s mutation context type:%s chr_based_mutation_df.shape(%d,%d)-- merged_df.shape(%d,%d) ' % (simNum, chrShort, mutation_type_context,chr_based_mutation_df.shape[0],chr_based_mutation_df.shape[1],merged_df.shape[0],merged_df.shape[1]))
+            print('Which samples are not merged?: %s' %(set(chr_based_mutation_df[SAMPLE].unique()).difference(set(merged_df[SAMPLE].unique()))))
+            temp_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='outer',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION], indicator=True)
+            print('which rows of chr_based_mutation_df are not merged?')
+            print(temp_df[temp_df['_merge']=='left_only'])
 
         if ((merged_df is not None) and (not merged_df.empty)):
             if (mutation_type_context in SBS_CONTEXTS):

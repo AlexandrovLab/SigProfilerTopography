@@ -48,16 +48,29 @@ from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DIST
 
 ####################################################################################
 #DEC 22, 2019
-def findProcessiveGroupsForApplySyncWithDistance(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def findProcessiveGroupsForApplySyncWithDistance(simNum,
+                                                 chrLong,
+                                                 sample,
+                                                 sampleBased_chrBased_spms_df,
+                                                 considerProbabilityInProcessivityAnalysis,
+                                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                 verbose):
     #Sort it
     sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
 
-    return findProcessiveGroupsWithDistance(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+    return findProcessiveGroupsWithDistance(simNum,
+                                            chrLong,
+                                            sample,
+                                            sampleBased_chrBased_spms_df,
+                                            considerProbabilityInProcessivityAnalysis,
+                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                            verbose)
 ####################################################################################
 
 
 ####################################################################################
 #SEP 17, 2020
+#Did not work as expected
 def findProcessiveGroupsForApplySyncWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
     #Sort it
     chrBased_spms_df.sort_values(START, inplace=True)
@@ -141,7 +154,7 @@ def findProcessiveGroupsWithCount(simNum,chrLong,sample,sorted_sampleBased_chrBa
 
 ####################################################################################
 #Sep 17, 2020
-#Test
+#Did not work as expected
 def findProcessiveGroupsWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
     my_all_samples_dict={}
 
@@ -196,7 +209,13 @@ def findProcessiveGroupsWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,c
 ####################################################################################
 
 ####################################################################################
-def findProcessiveGroupsWithDistance(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
+def findProcessiveGroupsWithDistance(simNum,
+                                     chrLong,
+                                     sample,
+                                     sorted_sampleBased_chrBased_spms_df,
+                                     considerProbabilityInProcessivityAnalysis,
+                                     signature_cutoff_numberofmutations_averageprobability_df,
+                                     verbose):
 
     my_dict={}
 
@@ -336,7 +355,16 @@ def writeCountDictionaryAsADataframe(signature2ProcessiveGroupLength2CountDict,f
 
 
 ####################################################################################
-def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,processivity_calculation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
+                                                                      chromNamesList,
+                                                                      computation_type,
+                                                                      processivity_calculation_type,
+                                                                      outputDir,
+                                                                      jobname,
+                                                                      numofSimulations,
+                                                                      considerProbabilityInProcessivityAnalysis,
+                                                                      subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                      verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
         #####################################################################
@@ -417,7 +445,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                             for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
                                 jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithCount,
                                                              args=(
-                                                             simNum, chrLong, sample, sampleBased_chrBased_spms_df,
+                                                             simNum,
+                                                             chrLong,
+                                                             sample,
+                                                             sampleBased_chrBased_spms_df,
                                                              considerProbabilityInProcessivityAnalysis,
                                                              subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                              verbose,),
@@ -427,20 +458,26 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                             # With Distance
                             for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
                                 jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistance,
-                                                             args=(simNum,chrLong,sample,sampleBased_chrBased_spms_df,
+                                                             args=(simNum,
+                                                                   chrLong,
+                                                                   sample,
+                                                                   sampleBased_chrBased_spms_df,
                                                                    considerProbabilityInProcessivityAnalysis,
                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                    verbose,),
                                                              callback=accumulate_apply_async_result_with_distance))
 
-                        elif processivity_calculation_type==CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER:
-                            # With Distance All Samples Together
-                            jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistanceAllSamples,
-                                                         args=(simNum,chrLong,chrBased_spms_df,
-                                                               considerProbabilityInProcessivityAnalysis,
-                                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                               verbose,),
-                                                         callback=accumulate_apply_async_result_with_distance))
+                        #Did not work as expected
+                        # elif processivity_calculation_type==CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER:
+                        #     # With Distance All Samples Together
+                        #     jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistanceAllSamples,
+                        #                                  args=(simNum,
+                        #                                        chrLong,
+                        #                                        chrBased_spms_df,
+                        #                                        considerProbabilityInProcessivityAnalysis,
+                        #                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
+                        #                                        verbose,),
+                        #                                  callback=accumulate_apply_async_result_with_distance))
 
                 ####################################################################################
 
@@ -562,10 +599,29 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
 
 ##################################################################################
-def processivityAnalysis(mutation_types_contexts,chromNamesList,computation_type,processivity_calculation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def processivityAnalysis(mutation_types_contexts,
+                         chromNamesList,
+                         computation_type,
+                         processivity_calculation_type,
+                         outputDir,
+                         jobname,
+                         numofSimulations,
+                         considerProbabilityInProcessivityAnalysis,
+                         subsSignature_cutoff_numberofmutations_averageprobability_df,
+                         verbose):
+
     print('\n#################################################################################')
     print('--- ProcessivityAnalysis starts')
-    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,chromNamesList,computation_type,processivity_calculation_type,outputDir,jobname,numofSimulations,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
+    readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
+                                                                      chromNamesList,
+                                                                      computation_type,
+                                                                      processivity_calculation_type,
+                                                                      outputDir,
+                                                                      jobname,
+                                                                      numofSimulations,
+                                                                      considerProbabilityInProcessivityAnalysis,
+                                                                      subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                      verbose)
     print('--- ProcessivityAnalysis ends')
     print('#################################################################################\n')
 ##################################################################################

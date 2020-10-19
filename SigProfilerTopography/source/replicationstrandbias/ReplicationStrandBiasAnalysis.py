@@ -216,9 +216,9 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         mutation_row,
         chrBasedReplicationArray,
         six_mutation_types_np_array,
-        subs_signatures_cutoffs,
-        dinucs_signatures_cutoffs,
-        indels_signatures_cutoffs,
+        ordered_sbs_signatures_cutoffs,
+        ordered_dbs_signatures_cutoffs,
+        ordered_id_signatures_cutoffs,
         df_columns_subs_signatures_mask_array,
         df_columns_dinucs_signatures_mask_array,
         df_columns_indels_signatures_mask_array,
@@ -258,7 +258,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         six_mutation_types_mask_array= np.where(six_mutation_types_np_array == mutationType, 1, 0)
 
         probabilities = mutation_row[df_columns_subs_signatures_mask_array]
-        threshold_mask_array = np.greater_equal(probabilities, subs_signatures_cutoffs)
+        threshold_mask_array = np.greater_equal(probabilities, ordered_sbs_signatures_cutoffs)
         # Convert True into 1, and False into 0
         # subs_signatures_mask_array.shape (num_of_subs_signatures,)
         subs_signatures_mask_array = threshold_mask_array.astype(int)
@@ -279,7 +279,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         end = start+2
 
         probabilities = mutation_row[df_columns_dinucs_signatures_mask_array]
-        threshold_mask_array = np.greater_equal(probabilities, dinucs_signatures_cutoffs)
+        threshold_mask_array = np.greater_equal(probabilities, ordered_dbs_signatures_cutoffs)
         # Convert True into 1, and False into 0
         dinucs_signatures_mask_array = threshold_mask_array.astype(int)
 
@@ -291,7 +291,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         end = start+int(mutation_row[indexofLength])
 
         probabilities = mutation_row[df_columns_indels_signatures_mask_array]
-        threshold_mask_array = np.greater_equal(probabilities, indels_signatures_cutoffs)
+        threshold_mask_array = np.greater_equal(probabilities, ordered_id_signatures_cutoffs)
         # Convert True into 1, and False into 0
         indels_signatures_mask_array = threshold_mask_array.astype(int)
 
@@ -464,12 +464,12 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df_spl
                                             chrBased_replication_array,
                                             sim_num,
                                             six_mutation_types_np_array,
-                                            subs_signatures,
-                                            dinucs_signatures,
-                                            indels_signatures,
-                                            subs_signatures_cutoffs,
-                                            dinucs_signatures_cutoffs,
-                                            indels_signatures_cutoffs,
+                                            ordered_sbs_signatures,
+                                            ordered_dbs_signatures,
+                                            ordered_id_signatures,
+                                            ordered_sbs_signatures_cutoffs,
+                                            ordered_dbs_signatures_cutoffs,
+                                            ordered_id_signatures_cutoffs,
                                             all_types_leading_np_array,
                                             all_types_lagging_np_array,
                                             subs_signature_mutation_type_leading_np_array,
@@ -487,15 +487,15 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df_spl
         ###############################################################################
         ################################ Initialization ###############################
         ###############################################################################
-        df_columns_subs_signatures_mask_array = np.isin(df_columns,subs_signatures)
-        df_columns_dinucs_signatures_mask_array=np.isin(df_columns,dinucs_signatures)
-        df_columns_indels_signatures_mask_array= np.isin(df_columns, indels_signatures)
+        df_columns_subs_signatures_mask_array = np.isin(df_columns,ordered_sbs_signatures)
+        df_columns_dinucs_signatures_mask_array=np.isin(df_columns,ordered_dbs_signatures)
+        df_columns_indels_signatures_mask_array= np.isin(df_columns,ordered_id_signatures)
 
         six_mutation_types_default_zeros_array= np.zeros(six_mutation_types_np_array.size,dtype=int)
-        subs_signatures_default_zeros_array = np.zeros(subs_signatures.size,dtype=int)
-        dinucs_signatures_default_zeros_array = np.zeros(dinucs_signatures.size,dtype=int)
-        indels_signatures_default_zeros_array = np.zeros(indels_signatures.size,dtype=int)
-        subs_signatures_mutation_types_default_zeros_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size), dtype=int)
+        subs_signatures_default_zeros_array = np.zeros(ordered_sbs_signatures.size,dtype=int)
+        dinucs_signatures_default_zeros_array = np.zeros(ordered_dbs_signatures.size,dtype=int)
+        indels_signatures_default_zeros_array = np.zeros(ordered_id_signatures.size,dtype=int)
+        subs_signatures_mutation_types_default_zeros_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size), dtype=int)
         ###############################################################################
         ################################ Initialization ###############################
         ###############################################################################
@@ -507,9 +507,9 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_combined_df_spl
         [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             chrBased_replication_array,
                                                                             six_mutation_types_np_array,
-                                                                            subs_signatures_cutoffs,
-                                                                            dinucs_signatures_cutoffs,
-                                                                            indels_signatures_cutoffs,
+                                                                            ordered_sbs_signatures_cutoffs,
+                                                                            ordered_dbs_signatures_cutoffs,
+                                                                            ordered_id_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             df_columns_indels_signatures_mask_array,
@@ -544,12 +544,12 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                                               simNum,
                                                                               splitIndex,
                                                                               six_mutation_types_np_array,
-                                                                              subs_signatures,
-                                                                              dinucs_signatures,
-                                                                              indels_signatures,
-                                                                              subs_signatures_cutoffs,
-                                                                              dinucs_signatures_cutoffs,
-                                                                              indels_signatures_cutoffs,
+                                                                              ordered_sbs_signatures,
+                                                                              ordered_dbs_signatures,
+                                                                              ordered_id_signatures,
+                                                                              ordered_sbs_signatures_cutoffs,
+                                                                              ordered_dbs_signatures_cutoffs,
+                                                                              ordered_id_signatures_cutoffs,
                                                                               all_types_np_array_size,
                                                                               sample_based,
                                                                               verbose):
@@ -560,8 +560,8 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
     #Initialization
     all_types_leading_np_array = np.zeros((all_types_np_array_size), dtype=int)
     all_types_lagging_np_array = np.zeros((all_types_np_array_size), dtype=int)
-    subs_signature_mutation_type_leading_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
-    subs_signature_mutation_type_lagging_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_leading_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_lagging_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
 
     if (os.path.exists(chr_based_replication_time_file_path)):
         chrBased_replication_array = np.load(chr_based_replication_time_file_path)
@@ -575,12 +575,12 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                           chrBased_replication_array,
                                                           simNum,
                                                           six_mutation_types_np_array,
-                                                          subs_signatures,
-                                                          dinucs_signatures,
-                                                          indels_signatures,
-                                                          subs_signatures_cutoffs,
-                                                          dinucs_signatures_cutoffs,
-                                                          indels_signatures_cutoffs,
+                                                          ordered_sbs_signatures,
+                                                          ordered_dbs_signatures,
+                                                          ordered_id_signatures,
+                                                          ordered_sbs_signatures_cutoffs,
+                                                          ordered_dbs_signatures_cutoffs,
+                                                          ordered_id_signatures_cutoffs,
                                                           all_types_leading_np_array,
                                                           all_types_lagging_np_array,
                                                           subs_signature_mutation_type_leading_np_array,
@@ -604,12 +604,12 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    chrLong,
                                                                    simNum,
                                                                    six_mutation_types_np_array,
-                                                                   subs_signatures,
-                                                                   dinucs_signatures,
-                                                                   indels_signatures,
-                                                                   subs_signatures_cutoffs,
-                                                                   dinucs_signatures_cutoffs,
-                                                                   indels_signatures_cutoffs,
+                                                                   ordered_sbs_signatures,
+                                                                   ordered_dbs_signatures,
+                                                                   ordered_id_signatures,
+                                                                   ordered_sbs_signatures_cutoffs,
+                                                                   ordered_dbs_signatures_cutoffs,
+                                                                   ordered_id_signatures_cutoffs,
                                                                    all_types_np_array_size,
                                                                    sample_based,
                                                                    verbose):
@@ -620,8 +620,8 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
     #Initialization
     all_types_leading_np_array = np.zeros((all_types_np_array_size), dtype=int)
     all_types_lagging_np_array = np.zeros((all_types_np_array_size), dtype=int)
-    subs_signature_mutation_type_leading_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
-    subs_signature_mutation_type_lagging_np_array = np.zeros((subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_leading_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    subs_signature_mutation_type_lagging_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
 
     if (os.path.exists(chr_based_replication_time_file_path)):
         chrBased_replication_array = np.load(chr_based_replication_time_file_path)
@@ -634,12 +634,12 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           chrBased_replication_array,
                                                           simNum,
                                                           six_mutation_types_np_array,
-                                                          subs_signatures,
-                                                          dinucs_signatures,
-                                                          indels_signatures,
-                                                          subs_signatures_cutoffs,
-                                                          dinucs_signatures_cutoffs,
-                                                          indels_signatures_cutoffs,
+                                                          ordered_sbs_signatures,
+                                                          ordered_dbs_signatures,
+                                                          ordered_id_signatures,
+                                                          ordered_sbs_signatures_cutoffs,
+                                                          ordered_dbs_signatures_cutoffs,
+                                                          ordered_id_signatures_cutoffs,
                                                           all_types_leading_np_array,
                                                           all_types_lagging_np_array,
                                                           subs_signature_mutation_type_leading_np_array,
@@ -718,7 +718,24 @@ def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chrom
 # pool.apply_async:  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 # For each possible (chrLong,simNum) couple read the data and array on the worker process
 # Fastest, consumes more memory than others. 22/28 processes are running. For Combined_PACWG_nonPCAWG Skin_Melanoma after 1 hour all 28/28 running.
-def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,smoothedWaveletRepliseqDataFilename,valleysBEDFilename, peaksBEDFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
+def replicationStrandBiasAnalysis(computationType,
+                                  sample_based,
+                                  chromSizesDict,
+                                  chromNamesList,
+                                  outputDir,
+                                  jobname,
+                                  numofSimulations,
+                                  job_tuples,
+                                  smoothedWaveletRepliseqDataFilename,
+                                  valleysBEDFilename,
+                                  peaksBEDFilename,
+                                  ordered_sbs_signatures,
+                                  ordered_dbs_signatures,
+                                  ordered_id_signatures,
+                                  ordered_sbs_signatures_cutoffs,
+                                  ordered_dbs_signatures_cutoffs,
+                                  ordered_id_signatures_cutoffs,
+                                  verbose):
 
     print('\n#################################################################################')
     print('--- ReplicationStrandBias Analysis starts')
@@ -730,26 +747,16 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
 
     #########################################################################################
     six_mutation_types_np_array = np.array([C2A, C2G, C2T, T2A, T2C, T2G])
-
-    subs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    dinucs_signatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    indels_signatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-
-    subs_signatures_cutoffs = subsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-    dinucs_signatures_cutoffs = dinucsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-    indels_signatures_cutoffs = indelsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-
-    all_types_np_array = np.concatenate((six_mutation_types_np_array,subs_signatures,dinucs_signatures,indels_signatures), axis=None)
-
-    all_types_np_array_size = six_mutation_types_np_array.size + subs_signatures.size + dinucs_signatures.size + indels_signatures.size
+    all_types_np_array = np.concatenate((six_mutation_types_np_array,ordered_sbs_signatures,ordered_dbs_signatures,ordered_id_signatures), axis=None)
+    all_types_np_array_size = six_mutation_types_np_array.size + ordered_sbs_signatures.size + ordered_dbs_signatures.size + ordered_id_signatures.size
     #########################################################################################
 
     #########################################################################################
     # Initialization
     all_sims_all_types_leading_np_array = np.zeros((numofSimulations+1,all_types_np_array_size),dtype=int)
     all_sims_all_types_lagging_np_array = np.zeros((numofSimulations+1,all_types_np_array_size),dtype=int)
-    all_sims_subs_signature_mutation_type_leading_np_array = np.zeros((numofSimulations+1,subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
-    all_sims_subs_signature_mutation_type_lagging_np_array= np.zeros((numofSimulations+1,subs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    all_sims_subs_signature_mutation_type_leading_np_array = np.zeros((numofSimulations+1,ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
+    all_sims_subs_signature_mutation_type_lagging_np_array= np.zeros((numofSimulations+1,ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
     #########################################################################################
 
     #########################################################################################
@@ -795,12 +802,12 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                           chrLong,
                                           simNum,
                                           six_mutation_types_np_array,
-                                          subs_signatures,
-                                          dinucs_signatures,
-                                          indels_signatures,
-                                          subs_signatures_cutoffs,
-                                          dinucs_signatures_cutoffs,
-                                          indels_signatures_cutoffs,
+                                          ordered_sbs_signatures,
+                                          ordered_dbs_signatures,
+                                          ordered_id_signatures,
+                                          ordered_sbs_signatures_cutoffs,
+                                          ordered_dbs_signatures_cutoffs,
+                                          ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           sample_based,
                                           verbose,),
@@ -841,12 +848,12 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
                                           simNum,
                                           splitIndex,
                                           six_mutation_types_np_array,
-                                          subs_signatures,
-                                          dinucs_signatures,
-                                          indels_signatures,
-                                          subs_signatures_cutoffs,
-                                          dinucs_signatures_cutoffs,
-                                          indels_signatures_cutoffs,
+                                          ordered_sbs_signatures,
+                                          ordered_dbs_signatures,
+                                          ordered_id_signatures,
+                                          ordered_sbs_signatures_cutoffs,
+                                          ordered_dbs_signatures_cutoffs,
+                                          ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           sample_based,
                                           verbose,),
@@ -880,7 +887,7 @@ def replicationStrandBiasAnalysis(computationType,sample_based,chromSizesDict,ch
 
     write_signature_mutation_type_strand_bias_np_array_as_dataframe(np_arrays_list,
                                                                     six_mutation_types_np_array,
-                                                                    subs_signatures,
+                                                                    ordered_sbs_signatures,
                                                                     strand_bias,
                                                                     replication_strands,
                                                                     outputDir,

@@ -289,7 +289,8 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
             print('before outlier removal number of rows: %d' % (wigfile_interval_version_df.shape[0]))
             file_df = wigfile_interval_version_df[wigfile_interval_version_df[SIGNAL] < q]
             print('after outlier removal number of rows: %d' % (file_df.shape[0]))
-        # Outlier elimination ends
+        else:
+            file_df = wigfile_interval_version_df
 
         file_df_grouped = file_df.groupby(CHROM)
         pool = multiprocessing.Pool(numofProcesses)
@@ -297,18 +298,19 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
         poolInputList = []
 
         for chrLong, chromBasedFileDF in file_df_grouped:
-            chromSize = chromSizesDict[chrLong]
-            inputList = []
-            inputList.append(outputDir)
-            inputList.append(jobname)
-            inputList.append(chrLong)
-            inputList.append(chromSize)
-            inputList.append(chromBasedFileDF)
-            inputList.append(wig_file_path)
-            inputList.append(occupancy_type)
-            inputList.append(max_signal)
-            inputList.append(min_signal)
-            poolInputList.append(inputList)
+            if chrLong in chromSizesDict:
+                chromSize = chromSizesDict[chrLong]
+                inputList = []
+                inputList.append(outputDir)
+                inputList.append(jobname)
+                inputList.append(chrLong)
+                inputList.append(chromSize)
+                inputList.append(chromBasedFileDF)
+                inputList.append(wig_file_path)
+                inputList.append(occupancy_type)
+                inputList.append(max_signal)
+                inputList.append(min_signal)
+                poolInputList.append(inputList)
 
         pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 

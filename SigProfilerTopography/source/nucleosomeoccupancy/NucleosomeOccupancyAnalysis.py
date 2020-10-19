@@ -114,9 +114,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                              library_file_type,
                                                              sample2NumberofSubsDict,
                                                              sample2SubsSignature2NumberofMutationsDict,
-                                                             subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                             indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                             dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                             ordered_sbs_signatures,
+                                                             ordered_dbs_signatures,
+                                                             ordered_id_signatures,
+                                                             ordered_sbs_signatures_cutoffs,
+                                                             ordered_dbs_signatures_cutoffs,
+                                                             ordered_id_signatures_cutoffs,
                                                              plusorMinus,
                                                              sample_based,
                                                              verbose):
@@ -223,27 +226,20 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             ###############################################################################
             ################################ Initialization ###############################
             ###############################################################################
-            subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-            dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-            indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
 
-            subsSignatures_cutoffs = subsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-            dinucsSignatures_cutoffs = dinucsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-            indelsSignatures_cutoffs = indelsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-
-            subsSignatures_mask_array = np.isin(df_columns,subsSignatures)
-            dinucsSignatures_mask_array = np.isin(df_columns,dinucsSignatures)
-            indelsSignatures_mask_array = np.isin(df_columns,indelsSignatures)
+            subsSignatures_mask_array = np.isin(df_columns,ordered_sbs_signatures)
+            dinucsSignatures_mask_array = np.isin(df_columns,ordered_dbs_signatures)
+            indelsSignatures_mask_array = np.isin(df_columns,ordered_id_signatures)
 
             #Add one more row for the aggregated analysis
-            subsSignature_accumulated_signal_np_array=np.zeros((subsSignatures.size+1,plusorMinus*2+1))
-            dinucsSignature_accumulated_signal_np_array=np.zeros((dinucsSignatures.size+1,plusorMinus*2+1))
-            indelsSignature_accumulated_signal_np_array=np.zeros((indelsSignatures.size+1,plusorMinus*2+1))
+            subsSignature_accumulated_signal_np_array=np.zeros((ordered_sbs_signatures.size+1,plusorMinus*2+1))
+            dinucsSignature_accumulated_signal_np_array=np.zeros((ordered_dbs_signatures.size+1,plusorMinus*2+1))
+            indelsSignature_accumulated_signal_np_array=np.zeros((ordered_id_signatures.size+1,plusorMinus*2+1))
 
             #Add one more row for the aggregated analysis
-            subsSignature_accumulated_count_np_array=np.zeros((subsSignatures.size+1,plusorMinus*2+1))
-            dinucsSignature_accumulated_count_np_array=np.zeros((dinucsSignatures.size+1,plusorMinus*2+1))
-            indelsSignature_accumulated_count_np_array=np.zeros((indelsSignatures.size+1,plusorMinus*2+1))
+            subsSignature_accumulated_count_np_array=np.zeros((ordered_sbs_signatures.size+1,plusorMinus*2+1))
+            dinucsSignature_accumulated_count_np_array=np.zeros((ordered_dbs_signatures.size+1,plusorMinus*2+1))
+            indelsSignature_accumulated_count_np_array=np.zeros((ordered_id_signatures.size+1,plusorMinus*2+1))
             ###############################################################################
             ################################ Initialization ###############################
             ###############################################################################
@@ -260,9 +256,9 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 maximum_chrom_size,
                 sample2NumberofSubsDict,
                 sample2SubsSignature2NumberofMutationsDict,
-                subsSignatures_cutoffs,
-                dinucsSignatures_cutoffs,
-                indelsSignatures_cutoffs,
+                ordered_sbs_signatures_cutoffs,
+                ordered_dbs_signatures_cutoffs,
+                ordered_id_signatures_cutoffs,
                 subsSignatures_mask_array,
                 dinucsSignatures_mask_array,
                 indelsSignatures_mask_array,
@@ -322,9 +318,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occu
                                                                             library_file_type,
                                                                             sample2NumberofSubsDict,
                                                                             sample2SubsSignature2NumberofMutationsDict,
-                                                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                            indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                            ordered_sbs_signatures,
+                                                                            ordered_dbs_signatures,
+                                                                            ordered_id_signatures,
+                                                                            ordered_sbs_signatures_cutoffs,
+                                                                            ordered_dbs_signatures_cutoffs,
+                                                                            ordered_id_signatures_cutoffs,
                                                                             plusorMinus,
                                                                             sample_based,
                                                                             verbose):
@@ -343,9 +342,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occu
                                                                     library_file_type,
                                                                     sample2NumberofSubsDict,
                                                                     sample2SubsSignature2NumberofMutationsDict,
-                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    ordered_sbs_signatures,
+                                                                    ordered_dbs_signatures,
+                                                                    ordered_id_signatures,
+                                                                    ordered_sbs_signatures_cutoffs,
+                                                                    ordered_dbs_signatures_cutoffs,
+                                                                    ordered_id_signatures_cutoffs,
                                                                     plusorMinus,
                                                                     sample_based,
                                                                     verbose)
@@ -355,12 +357,27 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occu
 #May 19, 2020
 # For apply_async split using poolInputList
 # Read chromBased simBased combined mutations df split in the process
-def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type, occupancy_calculation_type, outputDir, jobname, chrLong, simNum, splitIndex,
-                                                                                  chromSizesDict, library_file_with_path,
-                                                                                  library_file_type, sample2NumberofSubsDict, sample2SubsSignature2NumberofMutationsDict,
-                                                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df, plusorMinus, sample_based, verbose):
+def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type,
+                                                                                  occupancy_calculation_type,
+                                                                                  outputDir,
+                                                                                  jobname,
+                                                                                  chrLong,
+                                                                                  simNum,
+                                                                                  splitIndex,
+                                                                                  chromSizesDict,
+                                                                                  library_file_with_path,
+                                                                                  library_file_type,
+                                                                                  sample2NumberofSubsDict,
+                                                                                  sample2SubsSignature2NumberofMutationsDict,
+                                                                                  ordered_sbs_signatures,
+                                                                                  ordered_dbs_signatures,
+                                                                                  ordered_id_signatures,
+                                                                                  ordered_sbs_signatures_cutoffs,
+                                                                                  ordered_dbs_signatures_cutoffs,
+                                                                                  ordered_id_signatures_cutoffs,
+                                                                                  plusorMinus,
+                                                                                  sample_based,
+                                                                                  verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
 
@@ -376,9 +393,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                     library_file_type,
                                                                     sample2NumberofSubsDict,
                                                                     sample2SubsSignature2NumberofMutationsDict,
-                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                    indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                    dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                    ordered_sbs_signatures,
+                                                                    ordered_dbs_signatures,
+                                                                    ordered_id_signatures,
+                                                                    ordered_sbs_signatures_cutoffs,
+                                                                    ordered_dbs_signatures_cutoffs,
+                                                                    ordered_id_signatures_cutoffs,
                                                                     plusorMinus,
                                                                     sample_based,
                                                                     verbose)
@@ -398,9 +418,9 @@ def fillSignalArrayAndCountArray_using_list_comp(
         maximum_chrom_size,
         sample2NumberofMutationsDict,
         sample2Signature2NumberofMutationsDict,
-        subsSignatures_cutoffs,
-        dinucsSignatures_cutoffs,
-        indelsSignatures_cutoffs,
+        ordered_sbs_signatures_cutoffs,
+        ordered_dbs_signatures_cutoffs,
+        ordered_id_signatures_cutoffs,
         subsSignatures_mask_array,
         dinucsSignatures_mask_array,
         indelsSignatures_mask_array,
@@ -429,17 +449,17 @@ def fillSignalArrayAndCountArray_using_list_comp(
     if mutation_row_type == SUBS:
         accumulated_signal_np_array=subsSignature_accumulated_signal_np_array
         accumulated_count_np_array=subsSignature_accumulated_count_np_array
-        cutoffs=subsSignatures_cutoffs
+        cutoffs=ordered_sbs_signatures_cutoffs
         signatures_mask_array=subsSignatures_mask_array
     elif mutation_row_type == DINUCS:
         accumulated_signal_np_array = dinucsSignature_accumulated_signal_np_array
         accumulated_count_np_array = dinucsSignature_accumulated_count_np_array
-        cutoffs=dinucsSignatures_cutoffs
+        cutoffs=ordered_dbs_signatures_cutoffs
         signatures_mask_array=dinucsSignatures_mask_array
     elif mutation_row_type == INDELS:
         accumulated_signal_np_array=indelsSignature_accumulated_signal_np_array
         accumulated_count_np_array=indelsSignature_accumulated_count_np_array
-        cutoffs=indelsSignatures_cutoffs
+        cutoffs=ordered_id_signatures_cutoffs
         signatures_mask_array=indelsSignatures_mask_array
     ###########################################
 
@@ -552,7 +572,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
         #Convert True into 1, and False into 0
         mask_array = threshold_mask_array.astype(int)
 
-        #Add 1 for the aggregated analysis to the mask array
+        #Add 1 for the Aggregated analysis to the mask array
         mask_array = np.append(mask_array, 1)
 
         #Add one more dimension to window_array and mask_array
@@ -643,9 +663,12 @@ def occupancyAnalysis(genome,
                         job_tuples,
                         library_file_with_path,
                         library_file_memo,
-                        subsSignature_cutoff_numberofmutations_averageprobability_df,
-                        indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                        dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                        ordered_sbs_signatures,
+                        ordered_dbs_signatures,
+                        ordered_id_signatures,
+                        ordered_sbs_signatures_cutoffs,
+                        ordered_dbs_signatures_cutoffs,
+                        ordered_id_signatures_cutoffs,
                         remove_outliers,
                         quantileValue,
                         verbose):
@@ -693,27 +716,26 @@ def occupancyAnalysis(genome,
     ##########################################################################
     #July 26, 2020
     #For Vectorization
-    subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
+    #These are used in writing tables
+    subsSignatures = np.append(ordered_sbs_signatures, AGGREGATEDSUBSTITUTIONS)
+    dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
+    indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
 
-    subsSignatures = np.append(subsSignatures, AGGREGATEDSUBSTITUTIONS)
-    dinucsSignatures = np.append(dinucsSignatures, AGGREGATEDDINUCS)
-    indelsSignatures = np.append(indelsSignatures, AGGREGATEDINDELS)
+    allSims_subsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,ordered_sbs_signatures.size+1, plusorMinus * 2 + 1))
+    allSims_dinucsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,ordered_dbs_signatures.size+1, plusorMinus * 2 + 1))
+    allSims_indelsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,ordered_id_signatures.size+1, plusorMinus * 2 + 1))
 
-    allSims_subsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,subsSignatures.size, plusorMinus * 2 + 1))
-    allSims_dinucsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,dinucsSignatures.size, plusorMinus * 2 + 1))
-    allSims_indelsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1,indelsSignatures.size, plusorMinus * 2 + 1))
-
-    allSims_subsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,subsSignatures.size, plusorMinus * 2 + 1))
-    allSims_dinucsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,dinucsSignatures.size, plusorMinus * 2 + 1))
-    allSims_indelsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,indelsSignatures.size, plusorMinus * 2 + 1))
+    allSims_subsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,ordered_sbs_signatures.size+1, plusorMinus * 2 + 1))
+    allSims_dinucsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,ordered_dbs_signatures.size+1, plusorMinus * 2 + 1))
+    allSims_indelsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1,ordered_id_signatures.size+1, plusorMinus * 2 + 1))
     ##########################################################################
 
     ##############################################################
     # This code reads the file abd preaore chrbased signal files
     # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
     # No need for preparing here
+    library_file_type=None
+
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES):
         #What is the type of the signal_file_with_path?
         #If it is a bed file read signal_file_with_path here
@@ -814,9 +836,12 @@ def occupancyAnalysis(genome,
                                                library_file_type,
                                                sample2NumberofSubsDict,
                                                sample2SubsSignature2NumberofMutationsDict,
-                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               ordered_sbs_signatures,
+                                               ordered_dbs_signatures,
+                                               ordered_id_signatures,
+                                               ordered_sbs_signatures_cutoffs,
+                                               ordered_dbs_signatures_cutoffs,
+                                               ordered_id_signatures_cutoffs,
                                                plusorMinus,
                                                sample_based,
                                                verbose,),
@@ -866,9 +891,12 @@ def occupancyAnalysis(genome,
                                                library_file_type,
                                                sample2NumberofSubsDict,
                                                sample2SubsSignature2NumberofMutationsDict,
-                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                               indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                               dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                               ordered_sbs_signatures,
+                                               ordered_dbs_signatures,
+                                               ordered_id_signatures,
+                                               ordered_sbs_signatures_cutoffs,
+                                               ordered_dbs_signatures_cutoffs,
+                                               ordered_id_signatures_cutoffs,
                                                plusorMinus,
                                                sample_based,
                                                verbose,),

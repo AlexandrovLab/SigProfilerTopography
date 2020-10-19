@@ -237,9 +237,9 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
 # Using numpy array
 def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                         chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                                                        subs_signatures_cutoffs,
-                                                                        dinucs_signatures_cutoffs,
-                                                                        indels_signatures_cutoffs,
+                                                                        ordered_sbs_signatures_cutoffs,
+                                                                        ordered_dbs_signatures_cutoffs,
+                                                                        ordered_id_signatures_cutoffs,
                                                                         df_columns_subs_signatures_mask_array,
                                                                         df_columns_dinucs_signatures_mask_array,
                                                                         df_columns_indels_signatures_mask_array,
@@ -267,19 +267,19 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
 
     if mutation_row_type==SUBS:
         end = start + 1
-        cutoffs=subs_signatures_cutoffs
+        cutoffs=ordered_sbs_signatures_cutoffs
         signatures_mask_array=df_columns_subs_signatures_mask_array
         signature_decile_index_accumulated_np_array = subs_signature_decile_index_accumulated_np_array
     elif mutation_row_type == DINUCS:
         end = start + 2
-        cutoffs=dinucs_signatures_cutoffs
+        cutoffs=ordered_dbs_signatures_cutoffs
         signatures_mask_array=df_columns_dinucs_signatures_mask_array
         signature_decile_index_accumulated_np_array = dinucs_signature_decile_index_accumulated_np_array
     elif mutation_row_type == INDELS:
         indexofLength = np.where(df_columns == LENGTH)
         length=mutation_row[indexofLength]
         end = start + int(length)
-        cutoffs=indels_signatures_cutoffs
+        cutoffs=ordered_id_signatures_cutoffs
         signatures_mask_array=df_columns_indels_signatures_mask_array
         signature_decile_index_accumulated_np_array = indels_signature_decile_index_accumulated_np_array
     ###########################################
@@ -341,12 +341,12 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
 def searchforAllMutations_using_numpy_array(sim_num,
                                             chrBased_simBased_combined_df,
                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                            subs_signatures,
-                                            dinucs_signatures,
-                                            indels_signatures,
-                                            subs_signatures_cutoffs,
-                                            dinucs_signatures_cutoffs,
-                                            indels_signatures_cutoffs,
+                                            ordered_sbs_signatures,
+                                            ordered_dbs_signatures,
+                                            ordered_id_signatures,
+                                            ordered_sbs_signatures_cutoffs,
+                                            ordered_dbs_signatures_cutoffs,
+                                            ordered_id_signatures_cutoffs,
                                             sample_based,
                                             verbose):
 
@@ -355,14 +355,14 @@ def searchforAllMutations_using_numpy_array(sim_num,
     ###############################################################################
     ################################ Initialization ###############################
     ###############################################################################
-    df_columns_subs_signatures_mask_array = np.isin(df_columns, subs_signatures)
-    df_columns_dinucs_signatures_mask_array = np.isin(df_columns, dinucs_signatures)
-    df_columns_indels_signatures_mask_array = np.isin(df_columns, indels_signatures)
+    df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+    df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+    df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
 
-    # Add one more row for the aggregated analysis, there are 10 deciles
-    subs_signature_decile_index_accumulated_np_array = np.zeros((subs_signatures.size + 1, 10),dtype=int)
-    dinucs_signature_decile_index_accumulated_np_array = np.zeros((dinucs_signatures.size + 1, 10),dtype=int)
-    indels_signature_decile_index_accumulated_np_array = np.zeros((indels_signatures.size + 3, 10),dtype=int)
+    # Add one more row for the Aggregated analysis, there are 10 deciles
+    subs_signature_decile_index_accumulated_np_array = np.zeros((ordered_sbs_signatures.size + 1, 10),dtype=int)
+    dinucs_signature_decile_index_accumulated_np_array = np.zeros((ordered_dbs_signatures.size + 1, 10),dtype=int)
+    indels_signature_decile_index_accumulated_np_array = np.zeros((ordered_id_signatures.size + 3, 10),dtype=int)
 
     ###############################################################################
     ################################ Initialization ###############################
@@ -372,9 +372,9 @@ def searchforAllMutations_using_numpy_array(sim_num,
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                                                            subs_signatures_cutoffs,
-                                                                            dinucs_signatures_cutoffs,
-                                                                            indels_signatures_cutoffs,
+                                                                            ordered_sbs_signatures_cutoffs,
+                                                                            ordered_dbs_signatures_cutoffs,
+                                                                            ordered_id_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             df_columns_indels_signatures_mask_array,
@@ -449,12 +449,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                        simNum,
                                        splitIndex,
                                        chrBased_grouped_decile_df_list,
-                                       subs_signatures,
-                                       dinucs_signatures,
-                                       indels_signatures,
-                                       subs_signatures_cutoffs,
-                                       dinucs_signatures_cutoffs,
-                                       indels_signatures_cutoffs,
+                                       ordered_sbs_signatures,
+                                       ordered_dbs_signatures,
+                                       ordered_id_signatures,
+                                       ordered_sbs_signatures_cutoffs,
+                                       ordered_dbs_signatures_cutoffs,
+                                       ordered_id_signatures_cutoffs,
                                        sample_based,
                                        verbose):
 
@@ -465,12 +465,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 simNum,
                                                                                                 chrBased_grouped_decile_df_list,
                                                                                                 chrBased_simBased_combined_df_split,
-                                                                                                subs_signatures,
-                                                                                                dinucs_signatures,
-                                                                                                indels_signatures,
-                                                                                                subs_signatures_cutoffs,
-                                                                                                dinucs_signatures_cutoffs,
-                                                                                                indels_signatures_cutoffs,
+                                                                                                ordered_sbs_signatures,
+                                                                                                ordered_dbs_signatures,
+                                                                                                ordered_id_signatures,
+                                                                                                ordered_sbs_signatures_cutoffs,
+                                                                                                ordered_dbs_signatures_cutoffs,
+                                                                                                ordered_id_signatures_cutoffs,
                                                                                                 sample_based,
                                                                                                 verbose)
 
@@ -485,12 +485,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            chromSize,
                                                                                                            sim_num,
                                                                                                            chrBased_grouped_decile_df_list,
-                                                                                                           subs_signatures,
-                                                                                                           dinucs_signatures,
-                                                                                                           indels_signatures,
-                                                                                                           subs_signatures_cutoffs,
-                                                                                                           dinucs_signatures_cutoffs,
-                                                                                                           indels_signatures_cutoffs,
+                                                                                                           ordered_sbs_signatures,
+                                                                                                           ordered_dbs_signatures,
+                                                                                                           ordered_id_signatures,
+                                                                                                           ordered_sbs_signatures_cutoffs,
+                                                                                                           ordered_dbs_signatures_cutoffs,
+                                                                                                           ordered_id_signatures_cutoffs,
                                                                                                            sample_based,
                                                                                                            verbose):
 
@@ -501,12 +501,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 sim_num,
                                                                                                 chrBased_grouped_decile_df_list,
                                                                                                 chrBased_simBased_combined_df,
-                                                                                                subs_signatures,
-                                                                                                dinucs_signatures,
-                                                                                                indels_signatures,
-                                                                                                subs_signatures_cutoffs,
-                                                                                                dinucs_signatures_cutoffs,
-                                                                                                indels_signatures_cutoffs,
+                                                                                                ordered_sbs_signatures,
+                                                                                                ordered_dbs_signatures,
+                                                                                                ordered_id_signatures,
+                                                                                                ordered_sbs_signatures_cutoffs,
+                                                                                                ordered_dbs_signatures_cutoffs,
+                                                                                                ordered_id_signatures_cutoffs,
                                                                                                 sample_based,
                                                                                                 verbose)
 
@@ -521,12 +521,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         sim_num,
                                                                                         chrBased_grouped_decile_df_list,
                                                                                         chrBased_simBased_combined_df,
-                                                                                        subs_signatures,
-                                                                                        dinucs_signatures,
-                                                                                        indels_signatures,
-                                                                                        subs_signatures_cutoffs,
-                                                                                        dinucs_signatures_cutoffs,
-                                                                                        indels_signatures_cutoffs,
+                                                                                        ordered_sbs_signatures,
+                                                                                        ordered_dbs_signatures,
+                                                                                        ordered_id_signatures,
+                                                                                        ordered_sbs_signatures_cutoffs,
+                                                                                        ordered_dbs_signatures_cutoffs,
+                                                                                        ordered_id_signatures_cutoffs,
                                                                                         sample_based,
                                                                                         verbose):
 
@@ -536,12 +536,12 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
     return searchforAllMutations_using_numpy_array(sim_num,
                                                    chrBased_simBased_combined_df,
                                                    chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                                   subs_signatures,
-                                                   dinucs_signatures,
-                                                   indels_signatures,
-                                                   subs_signatures_cutoffs,
-                                                   dinucs_signatures_cutoffs,
-                                                   indels_signatures_cutoffs,
+                                                   ordered_sbs_signatures,
+                                                   ordered_dbs_signatures,
+                                                   ordered_id_signatures,
+                                                   ordered_sbs_signatures_cutoffs,
+                                                   ordered_dbs_signatures_cutoffs,
+                                                   ordered_id_signatures_cutoffs,
                                                    sample_based,
                                                    verbose)
 ##################################################################
@@ -655,21 +655,21 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         chromSizesDict,
         chromNamesList,
         chrBased_grouped_decile_df_list,
-        subs_signatures,
-        dinucs_signatures,
-        indels_signatures,
-        subs_signatures_cutoffs,
-        dinucs_signatures_cutoffs,
-        indels_signatures_cutoffs,
+        ordered_sbs_signatures,
+        ordered_dbs_signatures,
+        ordered_id_signatures,
+        ordered_sbs_signatures_cutoffs,
+        ordered_dbs_signatures_cutoffs,
+        ordered_id_signatures_cutoffs,
         sample_based,
         verbose):
 
     ################################
-    #+1 for aggregated
-    all_sims_subs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,subs_signatures.size+1, 10), dtype=int)
-    all_sims_dinucs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,dinucs_signatures.size+1, 10), dtype=int)
-    #+3 for microhomology, repeat, aggregated
-    all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,indels_signatures.size+3, 10), dtype=int)
+    #+1 for Aggregated
+    all_sims_subs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_sbs_signatures.size+1, 10), dtype=int)
+    all_sims_dinucs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_dbs_signatures.size+1, 10), dtype=int)
+    #+3 for Microhomology, Repeat, Aggregated
+    all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_id_signatures.size+3, 10), dtype=int)
     ################################
 
     #########################################################################################
@@ -712,12 +712,12 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        chromSize,
                                        simNum,
                                        chrBased_grouped_decile_df_list,
-                                       subs_signatures,
-                                       dinucs_signatures,
-                                       indels_signatures,
-                                       subs_signatures_cutoffs,
-                                       dinucs_signatures_cutoffs,
-                                       indels_signatures_cutoffs,
+                                       ordered_sbs_signatures,
+                                       ordered_dbs_signatures,
+                                       ordered_id_signatures,
+                                       ordered_sbs_signatures_cutoffs,
+                                       ordered_dbs_signatures_cutoffs,
+                                       ordered_id_signatures_cutoffs,
                                        sample_based,
                                        verbose,),
                                  callback=accumulate_np_arrays))
@@ -761,12 +761,12 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        simNum,
                                        splitIndex,
                                        chrBased_grouped_decile_df_list,
-                                       subs_signatures,
-                                       dinucs_signatures,
-                                       indels_signatures,
-                                       subs_signatures_cutoffs,
-                                       dinucs_signatures_cutoffs,
-                                       indels_signatures_cutoffs,
+                                       ordered_sbs_signatures,
+                                       ordered_dbs_signatures,
+                                       ordered_id_signatures,
+                                       ordered_sbs_signatures_cutoffs,
+                                       ordered_dbs_signatures_cutoffs,
+                                       ordered_id_signatures_cutoffs,
                                        sample_based,
                                        verbose,),
                                  callback=accumulate_np_arrays))
@@ -1025,7 +1025,24 @@ def writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,decil
 
 ##################################################################
 #main function
-def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,chromNamesList,outputDir,jobname,numofSimulations,job_tuples,repliseqDataFilename,subsSignature_cutoff_numberofmutations_averageprobability_df,indelsSignature_cutoff_numberofmutations_averageprobability_df,dinucsSignature_cutoff_numberofmutations_averageprobability_df,verbose,matrix_generator_path):
+def replicationTimeAnalysis(computationType,
+                            sample_based,
+                            genome,
+                            chromSizesDict,
+                            chromNamesList,
+                            outputDir,
+                            jobname,
+                            numofSimulations,
+                            job_tuples,
+                            repliseqDataFilename,
+                            ordered_sbs_signatures,
+                            ordered_dbs_signatures,
+                            ordered_id_signatures,
+                            ordered_sbs_signatures_cutoffs,
+                            ordered_dbs_signatures_cutoffs,
+                            ordered_id_signatures_cutoffs,
+                            verbose,
+                            matrix_generator_path):
 
     print('\n#################################################################################')
     print('--- ReplicationTimeAnalysis starts')
@@ -1102,15 +1119,7 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
     # #old method keep it for further guidance for sample based
     # writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,None,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
 
-    # Signatures will only have signatures since later on, they are used in filtering mutation row columns
-    subs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    dinucs_signatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-    indels_signatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].values
-
-    subs_signatures_cutoffs = subsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-    dinucs_signatures_cutoffs = dinucsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-    indels_signatures_cutoffs = indelsSignature_cutoff_numberofmutations_averageprobability_df['cutoff'].values
-
+    # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns
     all_sims_subs_signature_decile_index_accumulated_np_array, \
     all_sims_dinucs_signature_decile_index_accumulated_np_array, \
     all_sims_indels_signature_decile_index_accumulated_np_array = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(
@@ -1122,12 +1131,12 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
         chromSizesDict,
         chromNamesList,
         chrBased_grouped_decile_df_list,
-        subs_signatures,
-        dinucs_signatures,
-        indels_signatures,
-        subs_signatures_cutoffs,
-        dinucs_signatures_cutoffs,
-        indels_signatures_cutoffs,
+        ordered_sbs_signatures,
+        ordered_dbs_signatures,
+        ordered_id_signatures,
+        ordered_sbs_signatures_cutoffs,
+        ordered_dbs_signatures_cutoffs,
+        ordered_id_signatures_cutoffs,
         sample_based,
         verbose)
 
@@ -1135,9 +1144,9 @@ def replicationTimeAnalysis(computationType,sample_based,genome,chromSizesDict,c
                                             jobname,
                                             sample_based,
                                             decile_df_list,
-                                            subs_signatures,
-                                            dinucs_signatures,
-                                            indels_signatures,
+                                            ordered_sbs_signatures,
+                                            ordered_dbs_signatures,
+                                            ordered_id_signatures,
                                             all_sims_subs_signature_decile_index_accumulated_np_array,
                                             all_sims_dinucs_signature_decile_index_accumulated_np_array,
                                             all_sims_indels_signature_decile_index_accumulated_np_array)
