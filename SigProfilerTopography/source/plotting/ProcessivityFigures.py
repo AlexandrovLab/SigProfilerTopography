@@ -367,7 +367,7 @@ def plot_processivity_figure(outputDir,
     if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (maxProcessiveGroupLength, len(sorted_signature_list)))
 
     if (len(sorted_signature_list)>0):
-        plot1, panel1 = plt.subplots(figsize=(10+1.5*len(sorted_processsive_group_length_list), 10+1.5*len(sorted_signature_list)))
+        plot1, panel1 = plt.subplots(figsize=(20+1.5*len(sorted_processsive_group_length_list), 10+1.5*len(sorted_signature_list)))
         plt.rc('axes', edgecolor='lightgray')
 
         #make aspect ratio square
@@ -467,7 +467,7 @@ def plot_processivity_figure(outputDir,
             # cb.set_label("-log10 (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=50)
 
             ax = cb.ax
-            ax.text(3.5, 0.5, '-log10 (q-value)',fontsize=50)
+            ax.text(3.5, 0.5, '-log10\n (q-value)',fontsize=50)
             #########################################################################################
 
             ##########################################################################################
@@ -523,7 +523,7 @@ def plot_processivity_figure(outputDir,
 
         figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
         plot1.savefig(figFile)
-        plot1.tight_layout()
+        # plot1.tight_layout()
 
         plt.cla()
         plt.close(plot1)
