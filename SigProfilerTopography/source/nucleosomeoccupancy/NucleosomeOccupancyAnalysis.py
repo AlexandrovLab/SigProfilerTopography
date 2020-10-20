@@ -636,7 +636,6 @@ def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,
         #It has to be an absolute path
         print('%s is not an absolute path.' %(chrombased_npy_path))
 
-
     #go back
     os.chdir(current_abs_path)
 #######################################################
