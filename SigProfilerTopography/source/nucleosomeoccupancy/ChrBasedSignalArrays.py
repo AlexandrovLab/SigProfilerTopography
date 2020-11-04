@@ -749,18 +749,19 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWith
             poolInputList = []
 
             for chrLong, chromBasedFileDF in file_df_grouped:
-                chromSize = chromSizesDict[chrLong]
-                inputList = []
-                inputList.append(outputDir)
-                inputList.append(jobname)
-                inputList.append(chrLong)
-                inputList.append(chromSize)
-                inputList.append(chromBasedFileDF)
-                inputList.append(BEDFileWithPath)
-                inputList.append(occupancy_type)
-                inputList.append(max_signal)
-                inputList.append(min_signal)
-                poolInputList.append(inputList)
+                if chrLong in chromSizesDict:
+                    chromSize = chromSizesDict[chrLong]
+                    inputList = []
+                    inputList.append(outputDir)
+                    inputList.append(jobname)
+                    inputList.append(chrLong)
+                    inputList.append(chromSize)
+                    inputList.append(chromBasedFileDF)
+                    inputList.append(BEDFileWithPath)
+                    inputList.append(occupancy_type)
+                    inputList.append(max_signal)
+                    inputList.append(min_signal)
+                    poolInputList.append(inputList)
 
             pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 

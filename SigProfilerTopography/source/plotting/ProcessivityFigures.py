@@ -258,9 +258,9 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
     except ZeroDivisionError:
         print('ZeroDivisionError during statsmodels.stats.multitest.multipletests')
-        print('for debug ZeroDivisionError, all_p_values_array:')
-        print(all_p_values_array)
+        print('all_p_values_array: %s' %(all_p_values_array))
     ##########################################################################################
+
 
     if all_FDR_BH_adjusted_p_values is not None:
         minus_log10_all_FDR_BH_adjusted_p_values = [-math.log10(q_value) if (q_value > 0 and q_value < SIGNIFICANCE_LEVEL) else np.nan for q_value in all_FDR_BH_adjusted_p_values]
@@ -311,39 +311,49 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ############################# Calculate q-values ends ############################
     ####################################################################################
 
+
     ###################################################################
     ############### For information starts ############################
     ###################################################################
     # Get the highest processive group length with a nonzero radius
     #'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Radius'
-    maxProcessiveGroupLength= max(signature_radius_df[(signature_radius_df['Radius']>0)]['Processsive_Group_Length'].values)
 
-    if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' % (maxProcessiveGroupLength))
-    if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' % (len(sorted_processsive_group_length_list)))
+    processive_group_length_nparray = signature_radius_df[(signature_radius_df['Radius'] > 0)]['Processsive_Group_Length'].values
+
+    if (processive_group_length_nparray.size>0):
+        maxProcessiveGroupLength= max(processive_group_length_nparray)
+        if verbose: print('\tVerbose Processivity plot will be for this maxProcessiveGroupLength:%d' % (maxProcessiveGroupLength))
+        if verbose: print('\tVerbose len(sortedProcessiveGroupLengthList):%d' % (len(sorted_processsive_group_length_list)))
 
     ###################################################################
     ############### For information ends ##############################
     ###################################################################
 
-
     ###################################################################
     ############### Plotting starts ###################################
     ###################################################################
-    plot_processivity_figure(outputDir,
-                             jobname,
-                             numberofSimulations,
-                             sorted_signature_list,
-                             sorted_processsive_group_length_list,
-                             maxProcessiveGroupLength,
-                             signature_radius_df,
-                             signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict,
-                             verbose)
+    if (processive_group_length_nparray.size>0):
+        # create the directory if it does not exists
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
+
+        #plot processivity figure
+        plot_processivity_figure(outputDir,
+                                 jobname,
+                                 numberofSimulations,
+                                 sorted_signature_list,
+                                 sorted_processsive_group_length_list,
+                                 maxProcessiveGroupLength,
+                                 signature_radius_df,
+                                 signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict,
+                                 verbose)
+
+        #write accompanying processivity file
+        filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, '%s_Signatures_Processivity.txt' % (jobname))
+        writeDictionaryAsADataframe(jobname, signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict, filePath)
     ###################################################################
     ############### Plotting ends #####################################
     ###################################################################
 
-    filePath=os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY,'%s_Signatures_Processivity.txt' %(jobname))
-    writeDictionaryAsADataframe(jobname,signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict, filePath)
 ###################################################################
 
 
@@ -519,13 +529,10 @@ def plot_processivity_figure(outputDir,
         ##################################################################################
 
         ##################################################################################
-        #create the directory if it does not exists
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
         filename = '%s_Processivity.png' %(jobname)
-
         figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
         plot1.savefig(figFile)
-        # plot1.tight_layout()
+        plot1.tight_layout()
 
         plt.cla()
         plt.close(plot1)

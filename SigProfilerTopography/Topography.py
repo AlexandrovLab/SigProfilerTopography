@@ -77,9 +77,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
-from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
+
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_AVERAGE_PROBABILITY
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_SBS_REQUIRED
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_DBS_REQUIRED
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_ID_REQUIRED
 
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
@@ -100,20 +105,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
 from SigProfilerTopography.source.commons.TopographyCommons import SNV
 
 from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
-
-from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
-from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
-from SigProfilerTopography.source.commons.TopographyCommons import MM9
-from SigProfilerTopography.source.commons.TopographyCommons import MM10
-
-from SigProfilerTopography.source.commons.TopographyCommons import ONE_DIRECTORY_UP
 from SigProfilerTopography.source.commons.TopographyCommons import LIB
-from SigProfilerTopography.source.commons.TopographyCommons import UCSCGENOME
 
-from SigProfilerTopography.source.commons.TopographyCommons import WIG
-from SigProfilerTopography.source.commons.TopographyCommons import BED
-
-from SigProfilerTopography.source.commons.TopographyCommons import current_abs_path
 
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
@@ -160,7 +153,18 @@ from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEIS
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
 #read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
-def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,mutations_probabilities_file_path,mutation_type_context_for_probabilities,startSimNum, endSimNum,partialDirname,PCAWG,verbose):
+def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,
+                                                                       inputDir,
+                                                                       outputDir,
+                                                                       jobname,
+                                                                       mutation_type_context,
+                                                                       mutations_probabilities_file_path,
+                                                                       mutation_type_context_for_probabilities,
+                                                                       startSimNum,
+                                                                       endSimNum,
+                                                                       partialDirname,
+                                                                       PCAWG,
+                                                                       verbose):
 
     ###########################################################################################
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
@@ -787,16 +791,15 @@ def runAnalyses(genome,
                 processivity=False,
                 sample_based=False,
                 plot_figures=True,
-                full_mode=True,
                 step1_sim_data=True,
                 step2_matgen_data=True,
                 step3_prob_merged_data=True,
                 step4_tables=True,
                 cutoff_type=STRINGENT,
-                average_probability=0.9,
-                num_of_sbs_required=5000,
-                num_of_id_required=1000,
-                num_of_dbs_required=200,
+                average_probability=DEFAULT_AVERAGE_PROBABILITY,
+                num_of_sbs_required=DEFAULT_NUM_OF_SBS_REQUIRED,
+                num_of_id_required=DEFAULT_NUM_OF_ID_REQUIRED,
+                num_of_dbs_required=DEFAULT_NUM_OF_DBS_REQUIRED,
                 plusorMinus_epigenomics=1000,
                 plusorMinus_nucleosome=1000,
                 verbose=False,
@@ -837,7 +840,6 @@ def runAnalyses(genome,
     #         mutation_types_contexts.append(ID)
     #     if (dbs_probabilities is not None) and (os.path.exists(dbs_probabilities)):
     #         mutation_types_contexts.append(DBS)
-
     if mutation_types_contexts is None:
         mutation_types_contexts=[]
         if (sbs_probabilities is not None):
@@ -851,6 +853,25 @@ def runAnalyses(genome,
         mutation_types_contexts_for_signature_probabilities=mutation_types_contexts
     ###################################################
 
+    ###################################################
+    if step1_sim_data:
+        step2_matgen_data=True
+        step3_prob_merged_data=True
+        step4_tables=True
+    elif step2_matgen_data:
+        step3_prob_merged_data=True
+        step4_tables=True
+    elif step3_prob_merged_data:
+        step4_tables=True
+    ###################################################
+
+    ###################################################
+    if (average_probability!=DEFAULT_AVERAGE_PROBABILITY) or \
+            (num_of_sbs_required!=DEFAULT_NUM_OF_SBS_REQUIRED) or \
+            (num_of_dbs_required!=DEFAULT_NUM_OF_DBS_REQUIRED) or \
+            (num_of_id_required!=DEFAULT_NUM_OF_ID_REQUIRED):
+        step4_tables = True
+    ###################################################
 
     #################################################################################
     ################################## Setting starts ###############################
@@ -1055,6 +1076,11 @@ def runAnalyses(genome,
         print('--- Transcription Strand Bias Analysis.')
     if processivity:
         print('--- Processivity Analysis.')
+
+    print('--- step1_sim_data:%s' %step1_sim_data)
+    print('--- step2_matgen_data:%s' %step2_matgen_data)
+    print('--- step3_prob_merged_data:%s' %step3_prob_merged_data)
+    print('--- step4_tables:%s' %step4_tables)
 
     print('--- plot_figures:%s' %plot_figures)
     print('--- average mutation probability required %0.2f' %average_probability)
