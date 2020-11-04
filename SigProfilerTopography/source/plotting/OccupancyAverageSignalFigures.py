@@ -1345,18 +1345,7 @@ def plot_heatmap_rows_signatures(heatmap_type,
         print('average_fold_change_array: %s' %(average_fold_change_array))
 
     ##########################################################################
-    # fig, ax = plt.subplots() #does not plot and blocks multiprocessing
-    # if len(signatures) > 20:
-    #     # if signature in ['SBS1', 'SBS5','SBS40','DBS2','DBS4','ID1','ID2','ID5']:
-    #     fig, ax = plt.subplots(figsize=(60, 100))
-    #     text_fontsize=60
-    # else:
-    #     fig, ax = plt.subplots(figsize=(50, 40))
-    #     text_fontsize=60
-
-    #extra space for the y-axis labels which are signatures
-    fig, ax = plt.subplots(figsize=(10+4*len(dna_elements), 4*len(signatures)))
-    text_fontsize = 6*len(dna_elements)
+    fig, ax = plt.subplots(figsize=(len(dna_elements),len(signatures)))
 
     try:
         if verbose: print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
@@ -1367,16 +1356,13 @@ def plot_heatmap_rows_signatures(heatmap_type,
         if verbose: print('\tVerbose average_fold_change_array.shape')
         if verbose: print(average_fold_change_array.shape)
 
-    # Blue White Re
-    im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75, fontsize=text_fontsize)
+    # Blue White Red
+    im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+    texts = annotate_heatmap(im, valfmt="{x:.2f} ")
+    plt.title(cancer_type, y=1.01)
 
-    #Here we set the fontsize
-    texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=text_fontsize)
-    # print('texts:%s' % texts)
-
-    plt.title(cancer_type, fontsize=90, y=1.01)
     # Results in big squares when array is small
-    # plt.tight_layout()
+    plt.tight_layout()
 
     #############################################################################################################
     #Add signature type
@@ -1387,9 +1373,7 @@ def plot_heatmap_rows_signatures(heatmap_type,
     #############################################################################################################
 
     figureFile = os.path.join(heatmap_output_path, filename)
-
-    fig.savefig(figureFile)
-
+    fig.savefig(figureFile,bbox_inches='tight')
     plt.close()
     ##########################################################################
 
@@ -1410,27 +1394,21 @@ def plot_heatmap_row_each_biosample_given_signature(signature2Biosample2DNAEleme
             cancer_type_encode_biosamples_list.append('%s, %s' %(cancer_type,biosample))
 
             ##########################################################################
-            # fig, ax = plt.subplots() #does not plot and blocks multiprocessing
-            fig, ax = plt.subplots(figsize=(100, 40))
+            fig, ax = plt.subplots(figsize=(len(encode_hms), len(cancer_type_encode_biosamples_list)))
 
-            # im, cbar = heatmap(fold_change_array, signatures, hms, ax=ax,cmap="seismic", cbarlabel="Fold Change [real/simulated]")
             if verbose: print('\tVerbose min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
 
             #Blue White Red
-            im, cbar = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2, fontsize=50)
-            texts = annotate_heatmap(im, valfmt="{x:.2f} ", fontsize=50)
+            im, cbar = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2)
+            texts = annotate_heatmap(im, valfmt="{x:.2f} ")
             if verbose: print('\tVerbose texts:%s' %texts)
 
-            plt.title('%s' % (signature), fontsize=60, y=1.01)
-            #Results in big squares when array is small
-            # plt.tight_layout()
+            plt.title('%s' % (signature), y=1.01)
             filename = '%s_%s_rows_%s_columns_dna_elements_heatmap.png' % (cancer_type,signature,biosample)
             figureFile = os.path.join(heatmap_output_path,filename)
 
-            # Results in big squares when array is small
             plt.tight_layout()
-
-            fig.savefig(figureFile)
+            fig.savefig(figureFile,bbox_inches='tight')
             plt.clf()
             plt.cla()
             plt.close(fig)
