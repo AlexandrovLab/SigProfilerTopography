@@ -1244,6 +1244,7 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
 
     ax.grid(which="minor", color="black", linestyle='-', linewidth=3)
+    ax.grid(b=False, which="major")
 
     return im, cbar
 ###################################################################
