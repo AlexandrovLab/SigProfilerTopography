@@ -766,8 +766,8 @@ def runAnalyses(genome,
                 jobname,
                 numofSimulations,
                 sbs_probabilities=None,
-                id_probabilities= None,
                 dbs_probabilities=None,
+                id_probabilities= None,
                 mutation_types_contexts=None,
                 mutation_types_contexts_for_signature_probabilities=None,
                 epigenomics_files=[DEFAULT_H3K27ME3_OCCUPANCY_FILE,DEFAULT_H3K36ME3_OCCUPANCY_FILE,DEFAULT_H3K9ME3_OCCUPANCY_FILE,DEFAULT_H3K27AC_OCCUPANCY_FILE,DEFAULT_H3K4ME1_OCCUPANCY_FILE,DEFAULT_H3K4ME3_OCCUPANCY_FILE,DEFAULT_CTCF_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE],
@@ -798,8 +798,8 @@ def runAnalyses(genome,
                 cutoff_type=STRINGENT,
                 average_probability=DEFAULT_AVERAGE_PROBABILITY,
                 num_of_sbs_required=DEFAULT_NUM_OF_SBS_REQUIRED,
-                num_of_id_required=DEFAULT_NUM_OF_ID_REQUIRED,
                 num_of_dbs_required=DEFAULT_NUM_OF_DBS_REQUIRED,
+                num_of_id_required=DEFAULT_NUM_OF_ID_REQUIRED,
                 plusorMinus_epigenomics=1000,
                 plusorMinus_nucleosome=1000,
                 verbose=False,
@@ -925,13 +925,6 @@ def runAnalyses(genome,
     ###############################################
 
     ###############################################
-    # We need to set nucleosome_file
-    # By default nucleosome_biosample=K562 and nucleosome_file is None
-    # Here we set filename with extension not full path
-    #There can be 2 cases:
-    #Case 1 : nucleosome_biosample is an available nucleosome biosample and nucleosome_file is set as filename without fullpath
-    #Case 2 : nucleosome_biosample is NOT an available nucleosome biosample and nucleosome_file is already set as filename with fullpath by the user
-
     #Case1: File is not set, Biosample is not set
     if (nucleosome_file is None) and (nucleosome_biosample is None):
         nucleosome_biosample = K562
@@ -1897,7 +1890,6 @@ def plotFigures(outputDir,
                 combine_p_values_method,
                 fold_change_window_size):
 
-
     ############################################################
     if (nucleosome or data_ready_plot_nucleosome):
         occupancy_type=NUCLEOSOMEOCCUPANCY
@@ -1907,12 +1899,14 @@ def plotFigures(outputDir,
         occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
     ############################################################
 
+
     ############################################################
     if (replication_time or data_ready_plot_replication_time):
         if delete_old:
             deleteOldFigures(outputDir, jobname, REPLICATIONTIME)
         replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode)
     ############################################################
+
 
     ############################################################
     if ((replication_strand_bias and transcription_strand_bias) or (data_ready_plot_replication_strand_bias and data_ready_plot_transcription_strand_bias)):
@@ -1929,6 +1923,7 @@ def plotFigures(outputDir,
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
     ############################################################
+
 
     ############################################################
     if (processivity or data_ready_plot_processivity):
@@ -1950,27 +1945,27 @@ def plotFigures(outputDir,
         #Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
-        #################################################################
-        pool = multiprocessing.Pool(numofProcesses)
-        jobs=[]
-
-        #Please note that epigenomics_file_memo is not None
-        #If None then it is created from filename.
-        for idx, epigenomics_file in enumerate(epigenomics_files):
-            epigenomics_file_basename = os.path.basename(epigenomics_file)
-            epigenomics_file_memo= epigenomics_files_memos[idx]
-            jobs.append(pool.apply_async(occupancyAverageSignalFigures,
-                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
-
-        if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
-
-        # wait for all jobs to finish
-        for job in jobs:
-            if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
-
-        pool.close()
-        pool.join()
-        #################################################################
+        # #################################################################
+        # pool = multiprocessing.Pool(numofProcesses)
+        # jobs=[]
+        #
+        # #Please note that epigenomics_file_memo is not None
+        # #If None then it is created from filename.
+        # for idx, epigenomics_file in enumerate(epigenomics_files):
+        #     epigenomics_file_basename = os.path.basename(epigenomics_file)
+        #     epigenomics_file_memo= epigenomics_files_memos[idx]
+        #     jobs.append(pool.apply_async(occupancyAverageSignalFigures,
+        #                                  args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+        #
+        # if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
+        #
+        # # wait for all jobs to finish
+        # for job in jobs:
+        #     if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
+        #
+        # pool.close()
+        # pool.join()
+        # #################################################################
 
         # original old call
         # sequential

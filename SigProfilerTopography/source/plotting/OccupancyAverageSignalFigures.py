@@ -1228,14 +1228,13 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     ax.set_xticklabels(col_labels,fontsize=fontsize)
     ax.set_yticklabels(row_labels,fontsize=fontsize)
 
-    # Let the horizontal axes labeling appear on top.
-    # ax.tick_params(top=True, bottom=False,labeltop=True, labelbottom=False)
+    # Let the x axes labeling appear on bottom.
     ax.tick_params(top=False, bottom=True, labeltop=False, labelbottom=True)
+    ax.tick_params(which="minor", bottom=False, left=False)
 
     # Rotate the tick labels and set their alignment.
     # plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",rotation_mode="anchor")
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right",rotation_mode="anchor")
-
 
     # Turn spines off and create white grid.
     # for edge, spine in ax.spines.items():
@@ -1244,10 +1243,7 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
     ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
 
-    # ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
     ax.grid(which="minor", color="black", linestyle='-', linewidth=3)
-
-    ax.tick_params(which="minor", bottom=False, left=False)
 
     return im, cbar
 ###################################################################
@@ -1578,6 +1574,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     plot_heatmap_row_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict, jobname, heatmaps_detailed_output_dir, verbose)
     #####################################################################################
 
+
     ############################################################################
     #Step2 Combine p values using Fisher's method
     #Pool for biosample and ENCDODE files
@@ -1624,15 +1621,12 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                      verbose)
     ############################################################################
 
-
     ############################################################################
     # Step3 Correct combined p values
     # combined p value list
     # [fold_change_list,avg_fold_change,p_value_list,combined_p_value]
     step3_signature2dna_element2q_value_list_dict = step3_apply_multiple_tests_correction(step2_signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir)
     ############################################################################
-
-
 
     ############################################################################
     #Step4
@@ -1641,7 +1635,6 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #[fold_change_list, avg_fold_change, q_value_list, combined_q_value]
     step4_signature2dna_element2filtered_q_value_list_dict,step4_signature2dna_element2average_fold_changedict=step4_filter_signature_dna_element(step3_signature2dna_element2q_value_list_dict,heatmaps_output_dir)
     ############################################################################
-
 
     ############################################################################
     # Plot heatmaps
