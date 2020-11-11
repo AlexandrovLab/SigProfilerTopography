@@ -1398,66 +1398,69 @@ def readChrBasedMutationsDF(outputDir,jobname,chrLong,mutation_type,simulationNu
     chrBased_mutation_df = None
     #############################################
     if (os.path.exists(chrBasedMutationDFFilePath)):
-
         #############################################
-        only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
-        # Please note thar encoding and engine slow done and increase memory usage
-        # only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1,encoding='utf8',engine='python')
-        columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
+        try:
+         only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
+         # Please note thar encoding and engine slow done and increase memory usage
+         # only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1,encoding='utf8',engine='python')
+         columnNamesList = list(only_header_chrBased_mutation_df.columns.values)
 
-        # Please note that we assume that after the column named 'Mutation' there are the signature columns in tab separated way.
-        mutationtIndex = columnNamesList.index(MUTATION)
-        signatures = columnNamesList[(mutationtIndex + 1):]
-        #############################################
+         # Please note that we assume that after the column named 'Mutation' there are the signature columns in tab separated way.
+         mutationtIndex = columnNamesList.index(MUTATION)
+         signatures = columnNamesList[(mutationtIndex + 1):]
+         #############################################
 
-        #################################################
-        mydtypes = {}
+         #################################################
+         mydtypes = {}
 
-        # Subs
-        # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        SBS1    SBS2    SBS3    SBS4    SBS5    SBS6    SBS7a   SBS7b   SBS7c   SBS7d   SBS8    SBS9    SBS10a  SBS10b  SBS11   SBS12   SBS13   SBS14   SBS15   SBS16   SBS17a  SBS17b  SBS18   SBS19   SBS20   SBS21   SBS22
-        # Indels
-        # Sample  Chrom   Start   MutationLong    Ref     Alt     Length  PyramidineStrand        TranscriptionStrand     Mutation        ID1     ID2     ID3     ID4     ID5     ID6     ID7     ID8     ID9     ID10    ID11    ID12    ID13    ID14    ID15    ID16    ID17
-        # Dinucs
-        # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        DBS1    DBS2    DBS3    DBS4    DBS5    DBS6    DBS7    DBS8    DBS9    DBS10   DBS11
+         # Subs
+         # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        SBS1    SBS2    SBS3    SBS4    SBS5    SBS6    SBS7a   SBS7b   SBS7c   SBS7d   SBS8    SBS9    SBS10a  SBS10b  SBS11   SBS12   SBS13   SBS14   SBS15   SBS16   SBS17a  SBS17b  SBS18   SBS19   SBS20   SBS21   SBS22
+         # Indels
+         # Sample  Chrom   Start   MutationLong    Ref     Alt     Length  PyramidineStrand        TranscriptionStrand     Mutation        ID1     ID2     ID3     ID4     ID5     ID6     ID7     ID8     ID9     ID10    ID11    ID12    ID13    ID14    ID15    ID16    ID17
+         # Dinucs
+         # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        DBS1    DBS2    DBS3    DBS4    DBS5    DBS6    DBS7    DBS8    DBS9    DBS10   DBS11
 
-        #np.float16 Half precision float: sign bit, 5 bits exponent, 10 bits mantissa
-        #np.int8 Byte (-128 to 127)
-        #np.int16 Integer (-32768 to 32767)
-        #np.int32   Integer (-2147483648 to 2147483647)
+         # np.float16 Half precision float: sign bit, 5 bits exponent, 10 bits mantissa
+         # np.int8 Byte (-128 to 127)
+         # np.int16 Integer (-32768 to 32767)
+         # np.int32   Integer (-2147483648 to 2147483647)
 
-        #To lower the dataframe size
-        for signature in signatures:
-            mydtypes[signature] = np.float16
+         # To lower the dataframe size
+         for signature in signatures:
+             mydtypes[signature] = np.float16
 
-        if ((mutation_type==SUBS) or (mutation_type==DINUCS)):
-            mydtypes[SAMPLE] = 'category'
-            mydtypes[CHROM] = 'category'
-            mydtypes[START] = np.int32
-            mydtypes[MUTATIONLONG] = 'category'
-            mydtypes[PYRAMIDINESTRAND] = np.int8
-            mydtypes[TRANSCRIPTIONSTRAND] = 'category'
-            mydtypes[MUTATION] = 'category'
+         if ((mutation_type == SUBS) or (mutation_type == DINUCS)):
+             mydtypes[SAMPLE] = 'category'
+             mydtypes[CHROM] = 'category'
+             mydtypes[START] = np.int32
+             mydtypes[MUTATIONLONG] = 'category'
+             mydtypes[PYRAMIDINESTRAND] = np.int8
+             mydtypes[TRANSCRIPTIONSTRAND] = 'category'
+             mydtypes[MUTATION] = 'category'
 
-        if (mutation_type==INDELS):
-            mydtypes[SAMPLE] = 'category'
-            mydtypes[CHROM] = 'category'
-            mydtypes[START] = np.int32
-            mydtypes[MUTATIONLONG] = 'category'
-            mydtypes[REF]=str
-            mydtypes[ALT]=str
-            mydtypes[LENGTH]=np.int16
-            mydtypes[PYRAMIDINESTRAND] = np.int8
-            mydtypes[TRANSCRIPTIONSTRAND] = 'category'
-            mydtypes[MUTATION] = 'category'
-        #################################################
+         if (mutation_type == INDELS):
+             mydtypes[SAMPLE] = 'category'
+             mydtypes[CHROM] = 'category'
+             mydtypes[START] = np.int32
+             mydtypes[MUTATIONLONG] = 'category'
+             mydtypes[REF] = str
+             mydtypes[ALT] = str
+             mydtypes[LENGTH] = np.int16
+             mydtypes[PYRAMIDINESTRAND] = np.int8
+             mydtypes[TRANSCRIPTIONSTRAND] = 'category'
+             mydtypes[MUTATION] = 'category'
+         #################################################
 
-        chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes)
-        # chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes,encoding='utf8',engine='python')
-        chrBased_mutation_df[SIMULATION_NUMBER]=simulationNumber
+         chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', header=0, dtype=mydtypes)
+         # chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes,encoding='utf8',engine='python')
+         chrBased_mutation_df[SIMULATION_NUMBER] = simulationNumber
+
+        except pd.errors.EmptyDataError:
+         chrBased_mutation_df = pd.DataFrame()
     #############################################
 
     if return_number_of_samples:
-        if (chrBased_mutation_df is not None):
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
             chrbased_samples = chrBased_mutation_df[SAMPLE].unique()
             return chrbased_samples, chrBased_mutation_df
         else:

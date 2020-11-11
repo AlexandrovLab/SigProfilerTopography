@@ -265,7 +265,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     ###########################################################################################
 
     ###########################################################################################
-    elif (mutations_probabilities_file_path is None):
+    elif ((mutations_probabilities_file_path is None) or (not (os.path.exists(mutations_probabilities_file_path)))):
         #For Information
         print('There is a situation/problem: mutations_probabilities_file_path:%s does not exist.' %(mutations_probabilities_file_path))
 
@@ -1100,10 +1100,8 @@ def runAnalyses(genome,
     print('#################################################################################\n')
     #################################################################################
 
-
-
     ###################################################################################################################
-    ################################################# Full Mode starts ################################################
+    ################################################# All Steps starts ################################################
     ###################################################################################################################
 
     ###################################################################################################
@@ -1134,7 +1132,7 @@ def runAnalyses(genome,
 
 
     ###################################################################################################################
-    ################################## First Step Simulations if any starts ###########################################
+    ################################## Step1 Simulations if any starts ################################################
     ###################################################################################################################
     if ((numofSimulations > 0) and (step1_sim_data)):
 
@@ -1166,12 +1164,12 @@ def runAnalyses(genome,
         ###################################################################################################
 
     ###################################################################################################################
-    ################################## First Step Simulations if any ends #############################################
+    ################################## Step1 Simulations if any ends ##################################################
     ###################################################################################################################
 
 
     ###################################################################################################################
-    ################################## Second Step Matrix Generator for n simulations starts ##########################
+    ################################## Step2 Matrix Generator for n simulations starts ################################
     ###################################################################################################################
     if (step2_matgen_data):
 
@@ -1274,12 +1272,12 @@ def runAnalyses(genome,
             ###################################################################################################
 
     ###################################################################################################################
-    ################################## Second Step Matrix Generator for n simulations ends ############################
+    ################################## Step2 Matrix Generator for n simulations ends ##################################
     ###################################################################################################################
 
 
     ###################################################################################################################
-    ########### Third Step Merge chrom based matrix generator generated files with probabilities starts ###############
+    ########### Step3 Merge chrom based matrix generator generated files with probabilities starts ####################
     ###################################################################################################################
     if (step3_prob_merged_data):
         ####################################################################################################################
@@ -1396,12 +1394,12 @@ def runAnalyses(genome,
             if ((id_probabilities is not None) and (os.path.exists(id_probabilities))):
                 ordered_id_signatures_wrt_probabilities_file = pd.read_csv(id_probabilities,sep='\t', index_col=0, nrows=0).columns.values
     ###################################################################################################################
-    ########### Third Step Merge chrom based matrix generator generated files with probabilities ends #################
+    ########### Step# Merge chrom based matrix generator generated files with probabilities ends ######################
     ###################################################################################################################
 
 
     #######################################################################################################
-    ################################### Fourth Step Fill Table Starts #####################################
+    ################################### Step4 Fill Table Starts ###########################################
     #######################################################################################################
     if (step4_tables):
         #################################################################################
@@ -1540,12 +1538,12 @@ def runAnalyses(genome,
         indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
         dinucsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t',header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
     #######################################################################################################
-    ################################### Fourth Step Fill Table ends #######################################
+    ################################### Step4 Fill Table ends #############################################
     #######################################################################################################
 
 
     ###################################################################################################################
-    ################################################# Full Mode ends ##################################################
+    ################################################# All Steps ends ##################################################
     ###################################################################################################################
 
 
@@ -1945,27 +1943,27 @@ def plotFigures(outputDir,
         #Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
-        # #################################################################
-        # pool = multiprocessing.Pool(numofProcesses)
-        # jobs=[]
-        #
-        # #Please note that epigenomics_file_memo is not None
-        # #If None then it is created from filename.
-        # for idx, epigenomics_file in enumerate(epigenomics_files):
-        #     epigenomics_file_basename = os.path.basename(epigenomics_file)
-        #     epigenomics_file_memo= epigenomics_files_memos[idx]
-        #     jobs.append(pool.apply_async(occupancyAverageSignalFigures,
-        #                                  args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
-        #
-        # if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
-        #
-        # # wait for all jobs to finish
-        # for job in jobs:
-        #     if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
-        #
-        # pool.close()
-        # pool.join()
-        # #################################################################
+        #################################################################
+        pool = multiprocessing.Pool(numofProcesses)
+        jobs=[]
+
+        #Please note that epigenomics_file_memo is not None
+        #If None then it is created from filename.
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_basename = os.path.basename(epigenomics_file)
+            epigenomics_file_memo= epigenomics_files_memos[idx]
+            jobs.append(pool.apply_async(occupancyAverageSignalFigures,
+                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+
+        if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
+
+        # wait for all jobs to finish
+        for job in jobs:
+            if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
+
+        pool.close()
+        pool.join()
+        #################################################################
 
         # original old call
         # sequential
@@ -1985,7 +1983,6 @@ def plotFigures(outputDir,
                                               plusOrMinus_nucleosome,
                                               verbose)
     ############################################################
-
 ##############################################################
 
 
