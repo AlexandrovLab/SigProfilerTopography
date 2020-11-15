@@ -292,7 +292,6 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     # We aim to get rid of zero if any exists in slicedArray.
     uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
 
-
     decile_index_array=np.zeros((10),dtype=int)
 
     #decile 10  will be accumulated in index 9
@@ -320,6 +319,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
                 # REPEAT --> 1
                 # AGGREGATEDINDELS --> 1
                 mask_array = np.append(mask_array, [0, 1, 1])
+
         else:
             # Add 1 for the aggregated analysis to the mask array
             # For SUBS and DINUCS
@@ -360,6 +360,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
     df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
 
     # Add one more row for the Aggregated analysis, there are 10 deciles
+    # Add three more rows for the Microhomology, Repeat Mediated and Aggregated analysis, there are 10 deciles
     subs_signature_decile_index_accumulated_np_array = np.zeros((ordered_sbs_signatures.size + 1, 10),dtype=int)
     dinucs_signature_decile_index_accumulated_np_array = np.zeros((ordered_dbs_signatures.size + 1, 10),dtype=int)
     indels_signature_decile_index_accumulated_np_array = np.zeros((ordered_id_signatures.size + 3, 10),dtype=int)
@@ -837,7 +838,6 @@ def augment(genome,wavelet_processed_df,matrix_generator_path,verbose):
 # Using numpy array
 def writeReplicationTimeDataUsingNumpyArray(outputDir,
                                             jobname,
-                                            sample_based,
                                             decile_df_list,
                                             subs_signatures,
                                             dinucs_signatures,
@@ -867,15 +867,15 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
                 # -3 contains MICROHOMOLOGY for  my_type==INDELS
                 if signature_index<signatures.size:
                     signature = signatures[signature_index]
-                elif signature_index==num_of_signatures_with_extras-1 and my_type==SUBS:
+                elif signature_index==(num_of_signatures_with_extras-1) and my_type==SUBS:
                     signature=AGGREGATEDSUBSTITUTIONS
-                elif signature_index==num_of_signatures_with_extras-1 and my_type==DINUCS:
+                elif signature_index==(num_of_signatures_with_extras-1) and my_type==DINUCS:
                     signature=AGGREGATEDDINUCS
-                elif signature_index==num_of_signatures_with_extras-1 and my_type==INDELS:
+                elif signature_index==(num_of_signatures_with_extras-1) and my_type==INDELS:
                     signature=AGGREGATEDINDELS
-                elif signature_index==num_of_signatures_with_extras-2 and my_type==INDELS:
+                elif signature_index==(num_of_signatures_with_extras-2) and my_type==INDELS:
                     signature=REPEAT
-                elif signature_index==num_of_signatures_with_extras-3 and my_type==INDELS:
+                elif signature_index==(num_of_signatures_with_extras-3) and my_type==INDELS:
                     signature=MICROHOMOLOGY
 
                 if (sim_index==0):
@@ -1061,25 +1061,6 @@ def replicationTimeAnalysis(computationType,
     # Repeat indels --- len(indels) < 3
     #########################################################################
 
-    ##########################################################################################
-    if (sample_based):
-        sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir,jobname)
-        sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir,jobname)
-        sample2NumberofDinucsDict = getDictionary(outputDir,jobname,Sample2NumberofDinucsDictFilename)
-
-        sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
-        sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
-        sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname,Sample2DinucsSignature2NumberofMutationsDictFilename)
-    else:
-        sample2NumberofSubsDict = {}
-        sample2NumberofIndelsDict = {}
-        sample2NumberofDinucsDict = {}
-
-        sample2SubsSignature2NumberofMutationsDict = {}
-        sample2IndelsSignature2NumberofMutationsDict = {}
-        sample2DinucsSignature2NumberofMutationsDict = {}
-    ##########################################################################################
-
     # Fill replication np arrays during runtime
 
     ###################################################################
@@ -1142,7 +1123,6 @@ def replicationTimeAnalysis(computationType,
 
     writeReplicationTimeDataUsingNumpyArray(outputDir,
                                             jobname,
-                                            sample_based,
                                             decile_df_list,
                                             ordered_sbs_signatures,
                                             ordered_dbs_signatures,

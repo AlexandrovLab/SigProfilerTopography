@@ -36,6 +36,7 @@ from matplotlib.colors import Normalize
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
 from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
+from SigProfilerTopography.source.commons.TopographyCommons import TABLES
 from SigProfilerTopography.source.commons.TopographyCommons import USING_ONE_SAMPLE_TTEST
 from SigProfilerTopography.source.commons.TopographyCommons import USING_NULL_DISTRIBUTION
 from SigProfilerTopography.source.commons.TopographyCommons import USING_GAUSSIAN_KDE
@@ -335,6 +336,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     if (processive_group_length_nparray.size>0):
         # create the directory if it does not exists
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
 
         #plot processivity figure
         plot_processivity_figure(outputDir,
@@ -348,7 +350,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                  verbose)
 
         #write accompanying processivity file
-        filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, '%s_Signatures_Processivity.txt' % (jobname))
+        filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
         writeDictionaryAsADataframe(jobname, signature2ProcessiveGroupLength2ProcessiveGroupPropertiesDict, filePath)
     ###################################################################
     ############### Plotting ends #####################################
@@ -476,10 +478,9 @@ def plot_processivity_figure(outputDir,
             # plot the scatter plot
             sc = plt.scatter(x, y, s=0, c=c, cmap=cmap, vmin=v_min, vmax=v_max, edgecolors='black')
             cb = plt.colorbar(sc)  # this works because of the scatter
-            # cb.set_label("-log10 (q-value)", horizontalalignment='right', rotation=0, labelpad=150, fontsize=50)
 
-            ax = cb.ax
-            ax.text(3.5, 0.5, '-log10\n (q-value)',fontsize=50)
+            # cb.ax.set_ylabel("-log10 (q-value)", va="bottom", rotation=-90, labelpad=25)
+            cb.ax.set_ylabel("-log10 (q-value)", fontsize=50, labelpad=25)
             #########################################################################################
 
             ##########################################################################################

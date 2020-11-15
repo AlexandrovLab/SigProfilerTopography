@@ -18,7 +18,6 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
     matplotlib.use(BACKEND)
 
 from matplotlib import pyplot as plt
-import matplotlib as mpl
 from matplotlib.lines import Line2D
 
 import pandas as pd
@@ -33,8 +32,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import sixMutationTy
 from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
 from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import SCATTERPLOTS
+from SigProfilerTopography.source.commons.TopographyCommons import SCATTER_PLOTS
+from SigProfilerTopography.source.commons.TopographyCommons import BAR_PLOTS
+from SigProfilerTopography.source.commons.TopographyCommons import CIRCLE_PLOTS
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
+from SigProfilerTopography.source.commons.TopographyCommons import TABLES
 
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD
 
@@ -236,13 +238,13 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
     plt.axhline(y=0.0, color='gray', linestyle='--')
 
     if sample is None:
-        figureName = 'all_mutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
+        figureName = 'all_mutation_types_%s_scatter_plot.png' %(STRANDBIAS)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS,figureName)
 
     else:
-        figureName = 'all_mutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
+        figureName = 'all_mutation_types_%s_%d_%s_scatter_plot.png' %(sample,numberofMutations,STRANDBIAS)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
     fig.savefig(figureFile)
     plt.cla()
@@ -334,13 +336,13 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
     plt.axhline(y=0.0, color='gray', linestyle='--')
 
     if sample is None:
-        figureName = 'all_mutationtypes_%s_scatterplots.png' %(STRANDBIAS)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
+        figureName = 'all_mutation_types_%s_scatter_plot.png' %(STRANDBIAS)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS,figureName)
 
     else:
-        figureName = 'all_mutationtypes_%s_%d_%s_scatterplots.png' %(sample,numberofMutations,STRANDBIAS)
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
+        figureName = 'all_mutation_types_%s_%d_%s_scatter_plot.png' %(sample,numberofMutations,STRANDBIAS)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
     fig.savefig(figureFile)
     plt.cla()
@@ -467,13 +469,13 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
         plt.axhline(y=0.0, color='gray', linestyle='--')
 
         if sample is None:
-            figureName = 'all_%s_signatures_%s_scatterplots.png' % (signatureType, STRANDBIAS)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
+            figureName = 'all_%s_signatures_%s_scatter_plot.png' % (signatureType, STRANDBIAS)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS,figureName)
         else:
-            figureName = 'all_%s_signatures_%s_%d_%s_scatterplots.png' % (
+            figureName = 'all_%s_signatures_%s_%d_%s_scatter_plot.png' % (
             signatureType, sample, numberofMutations, STRANDBIAS)
-            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
+            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
         fig.savefig(figureFile)
         plt.cla()
@@ -581,13 +583,13 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
         plt.axhline(y=0.0, color='gray', linestyle='--')
 
         if sample is None:
-            figureName = 'all_%s_signatures_%s_scatterplots.png' % (signatureType, STRANDBIAS)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS,figureName)
+            figureName = 'all_%s_signatures_%s_scatter_plot.png' % (signatureType, STRANDBIAS)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS,figureName)
         else:
-            figureName = 'all_%s_signatures_%s_%d_%s_scatterplots.png' % (
+            figureName = 'all_%s_signatures_%s_%d_%s_scatter_plot.png' % (
             signatureType, sample, numberofMutations, STRANDBIAS)
-            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
-            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTERPLOTS, figureName)
+            os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
         fig.savefig(figureFile)
         plt.cla()
@@ -685,7 +687,7 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         newMutationType = mutationType.replace('>', '2')
 
         figureName = newMutationType + '_MutationType_' + STRANDBIAS + '.png'
-        figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTERPLOTS,figureName)
+        figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTER_PLOTS,figureName)
         fig.savefig(figureFile)
         plt.cla()
         plt.close(fig)
@@ -778,7 +780,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
                 plt.title(jobname + ' ' + signature)
 
             figureName = signature.replace(' ','') + '_Signature_' + STRANDBIAS + '.png'
-            figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTERPLOTS,figureName)
+            figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTER_PLOTS,figureName)
             fig.savefig(figureFile)
             plt.cla()
             plt.close(fig)
@@ -963,21 +965,20 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     #########################################################################################################
 
     if (key is None):
-        figureName = '%s.png' %(figureName)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, figureName)
+        figureName = '%s_bar_plot.png' %(figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, BAR_PLOTS, figureName)
     elif (not isKeySample):
-        figureName = '%s_%s.png' %(key,figureName)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, figureName)
+        figureName = '%s_%s_bar_plot.png' %(key,figureName)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, BAR_PLOTS, figureName)
     else:
-        figureName = '%s_%s_%d.png' %(figureName,key,numberofMutations)
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS), exist_ok=True)
-        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, figureName)
+        figureName = '%s_%s_%d_bar_plot.png' %(figureName,key,numberofMutations)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, BAR_PLOTS), exist_ok=True)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, BAR_PLOTS, figureName)
 
     fig.savefig(figureFile)
     plt.cla()
     plt.close(fig)
 ##################################################################
-
 
 
 ##################################################################
@@ -1095,39 +1096,6 @@ def plotBarPlotsUsingDataframes(outputDir,
 
 
 
-
-############################################################################################################################
-def write_my_type_dictionaries_as_dataframes(type2strand2percentagedict, filepath):
-    L = sorted([(my_type, strand,
-                 b[AT_LEAST_10_PERCENT_DIFF],
-                 b[AT_LEAST_20_PERCENT_DIFF],
-                 b[AT_LEAST_30_PERCENT_DIFF],
-                 b[AT_LEAST_50_PERCENT_DIFF],
-                 b[AT_LEAST_75_PERCENT_DIFF],
-                 b[AT_LEAST_100_PERCENT_DIFF] )
-                for my_type, a in type2strand2percentagedict.items()
-                 for strand, b in a.items()])
-    df = pd.DataFrame(L, columns=['type', 'strand', '10%', '20%', '30%', '50%', '75%', '100%'])
-    df.to_csv(filepath, sep='\t', header=True, index=False)
-############################################################################################################################
-
-############################################################################################################################
-def write_signature_dictionaries_as_dataframes(signature2mutation_type2strand2percentagelist,filepath):
-    L = sorted([(signature, mutation_type, strand,
-                 c[AT_LEAST_10_PERCENT_DIFF],
-                 c[AT_LEAST_20_PERCENT_DIFF],
-                 c[AT_LEAST_30_PERCENT_DIFF],
-                 c[AT_LEAST_50_PERCENT_DIFF],
-                 c[AT_LEAST_75_PERCENT_DIFF],
-                 c[AT_LEAST_100_PERCENT_DIFF] )
-                for signature, a in signature2mutation_type2strand2percentagelist.items()
-                 for mutation_type, b in a.items()
-                  for strand, c in b.items()])
-    df = pd.DataFrame(L, columns=['signature', 'mutation_type', 'strand', '10%', '20%', '30%', '50%', '75%', '100%'])
-    df.to_csv(filepath, sep='\t', header=True, index=False)
-############################################################################################################################
-
-
 ###################################################################
 # April 20, 2020
 # July 4, 2020 starts
@@ -1135,8 +1103,12 @@ def write_signature_dictionaries_as_dataframes(signature2mutation_type2strand2pe
 def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode):
 
     #######################################################################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTERPLOTS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,BAR_PLOTS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,CIRCLE_PLOTS), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES), exist_ok=True)
     strandbias_figures_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
+    strandbias_figures_tables_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES)
     #######################################################################
 
     ##########################################################################################
@@ -1180,13 +1152,13 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
         signature_lagging_versus_leading_df = pd.read_csv(signature_mutation_type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
         type_lagging_versus_leading_table_file_name = 'Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
-        type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, type_lagging_versus_leading_table_file_name)
+        type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS,type_lagging_versus_leading_table_file_name)
         type_lagging_versus_leading_df = pd.read_csv(type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
         #Transcription Strand Bias
         signature_mutation_type_transcribed_versus_untranscribed_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_mutation_type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS,signature_mutation_type_transcribed_versus_untranscribed_table_file_name)
+        signature_mutation_type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_transcribed_versus_untranscribed_table_file_name)
         signature_transcribed_versus_untranscribed_df = pd.read_csv(signature_mutation_type_transcribed_versus_untranscribed_table_filepath, header=0, sep='\t')
 
         type_transcribed_versus_untranscribed_table_file_name = 'Type_%s_Strand_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
@@ -1196,7 +1168,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
         #Transcription Strand Bias
         signature_mutation_type_genic_versus_intergenic_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-        signature_mutation_type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS,signature_mutation_type_genic_versus_intergenic_table_file_name)
+        signature_mutation_type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_genic_versus_intergenic_table_file_name)
         signature_genic_versus_intergenic_df = pd.read_csv(signature_mutation_type_genic_versus_intergenic_table_filepath, header=0, sep='\t')
 
         type_genic_versus_intergenic_table_file_name = 'Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
@@ -1316,11 +1288,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                 'Leading_real_count.1', 'Leading_mean_sims_count.1', 'Leading_min_sims_count', 'Leading_max_sims_count', 'Leading_sims_count_list' ]]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (LAGGING_VERSUS_LEADING)
-            signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+            signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
             signature_lagging_versus_leading_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
             type_filename = 'Type_%s_Q_Value_Table.txt' % (LAGGING_VERSUS_LEADING)
-            type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+            type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_lagging_versus_leading_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
         if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
@@ -1335,11 +1307,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                 'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list' ]]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-            signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+            signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
             signature_transcribed_versus_untranscribed_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
             type_filename = 'Type_%s_Q_Value_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-            type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+            type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_transcribed_versus_untranscribed_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
 
@@ -1357,11 +1329,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                 'NonTranscribed_real_count', 'NonTranscribed_mean_sims_count', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list' ]]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-            signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+            signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
             signature_genic_versus_intergenic_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
             type_filename = 'Type_%s_Q_Value_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-            type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+            type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_genic_versus_intergenic_df.to_csv(type_filepath, sep='\t', header=True, index=False)
     #######################################################################
 
@@ -1398,11 +1370,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] -type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (LAGGING_VERSUS_LEADING)
-        signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+        signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
         signature_lagging_versus_leading_filtered_q_value_df.to_csv(signature_filepath, sep='\t', header=True,index=False)
 
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (LAGGING_VERSUS_LEADING)
-        type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+        type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_lagging_versus_leading_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
     ##################################################################################################################################
 
@@ -1433,11 +1405,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]-type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) >= (type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+        signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
         signature_transcribed_versus_untranscribed_filtered_q_value_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+        type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_transcribed_versus_untranscribed_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True,index=False)
     ##################################################################################################################################
 
@@ -1470,11 +1442,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]-type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) >= (type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-        signature_filepath = os.path.join(strandbias_figures_outputDir, signature_filename)
+        signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
         signature_genic_versus_intergenic_filtered_q_value_df.to_csv(signature_filepath, sep='\t', header=True,index=False)
 
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-        type_filepath = os.path.join(strandbias_figures_outputDir, type_filename)
+        type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_genic_versus_intergenic_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
     ##################################################################################################################################
 
@@ -1939,7 +1911,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     ########### Plot sub signatures mutation types ends #############
     #################################################################
 
-
     ########################################################################
     ######## Bar plot starts includes sample based bar plots ###############
     ##########################  Part 4 ends ################################
@@ -2194,14 +2165,12 @@ def plot_dbs_and_id_signatures_figures(signature_type,
 
 
 ############################################################################################################################
-#New way
 #Plot Legend only
 def plot_legend(strandbias_figures_outputDir):
 
     strand_biases=[TRANSCRIBED_VERSUS_UNTRANSCRIBED, GENIC_VERSUS_INTERGENIC, LAGGING_VERSUS_LEADING]
 
     for strandbias in strand_biases:
-
         ##################################################################################
         fig = plt.figure(figsize=(4,1), dpi=300)
         ax = plt.gca()
@@ -2211,16 +2180,16 @@ def plot_legend(strandbias_figures_outputDir):
         ##################################################################################
         if strandbias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
-                Line2D([0], [0], marker='o', color='w', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=20),
-                Line2D([0], [0], marker='o', color='w', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen',markersize=20)]
+                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=20),
+                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen',markersize=20)]
         elif strandbias == GENIC_VERSUS_INTERGENIC:
                 legend_elements = [
-                    Line2D([0], [0], marker='o', color='w', label=GENIC, markerfacecolor='cyan',markersize=20),
-                    Line2D([0], [0], marker='o', color='w', label=INTERGENIC, markerfacecolor='gray',markersize=20)]
+                    Line2D([0], [0], marker='o', color='white', label=GENIC, markerfacecolor='cyan',markersize=20),
+                    Line2D([0], [0], marker='o', color='white', label=INTERGENIC, markerfacecolor='gray',markersize=20)]
         elif (strandbias==LAGGING_VERSUS_LEADING):
             legend_elements = [
-                Line2D([0], [0], marker='o', color='w', label=LAGGING, markerfacecolor='indianred', markersize=20),
-                Line2D([0], [0], marker='o', color='w', label=LEADING, markerfacecolor='goldenrod', markersize=20)]
+                Line2D([0], [0], marker='o', color='white', label=LAGGING, markerfacecolor='indianred', markersize=20),
+                Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=20)]
 
         ax.legend(handles=legend_elements, bbox_to_anchor=(0, 0.5), loc='center left' ,fontsize = 20)
         ##################################################################################
@@ -2228,7 +2197,7 @@ def plot_legend(strandbias_figures_outputDir):
         ##################################################################################
         # create the directory if it does not exists
         filename = 'Legend_%s.png' % (strandbias)
-        figFile = os.path.join(strandbias_figures_outputDir, filename)
+        figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
         fig.savefig(figFile)
         fig.tight_layout()
 
@@ -2269,7 +2238,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                 for strand in strands:
                     if strand in signature2mutation_type2strand2percentagedict[signature][mutation_type]:
                         for percentage_string in percentage_strings:
-                            if percentage_string in signature2mutation_type2strand2percentagedict[signature][mutation_type][strand]:
+                            if (percentage_string in signature2mutation_type2strand2percentagedict[signature][mutation_type][strand]) and (signature2mutation_type2strand2percentagedict[signature][mutation_type][strand][percentage_string]==1):
                                 if signature not in rows_sbs_signatures:
                                     rows_sbs_signatures.append(signature)
     #####################################################################
@@ -2379,16 +2348,16 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
         #Put the legend
         if strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
-                Line2D([0], [0], marker='o', color='w', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=40),
-                Line2D([0], [0], marker='o', color='w', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen',markersize=40)]
+                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=40),
+                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen',markersize=40)]
         elif strand_bias == GENIC_VERSUS_INTERGENIC:
                 legend_elements = [
-                    Line2D([0], [0], marker='o', color='w', label=GENIC, markerfacecolor='cyan',markersize=40),
-                    Line2D([0], [0], marker='o', color='w', label=INTERGENIC, markerfacecolor='gray',markersize=40)]
+                    Line2D([0], [0], marker='o', color='white', label=GENIC, markerfacecolor='cyan',markersize=40),
+                    Line2D([0], [0], marker='o', color='white', label=INTERGENIC, markerfacecolor='gray',markersize=40)]
         elif (strand_bias==LAGGING_VERSUS_LEADING):
             legend_elements = [
-                Line2D([0], [0], marker='o', color='w', label=LAGGING, markerfacecolor='indianred', markersize=40),
-                Line2D([0], [0], marker='o', color='w', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
+                Line2D([0], [0], marker='o', color='white', label=LAGGING, markerfacecolor='indianred', markersize=40),
+                Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
 
         panel1.legend(handles=legend_elements,ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40)
         ##################################################################################
@@ -2516,8 +2485,8 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
 
         ##################################################################################
         # create the directory if it does not exists
-        filename = 'SBS_Signatures_%s_with_circles_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
-        figFile = os.path.join(strandbias_figures_outputDir, filename)
+        filename = 'SBS_Signatures_%s_with_circle_plot_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
+        figFile = os.path.join(strandbias_figures_outputDir,CIRCLE_PLOTS, filename)
         plot1.savefig(figFile,bbox_inches='tight')
         plot1.tight_layout()
 

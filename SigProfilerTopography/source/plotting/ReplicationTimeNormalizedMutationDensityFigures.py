@@ -60,13 +60,22 @@ from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_
 plt.rcParams.update({'figure.max_open_warning': 0})
 
 ########################################################
-def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalizedMutationDensityList, sample, signature, analysesType,indelType,barcolor,
-                                                    outputDir,jobname,
-                                                    sample2NumberofMutationsDict,
-                                                    signature_cutoff_numberofmutations_averageprobability_df,
-                                                    sample2Signature2NumberofMutationsDict,
-                                                    numberofSimulations,
-                                                    plot_mode):
+def plotNormalizedMutationDensityFigureWithSimulations(title,
+                                                       ylabel,
+                                                       normalizedMutationDensityList,
+                                                       sample,
+                                                       signature,
+                                                       analysesType,
+                                                       indelType,
+                                                       barcolor,
+                                                       fillcolor,
+                                                       outputDir,
+                                                       jobname,
+                                                       sample2NumberofMutationsDict,
+                                                       signature_cutoff_numberofmutations_averageprobability_df,
+                                                       sample2Signature2NumberofMutationsDict,
+                                                       numberofSimulations,
+                                                       plot_mode):
 
     #################################################################################
     ############################# For Simulations starts ############################
@@ -115,10 +124,10 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
     # plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
 
     if simulationsMeans is not None:
-        sims_dashed_line=plt.plot(x, simulationsMeans, 'o--', color='navy', label='Simulated Somatic Mutations', linewidth=5, zorder =2)
+        sims_dashed_line=plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=5, zorder =2)
         if (simulationsLows is not None) and (simulationsHighs is not None):
             # if (len(simulationsLows)==len(simulationsHighs)):
-            plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor='lightblue', zorder =2)
+            plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor=fillcolor, zorder =2)
     ####################################################
 
 
@@ -173,9 +182,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title, ylabel, normalized
             frame = legend.get_frame()
             frame.set_facecolor('white')
             frame.set_edgecolor('black')
-
     ####################################################
-
 
 
     ########################################################################
@@ -282,7 +289,7 @@ def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesT
 
 
 #########################################################
-def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
+def plotSignatureFigures(color,fillcolor,analysesType,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         # We check such file exists or not
         normalizedMutationData = readNormalizedMutationData(None, signature, outputDir, jobname)
@@ -295,9 +302,15 @@ def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulatio
                 # print('For %s: plot signature based replication time figure' % signature)
                 plotNormalizedMutationDensityFigureWithSimulations(signature,
                                                                    'Normalized\nsingle base substitution density',
-                                                                   normalizedMutationData, None, signature,
-                                                                   analysesType, None,
-                                                                   color, outputDir, jobname,
+                                                                   normalizedMutationData,
+                                                                   None,
+                                                                   signature,
+                                                                   analysesType,
+                                                                   None,
+                                                                   color,
+                                                                   fillcolor,
+                                                                   outputDir,
+                                                                   jobname,
                                                                    sample2NumberofMutationsDict,
                                                                    signature_cutoff_numberofmutations_averageprobability_df,
                                                                    sample2Signature2NumberofMutationsDict,
@@ -316,9 +329,15 @@ def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulatio
                     if not all(v == 0.0 for v in normalizedMutationData):
                         plotNormalizedMutationDensityFigureWithSimulations('%s_%s' % (signature, sample),
                                                                            'Normalized\nsingle base substitution density',
-                                                                           normalizedMutationData, sample, signature,
-                                                                           analysesType, None,
-                                                                           color, outputDir, jobname,
+                                                                           normalizedMutationData,
+                                                                           sample,
+                                                                           signature,
+                                                                           analysesType,
+                                                                           None,
+                                                                           color,
+                                                                           fillcolor,
+                                                                           outputDir,
+                                                                           jobname,
                                                                            sample2NumberofMutationsDict,
                                                                            signature_cutoff_numberofmutations_averageprobability_df,
                                                                            sample2Signature2NumberofMutationsDict,
@@ -327,7 +346,7 @@ def plotSignatureFigures(color,analysesType,outputDir, jobname,numberofSimulatio
 #########################################################
 
 #########################################################
-def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
+def plotAllMutationTypesFigures(title,color,fillcolor,analysesType,indelType,outputDir,jobname,numberofSimulations,sample_based,sample2NumberofMutationsDict,signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,plot_mode):
     if (analysesType == INDELBASED):
         normalizedMutationData = readNormalizedMutationData(None,indelType,outputDir,jobname)
     else:
@@ -335,9 +354,17 @@ def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,job
 
     if (normalizedMutationData is not None):
         normalizedMutationData = normalizedMutationData.iloc[0].tolist()
-        plotNormalizedMutationDensityFigureWithSimulations(title, '\nNormalized mutation density',
-                                                           normalizedMutationData, None, None, analysesType, indelType,
-                                                           color,outputDir, jobname,
+        plotNormalizedMutationDensityFigureWithSimulations(title,
+                                                           '\nNormalized mutation density',
+                                                           normalizedMutationData,
+                                                           None,
+                                                           None,
+                                                           analysesType,
+                                                           indelType,
+                                                           color,
+                                                           fillcolor,
+                                                           outputDir,
+                                                           jobname,
                                                            sample2NumberofMutationsDict,
                                                            signature_cutoff_numberofmutations_averageprobability_df,
                                                            sample2Signature2NumberofMutationsDict,
@@ -355,8 +382,15 @@ def plotAllMutationTypesFigures(title,color,analysesType,indelType,outputDir,job
                 normalizedMutationData = normalizedMutationData.iloc[0].tolist()
                 plotNormalizedMutationDensityFigureWithSimulations('%s %s' % (sample,title),
                                                                    '\nNormalized mutation density',
-                                                                   normalizedMutationData, sample, None, analysesType, indelType,
-                                                                   color, outputDir, jobname,
+                                                                   normalizedMutationData,
+                                                                   sample,
+                                                                   None,
+                                                                   analysesType,
+                                                                   indelType,
+                                                                   color,
+                                                                   fillcolor,
+                                                                   outputDir,
+                                                                   jobname,
                                                                    sample2NumberofMutationsDict,
                                                                    signature_cutoff_numberofmutations_averageprobability_df,
                                                                    sample2Signature2NumberofMutationsDict,
@@ -396,16 +430,17 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSi
     ##########################  Plot figures starts  #########################################
     ##########################################################################################
     if (SBS96 in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Substitutions','yellowgreen',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
-        plotSignatureFigures('yellowgreen',SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
+        #Formerly it was yellowgreen
+        plotAllMutationTypesFigures('Aggregated Substitutions','royalblue','lightblue',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('royalblue','lightblue',SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
     if (ID in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Indels','indianred',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofIndelsDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
-        plotAllMutationTypesFigures(MICROHOMOLOGY,'indianred',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
-        plotAllMutationTypesFigures(REPEAT, 'indianred',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
-        plotSignatureFigures('indianred', SIGNATUREBASED, outputDir, jobname, numberofSimulations, sample_based,sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures('Aggregated Indels','yellowgreen','lightgreen',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofIndelsDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures(MICROHOMOLOGY,'yellowgreen','lightgreen',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures(REPEAT, 'yellowgreen','lightgreen',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('yellowgreen','lightgreen', SIGNATUREBASED, outputDir, jobname, numberofSimulations, sample_based,sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
     if (DBS in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Dinucs','crimson',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
-        plotSignatureFigures('crimson', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
+        plotAllMutationTypesFigures('Aggregated Dinucs','crimson','lightpink',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('crimson','lightpink', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
     ##########################################################################################
     ##########################  Plot figures ends  ###########################################
     ##########################################################################################

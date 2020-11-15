@@ -989,7 +989,6 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         color = 'darkgreen'
         fillcolor = 'lightgreen'
         linestyle='dashed'
-        # linestyle='dotted'
     elif (mutationType==DBS):
         xlabel = 'Interval around doublet base substitution (bp)'
         # label = 'Doublet Base Substitutions'
@@ -998,7 +997,6 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
         color = 'crimson'
         fillcolor = 'lightpink'
         linestyle='dashed'
-        # linestyle='dashdot'
 
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         #[signature cutoff numberofMutations  averageProbability]
