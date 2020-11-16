@@ -1387,12 +1387,38 @@ def runAnalyses(genome,
             if (mutation_type_context in SBS_CONTEXTS):
                 if ((sbs_probabilities is not None) and (os.path.exists(sbs_probabilities))):
                     ordered_sbs_signatures_wrt_probabilities_file = pd.read_csv(sbs_probabilities,sep='\t', index_col=0, nrows=0).columns.values
+                else:
+                    filename = '%s_%s_for_topography.txt' % ('chr1', SUBS)
+                    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+                    if os.path.exists(chrBasedMutationDFFilePath):
+                        ordered_sbs_signatures_wrt_probabilities_file = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', index_col=0, nrows=0).columns.values
+                        print('ordered_sbs_signatures_wrt_probabilities_file:%s' %(ordered_sbs_signatures_wrt_probabilities_file))
+                    else:
+                        print('There is a problem: ordered_sbs_signatures_wrt_probabilities_file is not filled.')
+
         if (DBS in mutation_types_contexts):
             if ((dbs_probabilities is not None) and (os.path.exists(dbs_probabilities))):
                 ordered_dbs_signatures_wrt_probabilities_file = pd.read_csv(dbs_probabilities,sep='\t', index_col=0, nrows=0).columns.values
+            else:
+                filename = '%s_%s_for_topography.txt' % ('chr1', DINUCS)
+                chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+                if os.path.exists(chrBasedMutationDFFilePath):
+                    ordered_dbs_signatures_wrt_probabilities_file = pd.read_csv(chrBasedMutationDFFilePath, sep='\t',index_col=0, nrows=0).columns.values
+                    print('ordered_dbs_signatures_wrt_probabilities_file:%s' %(ordered_dbs_signatures_wrt_probabilities_file))
+                else:
+                    print('There is a problem: ordered_dbs_signatures_wrt_probabilities_file is not filled.')
+
         if (ID in mutation_types_contexts):
             if ((id_probabilities is not None) and (os.path.exists(id_probabilities))):
                 ordered_id_signatures_wrt_probabilities_file = pd.read_csv(id_probabilities,sep='\t', index_col=0, nrows=0).columns.values
+            else:
+                filename = '%s_%s_for_topography.txt' % ('chr1', INDELS)
+                chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+                if os.path.exists(chrBasedMutationDFFilePath):
+                    ordered_id_signatures_wrt_probabilities_file = pd.read_csv(chrBasedMutationDFFilePath, sep='\t',index_col=0, nrows=0).columns.values
+                    print('ordered_id_signatures_wrt_probabilities_file:%s' %(ordered_id_signatures_wrt_probabilities_file))
+                else:
+                    print('There is a problem: ordered_id_signatures_wrt_probabilities_file is not filled.')
     ###################################################################################################################
     ########### Step# Merge chrom based matrix generator generated files with probabilities ends ######################
     ###################################################################################################################
