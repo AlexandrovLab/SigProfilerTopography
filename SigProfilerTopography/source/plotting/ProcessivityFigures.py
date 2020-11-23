@@ -390,8 +390,6 @@ def plot_processivity_figure(outputDir,
         #set title
         panel1.text(len(sorted_processsive_group_length_list)*3, len(sorted_signature_list)+2.5, jobname,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
 
-        panel1.set_aspect(1.0)  # make aspect ratio square
-
         #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
         if (len(sorted_processsive_group_length_list)>1):
             panel1.set_xlim([1,index+1])

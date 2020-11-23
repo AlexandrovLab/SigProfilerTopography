@@ -259,10 +259,10 @@ COLORBAR_DISCREET='discreet'
 NUCLEOSOME_BIOSAMPLE="K562"
 TABLES='tables'
 DETAILED='detailed'
+EXCEL_FILES='excel_files'
 NUCLEOSOME_DNA_ELEMENT='Nucleosome'
 ATAC_DNA_ELEMENT='ATAC'
 ###################################################################################################
-
 
 
 ###################################################################################################
@@ -485,6 +485,17 @@ ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
+
+############################################################################################################################
+#sheet name must be less than 31 characters
+def write_excel_file(df_list, sheet_list, file_name):
+    writer = pd.ExcelWriter(file_name,engine='xlsxwriter')
+    for dataframe, sheet in zip(df_list, sheet_list):
+        dataframe.to_excel(writer, sheet_name=sheet, startrow=0 , startcol=0, index=False)
+    writer.save()
+############################################################################################################################
+
+
 
 # ############################################################
 def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):

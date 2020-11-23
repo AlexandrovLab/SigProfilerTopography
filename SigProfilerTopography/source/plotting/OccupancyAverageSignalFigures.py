@@ -62,6 +62,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import ATAC_DNA_ELEM
 
 from SigProfilerTopography.source.commons.TopographyCommons import TABLES
 from SigProfilerTopography.source.commons.TopographyCommons import DETAILED
+from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
 
 from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
@@ -87,6 +88,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_DISC
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE
+
+from SigProfilerTopography.source.commons.TopographyCommons import write_excel_file
 
 
 plt.rcParams.update({'figure.max_open_warning': 0})
@@ -1588,9 +1591,11 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     signatures.extend(id_signatures)
     ###########################################
 
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,TABLES), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED), exist_ok=True)
-    heatmaps_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, TABLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, DETAILED), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, EXCEL_FILES), exist_ok=True)
+
+    heatmaps_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS)
     heatmaps_detailed_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED)
 
     #####################################################################################
@@ -1603,7 +1608,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #[jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
     #  max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count,
     #  list(simulationsHorizontalMeans)]
-    step1_signature2Biosample2DNAElement2PValueDict= step1_calculate_p_value(fold_change_window_size,
+    step1_p_value_df, step1_signature2Biosample2DNAElement2PValueDict= step1_calculate_p_value(fold_change_window_size,
                         epigenomics_center,
                         nucleosome_center,
                         outputDir,
@@ -1618,7 +1623,8 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #####################################################################################
 
     #####################################################################################
-    #Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined)
+    #Plot heatmaps using step1 under epigenomics_occupancy/heatmaps/detailed/
+    #Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined) under detailed/
     plot_heatmap_one_row_only_for_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict, jobname, heatmaps_detailed_output_dir, verbose)
     #####################################################################################
 
@@ -1627,12 +1633,13 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Combine p values using Fisher's method
     #Pool for epigenomics_dna_elements only
     # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=100 and get Step2
-    step2_signature2biosample2dna_element2combined_p_value_list_dict, step2_signature2biosample2dna_element2avg_fold_change_dict = step2_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
+    step2_combined_p_value_df, step2_signature2biosample2dna_element2combined_p_value_list_dict, step2_signature2biosample2dna_element2avg_fold_change_dict = step2_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
                                                                                                                                                          heatmaps_output_dir,
                                                                                                                                                          combine_p_values_method,
                                                                                                                                                          nucleosome_file,
                                                                                                                                                          epigenomics_dna_elements)
 
+    #Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/
     plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
                                                              jobname,
                                                              heatmaps_output_dir,
@@ -1645,7 +1652,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Combine p values using Fisher's method
     #Pool for biosample and epigenomics_dna_elements
     # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=100 and get Step3
-    step3_signature2dna_element2combined_p_value_list_dict, step3_signature2dna_element2avg_fold_change_dict=step3_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
+    step3_combined_p_value_df, step3_signature2dna_element2combined_p_value_list_dict, step3_signature2dna_element2avg_fold_change_dict=step3_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
                           heatmaps_output_dir,
                           combine_p_values_method,
                           nucleosome_file,
@@ -1688,7 +1695,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Step4 Correct combined p values
     # combined p value list
     # [fold_change_list,avg_fold_change,p_value_list,combined_p_value]
-    step4_signature2dna_element2q_value_list_dict = step4_apply_multiple_tests_correction(step3_signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir)
+    step4_q_value_df,step4_signature2dna_element2q_value_list_dict = step4_apply_multiple_tests_correction(step3_signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir)
     ############################################################################
 
     ############################################################################
@@ -1696,7 +1703,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #Filter using q values (combined_q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change))
     # (signature, cancer_type, dna_element) with combined q_value <= 0.01 and (avg_fold_change >= 1.1 or <=0.9)
     #[fold_change_list, avg_fold_change, q_value_list, combined_q_value]
-    step5_signature2dna_element2filtered_q_value_list_dict,step5_signature2dna_element2average_fold_changedict=step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,heatmaps_output_dir)
+    step5_filtered_q_value_df,step5_signature2dna_element2filtered_q_value_list_dict,step5_signature2dna_element2average_fold_changedict=step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,heatmaps_output_dir)
     ############################################################################
 
     ############################################################################
@@ -1730,6 +1737,14 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                      verbose)
     ############################################################################
 
+    ############################################################################
+    #write excel files
+    excel_file_path = os.path.join(heatmaps_output_dir,EXCEL_FILES,'Epigenomics_Occupancy.xlsx')
+    df_list = [step1_p_value_df,step2_combined_p_value_df, step3_combined_p_value_df, step4_q_value_df, step5_filtered_q_value_df]
+    sheet_list = ['step1_p_value', 'step2_combined_p_value', 'step3_combined_p_value', 'step4_q_value', 'step5_filtered_q_value']
+    write_excel_file(df_list, sheet_list, excel_file_path)
+    ############################################################################
+
 ########################################################
 
 
@@ -1752,17 +1767,33 @@ def breakdown_signatures(signature2dna_element2avg_fold_change_dict,sbs_signatur
 
 ########################################################
 #Used for search for dna_elements
-#Used for search for biosamples
-def get_element_within(look_in_str,str_list,nucleosome_file):
-    if str_list:
-        for look_for_str in str_list:
-             if look_for_str in look_in_str:
-                return look_for_str
-    if (nucleosome_file is not None) and (look_in_str in nucleosome_file):
+def get_dna_element(dna_element_long,epigenomics_dna_elements,nucleosome_file):
+    if epigenomics_dna_elements:
+        for dna_element in epigenomics_dna_elements:
+            dna_element_with_underscore= "_%s" %dna_element
+            if dna_element_with_underscore in dna_element_long:
+                return dna_element
+    if (nucleosome_file is not None) and (dna_element_long in nucleosome_file):
         return NUCLEOSOME_DNA_ELEMENT
-    print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(look_in_str))
+    print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(dna_element_long))
     return UNDECLARED
 ########################################################
+
+
+########################################################
+#Used for search for biosamples
+def get_biosample(file_memo,biosample_list,nucleosome_file):
+    if biosample_list:
+        for biosample in biosample_list:
+            biosample_with_underscore= "_%s_" %biosample
+            if biosample_with_underscore in file_memo:
+                return biosample
+    if (nucleosome_file is not None) and (file_memo in nucleosome_file):
+        return NUCLEOSOME_DNA_ELEMENT
+    print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(file_memo))
+    return UNDECLARED
+########################################################
+
 
 ########################################################
 #Sep24 2020 #Enrichment is done in this function.
@@ -1800,7 +1831,7 @@ def calculate_fold_change_real_over_sim(center,
     dna_element_to_be_read=None
 
     if occupancy_type==EPIGENOMICSOCCUPANCY:
-        biosample=get_element_within(epigenomics_file_memo,epigenomics_biosamples,nucleosome_file)
+        biosample=get_biosample(epigenomics_file_memo,epigenomics_biosamples,nucleosome_file)
         dna_element=epigenomics_file_memo
         dna_element_to_be_read = epigenomics_file_memo
     elif occupancy_type==NUCLEOSOMEOCCUPANCY:
@@ -1954,6 +1985,8 @@ def write_dictionary_as_dataframe_step1_p_value(step1_signature2Biosample2DNAEle
                    for dna_element, complete_list in b.items()])
     df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'biosample', 'dna_element', 'avg_real_signal','avg_simulated_signal', 'fold_change', 'min_sim_signal', 'max_sim_signal','p_value', 'num_of_sims', 'num_of_sims_with_not_nan_avgs', 'real_data_avg_count', 'sim_avg_count', 'sim_signals'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    return df
 ########################################################
 
 
@@ -1967,6 +2000,8 @@ def write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2poo
                 for dna_element, combined_p_value_list in b.items()])
     df = pd.DataFrame(L, columns=['signature', 'biosample','dna_element', 'fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    return df
 ########################################################
 
 
@@ -1979,6 +2014,8 @@ def write_dictionary_as_dataframe_step3_combined_p_value(step2_signature2dna_ele
                   for dna_element, combined_p_value_list in a.items()])
     df = pd.DataFrame(L, columns=['signature', 'dna_element', 'fold_change_list', 'avg_fold_change' , 'p_value_list', 'combined_p_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    return df
 ########################################################
 
 ########################################################
@@ -1991,6 +2028,8 @@ def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_va
     df = pd.DataFrame(L, columns=['signature', 'dna_element',
                                   'fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','q_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    return df
 ########################################################
 
 
@@ -2003,6 +2042,8 @@ def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_ele
     df = pd.DataFrame(L, columns=['signature', 'dna_element',
                                   'fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','filtered_q_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    return df
 ########################################################
 
 
@@ -2074,6 +2115,7 @@ def step1_calculate_p_value(fold_change_window_size,
         #Nucleosome
         # if data files are ready it returns otherwise it returns None
         occupancy_type=NUCLEOSOMEOCCUPANCY
+        epigenomics_file_memo=None
         pool.apply_async(calculate_fold_change_real_over_sim,
                  args=(nucleosome_center,plusorMinus,output_dir,jobname,numberofSimulations,signature,nucleosome_file,nucleosome_biosample,epigenomics_file_memo,epigenomics_biosamples,occupancy_type,),
                  callback=update_dictionary)
@@ -2089,10 +2131,10 @@ def step1_calculate_p_value(fold_change_window_size,
     # Write dictionary as a dataframe
     df_filename = 'Step1_Signature_Biosample_DNAElement_PValue.txt'
     filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
-    write_dictionary_as_dataframe_step1_p_value(signature2Biosample2DNAElement2PValueDict,filepath)
+    step1_p_value_df = write_dictionary_as_dataframe_step1_p_value(signature2Biosample2DNAElement2PValueDict,filepath)
     # print('##############################################################')
 
-    return signature2Biosample2DNAElement2PValueDict
+    return step1_p_value_df, signature2Biosample2DNAElement2PValueDict
 ########################################################
 
 
@@ -2115,7 +2157,7 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             # dna_element_long <-- epigenomics_file_memo
             # dna_element_long <-- os.path.basename(nucleosome_file)
             for dna_element_long in signature2Biosample2DNAElement2PValueDict[signature][biosample]:
-                dna_element = get_element_within(dna_element_long,epigenomics_dna_elements,nucleosome_file)
+                dna_element = get_dna_element(dna_element_long,epigenomics_dna_elements,nucleosome_file)
                 complete_list = signature2Biosample2DNAElement2PValueDict[signature][biosample][dna_element_long]
 
                 # p value complete list has [signature, cancer_type, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, list(simulationsHorizontalMeans)]
@@ -2199,10 +2241,10 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
     # Write dictionary as a pandas dataframe
     df_filename = 'Step2_Signature_Biosample_DNAElement_CombinedPValue.txt'
     filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
-    write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath)
+    step2_combined_p_value_df=write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath)
     ############################################################################
 
-    return signature2biosample2pooled_dna_element2combined_p_value_list_dict, signature2biosample2pooled_dna_element2avg_fold_change_dict
+    return step2_combined_p_value_df, signature2biosample2pooled_dna_element2combined_p_value_list_dict, signature2biosample2pooled_dna_element2avg_fold_change_dict
 ########################################################
 
 
@@ -2224,7 +2266,7 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             # dna_element_long <-- epigenomics_file_memo
             # dna_element_long <-- os.path.basename(nucleosome_file)
             for dna_element_long in signature2Biosample2DNAElement2PValueDict[signature][biosample]:
-                dna_element = get_element_within(dna_element_long,epigenomics_dna_elements,nucleosome_file)
+                dna_element = get_dna_element(dna_element_long,epigenomics_dna_elements,nucleosome_file)
                 complete_list = signature2Biosample2DNAElement2PValueDict[signature][biosample][dna_element_long]
 
                 # p value complete list has [signature, cancer_type, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, list(simulationsHorizontalMeans)]
@@ -2298,10 +2340,10 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
     # Write dictionary as a pandas dataframe
     df_filename = 'Step3_Signature_DNAElement_CombinedPValue.txt'
     filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
-    write_dictionary_as_dataframe_step3_combined_p_value(signature2dna_element2combined_p_value_list_dict,filepath)
+    step3_combined_p_value_df = write_dictionary_as_dataframe_step3_combined_p_value(signature2dna_element2combined_p_value_list_dict,filepath)
     ############################################################################
 
-    return signature2dna_element2combined_p_value_list_dict, signature2dna_element2avg_fold_change_dict
+    return step3_combined_p_value_df, signature2dna_element2combined_p_value_list_dict, signature2dna_element2avg_fold_change_dict
 ########################################################
 
 ########################################################
@@ -2360,10 +2402,10 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
     # Write dictionary as a dataframe
     df_filename = 'Step4_Signature_CancerType_DNAElement_QValue.txt'
     filepath = os.path.join(heatmaps_output_dir, TABLES, df_filename)
-    write_dictionary_as_dataframe_step4_q_value(signature2dna_element2q_value_list_dict,filepath)
+    step4_q_value_df=write_dictionary_as_dataframe_step4_q_value(signature2dna_element2q_value_list_dict,filepath)
     ########################################################
 
-    return signature2dna_element2q_value_list_dict
+    return step4_q_value_df,signature2dna_element2q_value_list_dict
 ########################################################
 
 
@@ -2402,10 +2444,10 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
     # Write dictionary as a dataframe
     df_filename = 'Step5_Signature_CancerType_DNAElement_FilteredQValue.txt'
     filepath = os.path.join(heatmaps_output_dir, TABLES, df_filename)
-    write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,filepath)
+    step5_filtered_q_value_df=write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,filepath)
     ############################################################################
 
-    return signature2dna_element2filtered_q_list_dict,signature2dna_element2average_fold_changedict
+    return step5_filtered_q_value_df,signature2dna_element2filtered_q_list_dict,signature2dna_element2average_fold_changedict
 ########################################################
 
 

@@ -2394,15 +2394,14 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                     radius_leading = 0.49
                                     if (radius_lagging > radius_leading):
                                         # First lagging
-                                        panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='goldenrod', fill=True))
+                                        panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
                                         # Second leading
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
                                     else:
                                         # First leading
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
                                         # Second lagging
-                                        panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='goldenrod', fill=True))
-
+                                        panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
 
                     elif (strand_bias == GENIC_VERSUS_INTERGENIC):
                         if row_sbs_signature in signature2mutation_type2strand2percentagedict:
