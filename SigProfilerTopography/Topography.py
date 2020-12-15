@@ -808,6 +808,7 @@ def runAnalyses(genome,
                 data_ready_plot_epigenomics=False,
                 data_ready_plot_nucleosome=False,
                 data_ready_plot_replication_time=False,
+                data_ready_plot_strand_bias=False,
                 data_ready_plot_replication_strand_bias=False,
                 data_ready_plot_transcription_strand_bias=False,
                 data_ready_plot_processivity=False,
@@ -884,6 +885,10 @@ def runAnalyses(genome,
     if strand_bias:
         replication_strand_bias=True
         transcription_strand_bias=True
+
+    if data_ready_plot_strand_bias:
+        data_ready_plot_replication_strand_bias=True
+        data_ready_plot_transcription_strand_bias=True
     ###############################################
 
     ###############################################

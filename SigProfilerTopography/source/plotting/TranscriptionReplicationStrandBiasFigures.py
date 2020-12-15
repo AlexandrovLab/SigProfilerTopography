@@ -1675,8 +1675,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                                         signature2mutation_type2strand2percentagedict,
                                         percentage_strings)
 
-
-        plot_dbs_and_id_signatures_figures(DBS,
+        plot_dbs_and_id_signatures_circle_figures(DBS,
                                            dinucsSignatures,
                                            strand_bias,
                                            strandbias_figures_outputDir,
@@ -1684,7 +1683,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                                            type2strand2percentagedict,
                                            percentage_strings)
 
-        plot_dbs_and_id_signatures_figures(ID,
+        plot_dbs_and_id_signatures_circle_figures(ID,
                                            indelsSignatures,
                                            strand_bias,
                                            strandbias_figures_outputDir,
@@ -1920,13 +1919,13 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
 
 
 ############################################################################################################################
-def plot_dbs_and_id_signatures_figures(signature_type,
-                            signatures,
-                           strand_bias,
-                           strandbias_figures_outputDir,
-                           SIGNIFICANCE_LEVEL,
-                           type2strand2percentagedict,
-                           percentage_strings):
+def plot_dbs_and_id_signatures_circle_figures(signature_type,
+                                       signatures,
+                                       strand_bias,
+                                       strandbias_figures_outputDir,
+                                       SIGNIFICANCE_LEVEL,
+                                       type2strand2percentagedict,
+                                       percentage_strings):
 
     rows_signatures=[]
 
@@ -1961,7 +1960,7 @@ def plot_dbs_and_id_signatures_figures(signature_type,
     if (len(rows_signatures)>0):
         #####################################################################
         #New plot (width,height)
-        fig, ax = plt.subplots(figsize=(1.75*len(percentage_strings), len(rows_signatures)+3))
+        fig, ax = plt.subplots(figsize=(5+1.5*len(percentage_strings), 10+1.5*len(rows_signatures)))
 
         #make aspect ratio square
         ax.set_aspect(1.0)
@@ -2152,7 +2151,7 @@ def plot_dbs_and_id_signatures_figures(signature_type,
         ##################################################################################
         # create the directory if it does not exists
         filename = '%s_Signatures_%s_with_circles_%s.png' % (signature_type,strand_bias,str(SIGNIFICANCE_LEVEL).replace('.','_'))
-        figFile = os.path.join(strandbias_figures_outputDir, filename)
+        figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
         fig.savefig(figFile)
         fig.tight_layout()
 
