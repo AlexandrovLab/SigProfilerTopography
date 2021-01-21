@@ -389,6 +389,8 @@ DEFAULT_NUM_OF_SBS_REQUIRED=2000
 DEFAULT_NUM_OF_DBS_REQUIRED=200
 DEFAULT_NUM_OF_ID_REQUIRED=1000
 
+DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED=100
+
 ############################################
 #Column Names
 PROJECT = 'Project'
@@ -519,6 +521,16 @@ def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for
         return None
 # ############################################################
 
+##################################################################
+#Dec 17, 2020
+def get_chrBased_simBased_dfs(outputDir,jobname,chrLong,simNum):
+
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+
+    return chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df
+##################################################################
 
 ##################################################################
 # April 27, 2020
@@ -543,7 +555,6 @@ def get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum):
     else:
         return None
 ##################################################################
-
 
 
 ##################################################################

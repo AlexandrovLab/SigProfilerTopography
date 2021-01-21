@@ -101,6 +101,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import  MEGABYTE_IN_
 from SigProfilerTopography.source.commons.TopographyCommons import  decideFileType
 
 from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_combined_df
+from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_dfs
 
 ##################################################################
 # Please note that this dictionary is copied from .../SigProfilerMatrixGenerator/SigProfilerMatrixGenerator/scripts/SigProfilerMatrixGeneratorFunc.py line 101
@@ -236,6 +237,86 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
 # August 1, 2020
 # Using numpy array
 def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                        mutation_type,
+                                                                        chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                                        ordered_signatures_cutoffs,
+                                                                        signatures_mask_array,
+                                                                        signature_decile_index_accumulated_np_array,
+                                                                        verbose,
+                                                                        df_columns):
+
+    # df_columns: numpy array
+    indexofStart = np.where(df_columns == START) [0][0]
+    start = mutation_row[indexofStart]
+
+    # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
+    # end is exclusive for subs, indels and dinucs provided by readChrBased methods
+
+    if mutation_type==SUBS:
+        end = start + 1
+    elif mutation_type==DINUCS:
+        end = start + 2
+    elif mutation_type==INDELS:
+        indexofLength = np.where(df_columns == LENGTH)
+        length=mutation_row[indexofLength]
+        end = start + int(length)
+
+    slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
+
+    # np.nonzero returns the indices of the elements that are non-zero.
+    # np.unique finds the unique elements of an array returns ndarray the sorted unique values.
+    # np.nditer efficient multi-dimensional iterator object to iterate over arrays.
+    # We aim to get rid of zero if any exists in slicedArray.
+    uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
+
+    decile_index_array=np.zeros((10),dtype=int)
+
+    #decile 10  will be accumulated in index 9
+    #decile 1 will be accumulated in index 0
+    #Therefore uniqueIndexesArray minus 1
+    if (uniqueIndexesArray.size>0):
+        uniqueIndexesArray -=1
+        decile_index_array[uniqueIndexesArray]=1
+
+        probabilities = mutation_row[signatures_mask_array]
+        threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
+
+        # Convert True into 1, and False into 0
+        mask_array = threshold_mask_array.astype(int)
+        if  mutation_type == INDELS:
+            if (length >= 3):
+                # Order is important
+                # MICROHOMOLOGY --> 1
+                # REPEAT --> 0
+                # AGGREGATEDINDELS --> 1
+                mask_array = np.append(mask_array, [1, 0, 1])
+            else:
+                # Order is important
+                # MICROHOMOLOGY --> 0
+                # REPEAT --> 1
+                # AGGREGATEDINDELS --> 1
+                mask_array = np.append(mask_array, [0, 1, 1])
+
+        else:
+            # Add 1 for the aggregated analysis to the mask array
+            # For SUBS and DINUCS
+            mask_array = np.append(mask_array, 1)
+
+        #Add 1 more dimension to the arrays
+        decile_index_array_1x10 = np.array([decile_index_array])
+        mask_array_1xnumofsignatures = np.array([mask_array])
+
+        signatures_decile_index_np_array = mask_array_1xnumofsignatures.T * decile_index_array_1x10
+        signature_decile_index_accumulated_np_array += signatures_decile_index_np_array
+##################################################################
+
+
+
+##################################################################
+# For df_split
+# August 1, 2020
+# Using numpy array
+def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_split(mutation_row,
                                                                         chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                         ordered_sbs_signatures_cutoffs,
                                                                         ordered_dbs_signatures_cutoffs,
@@ -335,10 +416,79 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
 ##################################################################
 
 
+
 ##################################################################
+#DEC 18, 2020
+def searchforAllMutations_using_numpy_array(sim_num,
+                                            chrBased_simBased_subs_df,
+                                            chrBased_simBased_dinucs_df,
+                                            chrBased_simBased_indels_df,
+                                            chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                            ordered_sbs_signatures,
+                                            ordered_dbs_signatures,
+                                            ordered_id_signatures,
+                                            ordered_sbs_signatures_cutoffs,
+                                            ordered_dbs_signatures_cutoffs,
+                                            ordered_id_signatures_cutoffs,
+                                            verbose):
+
+    # Add one more row for the Aggregated analysis, there are 10 deciles
+    # Add three more rows for the Microhomology, Repeat Mediated and Aggregated analysis, there are 10 deciles
+    subs_signature_decile_index_accumulated_np_array = np.zeros((ordered_sbs_signatures.size + 1, 10), dtype=int)
+    dinucs_signature_decile_index_accumulated_np_array = np.zeros((ordered_dbs_signatures.size + 1, 10), dtype=int)
+    indels_signature_decile_index_accumulated_np_array = np.zeros((ordered_id_signatures.size + 3, 10), dtype=int)
+
+    #SUBS
+    if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
+        df_columns = chrBased_simBased_subs_df.columns.values
+        df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+
+        [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                             SUBS,
+                                                                            chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                                            ordered_sbs_signatures_cutoffs,
+                                                                            df_columns_subs_signatures_mask_array,
+                                                                            subs_signature_decile_index_accumulated_np_array,
+                                                                            verbose,
+                                                                            df_columns) for mutation_row in chrBased_simBased_subs_df.values]
+
+    #DINUCS
+    if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
+        df_columns = chrBased_simBased_dinucs_df.columns.values
+        df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+
+        [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                             DINUCS,
+                                                                            chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                                            ordered_dbs_signatures_cutoffs,
+                                                                            df_columns_dinucs_signatures_mask_array,
+                                                                            dinucs_signature_decile_index_accumulated_np_array,
+                                                                            verbose,
+                                                                            df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
+
+    #INDELS
+    if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
+        df_columns = chrBased_simBased_indels_df.columns.values
+        df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
+
+        [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
+                                                                             INDELS,
+                                                                            chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                                            ordered_id_signatures_cutoffs,
+                                                                            df_columns_indels_signatures_mask_array,
+                                                                            indels_signature_decile_index_accumulated_np_array,
+                                                                            verbose,
+                                                                            df_columns) for mutation_row in chrBased_simBased_indels_df.values]
+
+    return sim_num, subs_signature_decile_index_accumulated_np_array, dinucs_signature_decile_index_accumulated_np_array, indels_signature_decile_index_accumulated_np_array
+##################################################################
+
+
+##################################################################
+# For df split
 # August 1, 2020
 # Using numpy arrays
-def searchforAllMutations_using_numpy_array(sim_num,
+def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                             chrBased_simBased_combined_df,
                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
                                             ordered_sbs_signatures,
@@ -371,7 +521,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
 
     if ((chrBased_simBased_combined_df is not None) and (not chrBased_simBased_combined_df.empty)):
 
-        [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
+        [search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_split(mutation_row,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                             ordered_sbs_signatures_cutoffs,
                                                                             ordered_dbs_signatures_cutoffs,
@@ -461,7 +611,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
 
-    return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
+    return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array_for_df_split(chrLong,
                                                                                                 chromSize,
                                                                                                 simNum,
                                                                                                 chrBased_grouped_decile_df_list,
@@ -492,32 +642,73 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            ordered_sbs_signatures_cutoffs,
                                                                                                            ordered_dbs_signatures_cutoffs,
                                                                                                            ordered_id_signatures_cutoffs,
-                                                                                                           sample_based,
                                                                                                            verbose):
 
-    chrBased_simBased_combined_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, sim_num)
+    # Old version
+    # chrBased_simBased_combined_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, sim_num)
+
+    #DEC18, 2020 To reduce memory usage
+    chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
 
     return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
                                                                                                 chromSize,
                                                                                                 sim_num,
                                                                                                 chrBased_grouped_decile_df_list,
-                                                                                                chrBased_simBased_combined_df,
+                                                                                                chrBased_simBased_subs_df,
+                                                                                                chrBased_simBased_dinucs_df,
+                                                                                                chrBased_simBased_indels_df,
                                                                                                 ordered_sbs_signatures,
                                                                                                 ordered_dbs_signatures,
                                                                                                 ordered_id_signatures,
                                                                                                 ordered_sbs_signatures_cutoffs,
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
-                                                                                                sample_based,
                                                                                                 verbose)
 
 ##################################################################
 
 
 ##################################################################
-# August 1, 2020
+#Dec 18, 2020
 # using numpy arrays
 def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
+                                                                                        chromSize,
+                                                                                        sim_num,
+                                                                                        chrBased_grouped_decile_df_list,
+                                                                                        chrBased_simBased_subs_df,
+                                                                                        chrBased_simBased_dinucs_df,
+                                                                                        chrBased_simBased_indels_df,
+                                                                                        ordered_sbs_signatures,
+                                                                                        ordered_dbs_signatures,
+                                                                                        ordered_id_signatures,
+                                                                                        ordered_sbs_signatures_cutoffs,
+                                                                                        ordered_dbs_signatures_cutoffs,
+                                                                                        ordered_id_signatures_cutoffs,
+                                                                                        verbose):
+
+    #Fill replication time numpy array
+    chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize, chrBased_grouped_decile_df_list)
+
+    return searchforAllMutations_using_numpy_array(sim_num,
+                                                   chrBased_simBased_subs_df,
+                                                   chrBased_simBased_dinucs_df,
+                                                   chrBased_simBased_indels_df,
+                                                   chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                   ordered_sbs_signatures,
+                                                   ordered_dbs_signatures,
+                                                   ordered_id_signatures,
+                                                   ordered_sbs_signatures_cutoffs,
+                                                   ordered_dbs_signatures_cutoffs,
+                                                   ordered_id_signatures_cutoffs,
+                                                   verbose)
+##################################################################
+
+
+##################################################################
+# For df_split
+# August 1, 2020
+# using numpy arrays
+def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array_for_df_split(chrLong,
                                                                                         chromSize,
                                                                                         sim_num,
                                                                                         chrBased_grouped_decile_df_list,
@@ -534,7 +725,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
     #Fill replication time numpy array
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize, chrBased_grouped_decile_df_list)
 
-    return searchforAllMutations_using_numpy_array(sim_num,
+    return searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                                    chrBased_simBased_combined_df,
                                                    chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                    ordered_sbs_signatures,
@@ -687,22 +878,17 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         all_sims_indels_signature_decile_index_accumulated_np_array[sim_num] += indels_signature_decile_index_accumulated_np_array
     #########################################################################################
 
+    jobs = []
+
     #######################################################################################################################
     # August 1, 2020
     # Using numpy array
     if (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
-
         sim_nums = range(0, numofSimulations + 1)
         sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-        ################################
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
-        ################################
-
-        ################################
-        jobs = []
-        ################################
 
         for simNum, chrLong in sim_num_chr_tuples:
             chromSize = chromSizesDict[chrLong]
@@ -719,38 +905,19 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        ordered_sbs_signatures_cutoffs,
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
-                                       sample_based,
                                        verbose,),
                                  callback=accumulate_np_arrays))
-            # print('MONITOR %s simNum:%d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
-        ################################################################################
 
-        ##############################################################################
-        # wait for all jobs to finish
-        for job in jobs:
-            if verbose: print('\tVerbose Replication Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-        ##############################################################################
-
-        ################################
         pool.close()
         pool.join()
-        ################################
-
     #######################################################################################################################
 
     ######################## starts July 22 2020 ###############################
     elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
 
-        ################################
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
-        ################################
 
-        ################################
-        jobs=[]
-        ################################
-
-        ################################
         for chrLong, simNum, splitIndex in job_tuples:
             chromSize = chromSizesDict[chrLong]
 
@@ -772,20 +939,8 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
-            # print('MONITOR %s %d len(jobs):%d' % (chrLong, simNum, len(jobs)), flush=True)
-        ################################
-
-        ##############################################################################
-        # wait for all jobs to finish
-        for job in jobs:
-            if verbose: print('\tVerbose Replication Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-        ##############################################################################
-
-        ################################
         pool.close()
         pool.join()
-        ################################
-
     ####################### ends July 22 2020   ###############################
 
     return all_sims_subs_signature_decile_index_accumulated_np_array, all_sims_dinucs_signature_decile_index_accumulated_np_array, all_sims_indels_signature_decile_index_accumulated_np_array

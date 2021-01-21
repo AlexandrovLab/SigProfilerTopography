@@ -79,7 +79,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC
 from SigProfilerTopography.source.commons.TopographyCommons import percentage_numbers
 from SigProfilerTopography.source.commons.TopographyCommons import percentage_strings
 
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_5_PERCENT_DIFF
 from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_10_PERCENT_DIFF
 from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_20_PERCENT_DIFF
 from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_30_PERCENT_DIFF
@@ -92,6 +91,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+
+from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
+from SigProfilerTopography.source.commons.TopographyCommons import write_excel_file
 
 SIGNATURE='signature'
 CANCER_TYPE='cancer_type'
@@ -841,7 +843,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
 
         #Set x tick labels
         if len(x_axis_labels) > 6:
-            ax.set_xticklabels(x_axis_labels, fontsize=15, rotation=90)
+            ax.set_xticklabels(x_axis_labels, fontsize=35, rotation=90)
         else:
             ax.set_xticklabels(x_axis_labels, fontsize=35)
 
@@ -1100,15 +1102,17 @@ def plotBarPlotsUsingDataframes(outputDir,
 # April 20, 2020
 # July 4, 2020 starts
 # Using dataframes
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode):
+def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode):
 
     #######################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,BAR_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,CIRCLE_PLOTS), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,TABLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,EXCEL_FILES), exist_ok=True)
     strandbias_figures_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
     strandbias_figures_tables_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES)
+    strandbias_figures_excel_files_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES)
     #######################################################################
 
     ##########################################################################################
@@ -1122,21 +1126,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-
-    if sample_based:
-        sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
-        sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir, jobname)
-        sample2NumberofDinucsDict = getDictionary(outputDir, jobname, Sample2NumberofDinucsDictFilename)
-        sample2SubsSignature2NumberofMutationsDict = getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname)
-        sample2IndelsSignature2NumberofMutationsDict = getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname)
-        sample2DinucsSignature2NumberofMutationsDict = getDictionary(outputDir,jobname, Sample2DinucsSignature2NumberofMutationsDictFilename)
-    else:
-        sample2NumberofSubsDict = {}
-        sample2NumberofIndelsDict = {}
-        sample2NumberofDinucsDict = {}
-        sample2SubsSignature2NumberofMutationsDict = {}
-        sample2IndelsSignature2NumberofMutationsDict = {}
-        sample2DinucsSignature2NumberofMutationsDict = {}
     ##########################################################################################
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples ends  ##################################
@@ -1450,6 +1439,29 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
         type_genic_versus_intergenic_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
     ##################################################################################################################################
 
+    #######################################################################
+    # Write Excel Files
+    sheet_list = ['corrected_p_value', 'percentages']
+    for strand1_versus_strand2 in strand_bias_list:
+        if strand1_versus_strand2==LAGGING_VERSUS_LEADING:
+            signatures_df_list=[signature_lagging_versus_leading_df,signature_lagging_versus_leading_filtered_q_value_df]
+            types_df_list = [type_lagging_versus_leading_df, type_lagging_versus_leading_filtered_q_value_df]
+        elif strand1_versus_strand2==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
+            signatures_df_list = [signature_transcribed_versus_untranscribed_df,signature_transcribed_versus_untranscribed_filtered_q_value_df]
+            types_df_list = [type_transcribed_versus_untranscribed_df, type_transcribed_versus_untranscribed_filtered_q_value_df]
+        elif strand1_versus_strand2==GENIC_VERSUS_INTERGENIC:
+            signatures_df_list = [signature_genic_versus_intergenic_df,signature_genic_versus_intergenic_filtered_q_value_df]
+            types_df_list = [type_genic_versus_intergenic_df, type_genic_versus_intergenic_filtered_q_value_df]
+
+        signatures_filename="Signatures_Mutation_Types_%s.xlsx" %(strand1_versus_strand2)
+        file_name_with_path=os.path.join(strandbias_figures_excel_files_outputDir, signatures_filename)
+        write_excel_file(signatures_df_list, sheet_list, file_name_with_path)
+
+        types_filename="Types_%s.xlsx" %(strand1_versus_strand2)
+        file_name_with_path=os.path.join(strandbias_figures_excel_files_outputDir, types_filename)
+        write_excel_file(types_df_list, sheet_list, file_name_with_path)
+    #######################################################################
+
 
     #######################################################################
     #Circle plots starts
@@ -1564,11 +1576,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                     signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                 if (percent_100 == 1):
                     signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
-
-    #Write these dictionaries as dataframes
-    # filename = 'Signature_Mutation_Type_Strand_Percentages_Table.txt'
-    # filepath = os.path.join(strandbias_figures_outputDir, filename)
-    # write_signature_dictionaries_as_dataframes(signature2mutation_type2strand2percentagedict,filepath)
     #######################################################################
 
     #######################################################################
@@ -1653,12 +1660,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                     type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
                 if (percent_100 == 1):
                     type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
-
-
-    #Write these dictionaries
-    # filename = 'Type_Strand_Percentages_Table.txt'
-    # filepath = os.path.join(strandbias_figures_outputDir, filename)
-    # write_my_type_dictionaries_as_dataframes(type2strand2percentagedict,filepath)
     #######################################################################
 
 

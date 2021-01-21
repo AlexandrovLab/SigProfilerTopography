@@ -85,6 +85,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_AVERA
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_SBS_REQUIRED
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_DBS_REQUIRED
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_ID_REQUIRED
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED
 
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
@@ -266,6 +267,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
 
     ###########################################################################################
     elif ((mutations_probabilities_file_path is None) or (not (os.path.exists(mutations_probabilities_file_path)))):
+
         #For Information
         print('There is a situation/problem: mutations_probabilities_file_path:%s does not exist.' %(mutations_probabilities_file_path))
 
@@ -626,7 +628,6 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                       jobname,
                                       numofSimulations,
                                       job_tuples,
-                                      sample_based,
                                       chromNamesList,
                                       computation_type,
                                       ordered_sbs_signatures,
@@ -643,7 +644,6 @@ def runTranscriptionStradBiasAnalysis(outputDir,
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
     transcriptionStrandBiasAnalysis(computation_type,
-                                    sample_based,
                                     chromNamesList,
                                     outputDir,
                                     jobname,
@@ -819,7 +819,8 @@ def runAnalyses(genome,
                 occupancy_calculation_type=MISSING_SIGNAL,
                 processivity_calculation_type=CONSIDER_DISTANCE,
                 combine_p_values_method=COMBINE_P_VALUES_METHOD_FISHER,
-                fold_change_window_size=100):
+                fold_change_window_size=100,
+                num_of_real_data_avg_overlap=DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED):
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1741,7 +1742,6 @@ def runAnalyses(genome,
                                           jobname,
                                           numofSimulations,
                                           job_tuples,
-                                          sample_based,
                                           chromNamesList,
                                           computation_type,
                                           ordered_sbs_signatures,
@@ -1866,7 +1866,8 @@ def runAnalyses(genome,
                     delete_old,
                     plot_mode,
                     combine_p_values_method,
-                    fold_change_window_size)
+                    fold_change_window_size,
+                    num_of_real_data_avg_overlap)
         print('#################################################################################')
         print("--- Plot Figures: %s seconds ---" %(time.time()-start_time))
         print("--- Plot Figures: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -1917,7 +1918,8 @@ def plotFigures(outputDir,
                 delete_old,
                 plot_mode,
                 combine_p_values_method,
-                fold_change_window_size):
+                fold_change_window_size,
+                num_of_real_data_avg_overlap):
 
     ############################################################
     if (nucleosome or data_ready_plot_nucleosome):
@@ -1944,13 +1946,13 @@ def plotFigures(outputDir,
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
     elif (replication_strand_bias or data_ready_plot_replication_strand_bias):
         strand_bias_list=[LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
     elif (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,sample_based,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
     ############################################################
 
 
@@ -2002,6 +2004,7 @@ def plotFigures(outputDir,
 
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
+                                              num_of_real_data_avg_overlap,
                                               outputDir,
                                               jobname,
                                               numberofSimulations,

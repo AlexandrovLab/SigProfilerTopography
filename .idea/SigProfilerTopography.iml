@@ -17,16 +17,11 @@
     <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Debugging" />
-    <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
     <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
     <orderEntry type="module" module-name="SigProfilerSimulator" />
-    <orderEntry type="module" module-name="SigProfilerSimulator" />
     <orderEntry type="module" module-name="OldSigProfilerTopography" />
     <orderEntry type="module" module-name="SigProfiler" />
-    <orderEntry type="module" module-name="SigProfiler" />
-    <orderEntry type="module" module-name="SigProfiler" />
-    <orderEntry type="module" module-name="SigProfiler" />
-    <orderEntry type="module" module-name="SigProfiler" />
+    <orderEntry type="module" module-name="Collaborations" />
   </component>
 </module>

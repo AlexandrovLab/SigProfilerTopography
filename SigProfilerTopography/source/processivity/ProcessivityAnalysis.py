@@ -372,15 +372,9 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
         if computation_type == USING_APPLY_ASYNC:
             for simNum in range(0,numofSimulations+1):
-
-                ####################################################################################
-                numofProcesses = multiprocessing.cpu_count()
-                pool = multiprocessing.Pool(numofProcesses)
-                ####################################################################################
-
-                ####################################################################################
                 jobs = []
-                ####################################################################################
+                numofProcesses = multiprocessing.cpu_count()
+                pool = multiprocessing.Pool(processes=numofProcesses)
 
                 signature2ProcessiveGroupLength2DistanceListDict = {}
 
@@ -466,32 +460,12 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                    verbose,),
                                                              callback=accumulate_apply_async_result_with_distance))
-
-                        #Did not work as expected
-                        # elif processivity_calculation_type==CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER:
-                        #     # With Distance All Samples Together
-                        #     jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistanceAllSamples,
-                        #                                  args=(simNum,
-                        #                                        chrLong,
-                        #                                        chrBased_spms_df,
-                        #                                        considerProbabilityInProcessivityAnalysis,
-                        #                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
-                        #                                        verbose,),
-                        #                                  callback=accumulate_apply_async_result_with_distance))
-
                 ####################################################################################
 
-                ################################
                 if verbose: print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)))
-                # wait for all jobs to finish
-                for job in jobs:
-                    if verbose: print('\tVerbose Processivity Worker pid %s job.get():%s ' %(str(os.getpid()), job.get()))
-                ################################
 
-                ####################################################################################
                 pool.close()
                 pool.join()
-                ####################################################################################
 
                 if (processivity_calculation_type == CONSIDER_COUNT):
                     ####################################################################################
