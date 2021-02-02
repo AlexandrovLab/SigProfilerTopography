@@ -311,6 +311,8 @@ INDELBASED = 'indelbased'
 SIGNATUREBASED = 'signaturebased'
 SAMPLEBASED = 'samplebased'
 
+SAMPLE_BASED = 'sample_based'
+
 SAMPLEBASED_SIGNATUREBASED = 'samplebased_signaturebased'
 
 SAMPLEBASED_AGGREGATEDSUBSTITUTIONS = 'samplebased_aggregatedsubstitutions'
@@ -2047,6 +2049,45 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
 ########################################################################
 
+
+########################################################################
+#Lagging_Count Leading_Count
+#Transcribed_Count UnTranscribed_Count
+def write_sample_based_strand1_strand2_as_dataframe(output_dir,
+                                                    jobname,
+                                                    num_of_simulations,
+                                                    strand_bias,
+                                                    all_samples_np_array,
+                                                    all_types_np_array,
+                                                    all_sims_all_samples_all_types_strand1_np_array,
+                                                    all_sims_all_samples_all_types_strand2_np_array):
+
+    if strand_bias==REPLICATIONSTRANDBIAS:
+        sample_type_strand1_strand2_ratio_file_name = 'Sample_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
+        strand1_column="lagging_count"
+        strand2_column="leading_count"
+    elif strand_bias==TRANSCRIPTIONSTRANDBIAS:
+        sample_type_strand1_strand2_ratio_file_name = 'Sample_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
+        strand1_column="transcribed_count"
+        strand2_column="untranscribed_count"
+
+    os.makedirs(os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED), exist_ok=True)
+    sample_type_strand1_strand2_ratio_file_path = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED,sample_type_strand1_strand2_ratio_file_name)
+
+    with open(sample_type_strand1_strand2_ratio_file_path, 'w') as f:
+        i, j, k = all_sims_all_samples_all_types_strand1_np_array.shape
+        f.write('sim_num\tsample\ttype\t%s\t%s\n' %(strand1_column,strand2_column))
+
+        for sim_index in range(num_of_simulations+1):
+            for sample_index in range(j):
+                for type_index in range(k):
+                    f.write('%d\t%s\t%s\t%d\t%d\n'% (sim_index,
+                                                     all_samples_np_array[sample_index],
+                                                     all_types_np_array[type_index],
+                                                     all_sims_all_samples_all_types_strand1_np_array[sim_index][sample_index][type_index],
+                                                     all_sims_all_samples_all_types_strand2_np_array[sim_index][sample_index][type_index]))
+########################################################################
+
 ########################################################################
 #Main function for type
 #Fills a dictionary and writes it as a dataframe
@@ -2819,6 +2860,14 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             temp_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='outer',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION], indicator=True)
             print('which rows of chr_based_mutation_df are not merged?')
             print(temp_df[temp_df['_merge']=='left_only'])
+            print("chr_based_mutation_df[MUTATION].unique()")
+            print(chr_based_mutation_df[MUTATION].unique())
+            print("chr_based_mutation_df[SAMPLE].unique()")
+            print(chr_based_mutation_df[SAMPLE].unique())
+            print("mutations_probabilities_df[MUTATION].unique()")
+            print(mutations_probabilities_df[MUTATION].unique())
+            print("mutations_probabilities_df[SAMPLE].unique()")
+            print(mutations_probabilities_df[SAMPLE].unique())
 
         if ((merged_df is not None) and (not merged_df.empty)):
             if (mutation_type_context in SBS_CONTEXTS):

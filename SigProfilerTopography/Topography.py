@@ -150,6 +150,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import COMBINE_P_VAL
 from SigProfilerTopography.source.commons.TopographyCommons import WEIGHTED_AVERAGE_METHOD
 from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEISMIC
 
+from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
@@ -578,6 +579,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                      numofSimulations,
                                      job_tuples,
                                      sample_based,
+                                     all_samples_np_array,
                                      replicationTimeFilename,
                                      replicationTimeValleyFilename,
                                      replicationTimePeakFilename,
@@ -601,14 +603,15 @@ def runReplicationStrandBiasAnalysis(outputDir,
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    replicationStrandBiasAnalysis(computation_type,
-                                  sample_based,
-                                  chromSizesDict,
-                                  chromNamesList,
-                                  outputDir,
+    replicationStrandBiasAnalysis(outputDir,
                                   jobname,
                                   numofSimulations,
                                   job_tuples,
+                                  sample_based,
+                                  all_samples_np_array,
+                                  chromSizesDict,
+                                  chromNamesList,
+                                  computation_type,
                                   smoothedWaveletRepliseqDataFilename,
                                   valleysBEDFilename,
                                   peaksBEDFilename,
@@ -628,6 +631,8 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                       jobname,
                                       numofSimulations,
                                       job_tuples,
+                                      sample_based,
+                                      all_samples_np_array,
                                       chromNamesList,
                                       computation_type,
                                       ordered_sbs_signatures,
@@ -643,12 +648,14 @@ def runTranscriptionStradBiasAnalysis(outputDir,
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    transcriptionStrandBiasAnalysis(computation_type,
-                                    chromNamesList,
-                                    outputDir,
+    transcriptionStrandBiasAnalysis(outputDir,
                                     jobname,
                                     numofSimulations,
                                     job_tuples,
+                                    sample_based,
+                                    all_samples_np_array,
+                                    computation_type,
+                                    chromNamesList,
                                     ordered_sbs_signatures,
                                     ordered_dbs_signatures,
                                     ordered_id_signatures,
@@ -1504,10 +1511,17 @@ def runAnalyses(genome,
             samples_list = mutationType2PropertiesDict[mutation_type]['samples_list']
             all_samples = all_samples.union(samples_list)
 
+        all_samples_list=list(all_samples)
+        # print('Delete Before sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
+        all_samples_list = sorted(all_samples_list, key=natural_key)
+        # print('Delete After sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
+        all_samples_np_array=np.array(all_samples_list)
+        print("Number of samples: %d" %all_samples_np_array.size)
+
         mutationType2PropertiesDict['All']={}
         mutationType2PropertiesDict['All']['number_of_mutations'] = numberofMutations
         mutationType2PropertiesDict['All']['number_of_samples'] = len(all_samples)
-        mutationType2PropertiesDict['All']['samples_list'] = list(all_samples)
+        mutationType2PropertiesDict['All']['samples_list'] = all_samples_list
 
         # Write mutationType2PropertiesListDict dictionary as a dataframe starts
         filePath = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename)
@@ -1565,6 +1579,12 @@ def runAnalyses(genome,
 
     else:
         mutationtype_numberofmutations_numberofsamples_sampleslist_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
+
+        #TODO it is a string "['sample1','sample2'] " with samples
+        #TODO provide all_samples_np_array
+        all_samples_list=mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
+        print('sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
+
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
         indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
@@ -1714,6 +1734,7 @@ def runAnalyses(genome,
                                          numofSimulations,
                                          job_tuples,
                                          sample_based,
+                                         all_samples_np_array,
                                          replication_time_signal_file,
                                          replication_time_valley_file,
                                          replication_time_peak_file,
@@ -1742,6 +1763,8 @@ def runAnalyses(genome,
                                           jobname,
                                           numofSimulations,
                                           job_tuples,
+                                          sample_based,
+                                          all_samples_np_array,
                                           chromNamesList,
                                           computation_type,
                                           ordered_sbs_signatures,

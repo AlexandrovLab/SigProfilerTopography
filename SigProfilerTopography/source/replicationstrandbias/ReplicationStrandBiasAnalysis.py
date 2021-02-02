@@ -50,6 +50,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
 from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
 from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_sample_based_strand1_strand2_as_dataframe
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
@@ -230,7 +231,19 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         all_types_lagging_np_array,
         subs_signature_mutation_type_leading_np_array,
         subs_signature_mutation_type_lagging_np_array,
+        all_samples_all_types_leading_np_array,
+        all_samples_all_types_lagging_np_array,
+        all_samples_subs_signature_mutation_type_leading_np_array,
+        all_samples_subs_signature_mutation_type_lagging_np_array,
+        sample_based,
+        all_samples_np_array,
         df_columns):
+
+
+    if sample_based:
+        indexofSample = np.where(df_columns == SAMPLE)[0][0]
+        mutation_sample = mutation_row[indexofSample]
+        sample_index=np.where(all_samples_np_array == mutation_sample)[0][0]
 
     indexofStart = np.where(df_columns == START)[0][0]
     start = mutation_row[indexofStart]
@@ -320,6 +333,35 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             print('There is a situation!!!')
         else:
             print('There is a situation!!!')
+
+    if sample_based:
+        if (np.any(slicedArray)):
+            # It must be full with at most -1 and +1
+            uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
+
+            # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
+            if (uniqueValueArray.size == 1):
+                for uniqueValue in np.nditer(uniqueValueArray):
+                    # type(decileIndex) is numpy.ndarray
+                    slope = int(uniqueValue)
+                    # They have the same sign, multiplication (1,1) (-1,-1) must be 1
+                    if (slope * pyramidineStrand > 0):
+                        all_samples_all_types_leading_np_array[sample_index] += all_types_mask_array
+                        all_samples_subs_signature_mutation_type_leading_np_array[sample_index] += subs_signature_mutation_type_mask_array
+                    # They have the opposite sign, multiplication(1,-1) (-1,-)  must be -1
+                    elif (slope * pyramidineStrand < 0):
+                        all_samples_all_types_lagging_np_array[sample_index] += all_types_mask_array
+                        all_samples_subs_signature_mutation_type_lagging_np_array[sample_index] += subs_signature_mutation_type_mask_array
+            elif ((uniqueValueArray.size == 2) and (pyramidineStrand != 0)):
+                # Increment both LEADING and LAGGING
+                all_samples_all_types_leading_np_array[sample_index] += all_types_mask_array
+                all_samples_all_types_lagging_np_array[sample_index] += all_types_mask_array
+                all_samples_subs_signature_mutation_type_leading_np_array[sample_index] += subs_signature_mutation_type_mask_array
+                all_samples_subs_signature_mutation_type_lagging_np_array[sample_index] += subs_signature_mutation_type_mask_array
+            elif (uniqueValueArray.size > 2):
+                print('There is a situation!!!')
+            else:
+                print('There is a situation!!!')
     #############################################################################################################
 
 ########################################################################
@@ -668,8 +710,8 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
 def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                chrBased_simBased_dinucs_df,
                                                chrBased_simBased_indels_df,
-                                            chrBased_replication_array,
-                                            sim_num,
+                                               chrBased_replication_array,
+                                               sim_num,
                                             six_mutation_types_np_array,
                                             ordered_sbs_signatures,
                                             ordered_dbs_signatures,
@@ -681,7 +723,12 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             all_types_lagging_np_array,
                                             subs_signature_mutation_type_leading_np_array,
                                             subs_signature_mutation_type_lagging_np_array,
+                                            all_samples_all_types_leading_np_array,
+                                            all_samples_all_types_lagging_np_array,
+                                            all_samples_subs_signature_mutation_type_leading_np_array,
+                                            all_samples_subs_signature_mutation_type_lagging_np_array,
                                             sample_based,
+                                            all_samples_np_array,
                                             verbose):
 
 
@@ -725,7 +772,13 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                             all_types_lagging_np_array,
                                                                             subs_signature_mutation_type_leading_np_array,
                                                                             subs_signature_mutation_type_lagging_np_array,
-                                                                            df_columns) for mutation_row in chrBased_simBased_subs_df.values]
+                                                                            all_samples_all_types_leading_np_array,
+                                                                            all_samples_all_types_lagging_np_array,
+                                                                            all_samples_subs_signature_mutation_type_leading_np_array,
+                                                                            all_samples_subs_signature_mutation_type_lagging_np_array,
+                                                                            sample_based,
+                                                                            all_samples_np_array,
+                                                                          df_columns) for mutation_row in chrBased_simBased_subs_df.values]
         ##############################################################################################
 
     ################################################################################
@@ -756,7 +809,12 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_types_lagging_np_array,
                                                                                               subs_signature_mutation_type_leading_np_array,
                                                                                               subs_signature_mutation_type_lagging_np_array,
+                                                                                              all_samples_all_types_leading_np_array,
+                                                                                              all_samples_all_types_lagging_np_array,
+                                                                                              all_samples_subs_signature_mutation_type_leading_np_array,
+                                                                                              all_samples_subs_signature_mutation_type_lagging_np_array,
                                                                                               sample_based,
+                                                                                              all_samples_np_array,
                                                                                               df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
         ##############################################################################################
 
@@ -788,18 +846,28 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_types_lagging_np_array,
                                                                                               subs_signature_mutation_type_leading_np_array,
                                                                                               subs_signature_mutation_type_lagging_np_array,
+                                                                                              all_samples_all_types_leading_np_array,
+                                                                                              all_samples_all_types_lagging_np_array,
+                                                                                              all_samples_subs_signature_mutation_type_leading_np_array,
+                                                                                              all_samples_subs_signature_mutation_type_lagging_np_array,
                                                                                               sample_based,
+                                                                                              all_samples_np_array,
                                                                                               df_columns) for mutation_row in chrBased_simBased_indels_df.values]
         ##############################################################################################
 
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
     ################################################################################
 
+
     return(sim_num,
            all_types_leading_np_array,
            all_types_lagging_np_array,
            subs_signature_mutation_type_leading_np_array,
-           subs_signature_mutation_type_lagging_np_array)
+           subs_signature_mutation_type_lagging_np_array,
+           all_samples_all_types_leading_np_array,
+           all_samples_all_types_lagging_np_array,
+           all_samples_subs_signature_mutation_type_leading_np_array,
+           all_samples_subs_signature_mutation_type_lagging_np_array)
 ########################################################################
 
 
@@ -878,6 +946,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    ordered_id_signatures_cutoffs,
                                                                    all_types_np_array_size,
                                                                    sample_based,
+                                                                   all_samples_np_array,
                                                                    verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
@@ -889,14 +958,19 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
     subs_signature_mutation_type_leading_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
     subs_signature_mutation_type_lagging_np_array = np.zeros((ordered_sbs_signatures.size, six_mutation_types_np_array.size),dtype=int)
 
+    #Jan 25, 2021
+    all_samples_np_array_size = all_samples_np_array.size
+    all_samples_all_types_leading_np_array = np.zeros((all_samples_np_array_size, all_types_np_array_size), dtype=int)
+    all_samples_all_types_lagging_np_array = np.zeros((all_samples_np_array_size, all_types_np_array_size), dtype=int)
+    all_samples_subs_signature_mutation_type_leading_np_array = np.zeros((all_samples_np_array_size, ordered_sbs_signatures.size, six_mutation_types_np_array.size), dtype=int)
+    all_samples_subs_signature_mutation_type_lagging_np_array = np.zeros((all_samples_np_array_size, ordered_sbs_signatures.size, six_mutation_types_np_array.size), dtype=int)
+
     if (os.path.exists(chr_based_replication_time_file_path)):
         chrBased_replication_array = np.load(chr_based_replication_time_file_path)
     else:
         chrBased_replication_array=None
 
     if chrBased_replication_array is not None:
-        # chrBased_simBased_combined_df=get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum)
-
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
 
         return searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
@@ -915,14 +989,23 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           all_types_lagging_np_array,
                                                           subs_signature_mutation_type_leading_np_array,
                                                           subs_signature_mutation_type_lagging_np_array,
+                                                          all_samples_all_types_leading_np_array,
+                                                          all_samples_all_types_lagging_np_array,
+                                                          all_samples_subs_signature_mutation_type_leading_np_array,
+                                                          all_samples_subs_signature_mutation_type_lagging_np_array,
                                                           sample_based,
+                                                          all_samples_np_array,
                                                           verbose)
     else:
         return (simNum,
                 all_types_leading_np_array,
                 all_types_lagging_np_array,
                 subs_signature_mutation_type_leading_np_array,
-                subs_signature_mutation_type_lagging_np_array)
+                subs_signature_mutation_type_lagging_np_array,
+                all_samples_all_types_leading_np_array,
+                all_samples_all_types_lagging_np_array,
+                all_samples_subs_signature_mutation_type_leading_np_array,
+                all_samples_subs_signature_mutation_type_lagging_np_array)
 ########################################################################
 
 
@@ -989,14 +1072,15 @@ def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chrom
 # pool.apply_async:  USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
 # For each possible (chrLong,simNum) couple read the data and array on the worker process
 # Fastest, consumes more memory than others. 22/28 processes are running. For Combined_PACWG_nonPCAWG Skin_Melanoma after 1 hour all 28/28 running.
-def replicationStrandBiasAnalysis(computationType,
-                                  sample_based,
-                                  chromSizesDict,
-                                  chromNamesList,
-                                  outputDir,
+def replicationStrandBiasAnalysis(outputDir,
                                   jobname,
                                   numofSimulations,
                                   job_tuples,
+                                  sample_based,
+                                  all_samples_np_array,
+                                  chromSizesDict,
+                                  chromNamesList,
+                                  computation_type,
                                   smoothedWaveletRepliseqDataFilename,
                                   valleysBEDFilename,
                                   peaksBEDFilename,
@@ -1031,6 +1115,16 @@ def replicationStrandBiasAnalysis(computationType,
     #########################################################################################
 
     #########################################################################################
+    if sample_based:
+        # Initialization for accumulated arrays
+        all_samples_np_array_size=all_samples_np_array.size
+        all_sims_all_samples_all_types_leading_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, all_types_np_array_size), dtype=int)
+        all_sims_all_samples_all_types_lagging_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, all_types_np_array_size), dtype=int)
+        all_sims_all_samples_subs_signature_mutation_type_leading_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, ordered_sbs_signatures.size, six_mutation_types_np_array.size), dtype=int)
+        all_sims_all_samples_subs_signature_mutation_type_lagging_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, ordered_sbs_signatures.size, six_mutation_types_np_array.size), dtype=int)
+    #########################################################################################
+
+    #########################################################################################
     # Accumulate Numpy Arrays
     # July 27, 2020
     def accumulate_np_arrays(result_tuple):
@@ -1040,13 +1134,23 @@ def replicationStrandBiasAnalysis(computationType,
         subs_signature_mutation_type_leading_np_array = result_tuple[3]
         subs_signature_mutation_type_lagging_np_array = result_tuple[4]
 
-        # print('MONITOR ACCUMULATE', flush=True)
-
         all_sims_all_types_leading_np_array[sim_num] += all_types_leading_np_array
         all_sims_all_types_lagging_np_array[sim_num] += all_types_lagging_np_array
-
         all_sims_subs_signature_mutation_type_leading_np_array[sim_num] += subs_signature_mutation_type_leading_np_array
         all_sims_subs_signature_mutation_type_lagging_np_array[sim_num] += subs_signature_mutation_type_lagging_np_array
+        # print('MONITOR ACCUMULATE', flush=True)
+
+        if sample_based:
+            #Jan 21, 2021
+            all_samples_all_types_leading_np_array = result_tuple[5]
+            all_samples_all_types_lagging_np_array = result_tuple[6]
+            all_samples_subs_signature_mutation_type_leading_np_array = result_tuple[7]
+            all_samples_subs_signature_mutation_type_lagging_np_array = result_tuple[8]
+
+            all_sims_all_samples_all_types_leading_np_array[sim_num] += all_samples_all_types_leading_np_array
+            all_sims_all_samples_all_types_lagging_np_array[sim_num] += all_samples_all_types_lagging_np_array
+            all_sims_all_samples_subs_signature_mutation_type_leading_np_array[sim_num] += all_samples_subs_signature_mutation_type_leading_np_array
+            all_sims_all_samples_subs_signature_mutation_type_lagging_np_array[sim_num] += all_samples_subs_signature_mutation_type_lagging_np_array
     #########################################################################################
 
     jobs = []
@@ -1054,7 +1158,7 @@ def replicationStrandBiasAnalysis(computationType,
     ###############################################################################
     #April 30, 2020
     #read chrom based sim based mutations data and chrom based replication time data in each worker process
-    if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
+    if (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
         sim_nums = range(0, numofSimulations + 1)
         sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
@@ -1076,6 +1180,7 @@ def replicationStrandBiasAnalysis(computationType,
                                           ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           sample_based,
+                                          all_samples_np_array,
                                           verbose,),
                                     callback=accumulate_np_arrays))
         pool.close()
@@ -1084,7 +1189,7 @@ def replicationStrandBiasAnalysis(computationType,
 
     ###############################################################################
     #July 23, 2020 starts
-    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+    elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
 
@@ -1139,6 +1244,18 @@ def replicationStrandBiasAnalysis(computationType,
                                                 replication_strands,
                                                 outputDir,
                                                 jobname)
+
+
+    if sample_based:
+        write_sample_based_strand1_strand2_as_dataframe(outputDir,
+                                                        jobname,
+                                                        numofSimulations,
+                                                        strand_bias,
+                                                        all_samples_np_array,
+                                                        all_types_np_array,
+                                                        all_sims_all_samples_all_types_lagging_np_array,
+                                                        all_sims_all_samples_all_types_leading_np_array)
+
     ############################################################################################################
     #####################################       Output ends      ###############################################
     ############################################################################################################
