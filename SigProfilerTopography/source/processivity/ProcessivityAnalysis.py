@@ -586,6 +586,8 @@ def processivityAnalysis(mutation_types_contexts,
 
     print('\n#################################################################################')
     print('--- ProcessivityAnalysis starts')
+    print('processivity_calculation_type:%s' % processivity_calculation_type)
+
     readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       computation_type,

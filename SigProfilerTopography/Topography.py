@@ -593,7 +593,6 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                      ordered_dbs_signatures_cutoffs,
                                      ordered_id_signatures_cutoffs,
                                      verbose):
-
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
 
     smoothedWaveletRepliseqDataFilename = replicationTimeFilename
@@ -683,7 +682,6 @@ def runProcessivityAnalysis(mutation_types_contexts,
     considerProbabilityInProcessivityAnalysis = True
     # considerProbabilityInProcessivityAnalysis = False
     computation_type=USING_APPLY_ASYNC
-    print('processivity_calculation_type:%s' %processivity_calculation_type)
 
     processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
@@ -1580,9 +1578,11 @@ def runAnalyses(genome,
     else:
         mutationtype_numberofmutations_numberofsamples_sampleslist_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
 
-        #TODO it is a string "['sample1','sample2'] " with samples
-        #TODO provide all_samples_np_array
-        all_samples_list=mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
+        all_samples_string=mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
+        all_samples_list=eval(all_samples_string)
+        all_samples_list = sorted(all_samples_list, key=natural_key)
+        all_samples_np_array=np.array(all_samples_list)
+
         print('sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
 
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
