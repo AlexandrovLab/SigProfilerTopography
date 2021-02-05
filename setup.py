@@ -10,7 +10,7 @@ def readme():
 	with open('README.rst') as f:
 		return(f.read())
 
-VERSION = '1.0.21'
+VERSION = '1.0.22'
 
 def write_version_py(filename='SigProfilerTopography/version.py'):
 	# Copied from numpy setup.py
@@ -36,7 +36,7 @@ setup(name="SigProfilerTopography",
     packages=find_packages(),
     install_requires=[
         "sigprofilermatrixgenerator>=1.0.21",
-	    "sigprofilersimulator>=0.2.15",
+	"sigprofilersimulator>=0.2.15",
         "matplotlib>=2.2.2",
         "scipy>=1.1.0",
         "pandas>=0.23.4",

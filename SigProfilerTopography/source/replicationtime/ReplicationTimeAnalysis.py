@@ -644,9 +644,6 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            ordered_id_signatures_cutoffs,
                                                                                                            verbose):
 
-    # Old version
-    # chrBased_simBased_combined_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, sim_num)
-
     #DEC18, 2020 To reduce memory usage
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
 
@@ -783,13 +780,24 @@ def getMutationDensityDictNewVersion(decileIndex2NumberofAttributableBasesDict,d
 ##################################################################
 
 ##################################################################
-# August 3, 2020
-def getMutationDensityDictUsingNumpyArray(decile_df_list,decile_counts_np_array):
-    decileBasedMutationDensityDict = {}
-    numberofMutations = 0
-
-    numberofMutationsList = []
+# Feb5, 2021
+def getNumberofAttributableBases(decile_df_list):
     numberofAttributableBasesList = []
+
+    #Modifiled as enumerate(deciles,1) formerly it was enumerate(deciles,0)
+    for i,decile_df in enumerate(decile_df_list,1):
+        numofAttBases = decile_df[NUMOFBASES].sum()
+        numberofAttributableBasesList.append(numofAttBases)
+
+    return numberofAttributableBasesList
+##################################################################
+
+##################################################################
+# Feb5, 2021
+def getMutationDensityDictUsingNumpyArray(decile_df_list,decile_counts_np_array):
+    numberofMutations = 0
+    decileBasedMutationDensityDict = {}
+    numberofMutationsList = []
 
     #Modifiled as enumerate(deciles,1) formerly it was enumerate(deciles,0)
     for i,decile_df in enumerate(decile_df_list,1):
@@ -799,12 +807,11 @@ def getMutationDensityDictUsingNumpyArray(decile_df_list,decile_counts_np_array)
         mutationDensity=float(count)/numofAttBases
         decileBasedMutationDensityDict[i] = mutationDensity
         numberofMutationsList.append(count)
-        numberofAttributableBasesList.append(numofAttBases)
 
         # decileBasedMutationDensityDict[i] = 0
         # numberofMutationsList.append(0)
         # numberofAttributableBasesList.append(0)
-    return numberofMutations, decileBasedMutationDensityDict, numberofMutationsList, numberofAttributableBasesList
+    return numberofMutations, decileBasedMutationDensityDict, numberofMutationsList
 ##################################################################
 
 ##################################################################
@@ -991,6 +998,7 @@ def augment(genome,wavelet_processed_df,matrix_generator_path,verbose):
 ##################################################################
 # August 3, 2020
 # Using numpy array
+# decile_df_list is RepliSeq input file dependent
 def writeReplicationTimeDataUsingNumpyArray(outputDir,
                                             jobname,
                                             decile_df_list,
@@ -1007,6 +1015,18 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
     my_list=[(SUBS,subs_signatures,all_sims_subs_signature_decile_index_accumulated_np_array),
              (DINUCS,dinucs_signatures, all_sims_dinucs_signature_decile_index_accumulated_np_array),
              (INDELS,indels_signatures, all_sims_indels_signature_decile_index_accumulated_np_array)]
+
+    #Write Number of Attributable Bases List
+    if (decile_df_list is not None):
+        numberofAttributableBasesList=getNumberofAttributableBases(decile_df_list)
+        numberofAttributabelBasesFilename = 'NumberofAttributableBases.txt'
+        numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,numberofAttributabelBasesFilename)
+
+        # Number of Attributable Bases
+        with open(numberofAttributabelBasesFilePath, 'w') as file:
+            for numberofAttributabelBases in numberofAttributableBasesList:
+                file.write(str(numberofAttributabelBases) + ' ')
+            file.write('\n')
 
     for my_tuple in my_list:
         my_type, signatures, all_sims_signature_decile_index_accumulated_np_array = my_tuple
@@ -1036,25 +1056,21 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
                 if (sim_index==0):
                     normalizedMutationDensityFilename = '%s_NormalizedMutationDensity.txt' %(signature)
                     numberofMutationsFilename = '%s_NumberofMutations.txt' %(signature)
-                    numberofAttributabelBasesFilename = '%s_NumberofAttributableBases.txt' %(signature)
                 else:
                     normalizedMutationDensityFilename = '%s_sim%d_NormalizedMutationDensity.txt' %(signature,sim_index)
                     numberofMutationsFilename = '%s_sim%d_NumberofMutations.txt' %(signature,sim_index)
-                    numberofAttributabelBasesFilename = '%s_sim%d_NumberofAttributableBases.txt' %(signature,sim_index)
 
                 if (signature == AGGREGATEDSUBSTITUTIONS) or (signature == AGGREGATEDINDELS) or (signature == AGGREGATEDDINUCS) or (signature == MICROHOMOLOGY) or (signature == REPEAT):
                     os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, signature), exist_ok=True)
                     normalizedMutationDensityFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, signature,normalizedMutationDensityFilename)
                     numberofMutationsFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, signature,numberofMutationsFilename)
-                    numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, signature,numberofAttributabelBasesFilename)
                 else:
                     os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED), exist_ok=True)
                     normalizedMutationDensityFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,normalizedMutationDensityFilename)
                     numberofMutationsFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,numberofMutationsFilename)
-                    numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, SIGNATUREBASED,numberofAttributabelBasesFilename)
 
                 if (decile_df_list is not None):
-                    numberofMutations, mutationDensityDict, numberofMutationsList, numberofAttributableBasesList = getMutationDensityDictUsingNumpyArray(decile_df_list, decile_counts_np_array)
+                    numberofMutations, mutationDensityDict, numberofMutationsList = getMutationDensityDictUsingNumpyArray(decile_df_list, decile_counts_np_array)
                     normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
 
                     #Normalized Mutation Density
@@ -1067,12 +1083,6 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
                     with open(numberofMutationsFilePath, 'w') as file:
                         for numberofMutations in numberofMutationsList:
                             file.write(str(numberofMutations) + ' ')
-                        file.write('\n')
-
-                    #Number of Attributable Bases
-                    with open(numberofAttributabelBasesFilePath, 'w') as file:
-                        for numberofAttributabelBases in numberofAttributableBasesList:
-                            file.write(str(numberofAttributabelBases) + ' ')
                         file.write('\n')
     ##############################################################
 

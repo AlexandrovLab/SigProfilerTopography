@@ -1514,7 +1514,7 @@ def runAnalyses(genome,
         all_samples_list = sorted(all_samples_list, key=natural_key)
         # print('Delete After sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
         all_samples_np_array=np.array(all_samples_list)
-        print("Number of samples: %d" %all_samples_np_array.size)
+        print("--- Number of samples: %d" %all_samples_np_array.size)
 
         mutationType2PropertiesDict['All']={}
         mutationType2PropertiesDict['All']['number_of_mutations'] = numberofMutations
