@@ -4,8 +4,8 @@
 SigProfilerTopography provides topography analyses for mutations such as
 
 - Single Base Substitutions (SBS)
-- Insertions and deletions, indels (ID)
 - Double Base Substitutions (DBS)
+- Insertions and deletions, indels (ID)
 
 
 and carries out following analyses:
@@ -74,9 +74,9 @@ $ python
 >>> jobname = 'your_job_name'
 >>> numofSimulations = 2
 >>> sbs_probabilities_file_path = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>> id_probabilities_file_path = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
 >>> dbs_probabilities_file_path = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+>>> id_probabilities_file_path = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
+>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 ```
 
 **INPUT FILE FORMAT**
@@ -108,7 +108,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ If you want to run SigProfilerTopography using  MNase-seq of GM12878 cell line, you have to include `nucleosome_biosample='GM12878'`  in the `runAnalyses` call as follows:
 		
-		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')`
 
 	+ SigProfilerTopography downloads offline prepared chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` you have set  which requires ~6 GB of storage.
 
@@ -143,7 +143,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ If you want to run SigProfilerTopography using  Repli-seq of any available biosamples e.g.: NHEK,  then you have to include `replication_time_biosample='NHEK'`  in the `runAnalyses` call as follows:
 
-		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='NHEK')`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='NHEK')`
                     
 
 **USER PROVIDED LIBRARY FILES**
@@ -161,7 +161,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
 
-		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
+		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
 
 	
 + **NUCLEOSOME OCCUPANCY**
@@ -193,26 +193,35 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
                     
 | Parameter | Default Value  |
 | ------------- | ------------- |
-| average probability | 0.9  |
-| num_of_sbs_required | 5000  |
-| num_of_id_required | 1000  |
+| average probability | 0.75  |
+| num_of_sbs_required | 2000  |
 | num_of_dbs_required | 200  |
-|mutation_types_contexts| ['96', 'ID', 'DBS'] |
+| num_of_id_required | 1000  | |
                     
 
 
-+ By default, we require at least 5000, 1000, 200 mutations with average probability of 0.9 for a SBS, ID, DBS signature, respectively, to be considered and analysed.
++ By default, we require at least 2000, 200, 1000 mutations with average probability of 0.75 for a SBS, DBS, ID signature, respectively, to be considered and analysed.
 
 + However, as an example these parameters can be relaxed in the `runAnalyses` call as follows:
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.75,num_of_sbs_required=2000,num_of_id_required=1000,num_of_dbs_required=200)`
+	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.7,num_of_sbs_required=1500,num_of_dbs_required=200,num_of_id_required=1000)`
 	
-+ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'ID', 'DBS']` for simulations unless you want to set `mutation_types_contexts` as `['192', 'ID', 'DBS']`,`['384', 'ID', 'DBS']`, `['1536', 'ID', 'DBS']`, or `['3072', 'ID', 'DBS']`.
++ By default, SigProfilerTopography appends `'96'`, `'DBS'`, and `'ID'` to  `mutation_types_contexts` if `sbs_probabilities`, `dbs_probabilities`,  and  `id_probabilities` are set respectively for topography analyses.
 
-	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set `mutation_types_contexts=['192', 'ID', 'DBS']` in the `runAnalyses` call as follows: 
++ If you want to analyse SBS signatures using `'288'` context instead of `'96'` context then you have to set mutation_types_contexts=`['288', 'DBS', 'ID']` in the `runAnalyses` call as follows:
 	
+	
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['288', 'DBS', 'ID'])`
 
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['192', 'ID', 'DBS'])`
++ If you want to analyse only SBS signatures using `'288'` context then you have to set `mutation_types_contexts=['288']` in the `runAnalyses` call as follows: 
+	
+	
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['288'])`
+
++ If you don't have `'sbs_probabilities'`, `'dbs_probabilities'` and `'id_probabilities'`, you can still achieve aggregated analyses by setting mutation_types_contexts=`['96', 'DBS', 'ID']` in the `runAnalyses` call as follows: 
+	
+	
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['96','DBS','ID'])`
 
 
 
