@@ -196,8 +196,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 | average probability | 0.75  |
 | num_of_sbs_required | 2000  |
 | num_of_dbs_required | 200  |
-| num_of_id_required | 1000  |
-|mutation_types_contexts| ['96', 'DBS' , 'ID'] |
+| num_of_id_required | 1000  | |
                     
 
 
@@ -207,12 +206,11 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.7,num_of_sbs_required=1500,num_of_dbs_required=200,num_of_id_required=1000)`
 	
-+ By default, SigProfilerTopography sets `mutation_types_contexts` as `['96', 'DBS', 'ID']` for simulations unless you want to set `mutation_types_contexts` as `['192',  'DBS', 'ID']`,`['384', 'DBS', 'ID']`, `['1536', 'DBS', 'ID']`, or `['3072', 'DBS', 'ID']`.
++ By default, SigProfilerTopography appends '96', 'DBS', and 'ID' to  `mutation_types_contexts` if sbs_probabilities, dbs_probabilities,  and  id_probabilities are set respectively, for simulations.
 
-	* e.g.: If you want to simulate SBS using `'192'` context instead of `'96'` context then you have to set `mutation_types_contexts=['192', 'DBS', 'ID']` in the `runAnalyses` call as follows: 
++ If you want to simulate SBS using `'288'` context instead of `'96'` context then you have to set `mutation_types_contexts=['288', 'DBS', 'ID']` in the `runAnalyses` call as follows: 
 	
-
-	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['192', 'DBS', 'ID'])`
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['288', 'DBS', 'ID'])`
 
 
 
