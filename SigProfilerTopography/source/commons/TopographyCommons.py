@@ -2947,7 +2947,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         else:
             #SBS96 has A[C>G]A
             chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[2:5]
-            chr_based_mutation_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
+
+        #write
+        chr_based_mutation_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
     #######################################################################################
 
 ############################################################

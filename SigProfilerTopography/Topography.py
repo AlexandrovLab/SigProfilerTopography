@@ -270,7 +270,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     elif ((mutations_probabilities_file_path is None) or (not (os.path.exists(mutations_probabilities_file_path)))):
 
         #For Information
-        print('There is a situation/problem: mutations_probabilities_file_path:%s does not exist.' %(mutations_probabilities_file_path))
+        print('--- There is a situation/problem: mutations_probabilities_file_path:%s is None or does not exist.' %(mutations_probabilities_file_path))
 
         ############################################################################################
         ##############################  pool.apply_async starts ####################################
@@ -855,6 +855,11 @@ def runAnalyses(genome,
             mutation_types_contexts.append(ID)
         if (dbs_probabilities is not None):
             mutation_types_contexts.append(DBS)
+
+    #If still None
+    if mutation_types_contexts is None:
+        print('--- There is a situation/problem: mutation_types_contexts is None.')
+        print('--- mutation_types_contexts has to be set before SigProfilerTopography run.')
 
     if mutation_types_contexts_for_signature_probabilities is None:
         mutation_types_contexts_for_signature_probabilities=mutation_types_contexts
@@ -1513,8 +1518,9 @@ def runAnalyses(genome,
         # print('Delete Before sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
         all_samples_list = sorted(all_samples_list, key=natural_key)
         # print('Delete After sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
+        print("--- Number of samples: %d" %len(all_samples_list))
+        print("--- Samples: %s" %(all_samples_list))
         all_samples_np_array=np.array(all_samples_list)
-        print("--- Number of samples: %d" %all_samples_np_array.size)
 
         mutationType2PropertiesDict['All']={}
         mutationType2PropertiesDict['All']['number_of_mutations'] = numberofMutations

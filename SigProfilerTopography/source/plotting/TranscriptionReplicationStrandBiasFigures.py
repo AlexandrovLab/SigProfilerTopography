@@ -809,13 +809,13 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     rects3=None
     rects4=None
 
-    rects1 = ax.bar(ind, strand1_values, width=width, color=color1)
-    rects2 = ax.bar(ind + width, strand2_values, width=width, color=color2)
+    rects1 = ax.bar(ind, strand1_values, width=width, edgecolor='black', color=color1)
+    rects2 = ax.bar(ind + width, strand2_values, width=width, edgecolor='black', color=color2)
 
     if ((strand1_simulations_median_values is not None) and strand1_simulations_median_values):
-        rects3 = ax.bar(ind+ 2*width, strand1_simulations_median_values, width=width, color=color1, hatch = '///')
+        rects3 = ax.bar(ind+ 2*width, strand1_simulations_median_values, width=width, edgecolor='black', color=color1, hatch = '///')
     if ((strand2_simulations_median_values is not None) and strand2_simulations_median_values):
-        rects4 = ax.bar(ind +3*width, strand2_simulations_median_values, width=width, color=color2, hatch = '///')
+        rects4 = ax.bar(ind +3*width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///')
 
 
     # add some text for labels, title and axes ticks
