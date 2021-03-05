@@ -206,11 +206,22 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,average_probability=0.7,num_of_sbs_required=1500,num_of_dbs_required=200,num_of_id_required=1000)`
 	
-+ By default, SigProfilerTopography appends '96', 'DBS', and 'ID' to  `mutation_types_contexts` if sbs_probabilities, dbs_probabilities,  and  id_probabilities are set respectively, for simulations.
++ By default, SigProfilerTopography appends `'96'`, `'DBS'`, and `'ID'` to  `mutation_types_contexts` if `sbs_probabilities`, `dbs_probabilities`,  and  `id_probabilities` are set respectively for topography analyses.
 
-+ If you want to simulate SBS using `'288'` context instead of `'96'` context then you have to set `mutation_types_contexts=['288', 'DBS', 'ID']` in the `runAnalyses` call as follows: 
++ If you want to analyse SBS signatures using `'288'` context instead of `'96`' context then you have to set mutation_types_contexts=`['288', 'DBS', 'ID']` in the `runAnalyses` call as follows:
+	
 	
 `>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['288', 'DBS', 'ID'])`
+
++ If you want to analyse only SBS signatures using `'288'` context then you have to set `mutation_types_contexts=['288']` in the `runAnalyses` call as follows: 
+	
+	
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['288'])`
+
++ If you do not have `'sbs_probabilities'`, `'dbs_probabilities'` and `'id_probabilities'` and you can still achieve aggregated analyis by setting mutation_types_contexts=`['96', 'DBS', 'ID']` in the `runAnalyses` call as follows: 
+	
+	
+`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,mutation_types_contexts=['96','DBS','ID'])`
 
 
 
