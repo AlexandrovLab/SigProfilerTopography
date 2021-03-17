@@ -1080,8 +1080,8 @@ def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,d
 
 ########################################################
 #Plot heatmaps
+# Used for after Step2
 # For Step4 and Step5
-# Also used for after Step1 before Step2
 def fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements):
     signatures=[]
     dna_elements=[]
@@ -1410,32 +1410,32 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
         if verbose: print(average_fold_change_array.shape)
 
     #For Rose Jan11 2021 Meeting starts
-    backup_average_fold_change_array=average_fold_change_array.copy()
-
-    for signature_index, signature in enumerate(signatures,0):
-        for dna_element_index, dna_element in enumerate(dna_elements,0):
-            if signature2dna_element2significancedict is not  None:
-                if signature=='ALL SUBSTITUTIONS':
-                    signature=AGGREGATEDSUBSTITUTIONS
-                elif signature=='ALL DINUCLEOTIDES':
-                    signature=AGGREGATEDDINUCS
-                elif signature=='ALL INDELS':
-                    signature=AGGREGATEDINDELS
-                if signature in signature2dna_element2significancedict:
-                    if dna_element not in signature2dna_element2significancedict[signature]:
-                        backup_average_fold_change_array[signature_index, dna_element_index]=1.0
-
-    im, cbar = heatmap(backup_average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+    # backup_average_fold_change_array=average_fold_change_array.copy()
+    #
+    # for signature_index, signature in enumerate(signatures,0):
+    #     for dna_element_index, dna_element in enumerate(dna_elements,0):
+    #         if signature2dna_element2significancedict is not  None:
+    #             if signature=='ALL SUBSTITUTIONS':
+    #                 signature=AGGREGATEDSUBSTITUTIONS
+    #             elif signature=='ALL DINUCLEOTIDES':
+    #                 signature=AGGREGATEDDINUCS
+    #             elif signature=='ALL INDELS':
+    #                 signature=AGGREGATEDINDELS
+    #             if signature in signature2dna_element2significancedict:
+    #                 if dna_element not in signature2dna_element2significancedict[signature]:
+    #                     backup_average_fold_change_array[signature_index, dna_element_index]=1.0
+    #
+    # im, cbar = heatmap(backup_average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
     #For Rose Jan11 2021 Meeting ends
 
     # Blue White Red
     # Uncomment After Rose Jan11 2021 Meeting
-    # im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+    im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
 
     #Put text in each heatmap cell
     for signature_index, signature in enumerate(signatures,0):
         for dna_element_index, dna_element in enumerate(dna_elements,0):
-            if signature2dna_element2significancedict is not  None:
+            if signature2dna_element2significancedict is not None:
                 if signature=='ALL SUBSTITUTIONS':
                     signature=AGGREGATEDSUBSTITUTIONS
                 elif signature=='ALL DINUCLEOTIDES':
@@ -1447,8 +1447,11 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                         text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
                     else:
                         text = ax.text(dna_element_index, signature_index, "%.2f" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
+                else:
+                    text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color="k")
             else:
                 text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color="k")
+
 
     # texts = annotate_heatmap(im, valfmt="{x:.2f} ")
     plt.title(cancer_type, y=1.01)
@@ -1690,6 +1693,8 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                                                                                                          epigenomics_dna_elements)
 
     #Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
+    #Rows biosamples
+    #Columns dna_elements
     plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
                                                              epigenomics_dna_elements,
                                                              jobname,
@@ -1702,7 +1707,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Step3 uses Step1
     # Combine p values using Fisher's method
     # Pool for biosample and epigenomics_dna_elements
-    # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=100 and get Step3
+    # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=num_of_real_data_avg_overlap and get Step3
     step3_combined_p_value_df, step3_signature2dna_element2combined_p_value_list_dict, step3_signature2dna_element2avg_fold_change_dict=step3_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
                           heatmaps_output_dir,
                           combine_p_values_method,
@@ -2058,11 +2063,11 @@ def write_dictionary_as_dataframe_step1_p_value(step1_signature2Biosample2DNAEle
 #Combined p value
 #[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 def write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath):
-    L = sorted([(signature, biosample, dna_element, combined_p_value_list[0], combined_p_value_list[1], combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5])
+    L = sorted([(signature, biosample, dna_element, combined_p_value_list[0], combined_p_value_list[1], combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5], combined_p_value_list[6])
                 for signature, a in signature2biosample2pooled_dna_element2combined_p_value_list_dict.items()
                 for biosample, b in a.items()
                 for dna_element, combined_p_value_list in b.items()])
-    df = pd.DataFrame(L, columns=['signature', 'biosample','dna_element', 'avg_real_signal_list','avg_sim_signal_list','fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value'])
+    df = pd.DataFrame(L, columns=['signature', 'biosample','dna_element', 'dna_element_long_list' ,'avg_real_signal_list','avg_sim_signal_list','fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
@@ -2073,10 +2078,10 @@ def write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2poo
 #Combined p value
 #[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 def write_dictionary_as_dataframe_step3_combined_p_value(step2_signature2dna_element2combined_p_value_list_dict,filepath):
-    L = sorted([(signature, dna_element, combined_p_value_list[0], combined_p_value_list[1],combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5])
+    L = sorted([(signature, dna_element, combined_p_value_list[0], combined_p_value_list[1],combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5],combined_p_value_list[6])
                 for signature, a in step2_signature2dna_element2combined_p_value_list_dict.items()
                   for dna_element, combined_p_value_list in a.items()])
-    df = pd.DataFrame(L, columns=['signature', 'dna_element', 'avg_real_signal_list', 'avg_sim_signal_list', 'fold_change_list', 'avg_fold_change' , 'p_value_list', 'combined_p_value'])
+    df = pd.DataFrame(L, columns=['signature', 'dna_element', 'dna_element_long_list', 'avg_real_signal_list', 'avg_sim_signal_list', 'fold_change_list', 'avg_fold_change' , 'p_value_list', 'combined_p_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
@@ -2087,11 +2092,11 @@ def write_dictionary_as_dataframe_step3_combined_p_value(step2_signature2dna_ele
 # Q Value List
 #[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
 def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_value_list_dict,filepath):
-    L = sorted([(signature, dna_element, q_value_list[0], q_value_list[1], q_value_list[2], q_value_list[3], q_value_list[4], q_value_list[5], q_value_list[6])
+    L = sorted([(signature, dna_element, q_value_list[0], q_value_list[1], q_value_list[2], q_value_list[3], q_value_list[4], q_value_list[5], q_value_list[6], q_value_list[7])
                 for signature, a in step3_signature2dna_element2q_value_list_dict.items()
                   for dna_element, q_value_list in a.items()])
     df = pd.DataFrame(L, columns=['signature', 'dna_element',
-                                  'avg_real_signal_list', 'avg_sim_signal_list', 'fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','q_value'])
+                                  'dna_element_long_list', 'avg_real_signal_list', 'avg_sim_signal_list', 'fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','q_value'])
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
@@ -2101,11 +2106,11 @@ def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_va
 ########################################################
 #[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value,q_value]
 def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_element2filtered_q_list_dict,filepath):
-    L = sorted([(signature, dna_element, filtered_q_value_list[0], filtered_q_value_list[1], filtered_q_value_list[2], filtered_q_value_list[3], filtered_q_value_list[4], filtered_q_value_list[5], filtered_q_value_list[6])
+    L = sorted([(signature, dna_element, filtered_q_value_list[0], filtered_q_value_list[1], filtered_q_value_list[2], filtered_q_value_list[3], filtered_q_value_list[4], filtered_q_value_list[5], filtered_q_value_list[6], filtered_q_value_list[7])
                 for signature, a in step4_signature2dna_element2filtered_q_list_dict.items()
                   for dna_element, filtered_q_value_list in a.items()])
     df = pd.DataFrame(L, columns=['signature', 'dna_element',
-                                  'avg_real_signal_list','avg_sim_signal_list','fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','filtered_q_value'])
+                                  'dna_element_long_list','avg_real_signal_list','avg_sim_signal_list','fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','filtered_q_value'])
 
     df=df[df['filtered_q_value']<=significance_level]
 
@@ -2259,23 +2264,26 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                     if signature in signature2biosample2pooled_dna_element2combined_p_value_list_dict:
                         if biosample in signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature]:
                             if dna_element in signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample]:
+
+                                #Add dna_element_long to the list
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][0].append(dna_element_long)
                                 #Add avg_real_signal to the list
-                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][0].append(avg_real_signal)
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][1].append(avg_real_signal)
                                 # Add avg_sim_signal to the list
-                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][1].append(avg_sim_signal)
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][2].append(avg_sim_signal)
                                 #Add to the fold change list
-                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][2].append(fold_change)
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][3].append(fold_change)
                                 #Add to the p value list
-                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][3].append(p_value)
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][4].append(p_value)
                             else:
-                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element]=[[avg_real_signal], [avg_sim_signal],[fold_change],[p_value]]
+                                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element]=[[dna_element_long], [avg_real_signal], [avg_sim_signal],[fold_change],[p_value]]
                         else:
                             signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample] = {}
-                            signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element] = [[avg_real_signal], [avg_sim_signal],[fold_change], [p_value]]
+                            signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element] = [[dna_element_long], [avg_real_signal], [avg_sim_signal],[fold_change], [p_value]]
                     else:
                         signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature] = {}
                         signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample] = {}
-                        signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element] = [[avg_real_signal], [avg_sim_signal], [fold_change], [p_value]]
+                        signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element] = [[dna_element_long], [avg_real_signal], [avg_sim_signal], [fold_change], [p_value]]
     ############################################################################
 
     ############################################################################
@@ -2283,10 +2291,11 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
         for biosample in signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature]:
             for dna_element in signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample]:
 
-                avg_real_signal_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][0]
-                avg_sim_signal_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][1]
-                fold_change_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][2]
-                p_value_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][3]
+                dna_element_long_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][0]
+                avg_real_signal_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][1]
+                avg_sim_signal_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][2]
+                fold_change_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][3]
+                p_value_list=signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element][4]
 
                 avg_fold_change= np.nanmean(fold_change_list)
                 p_values_array=np.asarray(p_value_list)
@@ -2298,7 +2307,13 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                     if len(p_value_list)>0:
                         combined_p_value=p_value_list[0]
 
-                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element]=[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
+                signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature][biosample][dna_element]=[dna_element_long_list,
+                                                                                                                      avg_real_signal_list,
+                                                                                                                      avg_sim_signal_list,
+                                                                                                                      fold_change_list,
+                                                                                                                      avg_fold_change,
+                                                                                                                      p_value_list,
+                                                                                                                      combined_p_value]
 
                 if signature in signature2biosample2pooled_dna_element2avg_fold_change_dict:
                     if biosample in signature2biosample2pooled_dna_element2avg_fold_change_dict[signature]:
@@ -2377,29 +2392,32 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 
                     if signature in signature2dna_element2combined_p_value_list_dict:
                         if dna_element in signature2dna_element2combined_p_value_list_dict[signature]:
+                            #Add dna_element_long
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][0].append(dna_element_long)
                             #Add to avg_real_signal_list
-                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][0].append(avg_real_signal)
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][1].append(avg_real_signal)
                             #Add to avg_sim_signal_list
-                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][1].append(avg_sim_signal)
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][2].append(avg_sim_signal)
                             #Add to the fold change list
-                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][2].append(fold_change)
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][3].append(fold_change)
                             #Add to the p value list
-                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][3].append(p_value)
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element][4].append(p_value)
                         else:
-                            signature2dna_element2combined_p_value_list_dict[signature][dna_element]=[[avg_real_signal], [avg_sim_signal],[fold_change],[p_value]]
+                            signature2dna_element2combined_p_value_list_dict[signature][dna_element]=[[dna_element_long], [avg_real_signal], [avg_sim_signal],[fold_change],[p_value]]
                     else:
                         signature2dna_element2combined_p_value_list_dict[signature] = {}
-                        signature2dna_element2combined_p_value_list_dict[signature][dna_element] = [[avg_real_signal], [avg_sim_signal], [fold_change], [p_value]]
+                        signature2dna_element2combined_p_value_list_dict[signature][dna_element] = [[dna_element_long],[avg_real_signal], [avg_sim_signal], [fold_change], [p_value]]
     ############################################################################
 
     ############################################################################
     for signature in signature2dna_element2combined_p_value_list_dict:
         for dna_element in signature2dna_element2combined_p_value_list_dict[signature]:
 
-            avg_real_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][0]
-            avg_sim_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][1]
-            fold_change_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][2]
-            p_value_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][3]
+            dna_element_long_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][0]
+            avg_real_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][1]
+            avg_sim_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][2]
+            fold_change_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][3]
+            p_value_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][4]
 
             avg_fold_change= np.nanmean(fold_change_list)
             p_values_array=np.asarray(p_value_list)
@@ -2411,7 +2429,7 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                 if len(p_value_list)>0:
                     combined_p_value=p_value_list[0]
 
-            signature2dna_element2combined_p_value_list_dict[signature][dna_element]=[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
+            signature2dna_element2combined_p_value_list_dict[signature][dna_element]=[dna_element_long_list, avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 
             if signature in signature2dna_element2avg_fold_change_dict:
                 if dna_element in signature2dna_element2avg_fold_change_dict[signature]:
@@ -2435,7 +2453,7 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 ########################################################
 
 ########################################################
-#[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
+#[dna_element_long_list, avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
 def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir):
     signature2dna_element2q_value_list_dict={}
 
@@ -2445,7 +2463,7 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
 
     for signature in signature2dna_element2combined_p_value_list_dict:
         for dna_element in signature2dna_element2combined_p_value_list_dict[signature]:
-            combined_p_value = signature2dna_element2combined_p_value_list_dict[signature][dna_element][5]
+            combined_p_value = signature2dna_element2combined_p_value_list_dict[signature][dna_element][6]
             if (combined_p_value is not None) and (not np.isnan(np.array([combined_p_value], dtype=np.float)).any()) and (str(combined_p_value)!='nan'):
                 element_name = (signature, dna_element)
                 all_p_values.append(combined_p_value)
@@ -2471,22 +2489,23 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
         q_value=all_FDR_BH_adjusted_p_values[element_index]
 
         # combined_p_value_list
-        # [avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
-        avg_real_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][0]
-        avg_sim_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][1]
-        fold_change_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][2]
-        avg_fold_change=signature2dna_element2combined_p_value_list_dict[signature][dna_element][3]
-        p_value_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][4]
-        combined_p_value=signature2dna_element2combined_p_value_list_dict[signature][dna_element][5]
+        # [dna_element_long_list,avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
+        dna_element_long_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][0]
+        avg_real_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][1]
+        avg_sim_signal_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][2]
+        fold_change_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][3]
+        avg_fold_change=signature2dna_element2combined_p_value_list_dict[signature][dna_element][4]
+        p_value_list=signature2dna_element2combined_p_value_list_dict[signature][dna_element][5]
+        combined_p_value=signature2dna_element2combined_p_value_list_dict[signature][dna_element][6]
 
         if signature in signature2dna_element2q_value_list_dict:
             if dna_element in signature2dna_element2q_value_list_dict[signature]:
                 print('There is a situation')
             else:
-                signature2dna_element2q_value_list_dict[signature][dna_element]=[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value,q_value]
+                signature2dna_element2q_value_list_dict[signature][dna_element]=[dna_element_long_list,avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value,q_value]
         else:
             signature2dna_element2q_value_list_dict[signature] = {}
-            signature2dna_element2q_value_list_dict[signature][dna_element] = [avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value,q_value]
+            signature2dna_element2q_value_list_dict[signature][dna_element] = [dna_element_long_list,avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value,q_value]
 
     ########################################################
     # Write dictionary as a dataframe
@@ -2510,13 +2529,14 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
         for dna_element in signature2dna_element2q_value_list_dict[signature]:
             q_value_list=signature2dna_element2q_value_list_dict[signature][dna_element]
 
-            avg_real_signal_list=q_value_list[0]
-            avg_sim_signal_list=q_value_list[1]
-            fold_change_list=q_value_list[2]
-            avg_fold_change=q_value_list[3]
-            p_value_list=q_value_list[4]
-            combined_p_value=q_value_list[5]
-            q_value=q_value_list[6]
+            dna_element_long_list=q_value_list[0]
+            avg_real_signal_list=q_value_list[1]
+            avg_sim_signal_list=q_value_list[2]
+            fold_change_list=q_value_list[3]
+            avg_fold_change=q_value_list[4]
+            p_value_list=q_value_list[5]
+            combined_p_value=q_value_list[6]
+            q_value=q_value_list[7]
 
             #Filter here
             # if (q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change)):
@@ -2536,11 +2556,11 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
                     if dna_element in signature2dna_element2filtered_q_list_dict[signature]:
                         print('There is a problem')
                     else:
-                        signature2dna_element2filtered_q_list_dict[signature][dna_element]=[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value, q_value]
+                        signature2dna_element2filtered_q_list_dict[signature][dna_element]=[dna_element_long_list,avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value, q_value]
                         signature2dna_element2average_fold_changedict[signature][dna_element]=avg_fold_change
             else:
                 signature2dna_element2filtered_q_list_dict[signature] = {}
-                signature2dna_element2filtered_q_list_dict[signature][dna_element] = [avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value, q_value]
+                signature2dna_element2filtered_q_list_dict[signature][dna_element] = [dna_element_long_list,avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value, q_value]
                 signature2dna_element2average_fold_changedict[signature] = {}
                 signature2dna_element2average_fold_changedict[signature][dna_element] = avg_fold_change
     ############################################################################

@@ -101,10 +101,16 @@ def writeChrBasedOccupancySignalArray(inputList):
 
     filenameWoExtension = os.path.splitext(os.path.basename(file_name_with_path))[0]
 
-    if (np.finfo(np.float16).min<=min_signal) and (max_signal<=np.finfo(np.float16).max):
-        signalArray = np.zeros(chromSize, dtype=np.float16)
-    else:
-        signalArray = np.zeros(chromSize,dtype=np.float32)
+    # if (np.finfo(np.float16).min<=min_signal) and (max_signal<=np.finfo(np.float16).max):
+    #     print("Signal array dtype is set as np.float16")
+    #     signalArray = np.zeros(chromSize, dtype=np.float16)
+    # else:
+    #     print("Signal array dtype is set as np.float32")
+    #     signalArray = np.zeros(chromSize,dtype=np.float32)
+
+    #To avoid overflow
+    # print("Signal array dtype is set as np.float32")
+    signalArray = np.zeros(chromSize,dtype=np.float32)
 
     # Using apply
     # chrBasedFileDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
@@ -500,11 +506,15 @@ def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, 
 
         max_signal = data_df[SIGNAL].max()
         min_signal = data_df[SIGNAL].min()
-        mean_signal = data_df[SIGNAL].mean()
+        mean_skipna_True_signal = data_df[SIGNAL].mean(skipna=True)
+        mean_skipna_False_signal = data_df[SIGNAL].mean(skipna=False)
         std_signal = data_df[SIGNAL].std()
+
+        print('\nfile_df.shape:(%d,%d)' % (data_df.shape[0], data_df.shape[1]))
         print('Max Signal: %f' % max_signal)
         print('Min Signal: %f' % min_signal)
-        print('Mean Signal: %f' % mean_signal)
+        print('Mean Signal skipna=True: %f' % mean_skipna_True_signal)
+        print('Mean Signal skipna=False: %f' % mean_skipna_False_signal)
         print('Std Signal: %f' % std_signal)
 
         if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data_df)))
@@ -655,7 +665,12 @@ def readFileInBEDFormat(file_with_path,discard_signal):
             print('There is no enough columns in this bed file')
         elif (ncols==4):
             print('SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header')
-            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 3],names = [CHROM,START,END,SIGNAL],dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},sep='\t')
+            file_df=pd.read_csv(file_with_path,
+                                header=None,
+                                usecols=[0, 1, 2, 3],
+                                names = [CHROM,START,END,SIGNAL],
+                                dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},
+                                sep='\t')
 
         elif ((ncols==10) or (ncols==9)):
             # ENCODE narrowpeak BED6+4 ncols=10
@@ -697,12 +712,17 @@ def readFileInBEDFormat(file_with_path,discard_signal):
         if SIGNAL in file_df.columns.values:
             max_signal=file_df[SIGNAL].max()
             min_signal=file_df[SIGNAL].min()
-            mean_signal=file_df[SIGNAL].mean()
+            mean_skipna_True_signal=file_df[SIGNAL].mean(skipna=True)
+            mean_skipna_False_signal=file_df[SIGNAL].mean(skipna=False)
             std_signal=file_df[SIGNAL].std()
+
             print('Max Signal: %f' %max_signal)
             print('Min Signal: %f' %min_signal)
-            print('Mean Signal: %f' % mean_signal)
-            print('Std Signal: %f' % std_signal)
+            print('Mean Signal skipna=True: %f' %mean_skipna_True_signal)
+            print('Mean Signal skipna=False: %f' %mean_skipna_False_signal)
+            print('Std Signal: %f' %std_signal)
+            print('file_df[SIGNAL].isnull().sum():%d' %file_df[SIGNAL].isnull().sum())
+
             return file_df, max_signal, min_signal
         else:
             return file_df

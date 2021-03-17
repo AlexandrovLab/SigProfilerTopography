@@ -1053,28 +1053,30 @@ def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,
         atac_seq_filename_wo_extension = os.path.splitext(os.path.basename(atac_seq_file))[0]
 
         for chrLong in chromNamesList:
-            # GM12878 and K562 comes from woman samples therefore there is no chrY
-            if chrLong != 'chrY':
-                # filename = '%s_signal_wgEncodeSydhNsome%sSig.npy' %(chrLong,cell_line)
-                filename = '%s_signal_%s.npy' % (chrLong, atac_seq_filename_wo_extension)
+            filename = '%s_signal_%s.npy' % (chrLong, atac_seq_filename_wo_extension)
 
-                chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
-                if not os.path.exists(chrbased_npy_array_path):
-                    print('Does not exists: %s' % (chrbased_npy_array_path))
-                    try:
-                        # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
-                        print('Downloading %s_signal_%s.npy under %s' % (
-                        chrLong, atac_seq_filename_wo_extension, chrbased_npy_array_path))
+            chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
+            if not os.path.exists(chrbased_npy_array_path):
+                print('Does not exists: %s' % (chrbased_npy_array_path))
+                try:
+                    print('Downloading %s under %s' % (filename, chrbased_npy_array_path))
 
-                        # wget -c Continue getting a partially-downloaded file
-                        # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                        # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                        cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                        # print(cmd)
-                        os.system(cmd)
-                    except:
-                        # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
-                        print("The UCSD ftp site is not responding...")
+                    # wget -c Continue getting a partially-downloaded file
+                    # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                    # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+
+                    # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
+                    # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
+                    # -c option to resume a download
+                    # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
+                    # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
+                    # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
+                    cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/epigenomics/chrbased/' + filename + "'"
+                    print("cmd: %s" %cmd)
+                    os.system(cmd)
+                except:
+                    # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                    print("The UCSD ftp site is not responding...")
 
     else:
         #It has to be an absolute path
@@ -1125,7 +1127,6 @@ def occupancyAnalysis(genome,
     #By the way pyBigWig can be imported in unix, linux like os not available in windows
     #Using HM and CTCF bed files preparing chr based signal array runtime
     #Using ATAC-seq wig files preparing chr based signal array runtime
-
 
     ##########################################################################
     # If chunksize is 1, maxtasksperchild=x will call the function x times in each process,

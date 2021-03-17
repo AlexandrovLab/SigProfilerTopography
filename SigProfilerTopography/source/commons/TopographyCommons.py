@@ -151,17 +151,28 @@ GM12801='GM12801'
 GM12812='GM12812'
 GM12813='GM12813'
 
-#Epigenomics File
-DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_H3K27me3_breast_epithelium.bed'
-DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_H3K36me3_breast_epithelium.bed'
-DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_H3K9me3_breast_epithelium.bed'
-DEFAULT_H3K27AC_OCCUPANCY_FILE = 'ENCFF154XFN_H3K27ac_breast_epithelium.bed'
-DEFAULT_H3K4ME1_OCCUPANCY_FILE = 'ENCFF336DDM_H3K4me1_breast_epithelium.bed'
-DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_H3K4me3_breast_epithelium.bed'
+MEF="MEF"
+
+#Epigenomics File for GRCh37
+DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_breast_epithelium_H3K27me3.bed'
+DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_breast_epithelium_H3K36me3.bed'
+DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_breast_epithelium_H3K9me3.bed'
+DEFAULT_H3K27AC_OCCUPANCY_FILE = 'ENCFF154XFN_breast_epithelium_H3K27ac.bed'
+DEFAULT_H3K4ME1_OCCUPANCY_FILE = 'ENCFF336DDM_breast_epithelium_H3K4me1.bed'
+DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_breast_epithelium_H3K4me3.bed'
 DEFAULT_CTCF_OCCUPANCY_FILE = 'ENCFF782GCQ_breast_epithelium_Normal_CTCF-human.bed'
 DEFAULT_ATAC_SEQ_OCCUPANCY_FILE = 'ENCFF035ICJ_breast_epithelium_Normal_ATAC-seq.wig'
 
+#Epigenomics File for mm10
+ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq="ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq.wig"
+ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1="ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1.bed"
+ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3="ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3.bed"
+ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF="ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF.bed"
+ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A="ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A.bed"
+ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac="ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac.bed"
+
 #NUCLEOSOME OCCUPANCY FILES
+MM10_MEF_NUCLEOSOME_FILE='Mus_musculus.mmNuc0030101.nucleosome.shift.bw'
 GM12878_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
 K562_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeK562Sig.bigWig'
 
@@ -228,8 +239,10 @@ GM12813_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1.
 GM12813_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813ValleysRep1.bed'
 GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
 
+MEF_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JVQ_mm10_embryonic_fibroblast_wavelet_smoothed_signal.wig'
 
-available_nucleosome_biosamples=[GM12878,K562]
+
+available_nucleosome_biosamples=[GM12878,K562,MEF]
 available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
 
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
@@ -263,7 +276,6 @@ EXCEL_FILES='excel_files'
 NUCLEOSOME_DNA_ELEMENT='Nucleosome'
 ATAC_DNA_ELEMENT='ATAC'
 ###################################################################################################
-
 
 ###################################################################################################
 #Tables
@@ -793,6 +805,8 @@ def getNucleosomeFile(nucleosome_biosample):
     nucleosome_file=None
 
     if (nucleosome_biosample is not None):
+        if (nucleosome_biosample==MEF):
+            nucleosome_file=MM10_MEF_NUCLEOSOME_FILE
         if (nucleosome_biosample==GM12878):
             nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
         elif (nucleosome_biosample==K562):
@@ -808,7 +822,9 @@ def getReplicationTimeFiles(replication_time_biosample):
     replication_time_peak_file=None
 
     if replication_time_biosample is not None:
-        if (replication_time_biosample==GM12878):
+        if (replication_time_biosample==MEF):
+            replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,MEF_REPLICATION_TIME_SIGNAL_FILE)
+        elif (replication_time_biosample==GM12878):
             replication_time_signal_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB, REPLICATION,GM12878_REPLICATION_TIME_PEAK_FILE)
@@ -2849,7 +2865,10 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 
 
         ############################################################################
-        merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION],right_on=[SAMPLE, MUTATION])
+        if SAMPLE not in mutations_probabilities_df.columns.values:
+            merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[MUTATION],right_on=[MUTATION])
+        else:
+            merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION])
         ############################################################################
 
         if ((merged_df is not None) and (chr_based_mutation_df.shape[0]!=merged_df.shape[0])):
@@ -2972,6 +2991,9 @@ def readProbabilities(probabilitiesFile,verbose):
     if ('Sample Names' in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
         probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={'Sample Names': 'category', 'MutationTypes': 'category'})
         probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
+    elif ('Sample Names' not in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={'MutationTypes': 'category'})
+        probabilities_df.rename(columns={'MutationTypes': MUTATION}, inplace=True)
     else:
         probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={SAMPLE: 'category', MUTATION: 'category'})
 

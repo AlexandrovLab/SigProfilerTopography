@@ -46,6 +46,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import K562
 from SigProfilerTopography.source.commons.TopographyCommons import MCF7
+from SigProfilerTopography.source.commons.TopographyCommons import MEF
+
+from SigProfilerTopography.source.commons.TopographyCommons import MM10
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
 
 from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 
@@ -73,6 +77,13 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4M
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME3_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac
 
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
@@ -107,7 +118,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import SNV
 
 from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
 from SigProfilerTopography.source.commons.TopographyCommons import LIB
-
 
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
@@ -775,7 +785,7 @@ def runAnalyses(genome,
                 id_probabilities= None,
                 mutation_types_contexts=None,
                 mutation_types_contexts_for_signature_probabilities=None,
-                epigenomics_files=[DEFAULT_H3K27ME3_OCCUPANCY_FILE,DEFAULT_H3K36ME3_OCCUPANCY_FILE,DEFAULT_H3K9ME3_OCCUPANCY_FILE,DEFAULT_H3K27AC_OCCUPANCY_FILE,DEFAULT_H3K4ME1_OCCUPANCY_FILE,DEFAULT_H3K4ME3_OCCUPANCY_FILE,DEFAULT_CTCF_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE],
+                epigenomics_files=None,
                 epigenomics_files_memos=None,
                 epigenomics_biosamples=None,
                 epigenomics_dna_elements=None,
@@ -904,27 +914,19 @@ def runAnalyses(genome,
 
     ###############################################
     # We need full path of the library files
-    default_epigenomics_files = [DEFAULT_H3K27ME3_OCCUPANCY_FILE,
-                                 DEFAULT_H3K36ME3_OCCUPANCY_FILE,
-                                 DEFAULT_H3K9ME3_OCCUPANCY_FILE,
-                                 DEFAULT_H3K27AC_OCCUPANCY_FILE,
-                                 DEFAULT_H3K4ME1_OCCUPANCY_FILE,
-                                 DEFAULT_H3K4ME3_OCCUPANCY_FILE,
-                                 DEFAULT_CTCF_OCCUPANCY_FILE,
-                                 DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
+    if (genome==GRCh37) and (epigenomics_files==None):
+        epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
+                            DEFAULT_H3K27ME3_OCCUPANCY_FILE,
+                            DEFAULT_H3K36ME3_OCCUPANCY_FILE,
+                            DEFAULT_H3K9ME3_OCCUPANCY_FILE,
+                            DEFAULT_H3K27AC_OCCUPANCY_FILE,
+                            DEFAULT_H3K4ME1_OCCUPANCY_FILE,
+                            DEFAULT_H3K4ME3_OCCUPANCY_FILE,
+                            DEFAULT_CTCF_OCCUPANCY_FILE]
 
-    if (set(epigenomics_files) == set(default_epigenomics_files)):
-        # Set default
-        # Order in default_epigenomics_files and epigenomics_files_memos must match
-        epigenomics_files = default_epigenomics_files
-        epigenomics_files_memos = [os.path.splitext(os.path.basename(DEFAULT_H3K27ME3_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_H3K36ME3_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_H3K9ME3_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_H3K27AC_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_H3K4ME1_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_H3K4ME3_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_CTCF_OCCUPANCY_FILE))[0],
-                                   os.path.splitext(os.path.basename(DEFAULT_ATAC_SEQ_OCCUPANCY_FILE))[0]]
+        epigenomics_files_memos=[]
+        for epigenomics_file in epigenomics_files:
+            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
 
         # Defines columns in the heatmap
         # These strings must be within filenames (without file extension)
@@ -938,54 +940,112 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+
+    elif (genome==MM10) and (epigenomics_files==None):
+        epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
+                            ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1,
+                            ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3,
+                            ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF,
+                            ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A,
+                            ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac]
+
+        epigenomics_files_memos = []
+        for epigenomics_file in epigenomics_files:
+            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
+
+        # Defines columns in the heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_dna_elements = ['ATAC','H3K4me1', 'H3K4me3', 'CTCF', 'POLR2A', 'H3K27ac']
+
+        # Defines rows in the detailed heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_biosamples = ['embryonic_fibroblast']
+
+        for file_index, filename in enumerate(epigenomics_files):
+            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
     ###############################################
 
     ###############################################
-    #Case1: File is not set, Biosample is not set
-    if (nucleosome_file is None) and (nucleosome_biosample is None):
-        nucleosome_biosample = K562
-        nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-        if nucleosome:
-            check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
-
-    #Case2: File is not set, Biosample is set
-    elif (nucleosome_file is None) and (nucleosome_biosample is not None):
-        if (nucleosome_biosample in available_nucleosome_biosamples):
-            #Sets the filename without the full path
+    if genome==MM10:
+        #Case1: File is not set, Biosample is not set
+        if (nucleosome_file is None) and (nucleosome_biosample is None):
+            nucleosome_biosample = MEF
             nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-            if (nucleosome):
+            if nucleosome:
                 check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
-    #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
-    elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
-        # We expect that user has provided nucleosome file with full path
-        nucleosome_biosample = UNDECLARED
-    #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-    #Do nothing use as it is
+
+        #Case2: File is not set, Biosample is set
+        elif (nucleosome_file is None) and (nucleosome_biosample is not None):
+            if (nucleosome_biosample in available_nucleosome_biosamples):
+                #Sets the filename without the full path
+                nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+                if (nucleosome):
+                    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
+            # We expect that user has provided nucleosome file with full path
+            nucleosome_biosample = UNDECLARED
+        #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+        #Do nothing use as it is
+
+    elif genome==GRCh37:
+        #Case1: File is not set, Biosample is not set
+        if (nucleosome_file is None) and (nucleosome_biosample is None):
+            nucleosome_biosample = K562
+            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+            if nucleosome:
+                check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+        #Case2: File is not set, Biosample is set
+        elif (nucleosome_file is None) and (nucleosome_biosample is not None):
+            if (nucleosome_biosample in available_nucleosome_biosamples):
+                #Sets the filename without the full path
+                nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+                if (nucleosome):
+                    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
+            # We expect that user has provided nucleosome file with full path
+            nucleosome_biosample = UNDECLARED
+        #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+        #Do nothing use as it is
     ###############################################
 
     ###############################################
-    #We need full path of the library files
-    #By default replication_time_biosample=MCF7 and signal, valley, peak files are None
-    #Case1: Files are not set, Biosample is not set
-    if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
-        replication_time_biosample=MCF7
-        replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
-        if (replication_time or replication_strand_bias):
-            # For using SigProfilerTopography Provided Replication Time Files
-            check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+    if genome==MM10:
+        # Case1: Files are not set, Biosample is not set
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+            replication_time_biosample=MEF
+            #We only set replication_time_signal_file
+            # replication_time_valley_file is None
+            # replication_time_peak_file is None
+            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
 
-    #Case2: Files are not set, Biosample is set
-    elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
-        if (replication_time_biosample in available_replication_time_biosamples):
-            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample)
+    elif genome==GRCh37:
+        # We need full path of the library files
+        # By default replication_time_biosample=MCF7 and signal, valley, peak files are None
+        # Case1: Files are not set, Biosample is not set
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+            replication_time_biosample=MCF7
+            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
 
-    #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
-    elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
-        replication_time_biosample = UNDECLARED
-    #Case4: Files are set. Biosample is set. Use as it is. Do nothing.
+        #Case2: Files are not set, Biosample is set
+        elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
+            if (replication_time_biosample in available_replication_time_biosamples):
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample)
+                if (replication_time or replication_strand_bias):
+                    # For using SigProfilerTopography Provided Replication Time Files
+                    check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+
+        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
+            replication_time_biosample = UNDECLARED
+        #Case4: Files are set. Biosample is set. Use as it is. Do nothing.
     ###############################################
 
     ###############################################
@@ -1603,7 +1663,6 @@ def runAnalyses(genome,
     ###################################################################################################################
     ################################################# All Steps ends ##################################################
     ###################################################################################################################
-
 
     ####################################################################################################################
     #Fill ordered_signatures and ordered_signatures_cutoffs arrays
