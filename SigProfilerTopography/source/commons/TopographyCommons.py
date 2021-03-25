@@ -1095,7 +1095,7 @@ def writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2Properties
     signature_cutoff_numberofmutations_averageprobability = open(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), 'w')
 
     # header line
-    signature_cutoff_numberofmutations_averageprobability.write('cancer_type\tsignature\tcutoff\tnumber_of_mutations\taverage_probability\n')
+    signature_cutoff_numberofmutations_averageprobability.write('cancer_type\tsignature\tcutoff\tnumber_of_mutations\taverage_probability\tsamples_list\n')
 
     sorted_signatures=sorted(signature2PropertiesListDict.keys(), key=natural_key)
     for signature in sorted_signatures:
@@ -1103,7 +1103,9 @@ def writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2Properties
         cutoff=cutoff_numbeofmutations_averageprobability[0]
         number_of_mutations = cutoff_numbeofmutations_averageprobability[1]
         average_probability = cutoff_numbeofmutations_averageprobability[2]
-        signature_cutoff_numberofmutations_averageprobability.write('%s\t%s\t%s\t%s\t%s\n' %(jobname,signature,cutoff,number_of_mutations,average_probability))
+        samples_list = sorted(cutoff_numbeofmutations_averageprobability[3], key=natural_key)
+
+        signature_cutoff_numberofmutations_averageprobability.write('%s\t%s\t%s\t%s\t%s\t%s\n' %(jobname,signature,cutoff,number_of_mutations,average_probability,samples_list))
 
     signature_cutoff_numberofmutations_averageprobability.close()
 ##################################################################
@@ -1163,8 +1165,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                   num_of_id_required,
                                                   num_of_dbs_required,
                                                   mutationType2PropertiesDict,
-                                                  chrLong2NumberofMutationsDict,
-                                                  cutoff_type):
+                                                  chrLong2NumberofMutationsDict):
 
     #Filled in the first part
     #PropertiesList consists of[sum_of_number of mutations, sum of probabilities]
@@ -1212,6 +1213,9 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                 for signature in signatures:
                     # chrBased_mutation_df[signature]=chrBased_mutation_df[signature].astype(np.float64)
                     number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])
+                    # Samples having mutations with prob ge cutoff for given cutoff and signature
+                    samples_array=chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)]['Sample'].unique()
+
                     # This results in infinity
                     # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
                     sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature]).values,dtype=np.float64)
@@ -1221,23 +1225,30 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                         cutoff2Signature2PropertiesListDict[cutoff][signature]=[]
                         cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
                         cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(samples_array.tolist())
                         cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
                         cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
                     elif signature not in cutoff2Signature2PropertiesListDict[cutoff]:
                         cutoff2Signature2PropertiesListDict[cutoff][signature]=[]
                         cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
                         cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(samples_array.tolist())
                         cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
                         cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
                     else:
                         cutoff2Signature2PropertiesListDict[cutoff][signature][0]+=number_of_mutations
                         cutoff2Signature2PropertiesListDict[cutoff][signature][1]+=sum_of_probabilities
+                        existing_samples_list = cutoff2Signature2PropertiesListDict[cutoff][signature][2]
+                        #Update existing_samples with new samples
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][2]=list(set(existing_samples_list).union(set(samples_array)))
         #First part ends
         #Accumulation ended for each chromosome
 
 
     #Second part starts
-    #Second find average probability
+    #Second: Find average probability
+    # Fill another dictionary: cutoff2Signature2NumberofMutationsAverageProbabilityListDict
+    # In fact, in this part, we can fill a dataframe
     for cutoff in cutoff2Signature2PropertiesListDict:
         for signature in cutoff2Signature2PropertiesListDict[cutoff]:
             if (cutoff2Signature2PropertiesListDict[cutoff][signature][0]>0):
@@ -1246,14 +1257,17 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
                 elif signature not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
                 else:
                     print('There is a situation in fillCutoff2Signature2PropertiesListDictionary method.')
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
     #Second part ends
 
 
@@ -1272,67 +1286,49 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
         table_signature_cutoff_numberofmutations_averageprobability_filename=Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 
-    ####################################################################
-    writeAllCutoffs(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename)
-    ####################################################################
-
     #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=required_probability
     sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
     for cutoff in sorted_cutoffs:
         for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
             if signature not in signature2PropertiesListDict:
                 if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]>=number_of_required_mutations) and (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]>=average_probability):
-                    signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
+                    signature2PropertiesListDict[signature]=[cutoff,
+                                                             np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),
+                                                             np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]),
+                                                             cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][2]]
     #Third part ends
 
-
-    ####################################################################
-    #Update signature2PropertiesListDict with signatures not satisfying our constraints
-    #There are two options
-    if cutoff_type==RELAXED:
-        #Option1: Use the lowest existing cutoff with the highest number of mutations
-        # sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
-        # for cutoff in sorted_cutoffs:
-        #     for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
-        #         if signature not in signature2PropertiesListDict:
-        #             signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
-
-        #Option2: Use the highest existing cutoff with the required number of mutations
-        sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys(),reverse=True)
-        if (len(sorted_cutoffs)>0):
-            min_cutoff=sorted_cutoffs[-1]
-            signatures=cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff].keys()
-
-            for signature in signatures:
-                if signature not in signature2PropertiesListDict:
-                    for cutoff in sorted_cutoffs:
-                        if (cutoff in cutoff2Signature2NumberofMutationsAverageProbabilityListDict) and (signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]):
-                            if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]>=number_of_required_mutations):
-                                signature2PropertiesListDict[signature]=[cutoff,np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1])]
-                                break
-                #If not found apply option1
-                if signature not in signature2PropertiesListDict:
-                    signature2PropertiesListDict[signature] = [min_cutoff, np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][0]),np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[min_cutoff][signature][1])]
-    ####################################################################
 
     #Write the dictionaries
     os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
 
     ####################################################################
-    writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename)
+    # Jobname is added here as the first column
+    # AverageProbabilityList contains  number_of_mutations average_probability samples_list
+    # Let's not write the samples_list to avoid repetions
+    writeAllCutoffs(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename)
     ####################################################################
 
+
+    ####################################################################
+    # Jobname is added here as the first column
+    # Write Decided Cutoffs with satisfying samples list
+    writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename)
+    ####################################################################
 
     ####################################################################
     L = sorted([(signature, cutoff_numberofmutations_averageprobability[0],cutoff_numberofmutations_averageprobability[1],cutoff_numberofmutations_averageprobability[2])
                  for signature, cutoff_numberofmutations_averageprobability in signature2PropertiesListDict.items()])
 
-    signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(L,columns=['signature','cutoff', 'number_of_mutations','average_probability'])
-
-    signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
-    signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
-    signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
-    signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
+    if L:
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(L,columns=['signature','cutoff', 'number_of_mutations','average_probability'])
+        signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
+        signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
+        signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
+        signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
+    else:
+        #Create empty dataframe
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['signature','cutoff', 'number_of_mutations','average_probability'])
     ####################################################################
 
     return signature_cutoff_numberofmutations_averageprobability_df
