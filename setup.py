@@ -10,7 +10,7 @@ def readme():
 	with open('README.rst') as f:
 		return(f.read())
 
-VERSION = '1.0.30'
+VERSION = '1.0.32'
 
 def write_version_py(filename='SigProfilerTopography/version.py'):
 	# Copied from numpy setup.py
@@ -30,17 +30,18 @@ setup(name="SigProfilerTopography",
     version=VERSION,
     author="Burcak Otlu",
     author_email="burcakotlu@eng.ucsd.edu",
-    description="SigProfilerTopography provides topography analyses for substitutions, dinucleotides and indels for each sample and all samples pooled.",
+    description="SigProfilerTopography provides topography analyses for substitutions, dinucleotides and indels for all given samples.",
     url="https://github.com/AlexandrovLab/SigProfilerTopography",
     license='UCSD',
     packages=find_packages(),
     install_requires=[
-        "sigprofilermatrixgenerator>=1.0.21",
-	"sigprofilersimulator>=0.2.15",
+	"SigProfilerMatrixGenerator>=1.1.26",
+	"SigProfilerSimulator>=1.1.2",
+	"XlsxWriter>=1.3.7",
+        "pandas>=1.2.3",
+        "numpy>=1.20.1",
         "matplotlib>=2.2.2",
         "scipy>=1.1.0",
-        "pandas>=0.23.4",
-        "numpy>=1.14.3",
         "statsmodels>=0.9.0",
         "fastrand>=1.2",
         "psutil>=5.6.3"],
