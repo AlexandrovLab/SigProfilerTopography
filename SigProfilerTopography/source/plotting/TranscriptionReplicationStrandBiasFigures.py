@@ -22,78 +22,79 @@ from matplotlib.lines import Line2D
 
 import pandas as pd
 
-from SigProfilerTopography.source.commons.TopographyCommons import natural_key
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING
-from SigProfilerTopography.source.commons.TopographyCommons import LEADING
+from source.commons.TopographyCommons import natural_key
+from source.commons.TopographyCommons import TRANSCRIBED_STRAND
+from source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
+from source.commons.TopographyCommons import LAGGING
+from source.commons.TopographyCommons import LEADING
 
-from SigProfilerTopography.source.commons.TopographyCommons import sixMutationTypes
-from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import SCATTER_PLOTS
-from SigProfilerTopography.source.commons.TopographyCommons import BAR_PLOTS
-from SigProfilerTopography.source.commons.TopographyCommons import CIRCLE_PLOTS
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
-from SigProfilerTopography.source.commons.TopographyCommons import TABLES
+from source.commons.TopographyCommons import sixMutationTypes
+from source.commons.TopographyCommons import STRANDBIAS
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import FIGURE
+from source.commons.TopographyCommons import SCATTER_PLOTS
+from source.commons.TopographyCommons import BAR_PLOTS
+from source.commons.TopographyCommons import CIRCLE_PLOTS
+from source.commons.TopographyCommons import SAMPLES
+from source.commons.TopographyCommons import TABLES
 
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD
+from source.commons.TopographyCommons import SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD
 
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
+from source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
+from source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
 
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
+from source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
+from source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
+from source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
 
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING_P_VALUE
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC_P_VALUE
+from source.commons.TopographyCommons import LAGGING_VERSUS_LEADING_P_VALUE
+from source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE
+from source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC_P_VALUE
 
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING_Q_VALUE
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC_Q_VALUE
+from source.commons.TopographyCommons import LAGGING_VERSUS_LEADING_Q_VALUE
+from source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE
+from source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC_Q_VALUE
 
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_REAL_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_REAL_COUNT
+from source.commons.TopographyCommons import TRANSCRIBED_REAL_COUNT
+from source.commons.TopographyCommons import UNTRANSCRIBED_REAL_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_REAL_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC_REAL_COUNT
+from source.commons.TopographyCommons import GENIC_REAL_COUNT
+from source.commons.TopographyCommons import INTERGENIC_REAL_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_REAL_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import LEADING_REAL_COUNT
+from source.commons.TopographyCommons import LAGGING_REAL_COUNT
+from source.commons.TopographyCommons import LEADING_REAL_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_SIMULATIONS_MEAN_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import TRANSCRIBED_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_SIMULATIONS_MEAN_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import GENIC_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import INTERGENIC_SIMULATIONS_MEAN_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_SIMULATIONS_MEAN_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import LEADING_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import LAGGING_SIMULATIONS_MEAN_COUNT
+from source.commons.TopographyCommons import LEADING_SIMULATIONS_MEAN_COUNT
 
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC
-from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC
+from source.commons.TopographyCommons import GENIC
+from source.commons.TopographyCommons import INTERGENIC
 
-from SigProfilerTopography.source.commons.TopographyCommons import percentage_numbers
-from SigProfilerTopography.source.commons.TopographyCommons import percentage_strings
+from source.commons.TopographyCommons import percentage_numbers
+from source.commons.TopographyCommons import percentage_strings
 
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_10_PERCENT_DIFF
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_20_PERCENT_DIFF
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_30_PERCENT_DIFF
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_50_PERCENT_DIFF
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_75_PERCENT_DIFF
-from SigProfilerTopography.source.commons.TopographyCommons import AT_LEAST_100_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_10_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_20_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_30_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_50_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_75_PERCENT_DIFF
+from source.commons.TopographyCommons import AT_LEAST_100_PERCENT_DIFF
 
-from SigProfilerTopography.source.commons.TopographyCommons import ID
-from SigProfilerTopography.source.commons.TopographyCommons import DBS
+from source.commons.TopographyCommons import ID
+from source.commons.TopographyCommons import DBS
+from source.commons.TopographyCommons import SBS_CONTEXTS
 
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
 
-from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
-from SigProfilerTopography.source.commons.TopographyCommons import write_excel_file
+from source.commons.TopographyCommons import EXCEL_FILES
+from source.commons.TopographyCommons import write_excel_file
 
 SIGNATURE='signature'
 CANCER_TYPE='cancer_type'
@@ -104,19 +105,19 @@ SIGNIFICANT_STRAND='significant_strand'
 SIGNIFICANCE_LEVEL=0.01
 
 
-from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
+from source.commons.TopographyCommons import getDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
+from source.commons.TopographyCommons import getSample2NumberofSubsDict
+from source.commons.TopographyCommons import getSample2NumberofIndelsDict
+from source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
+from source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
 transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
 genicVersusIntergenicStrands=[GENIC, INTERGENIC]
@@ -474,8 +475,7 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
             figureName = 'all_%s_signatures_%s_scatter_plot.png' % (signatureType, STRANDBIAS)
             figureFile = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS,figureName)
         else:
-            figureName = 'all_%s_signatures_%s_%d_%s_scatter_plot.png' % (
-            signatureType, sample, numberofMutations, STRANDBIAS)
+            figureName = 'all_%s_signatures_%s_%d_%s_scatter_plot.png' % (signatureType, sample, numberofMutations, STRANDBIAS)
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
@@ -1102,7 +1102,15 @@ def plotBarPlotsUsingDataframes(outputDir,
 # April 20, 2020
 # July 4, 2020 starts
 # Using dataframes
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode):
+def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode):
+    # Initialize these dataframes as empty dataframe
+    # We will read these dataframes if there is the corresponding data
+    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    subsSignatures=np.array([])
+    dinucsSignatures=np.array([])
+    indelsSignatures=np.array([])
 
     #######################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
@@ -1119,13 +1127,16 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples starts  ################################
     ##########################################################################################
-    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-
-    subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-    indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-    dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+    for mutation_type_context in mutation_types_contexts:
+        if (mutation_type_context in SBS_CONTEXTS):
+            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+    if (DBS in mutation_types_contexts):
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+    if (ID in mutation_types_contexts):
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     ##########################################################################################
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples ends  ##################################
@@ -1668,23 +1679,23 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     plot_legend(strandbias_figures_outputDir)
 
     for strand_bias in strand_bias_list:
-
-        plot_six_mutations_sbs_signatures_circle_figures(subsSignatures,
+        if np.any(subsSignatures):
+            plot_six_mutations_sbs_signatures_circle_figures(subsSignatures,
                                         strand_bias,
                                         strandbias_figures_outputDir,
                                         SIGNIFICANCE_LEVEL,
                                         signature2mutation_type2strand2percentagedict,
                                         percentage_strings)
-
-        plot_dbs_and_id_signatures_circle_figures(DBS,
+        if np.any(dinucsSignatures):
+            plot_dbs_and_id_signatures_circle_figures(DBS,
                                            dinucsSignatures,
                                            strand_bias,
                                            strandbias_figures_outputDir,
                                            SIGNIFICANCE_LEVEL,
                                            type2strand2percentagedict,
                                            percentage_strings)
-
-        plot_dbs_and_id_signatures_circle_figures(ID,
+        if np.any(indelsSignatures):
+            plot_dbs_and_id_signatures_circle_figures(ID,
                                            indelsSignatures,
                                            strand_bias,
                                            strandbias_figures_outputDir,
@@ -1709,25 +1720,25 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                                                                                                     type_lagging_versus_leading_df,
                                                                                                     outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and np.any(subsSignatures)):
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('subs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
                                                                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and np.any(dinucsSignatures)):
-            plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('dinuc2s', None, None,
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+            plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('dinucs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
-                                                                                          dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and np.any(indelsSignatures)):
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('indels', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
-                                                                                          indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                            outputDir, jobname)
     ########################################################################
     ############## Mutation Types Scatter Plots ends #######################
@@ -1857,8 +1868,9 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     #################################################################
     ########### Plot sub signatures mutation types starts ###########
     #################################################################
-    if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
-        plotBarPlotsUsingDataframes(outputDir,
+    if not subsSignature_cutoff_numberofmutations_averageprobability_df.empty:
+        if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
+            plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
                      subsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -1874,8 +1886,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                      'mutationtypes_transcription_strand_bias',
                       plot_mode)
 
-    if GENIC_VERSUS_INTERGENIC in strand_bias_list:
-        plotBarPlotsUsingDataframes(outputDir,
+        if GENIC_VERSUS_INTERGENIC in strand_bias_list:
+            plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
                      subsSignature_cutoff_numberofmutations_averageprobability_df,
@@ -1891,8 +1903,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                      'mutationtypes_genic_versus_intergenic_strand_bias',
                       plot_mode)
 
-    if LAGGING_VERSUS_LEADING in strand_bias_list:
-        plotBarPlotsUsingDataframes(outputDir,
+        if LAGGING_VERSUS_LEADING in strand_bias_list:
+            plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
                      subsSignature_cutoff_numberofmutations_averageprobability_df,

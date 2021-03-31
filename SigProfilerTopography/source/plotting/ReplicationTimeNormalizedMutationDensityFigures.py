@@ -21,41 +21,41 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 
 from matplotlib import pyplot as plt
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS96
-from SigProfilerTopography.source.commons.TopographyCommons import ID
-from SigProfilerTopography.source.commons.TopographyCommons import DBS
+from source.commons.TopographyCommons import SBS_CONTEXTS
+from source.commons.TopographyCommons import ID
+from source.commons.TopographyCommons import DBS
 
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import FIGURE
+from source.commons.TopographyCommons import REPLICATIONTIME
 
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
+from source.commons.TopographyCommons import SAMPLES
 
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDINDELS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDDINUCS
-from SigProfilerTopography.source.commons.TopographyCommons import SIGNATUREBASED
-from SigProfilerTopography.source.commons.TopographyCommons import INDELBASED
-from SigProfilerTopography.source.commons.TopographyCommons import MICROHOMOLOGY
-from SigProfilerTopography.source.commons.TopographyCommons import REPEAT
+from source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
+from source.commons.TopographyCommons import AGGREGATEDINDELS
+from source.commons.TopographyCommons import AGGREGATEDDINUCS
+from source.commons.TopographyCommons import SIGNATUREBASED
+from source.commons.TopographyCommons import INDELBASED
+from source.commons.TopographyCommons import MICROHOMOLOGY
+from source.commons.TopographyCommons import REPEAT
 
-from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
-from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
+from source.commons.TopographyCommons import takeAverage
+from source.commons.TopographyCommons import getDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
+from source.commons.TopographyCommons import getSample2NumberofSubsDict
+from source.commons.TopographyCommons import getSample2NumberofIndelsDict
+from source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
+from source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
@@ -402,10 +402,20 @@ def plotAllMutationTypesFigures(title,color,fillcolor,analysesType,indelType,out
 ##################################################################
 def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode):
 
+    # Initialize these dataframes as empty dataframe
+    # We will read these dataframes if there is the corresponding data
+    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+
     ##########################################################################################
-    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    for mutation_type_context in mutationTypes:
+        if (mutation_type_context in SBS_CONTEXTS):
+            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    if (DBS in mutationTypes):
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    if (ID in mutationTypes):
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
     if sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
@@ -429,18 +439,18 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSi
     ##########################################################################################
     ##########################  Plot figures starts  #########################################
     ##########################################################################################
-    if (SBS96 in mutationTypes):
+    if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         #Formerly it was yellowgreen
         plotAllMutationTypesFigures('Aggregated Substitutions','royalblue','lightblue',AGGREGATEDSUBSTITUTIONS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
         plotSignatureFigures('royalblue','lightblue',SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofSubsDict,subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,plot_mode)
-    if (ID in mutationTypes):
+    if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        plotAllMutationTypesFigures('Aggregated Dinucs','crimson','lightpink',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
+        plotSignatureFigures('crimson','lightpink', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
+    if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         plotAllMutationTypesFigures('Aggregated Indels','yellowgreen','lightgreen',AGGREGATEDINDELS,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofIndelsDict,indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
         plotAllMutationTypesFigures(MICROHOMOLOGY,'yellowgreen','lightgreen',INDELBASED,MICROHOMOLOGY,outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
         plotAllMutationTypesFigures(REPEAT, 'yellowgreen','lightgreen',INDELBASED, REPEAT, outputDir, jobname, numberofSimulations,sample_based, sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
         plotSignatureFigures('yellowgreen','lightgreen', SIGNATUREBASED, outputDir, jobname, numberofSimulations, sample_based,sample2NumberofIndelsDict, indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,plot_mode)
-    if (DBS in mutationTypes):
-        plotAllMutationTypesFigures('Aggregated Dinucs','crimson','lightpink',AGGREGATEDDINUCS ,None,outputDir, jobname,numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
-        plotSignatureFigures('crimson','lightpink', SIGNATUREBASED, outputDir, jobname, numberofSimulations,sample_based,sample2NumberofDinucsDict,dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,plot_mode)
     ##########################################################################################
     ##########################  Plot figures ends  ###########################################
     ##########################################################################################

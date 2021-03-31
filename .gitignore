@@ -26,3 +26,5 @@ build/
 dist/
 __pycache__/
 SigProfilerTopography.egg-info/
+.idea
+.DS_Store

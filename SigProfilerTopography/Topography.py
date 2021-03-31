@@ -30,137 +30,134 @@ import multiprocessing
 import SigProfilerMatrixGenerator as matrix_generator
 MATRIX_GENERATOR_PATH=matrix_generator.__path__[0]
 
-from SigProfilerTopography import version as topography_version
+import version as topography_version
 from SigProfilerMatrixGenerator import version as matrix_generator_version
 from SigProfilerSimulator import version as simulator_version
 
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerSimulator import SigProfilerSimulator as simulator
 
-from SigProfilerTopography.source.commons.TopographyCommons import readProbabilities
-from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
+from source.commons.TopographyCommons import readProbabilities
+from source.commons.TopographyCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
 
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import FIGURE
+from source.commons.TopographyCommons import SAMPLE
 
-from SigProfilerTopography.source.commons.TopographyCommons import K562
-from SigProfilerTopography.source.commons.TopographyCommons import MCF7
-from SigProfilerTopography.source.commons.TopographyCommons import MEF
+from source.commons.TopographyCommons import K562
+from source.commons.TopographyCommons import MCF7
+from source.commons.TopographyCommons import MEF
 
-from SigProfilerTopography.source.commons.TopographyCommons import MM10
-from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
+from source.commons.TopographyCommons import MM10
+from source.commons.TopographyCommons import GRCh37
 
-from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
+from source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 
-from SigProfilerTopography.source.commons.TopographyCommons import getNucleosomeFile
-from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
+from source.commons.TopographyCommons import getNucleosomeFile
+from source.commons.TopographyCommons import getReplicationTimeFiles
 
-from SigProfilerTopography.source.commons.TopographyCommons import available_nucleosome_biosamples
-from SigProfilerTopography.source.commons.TopographyCommons import available_replication_time_biosamples
+from source.commons.TopographyCommons import available_nucleosome_biosamples
+from source.commons.TopographyCommons import available_replication_time_biosamples
 
-from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
-from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
+from source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
+from source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
+from source.commons.TopographyCommons import REPLICATIONTIME
+from source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
+from source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
+from source.commons.TopographyCommons import PROCESSIVITY
 
-from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
-from SigProfilerTopography.source.commons.TopographyCommons import STRANDBIAS
+from source.commons.TopographyCommons import EPIGENOMICS
+from source.commons.TopographyCommons import STRANDBIAS
 
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27ME3_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K36ME3_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K9ME3_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27AC_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME1_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME3_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K27ME3_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K36ME3_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K9ME3_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K27AC_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K4ME1_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_H3K4ME3_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
+from source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A
-from SigProfilerTopography.source.commons.TopographyCommons import ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac
+from source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
+from source.commons.TopographyCommons import ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1
+from source.commons.TopographyCommons import ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3
+from source.commons.TopographyCommons import ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF
+from source.commons.TopographyCommons import ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A
+from source.commons.TopographyCommons import ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac
 
-from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
+from source.commons.TopographyCommons import UNDECLARED
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
+from source.commons.TopographyCommons import USING_APPLY_ASYNC
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from source.commons.TopographyCommons import STRINGENT
 
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_AVERAGE_PROBABILITY
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_SBS_REQUIRED
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_DBS_REQUIRED
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_ID_REQUIRED
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED
+from source.commons.TopographyCommons import DEFAULT_AVERAGE_PROBABILITY
+from source.commons.TopographyCommons import DEFAULT_NUM_OF_SBS_REQUIRED
+from source.commons.TopographyCommons import DEFAULT_NUM_OF_DBS_REQUIRED
+from source.commons.TopographyCommons import DEFAULT_NUM_OF_ID_REQUIRED
+from source.commons.TopographyCommons import DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED
 
-from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
-from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
-from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
+from source.commons.TopographyCommons import CONSIDER_COUNT
+from source.commons.TopographyCommons import CONSIDER_DISTANCE
+from source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
 
-from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNAL
-from SigProfilerTopography.source.commons.TopographyCommons import NO_SIGNAL
+from source.commons.TopographyCommons import MISSING_SIGNAL
+from source.commons.TopographyCommons import NO_SIGNAL
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS96
-from SigProfilerTopography.source.commons.TopographyCommons import ID
-from SigProfilerTopography.source.commons.TopographyCommons import DBS
+from source.commons.TopographyCommons import SBS96
+from source.commons.TopographyCommons import ID
+from source.commons.TopographyCommons import DBS
 
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS
-from SigProfilerTopography.source.commons.TopographyCommons import INDELS
-from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
+from source.commons.TopographyCommons import SUBS
+from source.commons.TopographyCommons import INDELS
+from source.commons.TopographyCommons import DINUCS
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
-from SigProfilerTopography.source.commons.TopographyCommons import SNV
+from source.commons.TopographyCommons import SBS_CONTEXTS
+from source.commons.TopographyCommons import SNV
 
-from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
-from SigProfilerTopography.source.commons.TopographyCommons import LIB
+from source.commons.TopographyCommons import CHRBASED
+from source.commons.TopographyCommons import LIB
 
-from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
-from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
-from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
-from SigProfilerTopography.source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
-from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_type_context_for_probabilities_file
+from source.commons.TopographyCommons import getChromSizesDict
+from source.commons.TopographyCommons import getShortNames
+from source.commons.TopographyCommons import copyMafFiles
+from source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
+from source.commons.TopographyCommons import fill_mutations_dictionaries_write
+from source.commons.TopographyCommons import get_mutation_type_context_for_probabilities_file
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
+from source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
+from source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
+from source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
-from SigProfilerTopography.source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
-from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
-from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
+from source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
+from source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
+from source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
 
-from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
-from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
+from source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
+from source.processivity.ProcessivityAnalysis import processivityAnalysis
 
-from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
-from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import compute_fold_change_with_p_values_plot_heatmaps
+from source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
+from source.plotting.OccupancyAverageSignalFigures import compute_fold_change_with_p_values_plot_heatmaps
+from source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
+from source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
+from source.plotting.ProcessivityFigures import processivityFigures
 
-from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
-from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
+from source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
+from source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
+from source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
+from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 
-from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
+from source.commons.TopographyCommons import COMBINE_P_VALUES_METHOD_FISHER
+from source.commons.TopographyCommons import WEIGHTED_AVERAGE_METHOD
+from source.commons.TopographyCommons import COLORBAR_SEISMIC
 
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
-from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
-from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_VERSUS_LEADING
-
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
-
-from SigProfilerTopography.source.commons.TopographyCommons import COMBINE_P_VALUES_METHOD_FISHER
-from SigProfilerTopography.source.commons.TopographyCommons import WEIGHTED_AVERAGE_METHOD
-from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEISMIC
-
-from SigProfilerTopography.source.commons.TopographyCommons import natural_key
+from source.commons.TopographyCommons import natural_key
 
 ############################################################
 #Can be move to DataPreparationCommons under /source/commons
@@ -2021,7 +2018,7 @@ def plotFigures(outputDir,
                 jobname,
                 numberofSimulations,
                 sample_based,
-                mutationTypes,
+                mutation_types_contexts,
                 epigenomics_files,
                 epigenomics_files_memos,
                 epigenomics_biosamples,
@@ -2056,7 +2053,7 @@ def plotFigures(outputDir,
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
-        occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
+        occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
     ############################################################
 
 
@@ -2064,7 +2061,7 @@ def plotFigures(outputDir,
     if (replication_time or data_ready_plot_replication_time):
         if delete_old:
             deleteOldFigures(outputDir, jobname, REPLICATIONTIME)
-        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,plot_mode)
+        replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,plot_mode)
     ############################################################
 
 
@@ -2075,13 +2072,13 @@ def plotFigures(outputDir,
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
     elif (replication_strand_bias or data_ready_plot_replication_strand_bias):
         strand_bias_list=[LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
     elif (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,strand_bias_list,plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
     ############################################################
 
 
@@ -2115,7 +2112,7 @@ def plotFigures(outputDir,
             epigenomics_file_basename = os.path.basename(epigenomics_file)
             epigenomics_file_memo= epigenomics_files_memos[idx]
             jobs.append(pool.apply_async(occupancyAverageSignalFigures,
-                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
 
         if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
 
@@ -2137,6 +2134,7 @@ def plotFigures(outputDir,
                                               outputDir,
                                               jobname,
                                               numberofSimulations,
+                                              mutation_types_contexts,
                                               nucleosome_file,
                                               nucleosome_biosample,
                                               epigenomics_files_memos,

@@ -30,75 +30,75 @@ import numpy as np
 import math
 import traceback
 
-from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
-from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
-from SigProfilerTopography.source.commons.TopographyCommons import func_addSignal
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
+from source.commons.TopographyCommons import memory_usage
+from source.commons.TopographyCommons import readChrBasedMutationsDF
+from source.commons.TopographyCommons import func_addSignal
+from source.commons.TopographyCommons import getSample2NumberofSubsDict
+from source.commons.TopographyCommons import getSample2NumberofIndelsDict
+from source.commons.TopographyCommons import getDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray
+from source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray
 
-from SigProfilerTopography.source.commons.TopographyCommons import TYPE
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS
-from SigProfilerTopography.source.commons.TopographyCommons import INDELS
-from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
-from SigProfilerTopography.source.commons.TopographyCommons import MEGABYTE_IN_BYTES
+from source.commons.TopographyCommons import TYPE
+from source.commons.TopographyCommons import SUBS
+from source.commons.TopographyCommons import INDELS
+from source.commons.TopographyCommons import DINUCS
+from source.commons.TopographyCommons import MEGABYTE_IN_BYTES
 
-from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
-from SigProfilerTopography.source.commons.TopographyCommons import ONE_DIRECTORY_UP
-from SigProfilerTopography.source.commons.TopographyCommons import LIB
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
-from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
-from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
+from source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
+from source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
+from source.commons.TopographyCommons import ONE_DIRECTORY_UP
+from source.commons.TopographyCommons import LIB
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import EPIGENOMICS
+from source.commons.TopographyCommons import NUCLEOSOME
+from source.commons.TopographyCommons import CHRBASED
 
-from SigProfilerTopography.source.commons.TopographyCommons import current_abs_path
+from source.commons.TopographyCommons import current_abs_path
 
-from SigProfilerTopography.source.commons.TopographyCommons import BED
-from SigProfilerTopography.source.commons.TopographyCommons import NARROWPEAK
-from SigProfilerTopography.source.commons.TopographyCommons import BIGBED
-from SigProfilerTopography.source.commons.TopographyCommons import BIGWIG
-from SigProfilerTopography.source.commons.TopographyCommons import WIG
-from SigProfilerTopography.source.commons.TopographyCommons import BEDGRAPH
-from SigProfilerTopography.source.commons.TopographyCommons import LIBRARY_FILE_TYPE_OTHER
+from source.commons.TopographyCommons import BED
+from source.commons.TopographyCommons import NARROWPEAK
+from source.commons.TopographyCommons import BIGBED
+from source.commons.TopographyCommons import BIGWIG
+from source.commons.TopographyCommons import WIG
+from source.commons.TopographyCommons import BEDGRAPH
+from source.commons.TopographyCommons import LIBRARY_FILE_TYPE_OTHER
 
-from SigProfilerTopography.source.commons.TopographyCommons import BED_6PLUS4
-from SigProfilerTopography.source.commons.TopographyCommons import BED_9PLUS2
+from source.commons.TopographyCommons import BED_6PLUS4
+from source.commons.TopographyCommons import BED_9PLUS2
 
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDINDELS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDDINUCS
+from source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
+from source.commons.TopographyCommons import AGGREGATEDINDELS
+from source.commons.TopographyCommons import AGGREGATEDDINUCS
 
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
-from SigProfilerTopography.source.commons.TopographyCommons import START
-from SigProfilerTopography.source.commons.TopographyCommons import SIMULATION_NUMBER
+from source.commons.TopographyCommons import SAMPLE
+from source.commons.TopographyCommons import START
+from source.commons.TopographyCommons import SIMULATION_NUMBER
 
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
+from source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
+from source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph
+from source.nucleosomeoccupancy.ChrBasedSignalArrays import readBEDandWriteChromBasedSignalArrays
+from source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays
+from source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph
 
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_chunks
-from SigProfilerTopography.source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_read_all
+from source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_chunks
+from source.nucleosomeoccupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_read_all
 
-from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
+from source.commons.TopographyCommons import decideFileType
+from source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
+from source.commons.TopographyCommons import get_chrBased_simBased_combined_df
+from source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
-from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNAL
+from source.commons.TopographyCommons import MISSING_SIGNAL
 
-from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
-from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+from source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
+from source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
 ########################################################################################
 # April 27, 2020

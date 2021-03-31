@@ -33,19 +33,19 @@ import matplotlib.cm as cm
 from statsmodels.stats.weightstats import ztest
 from matplotlib.colors import Normalize
 
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
-from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
-from SigProfilerTopography.source.commons.TopographyCommons import TABLES
-from SigProfilerTopography.source.commons.TopographyCommons import USING_ONE_SAMPLE_TTEST
-from SigProfilerTopography.source.commons.TopographyCommons import USING_NULL_DISTRIBUTION
-from SigProfilerTopography.source.commons.TopographyCommons import USING_GAUSSIAN_KDE
-from SigProfilerTopography.source.commons.TopographyCommons import USING_ZSCORE
-from SigProfilerTopography.source.commons.TopographyCommons import FDR_BH_CORRECTION
-from SigProfilerTopography.source.commons.TopographyCommons import BONFERRONI_CORRECTION
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import FIGURE
+from source.commons.TopographyCommons import PROCESSIVITY
+from source.commons.TopographyCommons import TABLES
+from source.commons.TopographyCommons import USING_ONE_SAMPLE_TTEST
+from source.commons.TopographyCommons import USING_NULL_DISTRIBUTION
+from source.commons.TopographyCommons import USING_GAUSSIAN_KDE
+from source.commons.TopographyCommons import USING_ZSCORE
+from source.commons.TopographyCommons import FDR_BH_CORRECTION
+from source.commons.TopographyCommons import BONFERRONI_CORRECTION
 
-from SigProfilerTopography.source.commons.TopographyCommons import readDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import natural_key
+from source.commons.TopographyCommons import readDictionary
+from source.commons.TopographyCommons import natural_key
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 

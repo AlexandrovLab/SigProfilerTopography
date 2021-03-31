@@ -19,7 +19,6 @@ import psutil
 
 import scipy
 from scipy.stats import sem, t
-from scipy import mean
 
 import scipy.stats as stats
 
@@ -921,7 +920,7 @@ def takeAverage(listofSimulationsAggregatedMutations):
 
             ########################
             #2nd way
-            mu = mean(colwise_array)
+            mu = np.mean(colwise_array)
             sigma = sem(colwise_array)
             start, end = scipy.stats.norm.interval(0.95, loc=mu, scale=sigma)
             ########################

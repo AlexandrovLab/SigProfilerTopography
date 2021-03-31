@@ -49,59 +49,59 @@ import numpy as np
 import pandas as pd
 
 
-from SigProfilerTopography.source.commons.TopographyCommons import DATA
-from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
-from SigProfilerTopography.source.commons.TopographyCommons import SIGNATUREBASED
+from source.commons.TopographyCommons import DATA
+from source.commons.TopographyCommons import REPLICATIONTIME
+from source.commons.TopographyCommons import SAMPLES
+from source.commons.TopographyCommons import SIGNATUREBASED
 
-from SigProfilerTopography.source.commons.TopographyCommons import NUMOFBASES
+from source.commons.TopographyCommons import NUMOFBASES
 
-from SigProfilerTopography.source.commons.TopographyCommons import CHROM
-from SigProfilerTopography.source.commons.TopographyCommons import START
-from SigProfilerTopography.source.commons.TopographyCommons import END
-from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
+from source.commons.TopographyCommons import CHROM
+from source.commons.TopographyCommons import START
+from source.commons.TopographyCommons import END
+from source.commons.TopographyCommons import SIGNAL
 
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
-from SigProfilerTopography.source.commons.TopographyCommons import LENGTH
-from SigProfilerTopography.source.commons.TopographyCommons import SIMULATION_NUMBER
+from source.commons.TopographyCommons import SAMPLE
+from source.commons.TopographyCommons import LENGTH
+from source.commons.TopographyCommons import SIMULATION_NUMBER
 
-from SigProfilerTopography.source.commons.TopographyCommons import TYPE
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS
-from SigProfilerTopography.source.commons.TopographyCommons import INDELS
-from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
+from source.commons.TopographyCommons import TYPE
+from source.commons.TopographyCommons import SUBS
+from source.commons.TopographyCommons import INDELS
+from source.commons.TopographyCommons import DINUCS
 
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDINDELS
-from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDDINUCS
+from source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
+from source.commons.TopographyCommons import AGGREGATEDINDELS
+from source.commons.TopographyCommons import AGGREGATEDDINUCS
 
-from SigProfilerTopography.source.commons.TopographyCommons import MICROHOMOLOGY
-from SigProfilerTopography.source.commons.TopographyCommons import REPEAT
+from source.commons.TopographyCommons import MICROHOMOLOGY
+from source.commons.TopographyCommons import REPEAT
 
-from SigProfilerTopography.source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
-from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
+from source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
+from source.commons.TopographyCommons import memory_usage
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
-from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
+from source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
+from source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
-from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
+from source.commons.TopographyCommons import getDictionary
+from source.commons.TopographyCommons import getSample2NumberofSubsDict
+from source.commons.TopographyCommons import getSample2NumberofIndelsDict
 
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
+from source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
 
-from SigProfilerTopography.source.commons.TopographyCommons import getChrShort
+from source.commons.TopographyCommons import getChrShort
 
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
+from source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 
-from SigProfilerTopography.source.commons.TopographyCommons import  MEGABYTE_IN_BYTES
-from SigProfilerTopography.source.commons.TopographyCommons import  decideFileType
+from source.commons.TopographyCommons import  MEGABYTE_IN_BYTES
+from source.commons.TopographyCommons import  decideFileType
 
-from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_combined_df
-from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_dfs
+from source.commons.TopographyCommons import  get_chrBased_simBased_combined_df
+from source.commons.TopographyCommons import  get_chrBased_simBased_dfs
 
 ##################################################################
 # Please note that this dictionary is copied from .../SigProfilerMatrixGenerator/SigProfilerMatrixGenerator/scripts/SigProfilerMatrixGeneratorFunc.py line 101

@@ -24,41 +24,40 @@ import multiprocessing
 import numpy as np
 import os
 
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
-from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
-from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+from source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
+from source.commons.TopographyCommons import SAMPLE
+from source.commons.TopographyCommons import MUTATION
 
-from SigProfilerTopography.source.commons.TopographyCommons import TYPE
+from source.commons.TopographyCommons import TYPE
 
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS
-from SigProfilerTopography.source.commons.TopographyCommons import INDELS
-from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
+from source.commons.TopographyCommons import SUBS
+from source.commons.TopographyCommons import INDELS
+from source.commons.TopographyCommons import DINUCS
 
-from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import NONTRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
+from source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
+from source.commons.TopographyCommons import TRANSCRIBED_STRAND
+from source.commons.TopographyCommons import NONTRANSCRIBED_STRAND
+from source.commons.TopographyCommons import TRANSCRIPTIONSTRANDBIAS
 
-from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
-from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
-from SigProfilerTopography.source.commons.TopographyCommons import write_sample_based_strand1_strand2_as_dataframe
+from source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
+from source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
+from source.commons.TopographyCommons import write_sample_based_strand1_strand2_as_dataframe
 
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
-from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
+from source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
+from source.commons.TopographyCommons import get_chrBased_simBased_combined_df
+from source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
-from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
+from source.commons.TopographyCommons import memory_usage
 
-from SigProfilerTopography.source.commons.TopographyCommons import C2A
-from SigProfilerTopography.source.commons.TopographyCommons import C2G
-from SigProfilerTopography.source.commons.TopographyCommons import C2T
-from SigProfilerTopography.source.commons.TopographyCommons import T2A
-from SigProfilerTopography.source.commons.TopographyCommons import T2C
-from SigProfilerTopography.source.commons.TopographyCommons import T2G
-
+from source.commons.TopographyCommons import C2A
+from source.commons.TopographyCommons import C2G
+from source.commons.TopographyCommons import C2T
+from source.commons.TopographyCommons import T2A
+from source.commons.TopographyCommons import T2C
+from source.commons.TopographyCommons import T2G
 
 ########################################################################
 # For df_split
