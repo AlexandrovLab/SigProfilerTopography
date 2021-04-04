@@ -30,13 +30,13 @@ import multiprocessing
 import SigProfilerMatrixGenerator as matrix_generator
 MATRIX_GENERATOR_PATH=matrix_generator.__path__[0]
 
-import version as topography_version
 from SigProfilerMatrixGenerator import version as matrix_generator_version
 from SigProfilerSimulator import version as simulator_version
 
 from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
 from SigProfilerSimulator import SigProfilerSimulator as simulator
 
+from . import version as topography_version
 from source.commons.TopographyCommons import readProbabilities
 from source.commons.TopographyCommons import readChrBasedMutationsMergeWithProbabilitiesAndWrite
 
@@ -135,7 +135,7 @@ from source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_Number
 
 from source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
-from source.nucleosomeoccupancy.NucleosomeOccupancyAnalysis import occupancyAnalysis
+from source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
 

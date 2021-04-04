@@ -27,7 +27,6 @@ import statsmodels.stats.multitest
 from decimal import Decimal
 import scipy
 
-
 from source.commons.TopographyCommons import SBS96
 from source.commons.TopographyCommons import AVERAGE_SIGNAL_ARRAY
 from source.commons.TopographyCommons import ACCUMULATED_COUNT_ARRAY

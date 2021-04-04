@@ -1,6 +1,7 @@
+include SigProfilerTopography/version.py
 include SigProfilerTopography/source/commons/TopographyCommons.py
 include SigProfilerTopography/source/commons/*
-include SigProfilerTopography/source/nucleosomeoccupancy/*
+include SigProfilerTopography/source/occupancy/*
 include SigProfilerTopography/source/replicationtime/*
 include SigProfilerTopography/source/replicationstrandbias/*
 include SigProfilerTopography/source/transcriptionstrandbias/*

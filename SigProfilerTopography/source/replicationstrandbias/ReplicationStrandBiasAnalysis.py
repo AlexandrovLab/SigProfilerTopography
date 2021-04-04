@@ -45,7 +45,7 @@ from source.commons.TopographyCommons import CHRBASED
 
 from source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
 
-from source.nucleosomeoccupancy.ChrBasedSignalArrays import readFileInBEDFormat
+from source.occupancy.ChrBasedSignalArrays import readFileInBEDFormat
 from source.commons.TopographyCommons import memory_usage
 
 from source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
