@@ -14,16 +14,16 @@ from matplotlib import pyplot as plt
 #To plot for bi range of x axis such as 250M
 plt.rcParams['agg.path.chunksize'] = 10000
 
-from source.commons.TopographyCommons import  getChromSizesDict
-from source.commons.TopographyCommons import  ONE_DIRECTORY_UP
-from source.commons.TopographyCommons import  LIB
-from source.commons.TopographyCommons import  NUCLEOSOME
-from source.commons.TopographyCommons import  CHRBASED
+from SigProfilerTopography.source.commons.TopographyCommons import  getChromSizesDict
+from SigProfilerTopography.source.commons.TopographyCommons import  ONE_DIRECTORY_UP
+from SigProfilerTopography.source.commons.TopographyCommons import  LIB
+from SigProfilerTopography.source.commons.TopographyCommons import  NUCLEOSOME
+from SigProfilerTopography.source.commons.TopographyCommons import  CHRBASED
 
-from source.commons.TopographyCommons import  CHROM
-from source.commons.TopographyCommons import  START
-from source.commons.TopographyCommons import  END
-from source.commons.TopographyCommons import  SIGNAL
+from SigProfilerTopography.source.commons.TopographyCommons import  CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import  START
+from SigProfilerTopography.source.commons.TopographyCommons import  END
+from SigProfilerTopography.source.commons.TopographyCommons import  SIGNAL
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 

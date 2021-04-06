@@ -26,11 +26,11 @@ import numpy as np
 import multiprocessing
 import shutil
 
-from source.commons.TopographyCommons import generateIntervalVersion
+from SigProfilerTopography.source.commons.TopographyCommons import generateIntervalVersion
 
-from source.commons.TopographyCommons import NAME
-from source.commons.TopographyCommons import SCORE
-from source.commons.TopographyCommons import STRAND
+from SigProfilerTopography.source.commons.TopographyCommons import NAME
+from SigProfilerTopography.source.commons.TopographyCommons import SCORE
+from SigProfilerTopography.source.commons.TopographyCommons import STRAND
 
 BACKEND = 'Agg'
 if matplotlib.get_backend().lower() != BACKEND.lower():
@@ -48,23 +48,23 @@ current_abs_path = os.path.dirname(os.path.realpath(__file__))
 commonsPath = os.path.join(current_abs_path, '..','commons')
 sys.path.append(commonsPath)
 
-from source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
-from source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
+from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
+from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
 
-from source.commons.TopographyCommons import ONE_DIRECTORY_UP
-from source.commons.TopographyCommons import LIB
-from source.commons.TopographyCommons import DATA
-from source.commons.TopographyCommons import EPIGENOMICS
-from source.commons.TopographyCommons import NUCLEOSOME
-from source.commons.TopographyCommons import CHRBASED
+from SigProfilerTopography.source.commons.TopographyCommons import ONE_DIRECTORY_UP
+from SigProfilerTopography.source.commons.TopographyCommons import LIB
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
+from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICS
+from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME
+from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
 
-from source.commons.TopographyCommons import CHROM
-from source.commons.TopographyCommons import START
-from source.commons.TopographyCommons import END
-from source.commons.TopographyCommons import SIGNAL
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import START
+from SigProfilerTopography.source.commons.TopographyCommons import END
+from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 
-from source.commons.TopographyCommons import getChromSizesDict
-from source.commons.TopographyCommons import memory_usage
+from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
 ######################################################################
 def updateSignalArray(row,signalArray):

@@ -13,38 +13,36 @@ import pandas as pd
 import os
 import time
 
-
 from json import JSONEncoder
 
-from source.commons.TopographyCommons import PROCESSIVITY
-from source.commons.TopographyCommons import DATA
+from SigProfilerTopography.source.commons.TopographyCommons import PROCESSIVITY
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
 
-from source.commons.TopographyCommons import START
-from source.commons.TopographyCommons import MUTATION
-from source.commons.TopographyCommons import PYRAMIDINESTRAND
-from source.commons.TopographyCommons import SIMULATION_NUMBER
-from source.commons.TopographyCommons import CHROM
-from source.commons.TopographyCommons import MUTATIONLONG
-from source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
-from source.commons.TopographyCommons import SAMPLE
+from SigProfilerTopography.source.commons.TopographyCommons import START
+from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+from SigProfilerTopography.source.commons.TopographyCommons import PYRAMIDINESTRAND
+from SigProfilerTopography.source.commons.TopographyCommons import SIMULATION_NUMBER
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import MUTATIONLONG
+from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
+from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
-from source.commons.TopographyCommons import SUBS
+from SigProfilerTopography.source.commons.TopographyCommons import SUBS
 
-from source.commons.TopographyCommons import SBS96
-from source.commons.TopographyCommons import SBS384
-from source.commons.TopographyCommons import SBS1536
-from source.commons.TopographyCommons import SBS3072
+from SigProfilerTopography.source.commons.TopographyCommons import SBS96
+from SigProfilerTopography.source.commons.TopographyCommons import SBS384
+from SigProfilerTopography.source.commons.TopographyCommons import SBS1536
+from SigProfilerTopography.source.commons.TopographyCommons import SBS3072
 
-from source.commons.TopographyCommons import readChrBasedMutationsDF
-from source.commons.TopographyCommons import writeDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
+from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
 
-from source.commons.TopographyCommons import USING_APPLY_ASYNC
-from source.commons.TopographyCommons import memory_usage
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
-from source.commons.TopographyCommons import CONSIDER_COUNT
-from source.commons.TopographyCommons import CONSIDER_DISTANCE
-from source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
-
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUNT
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
+from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
 
 ####################################################################################
 #DEC 22, 2019

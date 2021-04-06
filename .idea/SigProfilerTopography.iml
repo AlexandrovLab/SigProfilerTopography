@@ -2,26 +2,23 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/commons" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/nucleosomeoccupancy" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/plotting" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/processivity" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/replicationstrandbias" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/replicationtime" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/sigprotopography/source/transcriptionstrandbias" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../sigprotopography/sigprotopography/source/datapreparation" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/commons" isTestSource="false" />
-      <excludeFolder url="file://$MODULE_DIR$/SigProfilerTopography/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/occupancy" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/plotting" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/processivity" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/replicationstrandbias" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/replicationtime" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/transcriptionstrandbias" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (SigProfilerTopography)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Debugging" />
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
-    <orderEntry type="module" module-name="SigProfilerMatrixGenerator" />
-    <orderEntry type="module" module-name="SigProfilerSimulator" />
-    <orderEntry type="module" module-name="OldSigProfilerTopography" />
-    <orderEntry type="module" module-name="SigProfiler" />
-    <orderEntry type="module" module-name="Collaborations" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
   </component>
 </module>

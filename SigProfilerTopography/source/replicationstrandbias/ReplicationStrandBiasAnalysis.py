@@ -18,55 +18,55 @@ import numpy as np
 import pandas as pd
 import os
 
-from source.commons.TopographyCommons import CHROM
-from source.commons.TopographyCommons import START
-from source.commons.TopographyCommons import END
-from source.commons.TopographyCommons import SIGNAL
+from SigProfilerTopography.source.commons.TopographyCommons import CHROM
+from SigProfilerTopography.source.commons.TopographyCommons import START
+from SigProfilerTopography.source.commons.TopographyCommons import END
+from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 
-from source.commons.TopographyCommons import PYRAMIDINESTRAND
-from source.commons.TopographyCommons import SAMPLE
+from SigProfilerTopography.source.commons.TopographyCommons import PYRAMIDINESTRAND
+from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
-from source.commons.TopographyCommons import TYPE
+from SigProfilerTopography.source.commons.TopographyCommons import TYPE
 
-from source.commons.TopographyCommons import SUBS
-from source.commons.TopographyCommons import INDELS
-from source.commons.TopographyCommons import DINUCS
+from SigProfilerTopography.source.commons.TopographyCommons import SUBS
+from SigProfilerTopography.source.commons.TopographyCommons import INDELS
+from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
 
-from source.commons.TopographyCommons import MUTATION
-from source.commons.TopographyCommons import LENGTH
+from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+from SigProfilerTopography.source.commons.TopographyCommons import LENGTH
 
-from source.commons.TopographyCommons import LEADING
-from source.commons.TopographyCommons import LAGGING
-from source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
+from SigProfilerTopography.source.commons.TopographyCommons import LEADING
+from SigProfilerTopography.source.commons.TopographyCommons import LAGGING
+from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRANDBIAS
 
-from source.commons.TopographyCommons import DATA
-from source.commons.TopographyCommons import LIB
-from source.commons.TopographyCommons import CHRBASED
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
+from SigProfilerTopography.source.commons.TopographyCommons import LIB
+from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
 
-from source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
+from SigProfilerTopography.source.commons.TopographyCommons import readWig_with_fixedStep_variableStep
 
-from source.occupancy.ChrBasedSignalArrays import readFileInBEDFormat
-from source.commons.TopographyCommons import memory_usage
+from SigProfilerTopography.source.occupancy.ChrBasedSignalArrays import readFileInBEDFormat
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
-from source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
-from source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
-from source.commons.TopographyCommons import write_sample_based_strand1_strand2_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_type_strand_bias_np_array_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_signature_mutation_type_strand_bias_np_array_as_dataframe
+from SigProfilerTopography.source.commons.TopographyCommons import write_sample_based_strand1_strand2_as_dataframe
 
-from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-from source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
 
-from source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
-from source.commons.TopographyCommons import get_chrBased_simBased_combined_df
-from source.commons.TopographyCommons import get_chrBased_simBased_dfs
+from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
+from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
+from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
-from source.commons.TopographyCommons import decideFileType
+from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
 
-from source.commons.TopographyCommons import C2A
-from source.commons.TopographyCommons import C2G
-from source.commons.TopographyCommons import C2T
-from source.commons.TopographyCommons import T2A
-from source.commons.TopographyCommons import T2C
-from source.commons.TopographyCommons import T2G
+from SigProfilerTopography.source.commons.TopographyCommons import C2A
+from SigProfilerTopography.source.commons.TopographyCommons import C2G
+from SigProfilerTopography.source.commons.TopographyCommons import C2T
+from SigProfilerTopography.source.commons.TopographyCommons import T2A
+from SigProfilerTopography.source.commons.TopographyCommons import T2C
+from SigProfilerTopography.source.commons.TopographyCommons import T2G
 
 #For Supp Fig2B
 CHR10_THRESHOLD_START = 16400000

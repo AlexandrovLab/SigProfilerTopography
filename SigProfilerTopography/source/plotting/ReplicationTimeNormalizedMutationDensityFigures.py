@@ -21,41 +21,41 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 
 from matplotlib import pyplot as plt
 
-from source.commons.TopographyCommons import SBS_CONTEXTS
-from source.commons.TopographyCommons import ID
-from source.commons.TopographyCommons import DBS
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
+from SigProfilerTopography.source.commons.TopographyCommons import ID
+from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
-from source.commons.TopographyCommons import DATA
-from source.commons.TopographyCommons import FIGURE
-from source.commons.TopographyCommons import REPLICATIONTIME
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
+from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
+from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONTIME
 
-from source.commons.TopographyCommons import SAMPLES
+from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
 
-from source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
-from source.commons.TopographyCommons import AGGREGATEDINDELS
-from source.commons.TopographyCommons import AGGREGATEDDINUCS
-from source.commons.TopographyCommons import SIGNATUREBASED
-from source.commons.TopographyCommons import INDELBASED
-from source.commons.TopographyCommons import MICROHOMOLOGY
-from source.commons.TopographyCommons import REPEAT
+from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDSUBSTITUTIONS
+from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDINDELS
+from SigProfilerTopography.source.commons.TopographyCommons import AGGREGATEDDINUCS
+from SigProfilerTopography.source.commons.TopographyCommons import SIGNATUREBASED
+from SigProfilerTopography.source.commons.TopographyCommons import INDELBASED
+from SigProfilerTopography.source.commons.TopographyCommons import MICROHOMOLOGY
+from SigProfilerTopography.source.commons.TopographyCommons import REPEAT
 
-from source.commons.TopographyCommons import takeAverage
-from source.commons.TopographyCommons import getDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
+from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
-from source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from source.commons.TopographyCommons import getSample2NumberofSubsDict
-from source.commons.TopographyCommons import getSample2NumberofIndelsDict
-from source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
+from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
+from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
 
-from source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
-from source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
-from source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
+from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
+from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
+from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
-from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
-from source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
