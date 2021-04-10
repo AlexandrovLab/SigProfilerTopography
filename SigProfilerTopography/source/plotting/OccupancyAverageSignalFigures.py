@@ -59,7 +59,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCC
 from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
 from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME_DNA_ELEMENT
 from SigProfilerTopography.source.commons.TopographyCommons import ATAC_DNA_ELEMENT
+from SigProfilerTopography.source.commons.TopographyCommons import OPEN_CHROMATIN
 
+from SigProfilerTopography.source.commons.TopographyCommons import PLOTS
 from SigProfilerTopography.source.commons.TopographyCommons import TABLES
 from SigProfilerTopography.source.commons.TopographyCommons import DETAILED
 from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
@@ -98,8 +100,6 @@ INDIVIDUAL_SIGNATURE='INDIVIDUAL_SIGNATURE'
 ALL_SIGNATURES='ALL_SIGNATURES'
 
 ALL_MUTATIONS = [AGGREGATEDSUBSTITUTIONS, AGGREGATEDDINUCS, AGGREGATEDINDELS]
-
-significance_level= 0.01
 
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
@@ -426,7 +426,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
 ########################## Plot Figure starts  ##############################
 #############################################################################
 #Called by plotSignatureBasedFigures
-def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
+def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
         figurenameEnd='_NucleosomeOccupancy.png'
@@ -493,7 +493,7 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         rcParams.update({'figure.autolayout': True})
 
         # print('Plot signature based figure for %s starts' %signature)
-        fig = plt.figure(figsize=(20,10),facecolor=None,dpi=300)
+        fig = plt.figure(figsize=(20,10),facecolor=None,dpi=100)
         plt.style.use('ggplot')
 
         # This code makes the background white.
@@ -649,13 +649,16 @@ def plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample,sig
         #######################################################################
         # new code
         if (sample is None):
-            figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
+            if occupancy_type==NUCLEOSOMEOCCUPANCY:
+                figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
+            elif occupancy_type==EPIGENOMICSOCCUPANCY:
+                figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS, filename)
         else:
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type, filename)
         #######################################################################
 
-        fig.savefig(figureFile)
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
         plt.clf()
         #Clears the axis without removing the axis itself
         plt.cla()
@@ -752,7 +755,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     #####################################################################
     #####################################################################
     #####################################################################
-    fig = plt.figure(figsize=(30, 10), facecolor=None)
+    fig = plt.figure(figsize=(20, 10), facecolor=None, dpi=100)
     plt.style.use('ggplot')
 
     # This code makes the background white.
@@ -921,18 +924,21 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     else:
         plt.title(jobname, fontsize=40, fontweight='bold')
 
-    plt.xlabel(xlabel, fontsize=30)
-    plt.ylabel(ylabel, fontsize=30)
+    plt.xlabel(xlabel, fontsize=32, fontweight='semibold')
+    plt.ylabel(ylabel, fontsize=32, fontweight='semibold')
 
     ######################################################################################
     if (sample is None):
-        figureFile = os.path.join(outputDir,jobname,FIGURE,occupancy_type,filename)
+        if occupancy_type==EPIGENOMICSOCCUPANCY:
+            figureFile = os.path.join(outputDir,jobname,FIGURE,occupancy_type,PLOTS,filename)
+        elif occupancy_type==NUCLEOSOMEOCCUPANCY:
+            figureFile = os.path.join(outputDir,jobname,FIGURE,occupancy_type,filename)
     else:
         os.makedirs(os.path.join(outputDir, jobname,FIGURE,SAMPLES,sample,occupancy_type), exist_ok=True)
         figureFile = os.path.join(outputDir,jobname,FIGURE,SAMPLES,sample,occupancy_type,filename)
     ######################################################################################
 
-    fig.savefig(figureFile)
+    fig.savefig(figureFile,dpi=100, bbox_inches="tight")
     plt.clf()
     plt.cla()
     plt.close()
@@ -1002,7 +1008,7 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
         #[signature cutoff numberofMutations  averageProbability]
         signatureBasedNumberofMutations = int(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['number_of_mutations'].values[0])
-        plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(None, signature,
+        plotSignatureBasedAverageOccupancyFigureWithSimulations(None, signature,
                                                                           signatureBasedNumberofMutations,
                                                                           xlabel,ylabel,label,text,
                                                                           outputDir, jobname,
@@ -1012,7 +1018,7 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
     for sample in sample2Signature2NumberofMutationsDict:
         for signature in sample2Signature2NumberofMutationsDict[sample]:
             sampleBasedSignatureBasedNumberofMutations = sample2Signature2NumberofMutationsDict[sample][signature]
-            plotSignatureBasedAverageNucleosomeOccupancyFigureWithSimulations(sample, signature,
+            plotSignatureBasedAverageOccupancyFigureWithSimulations(sample, signature,
                                                                               sampleBasedSignatureBasedNumberofMutations,
                                                                               xlabel,ylabel,label,text,
                                                                               outputDir, jobname,
@@ -1020,61 +1026,61 @@ def plotSignatureBasedFigures(mutationType,signature_cutoff_numberofmutations_av
 #########################################################
 
 
-########################################################
-def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,dna_element,occupancy_type,plusOrMinus_epigenomics,verbose):
-    center=plusOrMinus_epigenomics
-    plusorMinus=250
-    start=center-plusorMinus
-    end= center+plusorMinus+1
-
-    if verbose: print('\n\tVerbose ----------> %s %s %s' % (signature, cancer_type, dna_element))
-    avg_real_signal = None
-
-    # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
-    avg_real_data_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, cancer_type, occupancy_type,dna_element,AVERAGE_SIGNAL_ARRAY)
-
-    if avg_real_data_signal_array is not None:
-        #If there is nan in the list np.mean returns nan.
-        # 1st way
-        # avg_real_data_signal_array[np.isnan(avg_real_data_signal_array)] = 0
-        # avg_real_signal = np.mean(avg_real_data_signal_array[1750:2251])
-        # 2nd way
-        if not np.all(np.isnan(avg_real_data_signal_array[start:end])):
-            avg_real_signal = np.nanmean(avg_real_data_signal_array[start:end])
-
-    avg_simulated_signal = None
-    if (numberofSimulations > 0):
-        listofSimulationsSignatureBased = readDataForSimulations(None, signature, SIGNATUREBASED, output_dir,cancer_type, numberofSimulations, occupancy_type,dna_element,AVERAGE_SIGNAL_ARRAY)
-
-        if ((listofSimulationsSignatureBased is not None) and listofSimulationsSignatureBased):
-            stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
-            (rows, cols) = stackedSimulationsSignatureBased.shape
-            if verbose: print('\tVerbose After np.vstack --- stackedSimulationsSignatureBased rows:%d cols:%d' % (rows, cols))
-
-            #Get the part that we are interested
-            stackedSimulationsSignatureBased_of_interest= stackedSimulationsSignatureBased[:,start:end]
-            (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
-            if verbose: print(
-                '\tVerbose After get part interested in --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
-
-            # Get rid of all the rows with all nans
-            stackedSimulationsSignatureBased_of_interest = stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
-            (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
-            if verbose: print(
-                '\tVerbose After removing all nan rows --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
-
-            simulationsSignatureBasedMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
-            if not np.all(np.isnan(simulationsSignatureBasedMeans)):
-                avg_simulated_signal = np.nanmean(simulationsSignatureBasedMeans)
-
-    if (avg_real_signal is not None) and (avg_simulated_signal is not None):
-        fold_change = avg_real_signal / avg_simulated_signal
-        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, dna_element,avg_real_signal, avg_simulated_signal, fold_change))
-        return fold_change
-    else:
-        if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,dna_element,str(avg_real_signal),str(avg_simulated_signal)))
-        return None
-########################################################
+# ########################################################
+# def calculate_fold_change(output_dir,numberofSimulations,signature,cancer_type,dna_element,occupancy_type,plusOrMinus_epigenomics,verbose):
+#     center=plusOrMinus_epigenomics
+#     plusorMinus=250
+#     start=center-plusorMinus
+#     end= center+plusorMinus+1
+#
+#     if verbose: print('\n\tVerbose ----------> %s %s %s' % (signature, cancer_type, dna_element))
+#     avg_real_signal = None
+#
+#     # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
+#     avg_real_data_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, cancer_type, occupancy_type,dna_element,AVERAGE_SIGNAL_ARRAY)
+#
+#     if avg_real_data_signal_array is not None:
+#         #If there is nan in the list np.mean returns nan.
+#         # 1st way
+#         # avg_real_data_signal_array[np.isnan(avg_real_data_signal_array)] = 0
+#         # avg_real_signal = np.mean(avg_real_data_signal_array[1750:2251])
+#         # 2nd way
+#         if not np.all(np.isnan(avg_real_data_signal_array[start:end])):
+#             avg_real_signal = np.nanmean(avg_real_data_signal_array[start:end])
+#
+#     avg_simulated_signal = None
+#     if (numberofSimulations > 0):
+#         listofSimulationsSignatureBased = readDataForSimulations(None, signature, SIGNATUREBASED, output_dir,cancer_type, numberofSimulations, occupancy_type,dna_element,AVERAGE_SIGNAL_ARRAY)
+#
+#         if ((listofSimulationsSignatureBased is not None) and listofSimulationsSignatureBased):
+#             stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
+#             (rows, cols) = stackedSimulationsSignatureBased.shape
+#             if verbose: print('\tVerbose After np.vstack --- stackedSimulationsSignatureBased rows:%d cols:%d' % (rows, cols))
+#
+#             #Get the part that we are interested
+#             stackedSimulationsSignatureBased_of_interest= stackedSimulationsSignatureBased[:,start:end]
+#             (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
+#             if verbose: print(
+#                 '\tVerbose After get part interested in --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
+#
+#             # Get rid of all the rows with all nans
+#             stackedSimulationsSignatureBased_of_interest = stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
+#             (rows, cols) = stackedSimulationsSignatureBased_of_interest.shape
+#             if verbose: print(
+#                 '\tVerbose After removing all nan rows --- stackedSimulationsSignatureBased_of_interest rows:%d cols:%d' % (rows, cols))
+#
+#             simulationsSignatureBasedMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
+#             if not np.all(np.isnan(simulationsSignatureBasedMeans)):
+#                 avg_simulated_signal = np.nanmean(simulationsSignatureBasedMeans)
+#
+#     if (avg_real_signal is not None) and (avg_simulated_signal is not None):
+#         fold_change = avg_real_signal / avg_simulated_signal
+#         if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%f\tavg_simulated_signal:%f\tfold change:%f' % (signature, cancer_type, dna_element,avg_real_signal, avg_simulated_signal, fold_change))
+#         return fold_change
+#     else:
+#         if verbose: print('\tVerbose ----------> %s %s %s avg_real_signal:%s\tavg_simulated_signal:%s\tfold change: nan' % (signature,cancer_type,dna_element,str(avg_real_signal),str(avg_simulated_signal)))
+#         return None
+# ########################################################
 
 
 
@@ -1093,19 +1099,19 @@ def fill_average_fold_change_array_rows_signatures_columns_dna_elements(signatur
             if dna_element not in dna_elements:
                 dna_elements.append(dna_element)
 
-    #Enlarge dna_elements with epigenomics_dna_elements
+    # Enlarge dna_elements with epigenomics_dna_elements
     for epigenomics_dna_element in epigenomics_dna_elements:
         if epigenomics_dna_element not in dna_elements:
             dna_elements.append(epigenomics_dna_element)
 
-    #sort the dna_elements and signatures
+    # Sort the dna_elements and signatures
     dna_elements=sorted(dna_elements,key=natural_key)
     signatures=sorted(signatures,key=natural_key)
 
-    #Initialize
+    # Initialize
     average_fold_change_array = np.zeros((len(signatures), len(dna_elements)))
 
-    #fill the average_fold_change_array
+    # Fill the average_fold_change_array
     for signature_index, signature in enumerate(signatures,0):
         for dna_element_index, dna_element in enumerate(dna_elements,0):
             if signature in signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict:
@@ -1383,7 +1389,7 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     signatures, dna_elements, average_fold_change_array= fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements)
 
     #Update ATAC-Seq to Chromatin
-    dna_elements = ['Chromatin' if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
+    dna_elements = [OPEN_CHROMATIN if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
 
     if signatureType==SBS:
         signatures = ['ALL SUBSTITUTIONS' if AGGREGATEDSUBSTITUTIONS in signature else signature for signature in signatures]
@@ -1409,7 +1415,7 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
         if verbose: print('\tVerbose average_fold_change_array.shape')
         if verbose: print(average_fold_change_array.shape)
 
-    #For Rose Jan11 2021 Meeting starts
+    # If dna_element is not statistically significant makes ir cell color white starts
     # backup_average_fold_change_array=average_fold_change_array.copy()
     #
     # for signature_index, signature in enumerate(signatures,0):
@@ -1426,13 +1432,12 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     #                     backup_average_fold_change_array[signature_index, dna_element_index]=1.0
     #
     # im, cbar = heatmap(backup_average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
-    #For Rose Jan11 2021 Meeting ends
+    # If dna_element is not statistically significant makes ir cell color white ends
 
-    # Blue White Red
-    # Uncomment After Rose Jan11 2021 Meeting
+    # Color the heatmap
     im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
 
-    #Put text in each heatmap cell
+    # Write average fold change w/wo star in each heatmap cell
     for signature_index, signature in enumerate(signatures,0):
         for dna_element_index, dna_element in enumerate(dna_elements,0):
             if signature2dna_element2significancedict is not None:
@@ -1444,6 +1449,8 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                     signature=AGGREGATEDINDELS
                 if signature in signature2dna_element2significancedict:
                     if dna_element in signature2dna_element2significancedict[signature]:
+                        text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
+                    elif (dna_element==OPEN_CHROMATIN) and any([True for key in signature2dna_element2significancedict[signature].keys() if ATAC_DNA_ELEMENT in key]):
                         text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
                     else:
                         text = ax.text(dna_element_index, signature_index, "%.2f" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
@@ -1562,6 +1569,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           epigenomics_dna_elements,
                                           plusOrMinus_epigenomics,
                                           plusOrMinus_nucleosome,
+                                          epigenomics_heatmap_significance_level,
                                           verbose):
 
     if verbose: print('\tVerbose epigenomics_files_memos:%s' % (epigenomics_files_memos))
@@ -1608,6 +1616,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                                     num_of_real_data_avg_overlap,
                                                     plusOrMinus_epigenomics,
                                                     plusOrMinus_nucleosome,
+                                                    epigenomics_heatmap_significance_level,
                                                     outputDir,
                                                     jobname,
                                                     numberofSimulations,
@@ -1632,6 +1641,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                     num_of_real_data_avg_overlap,
                                                     epigenomics_center,
                                                     nucleosome_center,
+                                                    epigenomics_heatmap_significance_level,
                                                     outputDir,
                                                     jobname,
                                                     numberofSimulations,
@@ -1776,7 +1786,9 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #Filter using q values (combined_q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change))
     # (signature, cancer_type, dna_element) with combined q_value <= 0.01 and (avg_fold_change >= 1.1 or <=0.9)
     #[fold_change_list, avg_fold_change, q_value_list, combined_q_value]
-    step5_filtered_q_value_df,step5_signature2dna_element2average_fold_changedict,signature2dna_element2significancedict=step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,heatmaps_output_dir)
+    step5_filtered_q_value_df,step5_signature2dna_element2average_fold_changedict,signature2dna_element2significancedict=step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,
+                                                                                                                                                            heatmaps_output_dir,
+                                                                                                                                                            epigenomics_heatmap_significance_level)
     ############################################################################
 
     ############################################################################
@@ -2115,14 +2127,14 @@ def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_va
 
 ########################################################
 #[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value,q_value]
-def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_element2filtered_q_list_dict,filepath):
+def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_element2filtered_q_list_dict,epigenomics_heatmap_significance_level,filepath):
     L = sorted([(signature, dna_element, filtered_q_value_list[0], filtered_q_value_list[1], filtered_q_value_list[2], filtered_q_value_list[3], filtered_q_value_list[4], filtered_q_value_list[5], filtered_q_value_list[6], filtered_q_value_list[7])
                 for signature, a in step4_signature2dna_element2filtered_q_list_dict.items()
                   for dna_element, filtered_q_value_list in a.items()])
     df = pd.DataFrame(L, columns=['signature', 'dna_element',
                                   'dna_element_long_list','avg_real_signal_list','avg_sim_signal_list','fold_change_list', 'avg_fold_change', 'p_value_list', 'combined_p_value','filtered_q_value'])
 
-    df=df[df['filtered_q_value']<=significance_level]
+    df=df[df['filtered_q_value']<=epigenomics_heatmap_significance_level]
 
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
@@ -2529,7 +2541,7 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
 
 
 ########################################################
-def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,heatmaps_output_dir):
+def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,heatmaps_output_dir,epigenomics_heatmap_significance_level):
     signature2dna_element2filtered_q_list_dict={}
     signature2dna_element2average_fold_changedict={}
     signature2dna_element2significancedict = {}
@@ -2551,7 +2563,7 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
             #Filter here
             # if (q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change)):
             # Let's plot all
-            if (q_value <= significance_level):
+            if (q_value <= epigenomics_heatmap_significance_level):
                 if signature in signature2dna_element2significancedict:
                     if dna_element in signature2dna_element2significancedict[signature]:
                         print('There is a problem')
@@ -2580,7 +2592,7 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
     df_filename = 'Step5_Signature_CancerType_DNAElement_FilteredQValue.txt'
     filepath = os.path.join(heatmaps_output_dir, TABLES, df_filename)
     #Filter rows in write_dictionary_as_dataframe_step5_filtered_q_value
-    step5_filtered_q_value_df=write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,filepath)
+    step5_filtered_q_value_df=write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,epigenomics_heatmap_significance_level,filepath)
     ############################################################################
 
     return step5_filtered_q_value_df,signature2dna_element2average_fold_changedict,signature2dna_element2significancedict
@@ -2603,7 +2615,10 @@ def occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_b
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
 
     #######################################################################################################################
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type), exist_ok=True)
+    if occupancy_type==NUCLEOSOMEOCCUPANCY:
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type), exist_ok=True)
+    elif occupancy_type==EPIGENOMICSOCCUPANCY:
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS), exist_ok=True)
     #######################################################################################################################
 
     ############## Read necessary dictionaries starts ########################################

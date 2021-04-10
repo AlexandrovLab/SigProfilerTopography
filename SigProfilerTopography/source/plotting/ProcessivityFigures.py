@@ -388,7 +388,8 @@ def plot_processivity_figure(outputDir,
         panel1.set_aspect(1.0)
 
         #set title
-        panel1.text(len(sorted_processsive_group_length_list)*3, len(sorted_signature_list)+2.5, jobname,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
+        # panel1.text(len(sorted_processsive_group_length_list)*3, len(sorted_signature_list)+2.5, jobname,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
+        panel1.text(0.1, 1.2, jobname,horizontalalignment='center', verticalalignment='top', fontsize=60, fontweight='bold', fontname='Arial',transform=panel1.transAxes)
 
         #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
         if (len(sorted_processsive_group_length_list)>1):
@@ -530,8 +531,8 @@ def plot_processivity_figure(outputDir,
         ##################################################################################
         filename = '%s_Processivity.png' %(jobname)
         figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
-        plot1.savefig(figFile)
-        plot1.tight_layout()
+        plot1.savefig(figFile,dpi=100, bbox_inches="tight")
+        # plot1.tight_layout()
 
         plt.cla()
         plt.close(plot1)

@@ -268,11 +268,13 @@ WEIGHTED_AVERAGE_METHOD='WEIGHTED_AVERAGE_METHOD'
 COLORBAR_SEISMIC='seismic'
 COLORBAR_DISCREET='discreet'
 NUCLEOSOME_BIOSAMPLE="K562"
+PLOTS='plots'
 TABLES='tables'
 DETAILED='detailed'
 EXCEL_FILES='excel_files'
 NUCLEOSOME_DNA_ELEMENT='Nucleosome'
 ATAC_DNA_ELEMENT='ATAC'
+OPEN_CHROMATIN='Open\nChromatin'
 ###################################################################################################
 
 ###################################################################################################
