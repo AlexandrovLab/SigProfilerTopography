@@ -16,6 +16,7 @@
     <orderEntry type="jdk" jdkName="Python 3.9 (SigProfilerTopography)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
+    <orderEntry type="module" module-name="Test" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

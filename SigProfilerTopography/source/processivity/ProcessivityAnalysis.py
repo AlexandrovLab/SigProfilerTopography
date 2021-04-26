@@ -35,7 +35,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import SBS1536
 from SigProfilerTopography.source.commons.TopographyCommons import SBS3072
 
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
-from SigProfilerTopography.source.commons.TopographyCommons import writeDictionary
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
@@ -46,20 +45,22 @@ from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DIST
 
 ####################################################################################
 #DEC 22, 2019
-def findProcessiveGroupsForApplySyncWithDistance(simNum,
+def findProcessiveGroupsForApplySyncWithDistance(inter_mutational_distance_for_processivity,
+                                                 simNum,
                                                  chrLong,
                                                  sample,
-                                                 sampleBased_chrBased_spms_df,
+                                                 sampleBased_chrBased_subs_df,
                                                  considerProbabilityInProcessivityAnalysis,
                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                  verbose):
     #Sort it
-    sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
+    sampleBased_chrBased_subs_df.sort_values(START, inplace=True)
 
-    return findProcessiveGroupsWithDistance(simNum,
+    return findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
+                                            simNum,
                                             chrLong,
                                             sample,
-                                            sampleBased_chrBased_spms_df,
+                                            sampleBased_chrBased_subs_df,
                                             considerProbabilityInProcessivityAnalysis,
                                             subsSignature_cutoff_numberofmutations_averageprobability_df,
                                             verbose)
@@ -67,193 +68,87 @@ def findProcessiveGroupsForApplySyncWithDistance(simNum,
 
 
 ####################################################################################
-#SEP 17, 2020
-#Did not work as expected
-def findProcessiveGroupsForApplySyncWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-    #Sort it
-    chrBased_spms_df.sort_values(START, inplace=True)
-
-    return findProcessiveGroupsWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
-####################################################################################
-
-####################################################################################
-#SEP 17, 2020
-def findProcessiveGroupsForApplySyncWithCount(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose):
-    #Sort it
-    sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
-
-    return findProcessiveGroupsWithCount(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
-####################################################################################
-
-
-####################################################################################
-def findProcessiveGroupsForInputList(inputList):
-    simNum=inputList[0]
-    chrLong=inputList[1]
-    sample=inputList[2]
-    sampleBased_chrBased_spms_df = inputList[3]
-    considerProbabilityInProcessivityAnalysis = inputList[4]
-    subsSignature_cutoff_numberofmutations_averageprobability_df=inputList[5]
-    verbose=inputList[6]
-
-    #Sort it
-    sampleBased_chrBased_spms_df.sort_values(START, inplace=True)
-
-    return findProcessiveGroupsForApplySyncWithDistance(simNum,chrLong,sample,sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,subsSignature_cutoff_numberofmutations_averageprobability_df,verbose)
-####################################################################################
-
-
-####################################################################################
-def findProcessiveGroupsWithCount(simNum,chrLong,sample,sorted_sampleBased_chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
-
-    my_dict={}
-
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
-    #They must be same type of mutation e.g.: T>A
-    #They must be resulted from same signature
-    #They must be on the same strand
-    if (sorted_sampleBased_chrBased_spms_df is not None):
-
-        ################################
-        #As long as mutation, signature, and pyrimidine strands are the same continue to accumlate, if one of them is not the same calculate cumsum and start again
-        sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION].ne(sorted_sampleBased_chrBased_spms_df[MUTATION].shift())) |
-                                                            (sorted_sampleBased_chrBased_spms_df['Signature'].ne(sorted_sampleBased_chrBased_spms_df['Signature'].shift())) |
-                                                            (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift()))) .cumsum()
-        ################################
-
-
-        ################################
-        df = sorted_sampleBased_chrBased_spms_df.groupby("subgroup").agg(
-            Signature=pd.NamedAgg(column='Signature', aggfunc="first"),
-            ProcessiveGroupLength=pd.NamedAgg(column=MUTATION, aggfunc="count"),
-            Probability=pd.NamedAgg(column='Probability', aggfunc="max"),)
-        #agg().reset_index() can be used. not necessary
-        ################################
-
-        ################################
-        # Remove rows with processive groups of length 1
-        df = df[df['ProcessiveGroupLength'].ne(1)]
-        ################################
-
-        ################################
-        if considerProbabilityInProcessivityAnalysis:
-            # # Remove rows with processive groups of length 1
-            df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
-        ################################
-
-        ################################
-        my_dict = df.groupby(['Signature', 'ProcessiveGroupLength']).size().to_dict()
-        ################################
-
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
-
-    return my_dict
-####################################################################################
-
-####################################################################################
-#Sep 17, 2020
-#Did not work as expected
-def findProcessiveGroupsWithDistanceAllSamples(simNum,chrLong,chrBased_spms_df,considerProbabilityInProcessivityAnalysis,signature_cutoff_numberofmutations_averageprobability_df,verbose):
-    my_all_samples_dict={}
-
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong))
-    #They must be same type of mutation e.g.: T>A
-    #They must be resulted from same signature
-    #They must be on the same strand
-    if (chrBased_spms_df is not None):
-
-        for sample, sorted_sampleBased_chrBased_spms_df in chrBased_spms_df.groupby('Sample'):
-
-            ################################
-            #As long as mutation, signature, and pyrimidine strands are the same continue to accumlate, if one of them is not the same calculate cumsum and start again
-            sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION].ne(sorted_sampleBased_chrBased_spms_df[MUTATION].shift())) |
-                                                                (sorted_sampleBased_chrBased_spms_df['Signature'].ne(sorted_sampleBased_chrBased_spms_df['Signature'].shift())) |
-                                                                (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift()))) .cumsum()
-            ################################
-
-            ################################
-            df = sorted_sampleBased_chrBased_spms_df.groupby("subgroup").agg(
-                Signature=pd.NamedAgg(column='Signature', aggfunc="first"),
-                ProcessiveGroupLength=pd.NamedAgg(column=MUTATION, aggfunc="count"),
-                Probability=pd.NamedAgg(column='Probability', aggfunc="max"),
-                LastDistance=pd.NamedAgg(column='Start', aggfunc="last"),
-                FirstDistance=pd.NamedAgg(column='Start', aggfunc="first"),
-                ).assign(Distance=lambda x: x.pop('LastDistance') - x.pop('FirstDistance'))
-            #agg().reset_index() can be used. not necessary
-            ################################
-
-            ################################
-            # Remove rows with processive groups of length 1
-            df = df[df['ProcessiveGroupLength'].ne(1)]
-            ################################
-
-            ################################
-            if considerProbabilityInProcessivityAnalysis:
-                # Remove rows with processive groups of length 1
-                df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
-            ################################
-
-            ################################
-            my_dict = {k: np.hstack(v) for k, v in df.groupby(['Signature', 'ProcessiveGroupLength'])['Distance']}
-            ################################
-
-            ################################
-            accumulateDict(my_dict,my_all_samples_dict)
-            ################################
-
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong))
-
-    return my_all_samples_dict
-####################################################################################
-
-####################################################################################
-def findProcessiveGroupsWithDistance(simNum,
+def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
+                                     simNum,
                                      chrLong,
                                      sample,
-                                     sorted_sampleBased_chrBased_spms_df,
+                                     sorted_sampleBased_chrBased_subs_df,
                                      considerProbabilityInProcessivityAnalysis,
                                      signature_cutoff_numberofmutations_averageprobability_df,
                                      verbose):
 
     my_dict={}
+    mutations_loci_df=None
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
-    #They must be same type of mutation e.g.: T>A
-    #They must be resulted from same signature
-    #They must be on the same strand
-    if (sorted_sampleBased_chrBased_spms_df is not None):
+    # They must be coming from the same sample
+    # They must be same type of mutation e.g.: T>A
+    # They must be resulted from same signature
+    # They must be on the same strand
+    if (sorted_sampleBased_chrBased_subs_df is not None):
+
+        #As long as mutation, signature, and pyrimidine strands are the same continue to accumulate, if one of them is not the same calculate cumsum and start again
+        # e.g.: If there are 4 consecutive rows with same mutation, signature and pyrimidine strand, subgroup will be 4 for these 4 rows
+        if inter_mutational_distance_for_processivity:
+            sorted_sampleBased_chrBased_subs_df['subgroup'] = ((sorted_sampleBased_chrBased_subs_df[MUTATION].ne(sorted_sampleBased_chrBased_subs_df[MUTATION].shift())) |
+                                                            (sorted_sampleBased_chrBased_subs_df['Signature'].ne(sorted_sampleBased_chrBased_subs_df['Signature'].shift())) |
+                                                            (sorted_sampleBased_chrBased_subs_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_subs_df[PYRAMIDINESTRAND].shift()))|
+                                                           (sorted_sampleBased_chrBased_subs_df[START] - sorted_sampleBased_chrBased_subs_df[START].shift() > inter_mutational_distance_for_processivity)) .cumsum()
+        else:
+            sorted_sampleBased_chrBased_subs_df['subgroup'] = ((sorted_sampleBased_chrBased_subs_df[MUTATION].ne(sorted_sampleBased_chrBased_subs_df[MUTATION].shift())) |
+                                                            (sorted_sampleBased_chrBased_subs_df['Signature'].ne(sorted_sampleBased_chrBased_subs_df['Signature'].shift())) |
+                                                            (sorted_sampleBased_chrBased_subs_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_subs_df[PYRAMIDINESTRAND].shift()))) .cumsum()
+
 
         ################################
-        #As long as mutation, signature, and pyrimidine strands are the same continue to accumlate, if one of them is not the same calculate cumsum and start again
-        #If there are 4 consecutive rows with same mutatio, signature and pyrimidine strand, subgroup will be 4
-        sorted_sampleBased_chrBased_spms_df['subgroup'] = ((sorted_sampleBased_chrBased_spms_df[MUTATION].ne(sorted_sampleBased_chrBased_spms_df[MUTATION].shift())) |
-                                                            (sorted_sampleBased_chrBased_spms_df['Signature'].ne(sorted_sampleBased_chrBased_spms_df['Signature'].shift())) |
-                                                            (sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].ne(sorted_sampleBased_chrBased_spms_df[PYRAMIDINESTRAND].shift()))) .cumsum()
-        ################################
+        #Former way
+        # df = sorted_sampleBased_chrBased_subs_df.groupby("subgroup").agg(
+        #     Signature=pd.NamedAgg(column='Signature', aggfunc="first"),
+        #     ProcessiveGroupLength=pd.NamedAgg(column=MUTATION, aggfunc="count"),
+        #     Probability=pd.NamedAgg(column='Probability', aggfunc="max"),
+        #     LastDistance=pd.NamedAgg(column='Start', aggfunc="last"),
+        #     FirstDistance=pd.NamedAgg(column='Start', aggfunc="first"),
+        #     ).assign(Distance=lambda x: x.pop('LastDistance') - x.pop('FirstDistance'))
+        # #agg().reset_index() can be used. not necessary
 
+        #To print mutation starts
+        df = sorted_sampleBased_chrBased_subs_df.groupby('subgroup').agg(
+            {'Sample':'first',
+             'Signature': 'first',
+             'Probability':'max',
+             'Mutation': 'count',
+             'PyramidineStrand': 'first',
+             # 'Start': lambda x: x.unique().tolist(),
+             # 'Start': lambda x: x.tolist(),
+             'Start': list,
+             }).rename(columns={'Start': 'Start_List', 'Mutation':'ProcessiveGroupLength'}).reset_index()
 
-        ################################
-        df = sorted_sampleBased_chrBased_spms_df.groupby("subgroup").agg(
-            Signature=pd.NamedAgg(column='Signature', aggfunc="first"),
-            ProcessiveGroupLength=pd.NamedAgg(column=MUTATION, aggfunc="count"),
-            Probability=pd.NamedAgg(column='Probability', aggfunc="max"),
-            LastDistance=pd.NamedAgg(column='Start', aggfunc="last"),
-            FirstDistance=pd.NamedAgg(column='Start', aggfunc="first"),
-            ).assign(Distance=lambda x: x.pop('LastDistance') - x.pop('FirstDistance'))
-        #agg().reset_index() can be used. not necessary
-        ################################
+        df['FirstLoci'] = pd.DataFrame(df['Start_List'].values.tolist()).min(axis=1)
+        df['LastLoci'] = pd.DataFrame(df['Start_List'].values.tolist()).max(axis=1)
 
+        df['Distance'] = df['LastLoci'] - df['FirstLoci']
+        df.drop(columns=['FirstLoci', 'LastLoci'], inplace=True)
+        ################################
 
         ################################
         # Remove rows with processive groups of length 1
         df = df[df['ProcessiveGroupLength'].ne(1)]
         ################################
 
-
         ################################
         if considerProbabilityInProcessivityAnalysis:
             df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
         ################################
+
+        #'subgroup' 'Signature' 'Probability' 'ProcessiveGroupLength' 'PyramidineStrand' 'Start_List' 'Distance'
+        mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
+            {'Sample':'first',
+             'Start_List': list,
+             'Distance':list
+             }).reset_index()
+
+        mutations_loci_df['Chr']=chrLong
+        mutations_loci_df = mutations_loci_df[['Sample', 'Chr', 'Signature', 'ProcessiveGroupLength', 'Start_List', 'Distance']]
 
         ################################
         my_dict = {k: np.hstack(v) for k, v in df.groupby(['Signature', 'ProcessiveGroupLength'])['Distance']}
@@ -261,7 +156,7 @@ def findProcessiveGroupsWithDistance(simNum,
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
 
-    return my_dict
+    return (my_dict, mutations_loci_df)
 ####################################################################################
 
 ####################################################################################
@@ -342,21 +237,11 @@ def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,f
 
 
 ####################################################################################
-#This method can be customized for other dictionaries
-def writeCountDictionaryAsADataframe(signature2ProcessiveGroupLength2CountDict,filePath):
-    L = sorted([(signature, processiveGroupLength, count,0,0) for signature, v in signature2ProcessiveGroupLength2CountDict.items() for processiveGroupLength, count in v.items()])
-    df = pd.DataFrame(L,columns=['Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_Distance', 'Median_of_Number_of_Processive_Groups_in_MB'])
-
-    #write this dataframe
-    df.to_csv(filePath, sep='\t', header=True, index=False)
-####################################################################################
-
-
-####################################################################################
 def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       computation_type,
                                                                       processivity_calculation_type,
+                                                                      inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,
                                                                       numofSimulations,
@@ -365,216 +250,103 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
-        #####################################################################
-        if verbose: print('\tVerbose computation_type:%s' % (computation_type))
+        if verbose: print('\tVerbose computation_type:%s processivity_calculation_type:%s' % (computation_type,processivity_calculation_type))
 
-        if computation_type == USING_APPLY_ASYNC:
-            for simNum in range(0,numofSimulations+1):
-                jobs = []
-                numofProcesses = multiprocessing.cpu_count()
-                pool = multiprocessing.Pool(processes=numofProcesses)
+        for simNum in range(0,numofSimulations+1):
+            jobs = []
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
 
-                signature2ProcessiveGroupLength2DistanceListDict = {}
+            signature2ProcessiveGroupLength2DistanceListDict = {}
+            df_mutations_loci_list=[]
 
-                ####################################################################################
-                def accumulate_apply_async_result_with_distance(my_dict):
-                    if my_dict is not None:
-                        for (signature,processive_group_length) in my_dict:
-                            my_distance_array=my_dict[(signature,processive_group_length)]
+            def accumulate_apply_async_result_with_distance(result_tuple):
+                my_dict=result_tuple[0]
+                mutations_loci_df=result_tuple[1]
 
-                            if signature in signature2ProcessiveGroupLength2DistanceListDict:
-                                if processive_group_length in signature2ProcessiveGroupLength2DistanceListDict[signature]:
-                                    signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length].extend(my_distance_array.tolist())
-                                else:
-                                    signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = my_distance_array.tolist()
+                if (mutations_loci_df is not None) and (not mutations_loci_df.empty):
+                    df_mutations_loci_list.append(mutations_loci_df)
+                if my_dict is not None:
+                    for (signature,processive_group_length) in my_dict:
+                        my_distance_array=my_dict[(signature,processive_group_length)]
+
+                        if signature in signature2ProcessiveGroupLength2DistanceListDict:
+                            if processive_group_length in signature2ProcessiveGroupLength2DistanceListDict[signature]:
+                                signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length].extend(my_distance_array.tolist())
                             else:
-                                signature2ProcessiveGroupLength2DistanceListDict[signature] = {}
                                 signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = my_distance_array.tolist()
-                ####################################################################################
+                        else:
+                            signature2ProcessiveGroupLength2DistanceListDict[signature] = {}
+                            signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = my_distance_array.tolist()
 
+            for chrLong in chromNamesList:
+                chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                if (chrBased_subs_df is not None):
+                    ###########################################
+                    chrBased_subs_df.drop([SIMULATION_NUMBER], inplace=True, errors='ignore', axis=1)
+                    columnNamesList = list(chrBased_subs_df.columns.values)
+                    # We assume that after the column named 'Context' there are the signature columns in tab separated way.
+                    mutationIndex = columnNamesList.index(MUTATION)
+                    signatures = columnNamesList[(mutationIndex + 1):]
+                    ###########################################
+                    chrBased_subs_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
+                    chrBased_subs_df['Signature'] = (chrBased_subs_df.loc[:, signatures]).idxmax(axis=1)
 
-                ####################################################################################
-                def accumulate_apply_async_result_with_count(my_dict):
-                    if my_dict is not None:
-                        for (signature,processive_group_length) in my_dict:
-                            count=my_dict[(signature,processive_group_length)]
+                    # Add new column. We take the probability of signature with highest probability
+                    chrBased_subs_df['Probability'] = chrBased_subs_df[signatures].max(axis=1)
 
-                            if signature in signature2ProcessiveGroupLength2DistanceListDict:
-                                if processive_group_length in signature2ProcessiveGroupLength2DistanceListDict[signature]:
-                                    signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length]+=count
-                                else:
-                                    signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = count
-                            else:
-                                signature2ProcessiveGroupLength2DistanceListDict[signature] = {}
-                                signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = count
-                ####################################################################################
+                    # Drop the signatures columns
+                    chrBased_subs_df.drop(signatures, inplace=True, axis=1)
 
+                    sampleBased_chrBased_subs_df_grouped = chrBased_subs_df.groupby(SAMPLE)
 
-                ####################################################################################
-                for chrLong in chromNamesList:
-                    chrBased_spms_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-                    if (chrBased_spms_df is not None):
-                        ###########################################
-                        chrBased_spms_df.drop([SIMULATION_NUMBER], inplace=True, errors='ignore', axis=1)
-                        columnNamesList = list(chrBased_spms_df.columns.values)
-                        # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-                        mutationIndex = columnNamesList.index(MUTATION)
-                        signatures = columnNamesList[(mutationIndex + 1):]
-                        ###########################################
-                        chrBased_spms_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
-                        chrBased_spms_df['Signature'] = (chrBased_spms_df.loc[:, signatures]).idxmax(axis=1)
+                    # With Distance
+                    for sample, sampleBased_chrBased_subs_df in sampleBased_chrBased_subs_df_grouped:
+                        # Parallel version for real run
+                        jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistance,
+                                                     args=(inter_mutational_distance_for_processivity,
+                                                           simNum,
+                                                           chrLong,
+                                                           sample,
+                                                           sampleBased_chrBased_subs_df,
+                                                           considerProbabilityInProcessivityAnalysis,
+                                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                           verbose,),
+                                                     callback=accumulate_apply_async_result_with_distance))
 
-                        # Add new column. We take the probability of signature with highest probability
-                        chrBased_spms_df['Probability'] = chrBased_spms_df[signatures].max(axis=1)
+                        # Sequential version for testing/debugging
+                        # result_tuple = findProcessiveGroupsForApplySyncWithDistance(inter_mutational_distance_for_processivity,
+                        #                            simNum,
+                        #                            chrLong,
+                        #                            sample,
+                        #                            sampleBased_chrBased_subs_df,
+                        #                            considerProbabilityInProcessivityAnalysis,
+                        #                            subsSignature_cutoff_numberofmutations_averageprobability_df,
+                        #                            verbose)
+                        # accumulate_apply_async_result_with_distance(result_tuple)
 
-                        # Drop the signatures columns
-                        chrBased_spms_df.drop(signatures, inplace=True, axis=1)
+            if verbose: print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)))
 
-                        sampleBased_chrBased_spms_df_grouped = chrBased_spms_df.groupby(SAMPLE)
+            pool.close()
+            pool.join()
 
-                        if processivity_calculation_type==CONSIDER_COUNT:
-                            # With Count
-                            for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
-                                jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithCount,
-                                                             args=(
-                                                             simNum,
-                                                             chrLong,
-                                                             sample,
-                                                             sampleBased_chrBased_spms_df,
-                                                             considerProbabilityInProcessivityAnalysis,
-                                                             subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                             verbose,),
-                                                             callback=accumulate_apply_async_result_with_count))
+            double_check_df=pd.concat(df_mutations_loci_list)
+            double_check_df.to_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "sim%d_double_check.txt"%(simNum)), sep='\t', index=False, header=True)
 
-                        elif processivity_calculation_type==CONSIDER_DISTANCE:
-                            # With Distance
-                            for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
-                                jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistance,
-                                                             args=(simNum,
-                                                                   chrLong,
-                                                                   sample,
-                                                                   sampleBased_chrBased_spms_df,
-                                                                   considerProbabilityInProcessivityAnalysis,
-                                                                   subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                                   verbose,),
-                                                             callback=accumulate_apply_async_result_with_distance))
-                ####################################################################################
-
-                if verbose: print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)))
-
-                pool.close()
-                pool.join()
-
-                if (processivity_calculation_type == CONSIDER_COUNT):
-                    ####################################################################################
-                    filename = 'Sim%d_Processivity.txt' % (simNum)
-                    filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
-                    writeCountDictionaryAsADataframe(signature2ProcessiveGroupLength2DistanceListDict,filePath)
-                    ####################################################################################
-                elif (processivity_calculation_type == CONSIDER_DISTANCE) or (processivity_calculation_type == CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER):
-                    ####################################################################################
-                    filename = 'Sim%d_Processivity.txt' % (simNum)
-                    filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
-                    signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-                    writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
-                    ####################################################################################
-
-        else:
-            for simNum in range(0,numofSimulations+1):
-                ####################################################################################
-                numofProcesses = multiprocessing.cpu_count()
-                pool = multiprocessing.Pool(numofProcesses)
-                ####################################################################################
-
-                signature2ProcessiveGroupLength2DistanceListDict = {}
-
-                ####################################################################################
-                # read chrBased spms_df
-                for chrLong in chromNamesList:
-                    # print('%s %s' %(chrLong,chrShort))
-                    chrBased_spms_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-
-                    if (chrBased_spms_df is not None):
-
-                        ###########################################
-                        chrBased_spms_df.drop([SIMULATION_NUMBER], inplace=True, errors='ignore', axis=1)
-                        columnNamesList = list(chrBased_spms_df.columns.values)
-                        # We assume that after the column named 'Context' there are the signature columns in tab separated way.
-                        mutationIndex = columnNamesList.index(MUTATION)
-                        signatures = columnNamesList[(mutationIndex + 1):]
-                        ###########################################
-
-                        # What are the columns in subs_df?
-                        # Sample  Chrom   Start   MutationLong    PyramidineStrand        TranscriptionStrand     Mutation        SBS1    SBS2    SBS3    SBS13   SBS26   SBS40   SBS44
-
-                        # delete unnecessary columns
-                        # chrBased_spms_df.drop([CHROM, MUTATIONLONG, PYRAMIDINESTRAND, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
-                        chrBased_spms_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
-
-                        # df['Max'] = df.idxmax(axis=1).
-                        # left here
-                        # https://stackoverflow.com/questions/29919306/find-the-column-name-which-has-the-maximum-value-for-each-row
-
-                        # Each mutation will be assigned to the signature with the highest probability
-                        # Add new column
-                        chrBased_spms_df['Signature'] = (chrBased_spms_df.loc[:, signatures]).idxmax(axis=1)
-
-                        # Add new column. We take the that signatures's highest probability
-                        chrBased_spms_df['Probability'] = chrBased_spms_df[signatures].max(axis=1)
-
-                        # Drop the signatures columns
-                        chrBased_spms_df.drop(signatures, inplace=True, axis=1)
-
-                        # Prepare the poolInputList
-                        poolInputList = []
-                        sampleBased_chrBased_spms_df_grouped = chrBased_spms_df.groupby(SAMPLE)
-
-                        for sample, sampleBased_chrBased_spms_df in sampleBased_chrBased_spms_df_grouped:
-                            inputList = []
-                            inputList.append(simNum)
-                            inputList.append(chrLong)
-                            inputList.append(sample)
-                            inputList.append(sampleBased_chrBased_spms_df)
-                            inputList.append(considerProbabilityInProcessivityAnalysis)
-                            inputList.append(subsSignature_cutoff_numberofmutations_averageprobability_df)
-                            inputList.append(verbose)
-                            poolInputList.append(inputList)
-
-                        # Call the function findProcessiveGroups
-                        # Sequential for each simulation and chromosome
-                        # Parallel for each sample
-                        allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list = pool.map(findProcessiveGroupsForInputList, poolInputList)
-
-                        # Accumuate all the list of dictionaries coming from all samples
-                        allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict = accumulateListofDicts(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list)
-
-                        # Accumulate the dictionary coming from each chromosome
-                        accumulateDict(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict,signature2ProcessiveGroupLength2DistanceListDict)
-                ####################################################################################
-
-                ####################################################################################
-                pool.close()
-                pool.join()
-                ####################################################################################
-
-                signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
-
-                ####################################################################################
-                filename = 'Sim%d_Processivity.txt' % (simNum)
-                filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
-                writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
-                ####################################################################################
-
-    #####################################################################
-
+            filename = 'Sim%d_Processivity.txt' % (simNum)
+            filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
+            signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
+            writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
 ####################################################################################
 
 
 ##################################################################################
+#Default value for processivity_calculation_type=CONSIDER_DISTANCE
 def processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
                          computation_type,
                          processivity_calculation_type,
+                         inter_mutational_distance_for_processivity,
                          outputDir,
                          jobname,
                          numofSimulations,
@@ -585,11 +357,13 @@ def processivityAnalysis(mutation_types_contexts,
     print('\n#################################################################################')
     print('--- ProcessivityAnalysis starts')
     print('processivity_calculation_type:%s' % processivity_calculation_type)
+    print('inter_mutational_distance_for_processivity:%s' % inter_mutational_distance_for_processivity)
 
     readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       computation_type,
                                                                       processivity_calculation_type,
+                                                                      inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,
                                                                       numofSimulations,

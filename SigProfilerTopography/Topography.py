@@ -680,6 +680,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                             numofSimulations,
                             chromNamesList,
                             processivity_calculation_type,
+                            inter_mutational_distance_for_processivity,
                             subsSignature_cutoff_numberofmutations_averageprobability_df,
                             verbose):
 
@@ -694,6 +695,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                          chromNamesList,
                          computation_type,
                          processivity_calculation_type,
+                         inter_mutational_distance_for_processivity,
                          outputDir,
                          jobname,
                          numofSimulations,
@@ -830,6 +832,7 @@ def runAnalyses(genome,
                 plot_mode=PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
                 occupancy_calculation_type=MISSING_SIGNAL,
                 processivity_calculation_type=CONSIDER_DISTANCE,
+                inter_mutational_distance_for_processivity=10000,
                 combine_p_values_method=COMBINE_P_VALUES_METHOD_FISHER,
                 fold_change_window_size=100,
                 num_of_real_data_avg_overlap=DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED):
@@ -1591,9 +1594,7 @@ def runAnalyses(genome,
             all_samples = all_samples.union(samples_list)
 
         all_samples_list=list(all_samples)
-        # print('Delete Before sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
         all_samples_list = sorted(all_samples_list, key=natural_key)
-        # print('Delete After sort --- sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
         print("--- Number of samples: %d" %len(all_samples_list))
         print("--- Samples: %s" %(all_samples_list))
         all_samples_np_array=np.array(all_samples_list)
@@ -1672,7 +1673,7 @@ def runAnalyses(genome,
         all_samples_list = sorted(all_samples_list, key=natural_key)
         all_samples_np_array=np.array(all_samples_list)
 
-        print('sample_based:%s --- type(all_samples_list):%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,type(all_samples_list),len(all_samples_list), all_samples_list))
+        print('sample_based:%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,len(all_samples_list), all_samples_list))
 
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         for mutation_type_context in mutation_types_contexts:
@@ -1896,6 +1897,7 @@ def runAnalyses(genome,
                                 numofSimulations,
                                 chromNamesList,
                                 processivity_calculation_type,
+                                inter_mutational_distance_for_processivity,
                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 verbose)
         print('#################################################################################')
