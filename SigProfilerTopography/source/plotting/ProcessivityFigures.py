@@ -178,6 +178,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
     for signature in sorted_signature_list:
         for processiveGroupLength in sorted_processsive_group_length_list:
+            radius=None
 
             if (signature_radius_df[(signature_radius_df['Signature']==signature) & (signature_radius_df['Processsive_Group_Length']==processiveGroupLength)]['Radius'].values.size>0):
                 radius=signature_radius_df[(signature_radius_df['Signature']==signature) & (signature_radius_df['Processsive_Group_Length']==processiveGroupLength)]['Radius'].values[0]
@@ -388,7 +389,6 @@ def plot_processivity_figure(outputDir,
         panel1.set_aspect(1.0)
 
         #set title
-        # panel1.text(len(sorted_processsive_group_length_list)*3, len(sorted_signature_list)+2.5, jobname,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
         panel1.text(0.1, 1.2, jobname,horizontalalignment='center', verticalalignment='top', fontsize=60, fontweight='bold', fontname='Arial',transform=panel1.transAxes)
 
         #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
@@ -397,7 +397,7 @@ def plot_processivity_figure(outputDir,
             panel1.set_xticks(np.arange(0,index+2,1))
         else:
             panel1.set_xlim([0,len(sorted_processsive_group_length_list)])
-            panel1.set_xticks(np.arange(0,len(sorted_processsive_group_length_list),1))
+            panel1.set_xticks(np.arange(0,len(sorted_processsive_group_length_list)+1,1))
 
         if (len(sorted_signature_list)>1):
             panel1.set_ylim([1, len(sorted_signature_list)])
@@ -444,8 +444,6 @@ def plot_processivity_figure(outputDir,
 
         panel1.set_facecolor('white')
         #When there are subplots, this is needed.
-        panel1.grid(color='black')
-
         panel1.grid(color='black')
 
         for edge, spine in panel1.spines.items():

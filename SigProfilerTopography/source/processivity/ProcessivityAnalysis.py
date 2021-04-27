@@ -78,7 +78,7 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
                                      verbose):
 
     my_dict={}
-    mutations_loci_df=None
+    # mutations_loci_df=None
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
     # They must be coming from the same sample
@@ -111,7 +111,7 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
         #     ).assign(Distance=lambda x: x.pop('LastDistance') - x.pop('FirstDistance'))
         # #agg().reset_index() can be used. not necessary
 
-        #To print mutation starts
+        #Current way facilitates printing mutation start positions
         df = sorted_sampleBased_chrBased_subs_df.groupby('subgroup').agg(
             {'Sample':'first',
              'Signature': 'first',
@@ -141,14 +141,14 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
         ################################
 
         #'subgroup' 'Signature' 'Probability' 'ProcessiveGroupLength' 'PyramidineStrand' 'Start_List' 'Distance'
-        mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
-            {'Sample':'first',
-             'Start_List': list,
-             'Distance':list
-             }).reset_index()
-
-        mutations_loci_df['Chr']=chrLong
-        mutations_loci_df = mutations_loci_df[['Sample', 'Chr', 'Signature', 'ProcessiveGroupLength', 'Start_List', 'Distance']]
+        # mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
+        #     {'Sample':'first',
+        #      'Start_List': list,
+        #      'Distance':list
+        #      }).reset_index()
+        #
+        # mutations_loci_df['Chr']=chrLong
+        # mutations_loci_df = mutations_loci_df[['Sample', 'Chr', 'Signature', 'ProcessiveGroupLength', 'Start_List', 'Distance']]
 
         ################################
         my_dict = {k: np.hstack(v) for k, v in df.groupby(['Signature', 'ProcessiveGroupLength'])['Distance']}
@@ -156,7 +156,8 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
 
-    return (my_dict, mutations_loci_df)
+    # return (my_dict, mutations_loci_df)
+    return (my_dict,)
 ####################################################################################
 
 ####################################################################################
@@ -262,10 +263,10 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
             def accumulate_apply_async_result_with_distance(result_tuple):
                 my_dict=result_tuple[0]
-                mutations_loci_df=result_tuple[1]
+                # mutations_loci_df=result_tuple[1]
 
-                if (mutations_loci_df is not None) and (not mutations_loci_df.empty):
-                    df_mutations_loci_list.append(mutations_loci_df)
+                # if (mutations_loci_df is not None) and (not mutations_loci_df.empty):
+                #     df_mutations_loci_list.append(mutations_loci_df)
                 if my_dict is not None:
                     for (signature,processive_group_length) in my_dict:
                         my_distance_array=my_dict[(signature,processive_group_length)]
@@ -330,8 +331,8 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             pool.close()
             pool.join()
 
-            double_check_df=pd.concat(df_mutations_loci_list)
-            double_check_df.to_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "sim%d_double_check.txt"%(simNum)), sep='\t', index=False, header=True)
+            # double_check_df=pd.concat(df_mutations_loci_list)
+            # double_check_df.to_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "sim%d_double_check.txt"%(simNum)), sep='\t', index=False, header=True)
 
             filename = 'Sim%d_Processivity.txt' % (simNum)
             filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
