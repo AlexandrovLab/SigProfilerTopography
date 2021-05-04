@@ -78,7 +78,7 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
                                      verbose):
 
     my_dict={}
-    # mutations_loci_df=None
+    mutations_loci_df=None
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
     # They must be coming from the same sample
@@ -140,15 +140,15 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
             df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
         ################################
 
-        #'subgroup' 'Signature' 'Probability' 'ProcessiveGroupLength' 'PyramidineStrand' 'Start_List' 'Distance'
-        # mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
-        #     {'Sample':'first',
-        #      'Start_List': list,
-        #      'Distance':list
-        #      }).reset_index()
-        #
-        # mutations_loci_df['Chr']=chrLong
-        # mutations_loci_df = mutations_loci_df[['Sample', 'Chr', 'Signature', 'ProcessiveGroupLength', 'Start_List', 'Distance']]
+        #'df columns: subgroup' 'Signature' 'Probability' 'ProcessiveGroupLength' 'PyramidineStrand' 'Start_List' 'Distance'
+        mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
+            {'Sample':'first',
+             'Start_List': list,
+             'Distance':list
+             }).reset_index()
+
+        mutations_loci_df['Chr']=chrLong
+        mutations_loci_df = mutations_loci_df[['Sample', 'Chr', 'Signature', 'ProcessiveGroupLength', 'Start_List', 'Distance']]
 
         ################################
         my_dict = {k: np.hstack(v) for k, v in df.groupby(['Signature', 'ProcessiveGroupLength'])['Distance']}
@@ -156,8 +156,8 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
 
     if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
 
-    # return (my_dict, mutations_loci_df)
-    return (my_dict,)
+    return (my_dict, mutations_loci_df)
+    # return (my_dict,)
 ####################################################################################
 
 ####################################################################################
@@ -224,7 +224,10 @@ def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,f
                  v1['number_of_processive_groups'],
                  v1['median_distance_between_last_first_mutations'],
                  v1['median_distance_between_consecutive_mutations'],
-                 v1['median_number_of_mutations_within_1MB']) for signature, v in signature2ProcessiveGroupLength2PropertiesDict.items() for processiveGroupLength, v1 in v.items()])
+                 v1['median_number_of_mutations_within_1MB'])
+                for signature, v in signature2ProcessiveGroupLength2PropertiesDict.items()
+                for processiveGroupLength, v1 in v.items()])
+
     df = pd.DataFrame(L,columns=['Signature',
                                  'Processsive_Group_Length',
                                  'Number_of_Processive_Groups',
@@ -241,7 +244,6 @@ def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,f
 def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       computation_type,
-                                                                      processivity_calculation_type,
                                                                       inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,
@@ -251,7 +253,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
-        if verbose: print('\tVerbose computation_type:%s processivity_calculation_type:%s' % (computation_type,processivity_calculation_type))
+        if verbose: print('\tVerbose computation_type:%s ' % (computation_type))
 
         for simNum in range(0,numofSimulations+1):
             jobs = []
@@ -259,14 +261,14 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             pool = multiprocessing.Pool(processes=numofProcesses)
 
             signature2ProcessiveGroupLength2DistanceListDict = {}
-            df_mutations_loci_list=[]
+            mutations_loci_df_list=[]
 
             def accumulate_apply_async_result_with_distance(result_tuple):
                 my_dict=result_tuple[0]
-                # mutations_loci_df=result_tuple[1]
+                mutations_loci_df=result_tuple[1]
 
-                # if (mutations_loci_df is not None) and (not mutations_loci_df.empty):
-                #     df_mutations_loci_list.append(mutations_loci_df)
+                if (mutations_loci_df is not None) and (not mutations_loci_df.empty):
+                    mutations_loci_df_list.append(mutations_loci_df)
                 if my_dict is not None:
                     for (signature,processive_group_length) in my_dict:
                         my_distance_array=my_dict[(signature,processive_group_length)]
@@ -331,8 +333,9 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             pool.close()
             pool.join()
 
-            # double_check_df=pd.concat(df_mutations_loci_list)
-            # double_check_df.to_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "sim%d_double_check.txt"%(simNum)), sep='\t', index=False, header=True)
+            if len(mutations_loci_df_list)>0:
+                all_mutations_loci_df=pd.concat(mutations_loci_df_list)
+                all_mutations_loci_df.to_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim%d_Processive_Mutations_Loci.txt"%(simNum)), sep='\t', index=False, header=True)
 
             filename = 'Sim%d_Processivity.txt' % (simNum)
             filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
@@ -363,7 +366,6 @@ def processivityAnalysis(mutation_types_contexts,
     readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       computation_type,
-                                                                      processivity_calculation_type,
                                                                       inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,
