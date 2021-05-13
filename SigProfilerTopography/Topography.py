@@ -1503,15 +1503,15 @@ def runAnalyses(genome,
     #######################################################################################################
     ################################### Step4 Fill Table Starts ###########################################
     #######################################################################################################
-    if (step4_tables):
+    # Step4 Initialize these dataframes as empty dataframe
+    # Step4 We will fill these dataframes if there is the corresponding data
+    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
+    mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+    chrlong_numberofmutations_df = pd.DataFrame()
 
-        # Initialize these dataframes as empty dataframe
-        # We will fill these dataframes if there is the corresponding data
-        subsSignature_cutoff_numberofmutations_averageprobability_df= pd.DataFrame()
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
-        indelsSignature_cutoff_numberofmutations_averageprobability_df =pd.DataFrame()
-        mutationtype_numberofmutations_numberofsamples_sampleslist_df=pd.DataFrame()
-        chrlong_numberofmutations_df=pd.DataFrame()
+    if (step4_tables):
 
         #################################################################################
         print('#################################################################################')
@@ -2052,23 +2052,18 @@ def plotFigures(outputDir,
                 fold_change_window_size,
                 num_of_real_data_avg_overlap):
 
-    ############################################################
     if (nucleosome or data_ready_plot_nucleosome):
         occupancy_type=NUCLEOSOMEOCCUPANCY
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
         occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
-    ############################################################
 
-
-    ############################################################
     if (replication_time or data_ready_plot_replication_time):
         if delete_old:
             deleteOldFigures(outputDir, jobname, REPLICATIONTIME)
         replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,plot_mode)
     ############################################################
-
 
     ############################################################
     if ((replication_strand_bias and transcription_strand_bias) or (data_ready_plot_replication_strand_bias and data_ready_plot_transcription_strand_bias)):
@@ -2085,7 +2080,6 @@ def plotFigures(outputDir,
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
     ############################################################
-
 
     ############################################################
     if (processivity or data_ready_plot_processivity):
@@ -2104,15 +2098,15 @@ def plotFigures(outputDir,
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
 
-        #Initiate the pool
+        # Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
         #################################################################
         pool = multiprocessing.Pool(numofProcesses)
         jobs=[]
 
-        #Please note that epigenomics_file_memo is not None
-        #If None then it is created from filename.
+        # Please note that epigenomics_file_memo is not None
+        # If None then it is created from filename.
         for idx, epigenomics_file in enumerate(epigenomics_files):
             epigenomics_file_basename = os.path.basename(epigenomics_file)
             epigenomics_file_memo= epigenomics_files_memos[idx]
@@ -2121,7 +2115,7 @@ def plotFigures(outputDir,
 
         if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
 
-        # wait for all jobs to finish
+        # Wait for all jobs to finish
         for job in jobs:
             if verbose: print('\n\tVerbose %s Worker pid %s Plotting figures  job.get():%s ' %(occupancy_type,str(os.getpid()),job.get()))
 

@@ -1,6 +1,6 @@
 
 # THIS FILE IS GENERATED FROM SIGPROFILERTOPOGRAPHY SETUP.PY
-short_version = '1.0.40'
-version = '1.0.40'
+short_version = '1.0.41'
+version = '1.0.41'
 	
 	

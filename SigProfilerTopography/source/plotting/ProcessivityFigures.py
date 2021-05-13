@@ -215,13 +215,17 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                     (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)]['expected_number_of_processive_groups'].values[0]
 
                 zscore = None
-                if (not np.isnan(observed_value)) and (expected_values.any() and len(expected_values)>0):
+                if (not np.isnan(observed_value)) and (len(expected_values)>0 and np.count_nonzero(expected_values)>0):
                     # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
                     zstat, pvalue = ztest(expected_values, [observed_value], alternative='smaller')
 
                     # Please note
-                    # If pvalue is np.nan e.g.: due to a few expected values or all expected values zero
+                    # If pvalue is np.nan e.g.: due to a few expected values like only one [1]
                     # Then there must be cases when you may want to manually set minus_log10_qvalue to np.inf
+                    if np.isnan(pvalue):
+                        signature_processive_group_length_properties_df.loc[
+                            ((signature_processive_group_length_properties_df['signature'] == signature) &
+                             (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)), 'minus_log10_qvalue'] = np.inf
 
                     if (pvalue is not None) and (not np.isnan(pvalue)):
                         all_p_values.append(pvalue)
