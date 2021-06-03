@@ -217,7 +217,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                 zscore = None
                 if (not np.isnan(observed_value)) and (len(expected_values)>0 and np.count_nonzero(expected_values)>0):
                     # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
-                    zstat, pvalue = ztest(expected_values, [observed_value], alternative='smaller')
+                    try:
+                        zstat, pvalue = ztest(expected_values, [observed_value], alternative='smaller')
+                    except FloatingPointError:
+                        print(signature,' observed_value: ', observed_value, ' expected_values: ', expected_values, ' FloatingPointError: divide by zero encountered in double_scalars')
 
                     # Please note
                     # If pvalue is np.nan e.g.: due to a few expected values like only one [1]
@@ -366,6 +369,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
     signature_processive_group_length_properties_df.to_csv(filePath, sep='\t', header=True, index=False)
 
+    # Append former dataframe
+    all_mutations_loci_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim0_Processive_Mutations_Loci.txt"), sep='\t', header=0)
+
+    f = open(filePath,"a")
+    f.write("\n")
+    all_mutations_loci_df.to_csv(f, sep='\t', header=True, index=False)
+    f.close()
 ###################################################################
 
 

@@ -347,6 +347,7 @@ STRANDBIAS = 'strand_bias'
 SCATTER_PLOTS= 'scatter_plots'
 BAR_PLOTS= 'bar_plots'
 CIRCLE_PLOTS= 'circle_plots'
+CIRCLE_BAR_PLOTS = 'circle_bar_plots'
 HEATMAPS='heatmaps'
 PLOTTING = 'plotting'
 TRANSCRIPTIONSTRANDBIAS = 'transcription_strand_bias'
@@ -375,7 +376,7 @@ T2A = 'T>A'
 T2C = 'T>C'
 T2G = 'T>G'
 
-sixMutationTypes = [C2A,C2G,C2T,T2A,T2C,T2G]
+six_mutation_types = [C2A,C2G,C2T,T2A,T2C,T2G]
 
 SIGNATURE = 'Signature'
 MUTATION = 'Mutation'
@@ -404,6 +405,7 @@ DEFAULT_NUM_OF_DBS_REQUIRED=200
 DEFAULT_NUM_OF_ID_REQUIRED=1000
 
 DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED=100
+NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT=100
 
 ############################################
 #Column Names
@@ -1089,27 +1091,6 @@ class NpEncoder(json.JSONEncoder):
             return super(NpEncoder, self).default(obj)
 ##################################################################
 
-##################################################################
-def writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename):
-
-    signature_cutoff_numberofmutations_averageprobability = open(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), 'w')
-
-    # header line
-    signature_cutoff_numberofmutations_averageprobability.write('cancer_type\tsignature\tcutoff\tnumber_of_mutations\taverage_probability\tsamples_list\n')
-
-    sorted_signatures=sorted(signature2PropertiesListDict.keys(), key=natural_key)
-    for signature in sorted_signatures:
-        cutoff_numbeofmutations_averageprobability = signature2PropertiesListDict[signature]
-        cutoff=cutoff_numbeofmutations_averageprobability[0]
-        number_of_mutations = cutoff_numbeofmutations_averageprobability[1]
-        average_probability = cutoff_numbeofmutations_averageprobability[2]
-        samples_list = sorted(cutoff_numbeofmutations_averageprobability[3], key=natural_key)
-
-        signature_cutoff_numberofmutations_averageprobability.write('%s\t%s\t%s\t%s\t%s\t%s\n' %(jobname,signature,cutoff,number_of_mutations,average_probability,samples_list))
-
-    signature_cutoff_numberofmutations_averageprobability.close()
-##################################################################
-
 
 ##################################################################
 #two header lines
@@ -1168,15 +1149,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                   chrLong2NumberofMutationsDict):
 
     #Filled in the first part
-    #PropertiesList consists of[sum_of_number of mutations, sum of probabilities]
+    #PropertiesList consists of [sum_of_number of mutations, sum of probabilities, samples_list]
     cutoff2Signature2PropertiesListDict={}
 
     #Filled in the second part
-    # [number of mutations, average probability]
+    # [number of mutations, average probability, samples_list]
     cutoff2Signature2NumberofMutationsAverageProbabilityListDict={}
 
     #Filled in the third part
-    #PropertiesList=[CufoffProbability NumberofMutations AverageMutationProbability]
+    #PropertiesList=[ cutoff number_of_mutations average_mutation_probability samples_list]
     signature2PropertiesListDict={}
 
     #This samples are for this mutation type
@@ -1275,16 +1256,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     if (mutation_type==SUBS):
         number_of_required_mutations=num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename=Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == INDELS):
         number_of_required_mutations=num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename=Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type== DINUCS):
         number_of_required_mutations=num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename=Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
     #Third find the signature based cufoff probability with number of mutations >= required number of mutations  and averega mutation probability >=required_probability
     sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
@@ -1311,25 +1291,42 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
 
 
     ####################################################################
-    # Jobname is added here as the first column
-    # Write Decided Cutoffs with satisfying samples list
-    writeSignatureBasedDecidedCutoff(outputDir,jobname,DATA,signature2PropertiesListDict,table_signature_cutoff_numberofmutations_averageprobability_filename)
-    ####################################################################
-
-    ####################################################################
-    L = sorted([(signature, cutoff_numberofmutations_averageprobability[0],cutoff_numberofmutations_averageprobability[1],cutoff_numberofmutations_averageprobability[2])
+    L = sorted([(jobname,
+                 signature,
+                 cutoff_numberofmutations_averageprobability[0],
+                 cutoff_numberofmutations_averageprobability[1],
+                 cutoff_numberofmutations_averageprobability[2],
+                 cutoff_numberofmutations_averageprobability[3],
+                 len(cutoff_numberofmutations_averageprobability[3]))
                  for signature, cutoff_numberofmutations_averageprobability in signature2PropertiesListDict.items()])
 
     if L:
-        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(L,columns=['signature','cutoff', 'number_of_mutations','average_probability'])
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(L,columns=['cancer_type',
+                                                                                           'signature',
+                                                                                           'cutoff',
+                                                                                           'number_of_mutations',
+                                                                                           'average_probability',
+                                                                                           'samples_list',
+                                                                                           'len(samples_list)'])
+
+        signature_cutoff_numberofmutations_averageprobability_df['cancer_type']=signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
         signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
         signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
         signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
         signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
     else:
         #Create empty dataframe
-        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['signature','cutoff', 'number_of_mutations','average_probability'])
-    ####################################################################
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cancer_type',
+                                                                                           'signature',
+                                                                                           'cutoff',
+                                                                                           'number_of_mutations',
+                                                                                           'average_probability',
+                                                                                           'samples_list',
+                                                                                           'len(samples_list)'])
+
+    signature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), sep='\t', index=False)
+
+    signature_cutoff_numberofmutations_averageprobability_df.drop(['cancer_type', 'samples_list', 'len(samples_list)'], inplace=True, axis=1)
 
     return signature_cutoff_numberofmutations_averageprobability_df
 ##################################################################

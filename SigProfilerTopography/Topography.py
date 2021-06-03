@@ -1617,7 +1617,6 @@ def runAnalyses(genome,
         # Write dictionary as a dataframe ends
         ####################################################################
 
-        ####################################################################
         # Write chrLong2NumberofMutationsDict dictionary as a dataframe starts
         filePath = os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename)
 
@@ -1629,10 +1628,7 @@ def runAnalyses(genome,
         # write this dataframe
         chrlong_numberofmutations_df.to_csv(filePath, sep='\t', header=True, index=False)
         # Write dictionary as a dataframe ends
-        ####################################################################
 
-
-        ##################################################################################
 
         ##################################################################################
         # We are reading original data again to fill the mutationType based, sample based and signature based dictionaries
@@ -1678,7 +1674,7 @@ def runAnalyses(genome,
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
-                subsSignature_cutoff_numberofmutations_averageprobability_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+                subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
             if (DBS in mutation_types_contexts):
                 dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
             if (ID in mutation_types_contexts):
@@ -1686,6 +1682,7 @@ def runAnalyses(genome,
     #######################################################################################################
     ################################### Step4 Fill Table ends #############################################
     #######################################################################################################
+
 
 
     ###################################################################################################################
