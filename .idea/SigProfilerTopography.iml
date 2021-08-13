@@ -17,6 +17,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
     <orderEntry type="module" module-name="Test" />
+    <orderEntry type="module" module-name="Collaborations" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

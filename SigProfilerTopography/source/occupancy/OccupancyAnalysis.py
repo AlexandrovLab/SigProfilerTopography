@@ -150,9 +150,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
-        chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED,signalArrayFilename)
+        chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, signalArrayFilename)
     elif (occupancy_type== EPIGENOMICSOCCUPANCY):
-        chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
+        if os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
+            chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, EPIGENOMICS, CHRBASED, signalArrayFilename)
+        else:
+            chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
     else:
         #It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
@@ -1202,8 +1205,8 @@ def occupancyAnalysis(genome,
         else:
             library_file_type=LIBRARY_FILE_TYPE_OTHER
 
-    elif os.path.basename(library_file_with_path)==DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
-        check_download_chrbased_npy_atac_seq_files(outputDir, jobname, occupancy_type,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,chromNamesList)
+    # elif os.path.basename(library_file_with_path)==DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
+    #     check_download_chrbased_npy_atac_seq_files(outputDir, jobname, occupancy_type,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,chromNamesList)
     ##############################################################
 
 

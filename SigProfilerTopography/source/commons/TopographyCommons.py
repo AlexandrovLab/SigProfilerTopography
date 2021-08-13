@@ -400,12 +400,13 @@ RELAXED='relaxed'
 STRINGENT='stringent'
 
 DEFAULT_AVERAGE_PROBABILITY=0.75
+
 DEFAULT_NUM_OF_SBS_REQUIRED=2000
 DEFAULT_NUM_OF_DBS_REQUIRED=200
 DEFAULT_NUM_OF_ID_REQUIRED=1000
 
 DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED=100
-NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT=100
+NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT=1
 
 ############################################
 #Column Names
@@ -428,6 +429,7 @@ ALT = 'Alt'
 PYRAMIDINESTRAND = 'PyramidineStrand'
 TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
 MUTATION = 'Mutation'
+MUTATION_LONG = 'MutationLong'
 MUTATIONS = 'Mutations'
 CONTEXT = 'Context'
 
@@ -540,7 +542,6 @@ def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for
 ##################################################################
 #Dec 17, 2020
 def get_chrBased_simBased_dfs(outputDir,jobname,chrLong,simNum):
-
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
     chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
     chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
@@ -2318,19 +2319,38 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
     strand3_max_sims_data = "%s_max_sims_count" %(strand3)
 
     if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        # # Formerly writes Transcribed Untranscribed
+        # L = sorted([(cancer_type, my_type,
+        #              a[strand1][0], a[strand2][0],
+        #              a[strand1][2], a[strand2][2],
+        #              a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+        #              a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
+        #              a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+        #             for my_type, a in type2Strand2ListDict.items()])
+        # df = pd.DataFrame(L, columns=['cancer_type', 'type',
+        #                               strand1_real_data, strand2_real_data,
+        #                               strand1_mean_sims_data, strand2_mean_sims_data,
+        #                               TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+        #                               strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+        #                               strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+
+        # Now writes Transcribed Untranscribed Nontranscribed
         L = sorted([(cancer_type, my_type,
-                     a[strand1][0], a[strand2][0],
-                     a[strand1][2], a[strand2][2],
+                     a[strand1][0], a[strand2][0], a[strand3][0],
+                     a[strand1][2], a[strand2][2], a[strand3][2],
                      a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
                      a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
-                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
+                     a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1],
+                     a[strand3][0], a[strand3][2], a[strand3][3], a[strand3][4], a[strand3][1])
                     for my_type, a in type2Strand2ListDict.items()])
         df = pd.DataFrame(L, columns=['cancer_type', 'type',
-                                      strand1_real_data, strand2_real_data,
-                                      strand1_mean_sims_data, strand2_mean_sims_data,
+                                      strand1_real_data, strand2_real_data, strand3_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data, strand3_mean_sims_data,
                                       TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
                                       strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+
         df.to_csv(filepath, sep='\t', header=True, index=False)
 
     elif strand_bias_subtype==GENIC_VERSUS_INTERGENIC:
@@ -2353,11 +2373,34 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
 ########################################################################
 
 
+# Write replication strand bias for real data for each signature
+def write_sbs_signature_sbs96_mutation_type_replication_strand_bias(subs_signature_SBS96_mutation_type_lagging_np_array,
+                                                                subs_signature_SBS96_mutation_type_leading_np_array,
+                                                                SBS96_mutation_types_np_array,
+                                                                ordered_sbs_signatures,
+                                                                strand_bias,
+                                                                outputDir,
+                                                                jobname):
+
+    # /restricted/alexandrov-group/burcak/SigProfilerTopographyRuns/Combined_PCAWG_nonPCAWG_4th_iteration/Liver-HCC/data/replication_strand_bias
+    for sbs_signature_idx, sbs_signature in enumerate(ordered_sbs_signatures):
+        file_name = "%s_%s_real_data.txt" %(sbs_signature, strand_bias)
+        with open(os.path.join(outputDir, jobname, DATA, strand_bias, file_name),'w') as writer:
+            writer.write('MutationType\tNumber_of_Mutations\n')
+            for SBS96_mutation_type_idx, SBS96_mutation_type in enumerate(SBS96_mutation_types_np_array):
+                lagging_count = subs_signature_SBS96_mutation_type_lagging_np_array[sbs_signature_idx][SBS96_mutation_type_idx]
+                leading_count = subs_signature_SBS96_mutation_type_leading_np_array[sbs_signature_idx][SBS96_mutation_type_idx]
+                writer.write('A:' + SBS96_mutation_type + '\t' + str(lagging_count) + '\n')
+                writer.write('E:' + SBS96_mutation_type + '\t' + str(leading_count) + '\n')
+        writer.close()
+
+
+
 ########################################################################
-#Main function for signature -- mutation type
-#Fills a dictionary and writes it as a dataframe
+# Main function for signature -- mutation type
+# Fills a dictionary and writes it as a dataframe
 def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_subs_signature_mutation_type_strand_np_arrays_list,
-                                                                    six_mutation_types_np_array,
+                                                                    SBS6_mutation_types_np_array,
                                                                     subs_signatures_np_array,
                                                                     strand_bias,
                                                                     strands,
@@ -2376,7 +2419,7 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
             for subs_signature_index in range(0,num_of_subs_signatures):
                 signature = subs_signatures_np_array[subs_signature_index]
                 for mutation_type_index in range(0,num_of_mutation_types):
-                    mutation_type = six_mutation_types_np_array[mutation_type_index]
+                    mutation_type = SBS6_mutation_types_np_array[mutation_type_index]
 
                     if signature in signature2MutationType2Strand2ListDict:
                         if mutation_type in signature2MutationType2Strand2ListDict[signature]:
@@ -2542,20 +2585,40 @@ def write_signature_mutation_type_transcription_dataframe(strands,signature2Muta
     strand3_max_sims_data = "%s_max_sims_count" %(strand3)
 
     if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        # Before writes Transcribed UnTranscribed
+        # L = sorted([(cancer_type, signature, mutation_type,
+        #              b[strand1][0], b[strand2][0],
+        #              b[strand1][2], b[strand2][2],
+        #              b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+        #              b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+        #              b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+        #             for signature, a in signature2MutationType2Strand2ListDict.items()
+        #             for mutation_type, b in a.items()])
+        # df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'mutation_type',
+        #                               strand1_real_data, strand2_real_data,
+        #                               strand1_mean_sims_data, strand2_mean_sims_data,
+        #                               TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+        #                               strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+        #                               strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+        # df.to_csv(filepath, sep='\t', header=True, index=False)
+
+        # Now writes Transcribed UnTranscribed Nontranscribed
         L = sorted([(cancer_type, signature, mutation_type,
-                     b[strand1][0], b[strand2][0],
-                     b[strand1][2], b[strand2][2],
+                     b[strand1][0], b[strand2][0], b[strand3][0],
+                     b[strand1][2], b[strand2][2], b[strand3][2],
                      b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
                      b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
-                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
+                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
                     for signature, a in signature2MutationType2Strand2ListDict.items()
-                    for mutation_type, b in a.items()])
+                     for mutation_type, b in a.items()])
         df = pd.DataFrame(L, columns=['cancer_type', 'signature', 'mutation_type',
-                                      strand1_real_data, strand2_real_data,
-                                      strand1_mean_sims_data, strand2_mean_sims_data,
+                                      strand1_real_data, strand2_real_data, strand3_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data, strand3_mean_sims_data,
                                       TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
                                       strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
         df.to_csv(filepath, sep='\t', header=True, index=False)
 
     elif (strand_bias_subtype==GENIC_VERSUS_INTERGENIC):
@@ -2795,7 +2858,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
                 #TODO Make conversion for each possible mutation context that can be in probabilities file.
                 if (mutation_type_context_for_probabilities==SBS288):
-                    #Since SBS288 probabilities mutation context does not contain B we are assigning B to N
+                    # Since SBS288 probabilities mutation context does not contain B we are assigning B to N
                     # TODO More correct way is to assign half of B as T and other half of B as U
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] == 'B', MUTATION] = 'N:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]

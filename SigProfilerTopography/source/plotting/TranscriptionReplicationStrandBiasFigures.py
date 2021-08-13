@@ -1299,8 +1299,39 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
     ax.tick_params(axis='x', labelsize=35)
     ax.tick_params(axis='y', labelsize=35)
 
-    locs = ax.get_yticks()
-    ax.set_ylim(0, locs[-1] + 5000)
+    # Old way for y axis tick labels
+    # locs = ax.get_yticks() # numpy.ndarray
+    # ax.set_ylim(0, locs[-1] + 5000)
+
+    # New way for y axis ticks and labels
+    ymax = max(max(strand1_values), max(strand2_values), max(strand1_simulations_median_values), max(strand2_simulations_median_values))
+    y = ymax / 1.025
+    ytick_offest = float(y / 3)
+    ylabs = [0, ytick_offest, ytick_offest * 2, ytick_offest * 3, ytick_offest * 4]
+    ylabels = [0, ytick_offest, ytick_offest * 2, ytick_offest * 3, ytick_offest * 4]
+
+    ylabels = ['{:,}'.format(int(x)) for x in ylabels]
+    if len(ylabels[-1]) > 3:
+        ylabels_temp = []
+        if len(ylabels[-1]) > 7:
+            for label in ylabels:
+                if len(label) > 7:
+                    ylabels_temp.append(label[0:-8] + "m")
+                elif len(label) > 3:
+                    ylabels_temp.append(label[0:-4] + "k")
+                else:
+                    ylabels_temp.append(label)
+        else:
+            for label in ylabels:
+                if len(label) > 3:
+                    ylabels_temp.append(label[0:-4] + "k")
+                else:
+                    ylabels_temp.append(label)
+        ylabels = ylabels_temp
+
+    ax.set_ylim([0, y])
+    ax.set_yticks(ylabs)
+    ax.set_yticklabels(ylabels, fontsize=35, fontweight='bold', fontname='Arial')
 
     # To make the bar width not too wide
     if len(ind) < 6:
@@ -1558,7 +1589,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
     if ((strand1_simulations_median_values is not None) and strand1_simulations_median_values):
         rects3 = ax.bar(ind + width, strand1_simulations_median_values, width=width, edgecolor='black', color=color1, hatch = '///')
     if ((strand2_simulations_median_values is not None) and strand2_simulations_median_values):
-        rects4 = ax.bar(ind + width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///', bottom=strand1_simulations_median_values )
+        rects4 = ax.bar(ind + width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///', bottom=strand1_simulations_median_values)
 
     # Add some text for labels, title and axes ticks
     ax.tick_params(axis='x', labelsize=35)
@@ -1799,6 +1830,7 @@ def plot_circle_bar_plots_together(outputDir,
                                replication_strands):
 
     x_ticklabels_list = percentage_strings * 6
+    # fig = plt.figure(figsize=(5 + 1.5 * len(x_ticklabels_list), 30 + 1.5))
     fig = plt.figure(figsize=(5 + 1.5 * len(x_ticklabels_list), 30 + 1.5))
     plt.rc('axes', edgecolor='lightgray')
 
@@ -1807,7 +1839,7 @@ def plot_circle_bar_plots_together(outputDir,
     width_ratios = [1] * width
     height_ratios = [1] * height
     gs = gridspec.GridSpec(height, width, height_ratios = height_ratios, width_ratios = width_ratios)
-    fig.subplots_adjust(hspace=0, wspace=1)
+    fig.subplots_adjust(hspace=0, wspace=3)
 
     cirle_plot_axis = plt.subplot(gs[0:2, :])
 
@@ -1833,7 +1865,7 @@ def plot_circle_bar_plots_together(outputDir,
                                 GENIC_VERSUS_INTERGENIC,
                                 genic_vs_intergenic_strands,
                                 signature_genic_versus_intergenic_df,
-                                y_axis_label = 'Number of single base substitutions')
+                                y_axis_label = 'Number of Single Base Substitutions')
 
     plot_bar_plot_in_given_axis(transcribed_vs_untranscribed_bar_plot_axis,
                                 sbs_signature,
@@ -2164,8 +2196,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                 type_lagging_versus_leading_df.loc[(type_lagging_versus_leading_df[CANCER_TYPE] == cancer_type) & (type_lagging_versus_leading_df[TYPE] == mutation_type),LAGGING_VERSUS_LEADING_Q_VALUE] = q_value
 
 
-        #Reorder columns
-        #Write dataframes
+        # Reorder columns
+        # Write dataframes
         if LAGGING_VERSUS_LEADING in strand_bias_list:
             signature_lagging_versus_leading_df = signature_lagging_versus_leading_df[
                 ['cancer_type', 'signature', 'mutation_type',
@@ -2191,14 +2223,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
 
         if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
             signature_transcribed_versus_untranscribed_df=signature_transcribed_versus_untranscribed_df[['cancer_type', 'signature', 'mutation_type',
-                'Transcribed_real_count', 'UnTranscribed_real_count', 'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'transcribed_versus_untranscribed_p_value', 'transcribed_versus_untranscribed_q_value',
+                'Transcribed_real_count', 'UnTranscribed_real_count', 'NonTranscribed_real_count',
+                'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'NonTranscribed_mean_sims_count',
+                'transcribed_versus_untranscribed_p_value', 'transcribed_versus_untranscribed_q_value',
                 'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list']]
+                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
 
             type_transcribed_versus_untranscribed_df=type_transcribed_versus_untranscribed_df[['cancer_type', 'type',
-                'Transcribed_real_count', 'UnTranscribed_real_count', 'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'transcribed_versus_untranscribed_p_value','transcribed_versus_untranscribed_q_value',
+                'Transcribed_real_count', 'UnTranscribed_real_count', 'NonTranscribed_real_count',
+                'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'NonTranscribed_mean_sims_count',
+                'transcribed_versus_untranscribed_p_value', 'transcribed_versus_untranscribed_q_value',
                 'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list' ]]
+                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
             signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2207,7 +2245,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             type_filename = 'Type_%s_Q_Value_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
             type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_transcribed_versus_untranscribed_df.to_csv(type_filepath, sep='\t', header=True, index=False)
-
 
         if GENIC_VERSUS_INTERGENIC in strand_bias_list:
             signature_genic_versus_intergenic_df=signature_genic_versus_intergenic_df[['cancer_type', 'signature', 'mutation_type',
@@ -2600,8 +2637,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     #Circle plots ends
     #######################################################################
 
-
-
     ########################################################################
     ##########################  Part 2 starts ##############################
     ############## Mutation Types Scatter Plots starts #####################
@@ -2819,23 +2854,25 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     ##########################  Part 4 ends ################################
     ########################################################################
 
-    # Plot circle plots and car plots all together
+    # Circle Bar Plots
+    # Plot circle plots and bar plots all together
     # At top ax, circle plots with 3 rows: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     # At middle ax, 3 bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     # At below ax, 3 normalized bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
-    sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-    for sbs_signature in sbs_signatures:
-        plot_circle_bar_plots_together(outputDir,
-                                       jobname,
-                                       sbs_signature,
-                                        six_mutation_types,
-                                       signature2mutation_type2strand2percentagedict,
-                                        signature_genic_versus_intergenic_df,
-                                        signature_transcribed_versus_untranscribed_df,
-                                        signature_lagging_versus_leading_df,
-                                        genicVersusIntergenicStrands,
-                                        transcriptionStrands,
-                                        replicationStrands)
+    if (TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list) and (LAGGING_VERSUS_LEADING in strand_bias_list):
+        sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+        for sbs_signature in sbs_signatures:
+            plot_circle_bar_plots_together(outputDir,
+                                           jobname,
+                                           sbs_signature,
+                                            six_mutation_types,
+                                           signature2mutation_type2strand2percentagedict,
+                                            signature_genic_versus_intergenic_df,
+                                            signature_transcribed_versus_untranscribed_df,
+                                            signature_lagging_versus_leading_df,
+                                            genicVersusIntergenicStrands,
+                                            transcriptionStrands,
+                                            replicationStrands)
 
 ###################################################################
 

@@ -13,13 +13,13 @@ import pandas as pd
 import multiprocessing
 
 import matplotlib as mpl
-BACKEND = 'Agg'
-if mpl.get_backend().lower() != BACKEND.lower():
-    # If backend is not set properly a call to describe will hang
-    mpl.use(BACKEND)
+# BACKEND = 'Agg'
+# if mpl.get_backend().lower() != BACKEND.lower():
+#     # If backend is not set properly a call to describe will hang
+#     mpl.use(BACKEND)
 
 from matplotlib import pyplot as plt
-import matplotlib.colors as colors
+from mpl_toolkits import axes_grid1
 
 from statsmodels.stats.weightstats import ztest
 import statsmodels.stats.multitest
@@ -1189,6 +1189,16 @@ def fill_average_fold_change_array_row_each_biosample(ENCODEHM2FoldChangeDict):
 ########################################################
 
 
+def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
+    """Add a vertical color bar to an image plot."""
+    divider = axes_grid1.make_axes_locatable(im.axes)
+    width = axes_grid1.axes_size.AxesY(im.axes, aspect=1./aspect)
+    pad = axes_grid1.axes_size.Fraction(pad_fraction, width)
+    current_ax = plt.gca()
+    cax = divider.append_axes("right", size=width, pad=pad)
+    plt.sca(current_ax)
+    return im.axes.figure.colorbar(im, cax=cax, **kwargs)
+
 ###################################################################
 def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
             cbar_kw={}, cbarlabel="", **kwargs):
@@ -1224,10 +1234,10 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     # Plot the heatmap
     im = ax.imshow(data, **kwargs)
 
-    # Create colorbar
-    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-    cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom",fontsize=fontsize,labelpad=25)
-    cbar.ax.tick_params(labelsize=fontsize)
+    # # Create colorbar
+    # cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    # cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom",fontsize=fontsize,labelpad=25)
+    # cbar.ax.tick_params(labelsize=fontsize)
 
     # We want to show all ticks...
     ax.set_xticks(np.arange(data.shape[1]))
@@ -1255,7 +1265,9 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     ax.grid(which="minor", color="black", linestyle='-', linewidth=3)
     ax.grid(b=False, which="major")
 
-    return im, cbar
+    # return im, cbar
+    return im
+
 ###################################################################
 
 
@@ -1354,7 +1366,7 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
             if verbose: print(average_fold_change_array.shape)
 
         # Blue White Red
-        im, cbar = heatmap(average_fold_change_array, biosamples, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+        im = heatmap(average_fold_change_array, biosamples, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
         texts = annotate_heatmap(im, valfmt="{x:.2f} ")
         title="%s %s" %(cancer_type,signature)
         plt.title(title, y=1.01)
@@ -1384,7 +1396,7 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                                                              filename_text,
                                                              verbose):
 
-    signatures, dna_elements, average_fold_change_array= fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements)
+    signatures, dna_elements, average_fold_change_array = fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements)
 
     #Update ATAC-Seq to Chromatin
     dna_elements = [OPEN_CHROMATIN if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
@@ -1433,7 +1445,18 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     # If dna_element is not statistically significant makes ir cell color white ends
 
     # Color the heatmap
-    im, cbar = heatmap(average_fold_change_array, signatures, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
+    im = heatmap(average_fold_change_array,
+                       signatures,
+                       dna_elements,
+                       ax=ax,
+                       cmap='seismic',
+                       cbarlabel="Fold Change [Real mutations/Simulated Mutations]",
+                       vmin=0.25,
+                       vmax=1.75)
+
+    cbar = add_colorbar(im)
+    cbar.ax.set_ylabel('Fold Change [Real mutations/Simulated Mutations]', rotation=-90, va="bottom", fontsize=None, labelpad=25)
+    cbar.ax.tick_params(labelsize=None)
 
     # Write average fold change w/wo star in each heatmap cell
     for signature_index, signature in enumerate(signatures,0):
@@ -1500,7 +1523,7 @@ def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosa
             if verbose: print('\tVerbose min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
 
             #Blue White Red
-            im, cbar = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2)
+            im = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2)
             texts = annotate_heatmap(im, valfmt="{x:.2f} ")
             if verbose: print('\tVerbose texts:%s' %texts)
 

@@ -36,20 +36,12 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. Install default Mnase-seq (nucleosome occupancy) and ATAC-seq (open chromatin regions) files:
-```
-$ python
->> from SigProfilerTopography import Topography as files
->> files.install_default_nucleosome('GRCh37')
->> files.install_default_atac_seq('GRCh37')
-```
-
-4. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
+3. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
 ```
 $ pip install SigProfilerMatrixGenerator
 $ pip install SigProfilerSimulator
 ```
-5. Install your desired reference genome from the command line/terminal.
+4. Install your desired reference genome from the command line/terminal.
 SigProfilerTopography supports GRCh37 (hg19), GRCh38 (hg38), mm9 and mm10.
 For GRCh37 (hg19) install GRCh37 reference genome as follows:
 ```
@@ -60,13 +52,13 @@ $ python
 This will install the human 37 assembly as a reference genome. 
 If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash,  use bash=False.
 
-6. Import SigProfilerTopography as follows:
+5. Import SigProfilerTopography as follows:
 ```
 $ python
 >>> from SigProfilerTopography import Topography as topography
 ```
 
-7. Within a python session, you can run the topography analyses as follows:
+6. Within a python session, you can run the topography analyses as follows:
 
 	+ You must provide the corresponding probabilities files in `sbs_probabilities`, `id_probabilities` and `dbs_probabilities` accordingly.
 		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply only `sbs_probabilities` and `dbs_probabilities`

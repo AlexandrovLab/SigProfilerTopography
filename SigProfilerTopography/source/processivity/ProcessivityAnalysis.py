@@ -53,7 +53,22 @@ def findProcessiveGroupsForApplySyncWithDistance(inter_mutational_distance_for_p
                                                  considerProbabilityInProcessivityAnalysis,
                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                  verbose):
-    #Sort it
+    # These are done before this function call
+    # Before sorting for each row get the signature with the highest probability
+    # Check whether this signature has probability > cutoff
+    # Filter the mutations that satify these constraints
+
+    # signatures_list = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique().tolist()
+    # sampleBased_chrBased_subs_df['Signature_Max_Pro'] = sampleBased_chrBased_subs_df[signatures_list].idxmax(axis=1)
+    # sampleBased_chrBased_subs_df['Max_Pro'] = sampleBased_chrBased_subs_df[signatures_list].max(axis=1)
+
+    if considerProbabilityInProcessivityAnalysis:
+        sampleBased_chrBased_subs_df = sampleBased_chrBased_subs_df[sampleBased_chrBased_subs_df['Probability'] >= sampleBased_chrBased_subs_df['Signature'].map(subsSignature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
+
+    # Drop Columns
+    # sampleBased_chrBased_subs_df.drop(['Signature_Max_Pro', 'Max_Pro'], inplace=True, axis=1)
+
+    # Sort it
     sampleBased_chrBased_subs_df.sort_values(START, inplace=True)
 
     return findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
@@ -87,8 +102,8 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
     # They must be on the same strand
     if (sorted_sampleBased_chrBased_subs_df is not None):
 
-        #As long as mutation, signature, and pyrimidine strands are the same continue to accumulate, if one of them is not the same calculate cumsum and start again
-        # e.g.: If there are 4 consecutive rows with same mutation, signature and pyrimidine strand, subgroup will be 4 for these 4 rows
+        #As long as mutation, signature, and pyrimidine strands are the same continue to accumulate, if one of them is different calculate cumsum and start again
+        # e.g.: If there are 4 consecutive rows with same mutation, signature and pyrimidine strand, subgroup will be X(THE SAME) for these 4 rows
         if inter_mutational_distance_for_processivity:
             sorted_sampleBased_chrBased_subs_df['subgroup'] = ((sorted_sampleBased_chrBased_subs_df[MUTATION].ne(sorted_sampleBased_chrBased_subs_df[MUTATION].shift())) |
                                                             (sorted_sampleBased_chrBased_subs_df['Signature'].ne(sorted_sampleBased_chrBased_subs_df['Signature'].shift())) |
@@ -101,7 +116,7 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
 
 
         ################################
-        #Former way
+        # Former way
         # df = sorted_sampleBased_chrBased_subs_df.groupby("subgroup").agg(
         #     Signature=pd.NamedAgg(column='Signature', aggfunc="first"),
         #     ProcessiveGroupLength=pd.NamedAgg(column=MUTATION, aggfunc="count"),
@@ -111,7 +126,7 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
         #     ).assign(Distance=lambda x: x.pop('LastDistance') - x.pop('FirstDistance'))
         # #agg().reset_index() can be used. not necessary
 
-        #Current way facilitates printing mutation start positions
+        # Current way facilitates printing mutation start positions
         df = sorted_sampleBased_chrBased_subs_df.groupby('subgroup').agg(
             {'Sample':'first',
              'Signature': 'first',
@@ -135,10 +150,11 @@ def findProcessiveGroupsWithDistance(inter_mutational_distance_for_processivity,
         df = df[df['ProcessiveGroupLength'].ne(1)]
         ################################
 
-        ################################
-        if considerProbabilityInProcessivityAnalysis:
-            df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
-        ################################
+        # ################################
+        # This is done earlier
+        # if considerProbabilityInProcessivityAnalysis:
+        #     df=df.loc[df['Probability'] >= df['Signature'].map(signature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
+        # ################################
 
         #'df columns: subgroup' 'Signature' 'Probability' 'ProcessiveGroupLength' 'PyramidineStrand' 'Start_List' 'Distance'
         mutations_loci_df = df.groupby(['Signature', 'ProcessiveGroupLength']).agg(
@@ -243,7 +259,6 @@ def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,f
 ####################################################################################
 def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
-                                                                      computation_type,
                                                                       inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,
@@ -253,7 +268,6 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
-        if verbose: print('\tVerbose computation_type:%s ' % (computation_type))
 
         for simNum in range(0,numofSimulations+1):
             jobs = []
@@ -317,7 +331,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                            verbose,),
                                                      callback=accumulate_apply_async_result_with_distance))
 
-                        # Sequential version for testing/debugging
+                        # # Sequential version for testing/debugging
                         # result_tuple = findProcessiveGroupsForApplySyncWithDistance(inter_mutational_distance_for_processivity,
                         #                            simNum,
                         #                            chrLong,
@@ -348,7 +362,6 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 #Default value for processivity_calculation_type=CONSIDER_DISTANCE
 def processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
-                         computation_type,
                          processivity_calculation_type,
                          inter_mutational_distance_for_processivity,
                          outputDir,
@@ -365,7 +378,6 @@ def processivityAnalysis(mutation_types_contexts,
 
     readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
-                                                                      computation_type,
                                                                       inter_mutational_distance_for_processivity,
                                                                       outputDir,
                                                                       jobname,

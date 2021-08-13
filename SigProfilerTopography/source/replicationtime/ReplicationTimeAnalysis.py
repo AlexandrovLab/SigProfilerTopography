@@ -102,6 +102,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import  decideFileTy
 from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_combined_df
 from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_dfs
 
+# June 6, 2021
+mutations_in_early_replicating_regions_df = pd.DataFrame()
+mutations_in_late_replicating_regions_df = pd.DataFrame()
+
 ##################################################################
 # Please note that this dictionary is copied from .../SigProfilerMatrixGenerator/SigProfilerMatrixGenerator/scripts/SigProfilerMatrixGeneratorFunc.py line 101
 # If this dictionary is updated in SigProfilerMatrixGeneratorFunc.py, it has to be updated in ReplicationTimeAnalysis.py
@@ -241,15 +245,19 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
                                                                         ordered_signatures_cutoffs,
                                                                         signatures_mask_array,
                                                                         signature_decile_index_accumulated_np_array,
-                                                                        verbose,
+                                                                        list_of_early_dict,
+                                                                        list_of_late_dict,
                                                                         df_columns):
-
     # df_columns: numpy array
     indexofStart = np.where(df_columns == START) [0][0]
     start = mutation_row[indexofStart]
 
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
     # end is exclusive for subs, indels and dinucs provided by readChrBased methods
+
+    #Simulation Number
+    index_of_sim_num = np.where(df_columns == 'Simulation_Number')[0][0]
+    sim_num = mutation_row[index_of_sim_num]
 
     if mutation_type==SUBS:
         end = start + 1
@@ -276,6 +284,17 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     if (uniqueIndexesArray.size>0):
         uniqueIndexesArray -=1
         decile_index_array[uniqueIndexesArray]=1
+
+        # JUNE 6 2021, What are the mutations on the early replicating regions?
+        # JUNE 6 2021, What are the mutations on the late replicating regions?
+        if (sim_num==0) and (decile_index_array[0] or decile_index_array[1]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_early_dict.append(my_dict)
+            # print('DEBUG1 len(list_of_early_dict): ', len(list_of_early_dict))
+        if (sim_num==0) and (decile_index_array[9] or decile_index_array[8]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_late_dict.append(my_dict)
+            # print('DEBUG2 len(list_of_late_dict): ', len(list_of_late_dict))
 
         probabilities = mutation_row[signatures_mask_array]
         threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
@@ -437,6 +456,9 @@ def searchforAllMutations_using_numpy_array(sim_num,
     dinucs_signature_decile_index_accumulated_np_array = np.zeros((ordered_dbs_signatures.size + 1, 10), dtype=int)
     indels_signature_decile_index_accumulated_np_array = np.zeros((ordered_id_signatures.size + 3, 10), dtype=int)
 
+    list_of_early_dict = []
+    list_of_late_dict = []
+
     #SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         df_columns = chrBased_simBased_subs_df.columns.values
@@ -448,7 +470,8 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_sbs_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             subs_signature_decile_index_accumulated_np_array,
-                                                                            verbose,
+                                                                            list_of_early_dict,
+                                                                            list_of_late_dict,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
     #DINUCS
@@ -462,8 +485,9 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_dbs_signatures_cutoffs,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
-                                                                            verbose,
-                                                                            df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
+                                                                             list_of_early_dict,
+                                                                             list_of_late_dict,
+                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     #INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
@@ -476,10 +500,11 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_id_signatures_cutoffs,
                                                                             df_columns_indels_signatures_mask_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
-                                                                            verbose,
-                                                                            df_columns) for mutation_row in chrBased_simBased_indels_df.values]
+                                                                             list_of_early_dict,
+                                                                             list_of_late_dict,
+                                                                             df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
-    return sim_num, subs_signature_decile_index_accumulated_np_array, dinucs_signature_decile_index_accumulated_np_array, indels_signature_decile_index_accumulated_np_array
+    return sim_num, subs_signature_decile_index_accumulated_np_array, dinucs_signature_decile_index_accumulated_np_array, indels_signature_decile_index_accumulated_np_array, list_of_early_dict, list_of_late_dict
 ##################################################################
 
 
@@ -870,6 +895,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
     all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_id_signatures.size+3, 10), dtype=int)
     ################################
 
+    # June 7, 2021, Monday
+    list_of_all_early_dicts=[]
+    list_of_all_late_dicts=[]
+
     #########################################################################################
     def accumulate_np_arrays(result_tuple):
         sim_num = result_tuple[0]
@@ -878,6 +907,11 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         indels_signature_decile_index_accumulated_np_array = result_tuple[3]
 
         # print('MONITOR ACCUMULATE', flush=True)
+        list_of_early_dicts = result_tuple[4]
+        list_of_late_dicts = result_tuple[5]
+
+        list_of_all_early_dicts.extend(list_of_early_dicts)
+        list_of_all_late_dicts.extend(list_of_late_dicts)
 
         all_sims_subs_signature_decile_index_accumulated_np_array[sim_num] += subs_signature_decile_index_accumulated_np_array
         all_sims_dinucs_signature_decile_index_accumulated_np_array[sim_num] += dinucs_signature_decile_index_accumulated_np_array
@@ -898,6 +932,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
 
         for simNum, chrLong in sim_num_chr_tuples:
             chromSize = chromSizesDict[chrLong]
+
             jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_using_numpy_array,
                                  args=(outputDir,
                                        jobname,
@@ -949,7 +984,11 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         pool.join()
     ####################### ends July 22 2020   ###############################
 
-    return all_sims_subs_signature_decile_index_accumulated_np_array, all_sims_dinucs_signature_decile_index_accumulated_np_array, all_sims_indels_signature_decile_index_accumulated_np_array
+    return all_sims_subs_signature_decile_index_accumulated_np_array, \
+           all_sims_dinucs_signature_decile_index_accumulated_np_array, \
+           all_sims_indels_signature_decile_index_accumulated_np_array,\
+           list_of_all_early_dicts,\
+           list_of_all_late_dicts
 ##################################################################
 
 
@@ -1267,7 +1306,9 @@ def replicationTimeAnalysis(computationType,
     # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns
     all_sims_subs_signature_decile_index_accumulated_np_array, \
     all_sims_dinucs_signature_decile_index_accumulated_np_array, \
-    all_sims_indels_signature_decile_index_accumulated_np_array = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(
+    all_sims_indels_signature_decile_index_accumulated_np_array, \
+    list_of_all_early_dicts,\
+    list_of_all_late_dicts= calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(
         computationType,
         outputDir,
         jobname,
@@ -1294,6 +1335,16 @@ def replicationTimeAnalysis(computationType,
                                             all_sims_subs_signature_decile_index_accumulated_np_array,
                                             all_sims_dinucs_signature_decile_index_accumulated_np_array,
                                             all_sims_indels_signature_decile_index_accumulated_np_array)
+
+    # June 6, 2021, Write DF
+    filename = 'Mutations_in_early_replicating_regions.txt'
+    mutations_in_early_replicating_regions_df=pd.DataFrame(list_of_all_early_dicts)
+    mutations_in_early_replicating_regions_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_in_late_replicating_regions.txt'
+    mutations_in_late_replicating_regions_df=pd.DataFrame(list_of_all_late_dicts)
+    mutations_in_late_replicating_regions_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
     #######################################################################################################
     ################################### Replication Time Data Analysis ends ###############################
     #######################################################################################################

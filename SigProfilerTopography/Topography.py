@@ -78,6 +78,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4M
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
+from SigProfilerTopography.source.commons.TopographyCommons import MM10_MEF_NUCLEOSOME_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import GM12878_NUCLEOSOME_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import K562_NUCLEOSOME_OCCUPANCY_FILE
+
+
 from SigProfilerTopography.source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
 from SigProfilerTopography.source.commons.TopographyCommons import ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1
 from SigProfilerTopography.source.commons.TopographyCommons import ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3
@@ -417,14 +422,58 @@ def check_download_replication_time_files(replication_time_signal_file,replicati
 
 #######################################################
 
+def check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList):
+    current_abs_path = os.path.dirname(os.path.abspath(__file__))
+    # print(current_abs_path)
 
+    os.makedirs(os.path.join(current_abs_path,'lib','epigenomics','chrbased'),exist_ok=True)
+    chrombased_npy_path = os.path.join(current_abs_path,'lib','epigenomics','chrbased')
+    # print(chrombased_npy_path)
+
+    if os.path.isabs(chrombased_npy_path):
+        # print('%s an absolute path.' %(chrombased_npy_path))
+        os.chdir(chrombased_npy_path)
+
+        atac_seq_filename_wo_extension = os.path.splitext(os.path.basename(atac_seq_file))[0]
+
+        for chrLong in chromNamesList:
+            filename = '%s_signal_%s.npy' % (chrLong, atac_seq_filename_wo_extension)
+
+            chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
+            if not os.path.exists(chrbased_npy_array_path):
+                print('Does not exists: %s' % (chrbased_npy_array_path))
+                try:
+                    print('Downloading %s under %s' % (filename, chrbased_npy_array_path))
+
+                    # wget -c Continue getting a partially-downloaded file
+                    # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                    # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+
+                    # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
+                    # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
+                    # -c option to resume a download
+                    # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
+                    # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
+                    # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
+                    cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/epigenomics/chrbased/' + filename + "'"
+                    print("cmd: %s" %cmd)
+                    os.system(cmd)
+                except:
+                    # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
+                    print("The UCSD ftp site is not responding...")
+
+    else:
+        #It has to be an absolute path
+        print('%s is not an absolute path.' %(chrombased_npy_path))
+
+    #go back
+    os.chdir(current_abs_path)
 
 #######################################################
 #Nov25, 2019
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
 # We are using this function if user is using our available nucleosome data for GM12878 adnd K562 cell lines
 def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
-
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
 
@@ -466,13 +515,35 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
         #It has to be an absolute path
         print('%s is not an absolute path.' %(chrombased_npy_path))
 
-
     #go back
     os.chdir(current_abs_path)
 #######################################################
 
 
-#######################################################
+def install_default_nucleosome(genome):
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
+
+    if genome==MM10:
+        #Case1: File is not set, Biosample is not set
+        nucleosome_biosample = MEF
+        nucleosome_file = MM10_MEF_NUCLEOSOME_FILE
+        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+    elif genome == GRCh37:
+        # Case1: File is not set, Biosample is not set
+        nucleosome_biosample = K562
+        nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
+        # nucleosome_biosample = GM12878
+        # nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
+        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+def install_default_atac_seq(genome):
+    chromSizesDict = getChromSizesDict(genome)
+    chromNamesList = list(chromSizesDict.keys())
+
+    if genome==GRCh37:
+        atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+        check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList)
 
 #######################################################
 #For Skin-Melanoma USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT is better
@@ -688,12 +759,9 @@ def runProcessivityAnalysis(mutation_types_contexts,
 
     #Internally Set
     considerProbabilityInProcessivityAnalysis = True
-    # considerProbabilityInProcessivityAnalysis = False
-    computation_type=USING_APPLY_ASYNC
 
     processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
-                         computation_type,
                          processivity_calculation_type,
                          inter_mutational_distance_for_processivity,
                          outputDir,
@@ -940,6 +1008,7 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+        # These must be under epigenomics under installed SigPofilerTopography
 
     elif (genome==MM10) and (epigenomics_files==None):
         epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
@@ -973,38 +1042,27 @@ def runAnalyses(genome,
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = MEF
             nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-            if nucleosome:
-                check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
-
         #Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-                if (nucleosome):
-                    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
         #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
             nucleosome_biosample = UNDECLARED
         #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
         #Do nothing use as it is
-
     elif genome==GRCh37:
         #Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = K562
             nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-            if nucleosome:
-                check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
-
         #Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-                if (nucleosome):
-                    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
         #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
@@ -1537,7 +1595,7 @@ def runAnalyses(genome,
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
                 # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all cutoffs and signature based decided cutoffs in table format.
+                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
                 subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
                     outputDir,
                     jobname,
@@ -1553,7 +1611,7 @@ def runAnalyses(genome,
 
             if (DBS in mutation_types_contexts):
                 # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all cutoffs and signature based decided cutoffs in table format.
+                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
                 dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
                     outputDir,
                     jobname,
@@ -1569,7 +1627,7 @@ def runAnalyses(genome,
 
             if (ID in mutation_types_contexts):
                 # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all cutoffs and signature based decided cutoffs in table format.
+                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
                 indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
                     outputDir,
                     jobname,
@@ -2098,6 +2156,7 @@ def plotFigures(outputDir,
         # Initiate the pool
         numofProcesses = multiprocessing.cpu_count()
 
+        # For real runs uncomment
         #################################################################
         pool = multiprocessing.Pool(numofProcesses)
         jobs=[]

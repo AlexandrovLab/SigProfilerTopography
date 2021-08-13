@@ -49,7 +49,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-SIGNIFICANCE_LEVEL=0.01
+# SigProfilerTopography PROCESSIVITY CONSTRAINTS
+PROCESSIVITY_SIGNIFICANCE_LEVEL = 0.01
+MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH = 2
+MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS = 2
 
 ###################################################################
 def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
@@ -109,7 +112,7 @@ def plot_color_bar(outputDir,jobname,norm):
 ###################################################################
 
 ###################################################################
-def func(df):
+def set_radius(df):
     df['radius'] = df['log10_number_of_processive_groups'] / df['log10_number_of_processive_groups'].max() * 0.48
     return df
 ###################################################################
@@ -117,8 +120,14 @@ def func(df):
 ###################################################################
 def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,jobname,processivity_df,numberofSimulations,verbose):
 
-    # processivity_df
-    #'Simulation_Number', 'Signature', 'Processsive_Group_Length', 'Number_of_Processive_Groups', 'Median_of_Number_of_Processive_Groups_in_MB'
+    # processivity_df: columns below
+    # Simulation_Number
+    # Signature
+    # Processsive_Group_Length
+    # Number_of_Processive_Groups
+    # Median_Distance_Between_Last_First_Mutations
+    # Median_Distance_Between_Consecutive_Mutations
+    # Median_Number_of_Mutations_Within_1MB
 
     ####################################################
     # Get the list of signatures using original
@@ -149,50 +158,45 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                                                             "expected_number_of_processive_groups"])
     for signature in sorted_signature_list:
         for processive_group_length in sorted_processsive_group_length_list:
-            number_of_processive_groups = np.nan
-            expected_number_of_processive_groups = []
 
             if processivity_df[
                 (processivity_df['Simulation_Number'] == 0) &
                 (processivity_df['Signature'] == signature) &
                 (processivity_df['Processsive_Group_Length'] == processive_group_length)].values.any():
 
+                expected_number_of_processive_groups = []
+
                 number_of_processive_groups = processivity_df[(processivity_df['Simulation_Number'] == 0) &
                                                               (processivity_df['Signature'] == signature) &
                                                               (processivity_df['Processsive_Group_Length'] == processive_group_length)]['Number_of_Processive_Groups'].values[0]
 
-            if processivity_df[
-                (processivity_df['Simulation_Number'] != 0) &
-                (processivity_df['Signature'] == signature) &
-                (processivity_df['Processsive_Group_Length'] == processive_group_length)].values.any():
 
-                expected_number_of_processive_groups = processivity_df[(processivity_df['Simulation_Number'] != 0) &
-                                                              (processivity_df['Signature'] == signature) &
-                                                              (processivity_df['Processsive_Group_Length'] == processive_group_length)]['Number_of_Processive_Groups'].values.tolist()
+                if processivity_df[
+                    (processivity_df['Simulation_Number'] != 0) &
+                    (processivity_df['Signature'] == signature) &
+                    (processivity_df['Processsive_Group_Length'] == processive_group_length)].values.any():
 
-            signature_processive_group_length_properties_df = signature_processive_group_length_properties_df.append(
-                {"signature": signature,
-                 "processive_group_length": processive_group_length,
-                 "number_of_processive_groups": number_of_processive_groups,
-                 "log10_number_of_processive_groups": np.nan,
-                 "radius": np.nan,
-                 "avg_sims": np.nan,
-                 "min_sims": np.nan,
-                 "max_sims": np.nan,
-                 "mean_sims": np.nan,
-                 "std_sims": np.nan,
-                 "pvalue": np.nan,
-                 "qvalue": np.nan,
-                 "minus_log10_qvalue": np.nan,
-                 "zscore": np.nan,
-                 "expected_number_of_processive_groups": expected_number_of_processive_groups}, ignore_index=True)
+                    expected_number_of_processive_groups = processivity_df[(processivity_df['Simulation_Number'] != 0) &
+                                                                  (processivity_df['Signature'] == signature) &
+                                                                  (processivity_df['Processsive_Group_Length'] == processive_group_length)]['Number_of_Processive_Groups'].values.tolist()
 
-    signature_processive_group_length_properties_df['log10_number_of_processive_groups']=\
-        np.log(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0,np.nan))
+                signature_processive_group_length_properties_df = signature_processive_group_length_properties_df.append(
+                    {"signature": signature,
+                     "processive_group_length": processive_group_length,
+                     "number_of_processive_groups": number_of_processive_groups,
+                     "log10_number_of_processive_groups": np.nan,
+                     "radius": np.nan,
+                     "avg_sims": np.nan,
+                     "min_sims": np.nan,
+                     "max_sims": np.nan,
+                     "mean_sims": np.nan,
+                     "std_sims": np.nan,
+                     "pvalue": np.nan,
+                     "qvalue": np.nan,
+                     "minus_log10_qvalue": np.nan,
+                     "zscore": np.nan,
+                     "expected_number_of_processive_groups": expected_number_of_processive_groups}, ignore_index=True)
 
-    # Here we set radius
-    signature_processive_group_length_properties_df = \
-        signature_processive_group_length_properties_df.groupby('signature').apply(lambda df: func(df))
 
     ##########################################################################################
     ############################# Calculate p-values starts ##################################
@@ -271,13 +275,16 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                         ((signature_processive_group_length_properties_df['signature'] == signature) &
                         (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)), 'zscore'] = zscore
 
-                elif (not np.isnan(observed_value)) and (observed_value >= 5) and (len(expected_values) == 0):
+                # elif (not np.isnan(observed_value)) and (observed_value >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS) and (len(expected_values) == 0):
+                elif (not np.isnan(observed_value)) and ((len(expected_values)>0 and np.count_nonzero(expected_values)==0)):
+
                     # manually set
                     signature_processive_group_length_properties_df.loc[
                         ((signature_processive_group_length_properties_df['signature'] == signature) &
                          (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)), 'minus_log10_qvalue'] = np.inf
 
-                elif (not np.isnan(observed_value)) and (observed_value >= 5) and (np.count_nonzero(expected_values) == 0):
+                # elif (not np.isnan(observed_value)) and (observed_value >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS) and (np.count_nonzero(expected_values) == 0):
+                elif (not np.isnan(observed_value)) and (len(expected_values) == 0):
                     # manually set
                     signature_processive_group_length_properties_df.loc[
                         ((signature_processive_group_length_properties_df['signature'] == signature) &
@@ -302,12 +309,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     else:
         minus_log10_all_FDR_BH_adjusted_p_values = []
 
-    print('#############################################')
-    print('len(all_p_values):%d\nall_p_values: %s' %(len(all_p_values), all_p_values))
-    print('len(names_list): ', len(names_list), 'names_list: ', names_list)
-    print('len(all_FDR_BH_adjusted_p_values):%d\nall_FDR_BH_adjusted_p_values: %s' %(len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
-    print('len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' %(len(minus_log10_all_FDR_BH_adjusted_p_values),minus_log10_all_FDR_BH_adjusted_p_values))
-
     # Get the corrected p values in an order
     for index, (signature,processive_group_length) in  enumerate(names_list,0):
         qvalue = all_FDR_BH_adjusted_p_values[index]
@@ -325,51 +326,69 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                 ((signature_processive_group_length_properties_df['signature'] == signature) &
                  (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)), 'minus_log10_qvalue'] = minus_log10_qvalue
 
+    # modify starts
+    # Filter the rows where processive_group_length >= MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH
+    signature_processive_group_length_properties_df = signature_processive_group_length_properties_df[
+        signature_processive_group_length_properties_df['processive_group_length'] >= MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH]
+
+    signature_processive_group_length_properties_df['log10_number_of_processive_groups']=\
+        np.log(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0,np.nan))
+
+    # To show avg_number_of_processive_groups=1
+    if MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS == 1:
+        signature_processive_group_length_properties_df.loc[(signature_processive_group_length_properties_df['number_of_processive_groups'] == 1), 'log10_number_of_processive_groups'] = np.log(2) / 2
+
+    # Here we set radius
+    signature_processive_group_length_properties_df = \
+        signature_processive_group_length_properties_df.groupby('signature').apply(lambda df: set_radius(df))
+    # modify ends
+
     # Get the highest processive group length with a nonzero radius
-    max_processive_group_length = signature_processive_group_length_properties_df[
-        (round(signature_processive_group_length_properties_df['radius'],2)>0) &
-        (signature_processive_group_length_properties_df['number_of_processive_groups'] >= 5)]['processive_group_length'].max()
+    if (len(signature_processive_group_length_properties_df.index)>0):
+        max_processive_group_length = signature_processive_group_length_properties_df[
+            (round(signature_processive_group_length_properties_df['radius'],2)>0) &
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['processive_group_length'].max()
 
-    # Update sorted_processsive_group_length_list
-    processsive_group_length_list = signature_processive_group_length_properties_df[
-        (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
-        (signature_processive_group_length_properties_df['number_of_processive_groups'] >= 5)]['processive_group_length'].unique()
-    sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
+        # Update sorted_processsive_group_length_list
+        processsive_group_length_list = signature_processive_group_length_properties_df[
+            (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['processive_group_length'].unique()
+        sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
 
-    # Update sorted_signature_list
-    signatures_list = signature_processive_group_length_properties_df[
-        (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
-        (signature_processive_group_length_properties_df['number_of_processive_groups'] >= 5)]['signature'].unique()
-    sorted_signature_list = sorted(signatures_list, reverse=True, key=natural_key)
+        # Update sorted_signature_list
+        signatures_list = signature_processive_group_length_properties_df[
+            (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['signature'].unique()
+        sorted_signature_list = sorted(signatures_list, reverse=True, key=natural_key)
 
-    if verbose: print('\tVerbose #############################################')
-    if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' % (len(all_p_values), all_p_values))
+        if verbose: print('\tVerbose #############################################')
+        if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' % (len(all_p_values), all_p_values))
 
-    if verbose: print('\tVerbose #############################################')
-    if verbose:
-        if (all_FDR_BH_adjusted_p_values is not None): print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' % (len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
-    if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' % (len(minus_log10_all_FDR_BH_adjusted_p_values), minus_log10_all_FDR_BH_adjusted_p_values))
+        if verbose: print('\tVerbose #############################################')
+        if verbose:
+            if (all_FDR_BH_adjusted_p_values is not None): print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' % (len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
+        if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' % (len(minus_log10_all_FDR_BH_adjusted_p_values), minus_log10_all_FDR_BH_adjusted_p_values))
 
-    # Plotting starts
-    # create the directory if it does not exists
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
+        # Plotting starts
+        # create the directory if it does not exists
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
 
-    # Plot processivity figure
-    plot_processivity_figure(outputDir,
-                             jobname,
-                             numberofSimulations,
-                             sorted_signature_list,
-                             sorted_processsive_group_length_list,
-                             max_processive_group_length,
-                             signature_processive_group_length_properties_df,
-                             verbose)
+        # Plot processivity figure
+        plot_processivity_figure(outputDir,
+                                 jobname,
+                                 numberofSimulations,
+                                 sorted_signature_list,
+                                 sorted_processsive_group_length_list,
+                                 max_processive_group_length,
+                                 signature_processive_group_length_properties_df,
+                                 verbose)
 
     # Write dataframe
     filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
     signature_processive_group_length_properties_df.to_csv(filePath, sep='\t', header=True, index=False)
 
-    # Append former dataframe
+    # Append  all_mutations_loci_df' to 'signature_processive_group_length_properties_df'
     all_mutations_loci_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim0_Processive_Mutations_Loci.txt"), sep='\t', header=0)
 
     f = open(filePath,"a")
@@ -560,8 +579,7 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
             processivity_table_file_list.append((simNum,filepath))
 
     for (simNum,processivity_table_file) in processivity_table_file_list:
-        #Signature       Processsive_Group_Length        Number_of_Processive_Groups     Median_of_Number_of_Processive_Groups_in_MB
-        processivity_df=pd.read_csv(processivity_table_file, header=0, sep='\t')
+        processivity_df = pd.read_csv(processivity_table_file, header=0, sep='\t')
         processivity_df['Simulation_Number']=simNum
         processivity_df=processivity_df[['Simulation_Number',
                                          'Signature',
@@ -573,7 +591,6 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
         processivity_df_list.append(processivity_df)
 
     # Vertically combine dfs
-    #signature_processive_group_length_number_of_processive_groups_median_number_of_processive_groups_in_MB_df
     processivity_df = pd.concat(processivity_df_list)
 
     # Using dataframes
