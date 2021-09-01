@@ -624,7 +624,7 @@ def runReplicationTimeAnalysis(genome,
                                verbose,
                                matrix_generator_path):
 
-    #Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
+    # Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
@@ -887,13 +887,13 @@ def runAnalyses(genome,
                 verbose=False,
                 matrix_generator_path=MATRIX_GENERATOR_PATH,
                 PCAWG=False,
-                data_ready_plot_epigenomics=False,
-                data_ready_plot_nucleosome=False,
-                data_ready_plot_replication_time=False,
-                data_ready_plot_strand_bias=False,
-                data_ready_plot_replication_strand_bias=False,
-                data_ready_plot_transcription_strand_bias=False,
-                data_ready_plot_processivity=False,
+                plot_epigenomics=False,
+                plot_nucleosome=False,
+                plot_replication_time=False,
+                plot_strand_bias=False,
+                plot_replication_strand_bias=False,
+                plot_transcription_strand_bias=False,
+                plot_processivity=False,
                 remove_outliers=False,
                 quantileValue=0.97,
                 delete_old=False,
@@ -975,9 +975,9 @@ def runAnalyses(genome,
         replication_strand_bias=True
         transcription_strand_bias=True
 
-    if data_ready_plot_strand_bias:
-        data_ready_plot_replication_strand_bias=True
-        data_ready_plot_transcription_strand_bias=True
+    if plot_strand_bias:
+        plot_replication_strand_bias=True
+        plot_transcription_strand_bias=True
     ###############################################
 
     ###############################################
@@ -2042,12 +2042,12 @@ def runAnalyses(genome,
                     plusorMinus_nucleosome,
                     epigenomics_heatmap_significance_level,
                     verbose,
-                    data_ready_plot_epigenomics,
-                    data_ready_plot_nucleosome,
-                    data_ready_plot_replication_time,
-                    data_ready_plot_replication_strand_bias,
-                    data_ready_plot_transcription_strand_bias,
-                    data_ready_plot_processivity,
+                    plot_epigenomics,
+                    plot_nucleosome,
+                    plot_replication_time,
+                    plot_replication_strand_bias,
+                    plot_transcription_strand_bias,
+                    plot_processivity,
                     delete_old,
                     plot_mode,
                     combine_p_values_method,
@@ -2066,13 +2066,10 @@ def runAnalyses(genome,
     print("--- SigProfilerTopography ended successfully")
     print("--- Thanks for using SigProfilerTopography")
     print('#################################################################################\n')
-
-
 #######################################################
 
 
-##############################################################
-#Plot Figures for the attainded data after SigProfilerTopography Analyses
+# Plot figures for the attainded data after SigProfilerTopography Analyses
 def plotFigures(outputDir,
                 jobname,
                 numberofSimulations,
@@ -2095,56 +2092,56 @@ def plotFigures(outputDir,
                 plusOrMinus_nucleosome,
                 epigenomics_heatmap_significance_level,
                 verbose,
-                data_ready_plot_epigenomics,
-                data_ready_plot_nucleosome,
-                data_ready_plot_replication_time,
-                data_ready_plot_replication_strand_bias,
-                data_ready_plot_transcription_strand_bias,
-                data_ready_plot_processivity,
+                plot_epigenomics,
+                plot_nucleosome,
+                plot_replication_time,
+                plot_replication_strand_bias,
+                plot_transcription_strand_bias,
+                plot_processivity,
                 delete_old,
                 plot_mode,
                 combine_p_values_method,
                 fold_change_window_size,
                 num_of_real_data_avg_overlap):
 
-    if (nucleosome or data_ready_plot_nucleosome):
+    if (nucleosome or plot_nucleosome):
         occupancy_type=NUCLEOSOMEOCCUPANCY
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
         occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
+        print("--- Plot nucleosome occupancy ends")
 
-    if (replication_time or data_ready_plot_replication_time):
+    if (replication_time or plot_replication_time):
         if delete_old:
             deleteOldFigures(outputDir, jobname, REPLICATIONTIME)
         replicationTimeNormalizedMutationDensityFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,plot_mode)
-    ############################################################
+        print("--- Plot replication time starts")
 
-    ############################################################
-    if ((replication_strand_bias and transcription_strand_bias) or (data_ready_plot_replication_strand_bias and data_ready_plot_transcription_strand_bias)):
+    if ((replication_strand_bias and transcription_strand_bias) or (plot_replication_strand_bias and plot_transcription_strand_bias)):
         if delete_old:
             deleteOldFigures(outputDir, jobname, STRANDBIAS)
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
-    elif (replication_strand_bias or data_ready_plot_replication_strand_bias):
+        print("--- Plot strand bias ends")
+    elif (replication_strand_bias or plot_replication_strand_bias):
         strand_bias_list=[LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
-    elif (transcription_strand_bias or data_ready_plot_transcription_strand_bias):
+        print("--- Plot strand bias ends")
+    elif (transcription_strand_bias or plot_transcription_strand_bias):
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode)
-    ############################################################
+        print("--- Plot strand bias ends")
 
-    ############################################################
-    if (processivity or data_ready_plot_processivity):
+    if (processivity or plot_processivity):
         if delete_old:
             deleteOldFigures(outputDir, jobname, PROCESSIVITY)
         processivityFigures(outputDir,jobname,numberofSimulations,verbose)
-    ############################################################
+        print("--- Plot processivity ends")
 
-    ############################################################
-    if (epigenomics or data_ready_plot_epigenomics):
+    if (epigenomics or plot_epigenomics):
         if epigenomics_dir_name is not None:
             occupancy_type=epigenomics_dir_name
         else:
@@ -2157,7 +2154,6 @@ def plotFigures(outputDir,
         numofProcesses = multiprocessing.cpu_count()
 
         # For real runs uncomment
-        #################################################################
         pool = multiprocessing.Pool(numofProcesses)
         jobs=[]
 
@@ -2177,7 +2173,7 @@ def plotFigures(outputDir,
 
         pool.close()
         pool.join()
-        #################################################################
+        print("--- Plot epigenomics occupancy ends")
 
         # original old call
         # sequential
@@ -2199,8 +2195,8 @@ def plotFigures(outputDir,
                                               plusOrMinus_nucleosome,
                                               epigenomics_heatmap_significance_level,
                                               verbose)
-    ############################################################
-##############################################################
+        print("--- Plot epigenomics heatmaps ends")
+
 
 
 

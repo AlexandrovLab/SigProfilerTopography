@@ -331,8 +331,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     signature_processive_group_length_properties_df = signature_processive_group_length_properties_df[
         signature_processive_group_length_properties_df['processive_group_length'] >= MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH]
 
-    signature_processive_group_length_properties_df['log10_number_of_processive_groups']=\
-        np.log(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0,np.nan))
+    signature_processive_group_length_properties_df['number_of_processive_groups'] = signature_processive_group_length_properties_df['number_of_processive_groups'].astype(int)
+    signature_processive_group_length_properties_df['log10_number_of_processive_groups'] = np.log(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0, np.nan))
 
     # To show avg_number_of_processive_groups=1
     if MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS == 1:
@@ -385,6 +385,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                  verbose)
 
     # Write dataframe
+    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
     filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
     signature_processive_group_length_properties_df.to_csv(filePath, sep='\t', header=True, index=False)
 
