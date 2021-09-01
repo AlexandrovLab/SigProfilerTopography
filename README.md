@@ -85,12 +85,12 @@ from SigProfilerTopography import Topography as topography
 
 def main_function():
  genome= 'GRCh37'
- inputDir = '/Users/burcakotlu/sample_vcfs/'
- outputDir = '/Users/burcakotlu/topo_output/'
- jobname = 'sample_run'
+ inputDir = '/path/to/sample_vcfs/'
+ outputDir = '/path/to/output_dir/'
+ jobname = 'sample_21_vcfs'
  numofSimulations = 10
- sbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
- dbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
+ sbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
+ dbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
  topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 
 if __name__ == "__main__":
