@@ -85,16 +85,16 @@ from SigProfilerTopography import Topography as topo
 
 def main_function():
  genome= 'GRCh37'
- inputDir = 'path_to_your/sample_vcfs/'
- outputDir = 'path_to_your_output_dir/'
+ inputDir = '/Users/burcakotlu/sample_vcfs/'
+ outputDir = '/Users/burcakotlu/topo_output/'
  jobname = 'sample_run'
  numofSimulations = 10
- sbs_probabilities_file_path = 'path_to_your/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
- dbs_probabilities_file_path = 'path_to_your/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
- topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+ sbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
+ dbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
+ topo.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 
 if __name__ == "__main__":
-   main_function()
+ main_function()
 ```
 
 **INPUT FILE FORMAT**
