@@ -39,9 +39,9 @@ $ pip install SigProfilerTopography --upgrade
 3. Install default nucleosome occupancy (Mnase-seq) and open chromatin regions (ATAC-seq) files:
 ```
 $ python
->> from SigProfilerTopography import Topography as files
->> files.install_default_nucleosome('GRCh37')
->> files.install_default_atac_seq('GRCh37')
+>> from SigProfilerTopography import Topography as topography
+>> topography.install_default_nucleosome('GRCh37')
+>> topography.install_default_atac_seq('GRCh37')
 ```
 
 4. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
@@ -60,12 +60,12 @@ $ python
 This will install the human 37 assembly as a reference genome. 
 If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash,  use bash=False.
 
-6. You can download 21 sample vcf files and corresponding probability files using SigProfilerTopography.
+6. You can download 21 sample vcf files (in GRCh37) and corresponding probability files using SigProfilerTopography.
 ```
 $ python
->> from SigProfilerTopography import Topography as files
->> files.install_sample_vcf_files()
->> files.install_sample_probability_files()
+>> from SigProfilerTopography import Topography as topography
+>> topography.install_sample_vcf_files()
+>> topography.install_sample_probability_files()
 
 # This will download 21 sample vcf files under current_working_directory/sample_vcfs/.
 # This will download sample probabilities files under current_working_directory/sample_probabilities/.
@@ -81,7 +81,7 @@ $ python
 	+ The run below will also plot the resulting figures.
 
 ```
-from SigProfilerTopography import Topography as topo
+from SigProfilerTopography import Topography as topography
 
 def main_function():
  genome= 'GRCh37'
@@ -91,7 +91,7 @@ def main_function():
  numofSimulations = 10
  sbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
  dbs_probabilities_file_path = '/Users/burcakotlu/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
- topo.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+ topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 
 if __name__ == "__main__":
  main_function()
