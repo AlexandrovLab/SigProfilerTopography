@@ -422,6 +422,91 @@ def check_download_replication_time_files(replication_time_signal_file,replicati
 
 #######################################################
 
+def check_download_sample_probability_files():
+    current_path = os.getcwd()
+    os.makedirs(os.path.join(current_path, 'sample_probabilities'), exist_ok=True)
+    sample_probability_files_path = os.path.join(current_path, 'sample_probabilities')
+
+    probability_files = ['COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt',
+                        'COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt']
+
+    if os.path.isabs(sample_probability_files_path):
+        os.chdir(sample_probability_files_path)
+
+        for probability_filename in probability_files:
+            probability_file_path = os.path.join(sample_probability_files_path, probability_filename)
+            if not os.path.exists(probability_file_path):
+                print('Does not exists: %s' % (probability_file_path))
+            try:
+                print('Downloading %s under %s' % (probability_filename, sample_probability_files_path))
+
+                # wget -c Continue getting a partially-downloaded file
+                # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+
+                # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
+                # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
+                # -c option to resume a download
+                # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
+                # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
+                # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
+                cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_probability_files/' + probability_filename + "'"
+                print("cmd: %s" % cmd)
+                os.system(cmd)
+            except:
+                print("The UCSD ftp site is not responding...")
+    else:
+        # It has to be an absolute path
+        print('%s is not an absolute path.' % (sample_probability_files_path))
+
+    # go back
+    os.chdir(current_path)
+
+
+
+def check_download_sample_vcf_files():
+    current_path = os.getcwd()
+    os.makedirs(os.path.join(current_path, 'sample_vcfs'), exist_ok=True)
+    sample_vcf_files_path = os.path.join(current_path, 'sample_vcfs')
+
+    vcf_files = ['PD4248a.vcf', 'PD4199a.vcf', 'PD4198a.vcf', 'PD4194a.vcf', 'PD4192a.vcf', 'PD4120a.vcf',
+                'PD4116a.vcf', 'PD4115a.vcf', 'PD4109a.vcf', 'PD4107a.vcf', 'PD4103a.vcf', 'PD4088a.vcf',
+                'PD4086a.vcf', 'PD4085a.vcf', 'PD4006a.vcf', 'PD4005a.vcf', 'PD3945a.vcf', 'PD3905a.vcf',
+                'PD3904a.vcf', 'PD3890a.vcf', 'PD3851a.vcf']
+
+    if os.path.isabs(sample_vcf_files_path):
+        os.chdir(sample_vcf_files_path)
+
+        for vcf_filename in vcf_files:
+            vcf_file_path = os.path.join(sample_vcf_files_path, vcf_filename)
+            if not os.path.exists(vcf_file_path):
+                print('Does not exists: %s' % (vcf_file_path))
+            try:
+                print('Downloading %s under %s' % (vcf_filename, sample_vcf_files_path))
+
+                # wget -c Continue getting a partially-downloaded file
+                # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
+                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+
+                # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
+                # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
+                # -c option to resume a download
+                # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
+                # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
+                # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
+                cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_vcf_files/' + vcf_filename + "'"
+                print("cmd: %s" % cmd)
+                os.system(cmd)
+            except:
+                print("The UCSD ftp site is not responding...")
+    else:
+        # It has to be an absolute path
+        print('%s is not an absolute path.' % (sample_vcf_files_path))
+
+    # go back
+    os.chdir(current_path)
+
+
 def check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
@@ -544,6 +629,15 @@ def install_default_atac_seq(genome):
     if genome==GRCh37:
         atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
         check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList)
+
+def install_sample_vcf_files():
+    # Download to where the SigProfilerTopography is run
+    check_download_sample_vcf_files()
+
+def install_sample_probability_files():
+    # Download to where the SigProfilerTopography is run
+    check_download_sample_probability_files()
+
 
 #######################################################
 #For Skin-Melanoma USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT is better

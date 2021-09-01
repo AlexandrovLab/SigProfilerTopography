@@ -10,7 +10,7 @@ SigProfilerTopography provides topography analyses for mutations such as
 
 and carries out following analyses:
 
-- Epigenomics Occupancy (e.g.: Histone Modifications, Transcription Factors, ATAC-seq)
+- Epigenomics Occupancy (e.g.: Histone Modifications, Transcription Factors, ATAC-seq for open chromatin regions)
 - Nucleosome Occupancy
 - Replication Time
 - Replication Strand Bias
@@ -36,7 +36,7 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. Install default Mnase-seq (nucleosome occupancy) and ATAC-seq (open chromatin regions) files:
+3. Install default nucleosome occupancy (Mnase-seq) and open chromatin regions (ATAC-seq) files:
 ```
 $ python
 >> from SigProfilerTopography import Topography as files
@@ -60,13 +60,18 @@ $ python
 This will install the human 37 assembly as a reference genome. 
 If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash,  use bash=False.
 
-6. Import SigProfilerTopography as follows:
+6. You can download 21 sample vcf files and corresponding probability files using SigProfilerTopography.
 ```
 $ python
->>> from SigProfilerTopography import Topography as topography
+>> from SigProfilerTopography import Topography as files
+>> files.install_sample_vcf_files()
+>> files.install_sample_probability_files()
+
+# This will download 21 sample vcf files under current_working_directory/sample_vcfs/.
+# This will download sample probabilities files under current_working_directory/sample_probabilities/.
 ```
 
-7. Within a python session, you can run the topography analyses as follows:
+7. Within a python session, you can run the topography analyses for these 21 sample vcf files as follows:
 
 	+ You must provide the corresponding probabilities files in `sbs_probabilities`, `id_probabilities` and `dbs_probabilities` accordingly.
 		* For example, if you want to carry out topography analyses only for single base substitutions and dinucleotides then you must supply only `sbs_probabilities` and `dbs_probabilities`
@@ -76,15 +81,20 @@ $ python
 	+ The run below will also plot the resulting figures.
 
 ```
->>> genome= 'GRCh37'
->>> inputDir = '.../your_input_dir/'
->>> outputDir = '.../your_output_dir/'
->>> jobname = 'your_job_name'
->>> numofSimulations = 2
->>> sbs_probabilities_file_path = '.../SBS96_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>> dbs_probabilities_file_path = '.../DBS78_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>> id_probabilities_file_path = '.../ID83_Mutation_Probabilities_that_comes_from_SigProfilerExtractor.txt'
->>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+from SigProfilerTopography import Topography as topo
+
+def main_function():
+ genome= 'GRCh37'
+ inputDir = 'path_to_your/sample_vcfs/'
+ outputDir = 'path_to_your_output_dir/'
+ jobname = 'sample_run'
+ numofSimulations = 10
+ sbs_probabilities_file_path = 'path_to_your/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
+ dbs_probabilities_file_path = 'path_to_your/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
+ topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+
+if __name__ == "__main__":
+   main_function()
 ```
 
 **INPUT FILE FORMAT**
