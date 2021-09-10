@@ -17,7 +17,7 @@ import sys
 import shutil
 import statsmodels.stats.multitest
 import math
-import  numpy as np
+import numpy as np
 import pandas as pd
 
 import matplotlib
@@ -390,12 +390,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     signature_processive_group_length_properties_df.to_csv(filePath, sep='\t', header=True, index=False)
 
     # Append  all_mutations_loci_df' to 'signature_processive_group_length_properties_df'
-    all_mutations_loci_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim0_Processive_Mutations_Loci.txt"), sep='\t', header=0)
+    if os.path.exists(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim0_Processive_Mutations_Loci.txt")):
+        all_mutations_loci_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, "Sim0_Processive_Mutations_Loci.txt"), sep='\t', header=0)
 
-    f = open(filePath,"a")
-    f.write("\n")
-    all_mutations_loci_df.to_csv(f, sep='\t', header=True, index=False)
-    f.close()
+        f = open(filePath,"a")
+        f.write("\n")
+        all_mutations_loci_df.to_csv(f, sep='\t', header=True, index=False)
+        f.close()
 ###################################################################
 
 

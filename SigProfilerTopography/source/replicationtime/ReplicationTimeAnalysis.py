@@ -1026,9 +1026,9 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
 
     #Write Number of Attributable Bases List
     if (decile_df_list is not None):
-        numberofAttributableBasesList=getNumberofAttributableBases(decile_df_list)
+        numberofAttributableBasesList = getNumberofAttributableBases(decile_df_list)
         numberofAttributabelBasesFilename = 'NumberofAttributableBases.txt'
-        numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME,numberofAttributabelBasesFilename)
+        numberofAttributabelBasesFilePath = os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, numberofAttributabelBasesFilename)
 
         # Number of Attributable Bases
         with open(numberofAttributabelBasesFilePath, 'w') as file:

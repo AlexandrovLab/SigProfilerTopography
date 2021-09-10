@@ -1542,24 +1542,35 @@ def runAnalyses(genome,
             mutation_type_context_for_probabilities = get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities, INDELS)
             print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
             ordered_id_signatures_wrt_probabilities_file = prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,
-                                                                               inputDir,
-                                                                               outputDir,
-                                                                               jobname,
-                                                                               ID,
-                                                                               id_probabilities,
-                                                                               mutation_type_context_for_probabilities,
-                                                                               startSimNum, endSimNum, ID,PCAWG,verbose)
+                                                                                inputDir,
+                                                                                outputDir,
+                                                                                jobname,
+                                                                                ID,
+                                                                                id_probabilities,
+                                                                                mutation_type_context_for_probabilities,
+                                                                                startSimNum,
+                                                                                endSimNum,
+                                                                                ID,
+                                                                                PCAWG,
+                                                                                verbose)
 
         # DBS
         # if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
         if (DBS in mutation_types_contexts):
             mutation_type_context_for_probabilities = get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities, DINUCS)
             print('--- Merge %s mutations with probabilities for %s' % (DBS, dbs_probabilities))
-            ordered_dbs_signatures_wrt_probabilities_file = prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList, inputDir, outputDir,
-                                                                               jobname, DBS,
-                                                                               dbs_probabilities,
-                                                                               mutation_type_context_for_probabilities,
-                                                                               startSimNum, endSimNum, DBS,PCAWG,verbose)
+            ordered_dbs_signatures_wrt_probabilities_file = prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,
+                                                                                inputDir,
+                                                                                outputDir,
+                                                                                jobname,
+                                                                                DBS,
+                                                                                dbs_probabilities,
+                                                                                mutation_type_context_for_probabilities,
+                                                                                startSimNum,
+                                                                                endSimNum,
+                                                                                DBS,
+                                                                                PCAWG,
+                                                                                verbose)
 
 
         print("--- Merge original chr based files with Mutation Probabilities: %s seconds" % (time.time() - start_time))

@@ -558,7 +558,7 @@ def checkforValidness(chrBased_valleys_peaks_df):
 
 ########################################################################
 def get_chr_based_replication_strand_array_for_callback(chrLong,chromSize,repliseq_signal_df,valleys_df,peaks_df):
-    chrBased_replication_array=get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df)
+    chrBased_replication_array = get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df)
     return (chrLong,chrBased_replication_array)
 ########################################################################
 
@@ -584,7 +584,10 @@ def get_chr_based_replication_strand_array(chrLong,chromSize,repliseq_signal_df,
     chrBased_valleys_peaks_df.sort_values(START, inplace=True)
 
     if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
-        chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong, chromSize,chrBased_SmoothedWaveletReplicationTimeSignal_df,chrBased_valleys_peaks_df)
+        chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,
+                                                                             chromSize,
+                                                                             chrBased_SmoothedWaveletReplicationTimeSignal_df,
+                                                                             chrBased_valleys_peaks_df)
         return chrBased_replication_array
     else:
         return None
@@ -610,7 +613,9 @@ def fill_chr_based_replication_strand_array(chrLong,
     end = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[-1, endColumnIndex]  # get the last row end
 
     # Step1 Find the transition zones
-    chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,start,end,
+    chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,
+                                                                               start,
+                                                                               end,
                                                                                chrBasedSmoothedWaveletReplicationTimeSignalDF,
                                                                                chrBased_valleys_peaks_df)
 

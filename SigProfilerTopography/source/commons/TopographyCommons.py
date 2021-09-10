@@ -393,8 +393,8 @@ CONSIDER_DISTANCE='CONSIDER_DISTANCE' #default
 CONSIDER_COUNT='CONSIDER_COUNT'
 CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER='CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER'
 
-MISSING_SIGNAL='MISSING_SIGNAL'  #default
-NO_SIGNAL='NO_SIGNAL'
+MISSING_SIGNAL='MISSING_SIGNAL'  # Default. Signal value of 0 considered as missing or unreliable data.
+NO_SIGNAL='NO_SIGNAL' # Signal value of 0 considered as reliable data but do not have any signal in the dataset.
 
 RELAXED='relaxed'
 STRINGENT='stringent'
@@ -2931,7 +2931,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             print('##############################')
             print('There is a situation/problem. For simNum:%s chr:%s All mutation context type: %s mutations are not merged with signature probabilities'  %(simNum,chrShort,mutation_type_context))
             print('For simNum:%s chr:%s mutation context type:%s chr_based_mutation_df.shape(%d,%d)-- merged_df.shape(%d,%d) ' % (simNum, chrShort, mutation_type_context,chr_based_mutation_df.shape[0],chr_based_mutation_df.shape[1],merged_df.shape[0],merged_df.shape[1]))
-            print('Which samples are not merged?: %s' %(set(chr_based_mutation_df[SAMPLE].unique()).difference(set(merged_df[SAMPLE].unique()))))
+            samples_not_merged = set(chr_based_mutation_df[SAMPLE].unique()).difference(set(merged_df[SAMPLE].unique()))
+            print('Which samples are not merged?: %s' %(samples_not_merged))
+            print('Number of samples not merged: %d' %(len(samples_not_merged)))
             temp_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='outer',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION], indicator=True)
             print('which rows of chr_based_mutation_df are not merged?')
             print(temp_df[temp_df['_merge']=='left_only'])
