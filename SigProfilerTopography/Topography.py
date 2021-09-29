@@ -1591,7 +1591,7 @@ def runAnalyses(genome,
             startSimNum=1
             endSimNum=numofSimulations
             start_time = time.time()
-            #SBS
+            # SBS
             for mutation_type_context in mutation_types_contexts:
                 # if (mutation_type_context in SBS_CONTEXTS) and (sbs_probabilities is not None):
                 if (mutation_type_context in SBS_CONTEXTS):
@@ -1599,14 +1599,14 @@ def runAnalyses(genome,
                     print('--- Merge %s mutations with probabilities for %s' %(mutation_type_context,sbs_probabilities))
                     prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,mutation_type_context,sbs_probabilities,mutation_type_context_for_probabilities,startSimNum,endSimNum,'SNV',PCAWG,verbose)
 
-            #ID
+            # ID
             # if ((ID in mutation_types_contexts) and (id_probabilities is not None)):
             if (ID in mutation_types_contexts):
                 mutation_type_context_for_probabilities = get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities, ID)
                 print('--- Merge %s mutations with probabilities for %s' % (ID, id_probabilities))
                 prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,inputDir,outputDir,jobname,'ID',id_probabilities,mutation_type_context_for_probabilities,startSimNum,endSimNum,'ID',PCAWG,verbose)
 
-            #DBS
+            # DBS
             # if ((DBS in mutation_types_contexts) and (dbs_probabilities is not None)):
             if (DBS in mutation_types_contexts):
                 mutation_type_context_for_probabilities = get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities, DBS)
@@ -1700,7 +1700,7 @@ def runAnalyses(genome,
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
                 # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
+                # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
                 subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
                     outputDir,
                     jobname,
@@ -1714,37 +1714,37 @@ def runAnalyses(genome,
                     mutationType2PropertiesDict,
                     chrLong2NumberofMutationsDict)
 
-            if (DBS in mutation_types_contexts):
-                # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
-                dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
-                    outputDir,
-                    jobname,
-                    chromNamesList,
-                    DINUCS,
-                    cutoffs,
-                    average_probability,
-                    num_of_sbs_required,
-                    num_of_id_required,
-                    num_of_dbs_required,
-                    mutationType2PropertiesDict,
-                    chrLong2NumberofMutationsDict)
+        if (DBS in mutation_types_contexts):
+            # We are reading original data to fill the signature2PropertiesListDict
+            # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
+                outputDir,
+                jobname,
+                chromNamesList,
+                DINUCS,
+                cutoffs,
+                average_probability,
+                num_of_sbs_required,
+                num_of_id_required,
+                num_of_dbs_required,
+                mutationType2PropertiesDict,
+                chrLong2NumberofMutationsDict)
 
-            if (ID in mutation_types_contexts):
-                # We are reading original data to fill the signature2PropertiesListDict
-                # We are writing all tables_mutations_cutoffs and signature based decided tables_mutations_cutoffs in table format.
-                indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
-                    outputDir,
-                    jobname,
-                    chromNamesList,
-                    INDELS,
-                    cutoffs,
-                    average_probability,
-                    num_of_sbs_required,
-                    num_of_id_required,
-                    num_of_dbs_required,
-                    mutationType2PropertiesDict,
-                    chrLong2NumberofMutationsDict)
+        if (ID in mutation_types_contexts):
+            # We are reading original data to fill the signature2PropertiesListDict
+            # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
+            indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
+                outputDir,
+                jobname,
+                chromNamesList,
+                INDELS,
+                cutoffs,
+                average_probability,
+                num_of_sbs_required,
+                num_of_id_required,
+                num_of_dbs_required,
+                mutationType2PropertiesDict,
+                chrLong2NumberofMutationsDict)
 
         ####################################################################
         #Add the last row
@@ -1803,19 +1803,19 @@ def runAnalyses(genome,
                     fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SUBS,
                                                       subsSignature_cutoff_numberofmutations_averageprobability_df, num_of_sbs_required, num_of_id_required,
                                                       num_of_dbs_required)
-                if (DBS in mutation_types_contexts):
-                    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
-                                                      dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                      num_of_sbs_required,
-                                                      num_of_id_required,
-                                                      num_of_dbs_required)
+            if (DBS in mutation_types_contexts):
+                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
+                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                  num_of_sbs_required,
+                                                  num_of_id_required,
+                                                  num_of_dbs_required)
 
-                if (ID in mutation_types_contexts):
-                    fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, INDELS,
-                                                      indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                      num_of_sbs_required,
-                                                      num_of_id_required,
-                                                      num_of_dbs_required)
+            if (ID in mutation_types_contexts):
+                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, INDELS,
+                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                  num_of_sbs_required,
+                                                  num_of_id_required,
+                                                  num_of_dbs_required)
 
         ##################################################################################
         print("--- Fill tables/dictionaries using original data: %s seconds" % (time.time() - start_time))
@@ -1838,10 +1838,10 @@ def runAnalyses(genome,
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
                 subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
-            if (DBS in mutation_types_contexts):
-                dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
-            if (ID in mutation_types_contexts):
-                indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+        if (DBS in mutation_types_contexts):
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
+        if (ID in mutation_types_contexts):
+            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
     #######################################################################################################
     ################################### Step4 Fill Table ends #############################################
     #######################################################################################################
