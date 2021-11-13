@@ -2214,7 +2214,17 @@ def plotFigures(outputDir,
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
-        occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,nucleosome_file_basename,None,occupancy_type,plusOrMinus_nucleosome,verbose,plot_mode)
+        occupancyAverageSignalFigures(outputDir,
+                                      jobname,
+                                      numberofSimulations,
+                                      sample_based,
+                                      mutation_types_contexts,
+                                      nucleosome_file_basename,
+                                      None,
+                                      occupancy_type,
+                                      plusOrMinus_nucleosome,
+                                      verbose,
+                                      plot_mode)
         print("--- Plot nucleosome occupancy ends")
 
     if (replication_time or plot_replication_time):
@@ -2268,7 +2278,17 @@ def plotFigures(outputDir,
             epigenomics_file_basename = os.path.basename(epigenomics_file)
             epigenomics_file_memo= epigenomics_files_memos[idx]
             jobs.append(pool.apply_async(occupancyAverageSignalFigures,
-                                         args=(outputDir,jobname,numberofSimulations,sample_based,mutation_types_contexts,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose,plot_mode,)))
+                                         args=(outputDir,
+                                               jobname,
+                                               numberofSimulations,
+                                               sample_based,
+                                               mutation_types_contexts,
+                                               epigenomics_file_basename,
+                                               epigenomics_file_memo,
+                                               occupancy_type,
+                                               plusOrMinus_epigenomics,
+                                               verbose,
+                                               plot_mode,)))
 
         if verbose: print('\tVerbose %s Plotting figures len(jobs):%d ' %(occupancy_type,len(jobs)))
 

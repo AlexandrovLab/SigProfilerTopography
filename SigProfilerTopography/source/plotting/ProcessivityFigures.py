@@ -30,7 +30,6 @@ from matplotlib import pyplot as plt
 
 import matplotlib as mpl
 import matplotlib.cm as cm
-from statsmodels.stats.weightstats import ztest
 from matplotlib.colors import Normalize
 
 from SigProfilerTopography.source.commons.TopographyCommons import DATA
@@ -46,6 +45,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import BONFERRONI_CO
 
 from SigProfilerTopography.source.commons.TopographyCommons import readDictionary
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
+from SigProfilerTopography.source.commons.TopographyCommons import calculate_pvalue_teststatistics
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
@@ -118,8 +118,7 @@ def set_radius(df):
 ###################################################################
 
 ###################################################################
-def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,jobname,processivity_df,numberofSimulations,verbose):
-
+def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir, jobname, processivity_df, numberofSimulations, verbose):
     # processivity_df: columns below
     # Simulation_Number
     # Signature
@@ -141,6 +140,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
     ####################################################
 
+    # We will fill this dataframe
     signature_processive_group_length_properties_df = pd.DataFrame(columns=["signature",
                                                                             "processive_group_length",
                                                                             "number_of_processive_groups",
@@ -156,6 +156,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                                                             "minus_log10_qvalue", #will be used in coloring
                                                                             "zscore", # for information only
                                                                             "expected_number_of_processive_groups"])
+    # Dataframe is filled here
     for signature in sorted_signature_list:
         for processive_group_length in sorted_processsive_group_length_list:
 
@@ -220,9 +221,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
 
                 zscore = None
                 if (not np.isnan(observed_value)) and (len(expected_values)>0 and np.count_nonzero(expected_values)>0):
-                    # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
                     try:
-                        zstat, pvalue = ztest(expected_values, [observed_value], alternative='smaller')
+                        zstat, pvalue = calculate_pvalue_teststatistics(observed_value, expected_values, alternative = 'smaller')
                     except FloatingPointError:
                         print(signature,' observed_value: ', observed_value, ' expected_values: ', expected_values, ' FloatingPointError: divide by zero encountered in double_scalars')
 
@@ -332,11 +332,11 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         signature_processive_group_length_properties_df['processive_group_length'] >= MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH]
 
     signature_processive_group_length_properties_df['number_of_processive_groups'] = signature_processive_group_length_properties_df['number_of_processive_groups'].astype(int)
-    signature_processive_group_length_properties_df['log10_number_of_processive_groups'] = np.log(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0, np.nan))
+    signature_processive_group_length_properties_df['log10_number_of_processive_groups'] = np.log10(signature_processive_group_length_properties_df['number_of_processive_groups'].replace(0, np.nan))
 
     # To show avg_number_of_processive_groups=1
     if MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS == 1:
-        signature_processive_group_length_properties_df.loc[(signature_processive_group_length_properties_df['number_of_processive_groups'] == 1), 'log10_number_of_processive_groups'] = np.log(2) / 2
+        signature_processive_group_length_properties_df.loc[(signature_processive_group_length_properties_df['number_of_processive_groups'] == 1), 'log10_number_of_processive_groups'] = np.log10(2) / 2
 
     # Here we set radius
     signature_processive_group_length_properties_df = \
@@ -582,8 +582,8 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
 
     for (simNum,processivity_table_file) in processivity_table_file_list:
         processivity_df = pd.read_csv(processivity_table_file, header=0, sep='\t')
-        processivity_df['Simulation_Number']=simNum
-        processivity_df=processivity_df[['Simulation_Number',
+        processivity_df['Simulation_Number'] = simNum
+        processivity_df = processivity_df[['Simulation_Number',
                                          'Signature',
                                          'Processsive_Group_Length',
                                          'Number_of_Processive_Groups',

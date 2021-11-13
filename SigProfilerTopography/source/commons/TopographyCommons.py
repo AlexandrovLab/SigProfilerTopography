@@ -18,11 +18,12 @@ import shutil
 import psutil
 
 import scipy
+from scipy import stats
 from scipy.stats import sem, t
 
-import scipy.stats as stats
+from statsmodels.stats.weightstats import ztest
 
-#To handle warnings as errors
+# To handle warnings as errors
 # import warnings
 # warnings.filterwarnings("error")
 
@@ -72,13 +73,13 @@ INTERGENIC_SIMULATIONS_MEAN_COUNT ='intergenic_mean_sims_count'
 LAGGING_SIMULATIONS_MEAN_COUNT ='Lagging_mean_sims_count'
 LEADING_SIMULATIONS_MEAN_COUNT ='Leading_mean_sims_count'
 
-AT_LEAST_5_PERCENT_DIFF='5%'
-AT_LEAST_10_PERCENT_DIFF='10%'
-AT_LEAST_20_PERCENT_DIFF='20%'
-AT_LEAST_30_PERCENT_DIFF='30%'
-AT_LEAST_50_PERCENT_DIFF='50%'
-AT_LEAST_75_PERCENT_DIFF='75%'
-AT_LEAST_100_PERCENT_DIFF='100%'
+AT_LEAST_5_PERCENT_DIFF = '5%'
+AT_LEAST_10_PERCENT_DIFF = '10%'
+AT_LEAST_20_PERCENT_DIFF = '20%'
+AT_LEAST_30_PERCENT_DIFF = '30%'
+AT_LEAST_50_PERCENT_DIFF = '50%'
+AT_LEAST_75_PERCENT_DIFF = '75%'
+AT_LEAST_100_PERCENT_DIFF = '100%'
 
 percentage_numbers = [10, 20, 30, 50, 75, 100]
 percentage_strings = [AT_LEAST_10_PERCENT_DIFF, AT_LEAST_20_PERCENT_DIFF, AT_LEAST_30_PERCENT_DIFF, AT_LEAST_50_PERCENT_DIFF, AT_LEAST_75_PERCENT_DIFF, AT_LEAST_100_PERCENT_DIFF]
@@ -152,14 +153,14 @@ GM12813='GM12813'
 MEF="MEF"
 
 #Epigenomics File for GRCh37
-DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_breast_epithelium_H3K27me3.bed'
-DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_breast_epithelium_H3K36me3.bed'
-DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_breast_epithelium_H3K9me3.bed'
-DEFAULT_H3K27AC_OCCUPANCY_FILE = 'ENCFF154XFN_breast_epithelium_H3K27ac.bed'
-DEFAULT_H3K4ME1_OCCUPANCY_FILE = 'ENCFF336DDM_breast_epithelium_H3K4me1.bed'
-DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_breast_epithelium_H3K4me3.bed'
-DEFAULT_CTCF_OCCUPANCY_FILE = 'ENCFF782GCQ_breast_epithelium_Normal_CTCF-human.bed'
-DEFAULT_ATAC_SEQ_OCCUPANCY_FILE = 'ENCFF035ICJ_breast_epithelium_Normal_ATAC-seq.wig'
+DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_breast_epithelium_H3K27me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_breast_epithelium_H3K36me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_breast_epithelium_H3K9me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_H3K27AC_OCCUPANCY_FILE = 'ENCFF154XFN_breast_epithelium_H3K27ac.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_H3K4ME1_OCCUPANCY_FILE = 'ENCFF336DDM_breast_epithelium_H3K4me1.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_breast_epithelium_H3K4me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
+DEFAULT_CTCF_OCCUPANCY_FILE = 'ENCFF782GCQ_breast_epithelium_Normal_CTCF-human.bed' # Homo sapiens breast epithelium tissue male adult (54 years)
+DEFAULT_ATAC_SEQ_OCCUPANCY_FILE = 'ENCFF035ICJ_breast_epithelium_Normal_ATAC-seq.wig' # Homo sapiens breast epithelium tissue male adult (54 years)
 
 #Epigenomics File for mm10
 ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq="ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq.wig"
@@ -239,7 +240,6 @@ GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
 
 MEF_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JVQ_mm10_embryonic_fibroblast_wavelet_smoothed_signal.wig'
 
-
 available_nucleosome_biosamples=[GM12878,K562,MEF]
 available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
 
@@ -289,8 +289,8 @@ Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Ta
 Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
 #Table
-Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename='Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
-Table_ChrLong_NumberofMutations_Filename='Table_ChrLong_NumberofMutations.txt'
+Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
+Table_ChrLong_NumberofMutations_Filename = 'Table_ChrLong_NumberofMutations.txt'
 
 #For Subs
 Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
@@ -399,14 +399,14 @@ NO_SIGNAL='NO_SIGNAL' # Signal value of 0 considered as reliable data but do not
 RELAXED='relaxed'
 STRINGENT='stringent'
 
-DEFAULT_AVERAGE_PROBABILITY=0.75
+DEFAULT_AVERAGE_PROBABILITY = 0.75
 
-DEFAULT_NUM_OF_SBS_REQUIRED=2000
-DEFAULT_NUM_OF_DBS_REQUIRED=200
-DEFAULT_NUM_OF_ID_REQUIRED=1000
+DEFAULT_NUM_OF_SBS_REQUIRED = 2000
+DEFAULT_NUM_OF_DBS_REQUIRED = 200
+DEFAULT_NUM_OF_ID_REQUIRED = 1000
 
-DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED=100
-NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT=1
+DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED = 100
+NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT = 1
 
 ############################################
 #Column Names
@@ -473,19 +473,19 @@ USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 USING_ZSCORE = 'USING_ZSCORE'
 
-SBS96   = '96'
-SBS192  = '192'
+SBS96 = '96'
+SBS192 = '192'
 SBS288 = '288'
-SBS384  = '384'
+SBS384 = '384'
 SBS1536 = '1536'
 SBS3072 = '3072'
 
 #These 3 (SNV,ID,DBS) are used for matrixgenerator creared directories
-SNV='SNV'
+SNV ='SNV'
 ID = 'ID'
-DBS= 'DBS'
+DBS = 'DBS'
 
-SBS='SBS'
+SBS = 'SBS'
 SBS_CONTEXTS = [SBS96,SBS192,SBS288,SBS384,SBS1536,SBS3072]
 
 # Used for dictionaries
@@ -493,8 +493,6 @@ SBS_CONTEXTS = [SBS96,SBS192,SBS288,SBS384,SBS1536,SBS3072]
 SUBS = 'SUBS'
 INDELS = 'INDELS'
 DINUCS = 'DINUCS'
-
-
 
 UNDECLARED = 'Undeclared'
 
@@ -506,14 +504,30 @@ PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
 
-############################################################################################################################
-#sheet name must be less than 31 characters
+
+# Always ztest
+# one sample or two_sample?
+# I decided to use one sample because for simulations I will get vertical vector and average of that vertical vector  must be equal to avg_simulated_signal, there is a way to self verification
+# Comparing one mean with means of n simulations gives a more realistic p-value.
+# In case of comparison of two samples, ztest and ttest gives either 0 or very low p-values.
+# zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way.
+# if there is only one simulation mean in simulationsHorizontalMeans, then pvalue is nan
+def calculate_pvalue_teststatistics(observed_value,
+                                    expected_values,
+                                    alternative = 'two-sided'):
+
+    zstat, pvalue = ztest(expected_values, [observed_value], alternative=alternative) # pvalue 0.0115612696237375
+    # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way. # (-25.37854961568692, 4.351195335930552e-142)
+    # stats.ttest_1samp(expected_values, observed_value) # Ttest_1sampResult(statistic=-25.378549615686918, pvalue=3.99359102646761e-45)
+
+    return zstat, pvalue
+
+# sheet name must be less than 31 characters
 def write_excel_file(df_list, sheet_list, file_name):
     writer = pd.ExcelWriter(file_name,engine='xlsxwriter')
     for dataframe, sheet in zip(df_list, sheet_list):
         dataframe.to_excel(writer, sheet_name=sheet, startrow=0 , startcol=0, index=False)
     writer.save()
-############################################################################################################################
 
 
 
@@ -1294,7 +1308,9 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                  cutoff_numberofmutations_averageprobability[1],
                  cutoff_numberofmutations_averageprobability[2],
                  cutoff_numberofmutations_averageprobability[3],
-                 len(cutoff_numberofmutations_averageprobability[3]))
+                 len(cutoff_numberofmutations_averageprobability[3]),
+                 len(all_samples),
+                 len(cutoff_numberofmutations_averageprobability[3])*100/len(all_samples))
                  for signature, cutoff_numberofmutations_averageprobability in signature2PropertiesListDict.items()])
 
     if L:
@@ -1304,13 +1320,17 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                                                            'number_of_mutations',
                                                                                            'average_probability',
                                                                                            'samples_list',
-                                                                                           'len(samples_list)'])
+                                                                                           'len(samples_list)',
+                                                                                           'len(all_samples_list)',
+                                                                                           'percentage_of_samples'])
 
         signature_cutoff_numberofmutations_averageprobability_df['cancer_type']=signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
         signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
         signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
         signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
         signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
+        signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'] = signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'].astype(np.float32)
+
     else:
         # Create empty dataframe
         signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cancer_type',
@@ -1319,11 +1339,14 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                                                            'number_of_mutations',
                                                                                            'average_probability',
                                                                                            'samples_list',
-                                                                                           'len(samples_list)'])
+                                                                                           'len(samples_list)',
+                                                                                           'len(all_samples_list)',
+                                                                                           'percentage_of_samples'
+                                                                                         ])
 
     signature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), sep='\t', index=False)
 
-    signature_cutoff_numberofmutations_averageprobability_df.drop(['cancer_type', 'samples_list', 'len(samples_list)'], inplace=True, axis=1)
+    signature_cutoff_numberofmutations_averageprobability_df.drop(['cancer_type', 'samples_list', 'len(samples_list)', 'len(all_samples_list)', 'percentage_of_samples'], inplace=True, axis=1)
 
     return signature_cutoff_numberofmutations_averageprobability_df
 

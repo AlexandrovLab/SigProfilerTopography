@@ -194,8 +194,8 @@ def findLongStretchesofConsistentTransitionZones(chrLong,fromStart,toEnd,chrBase
 
 ########################################################################
 #TODO Is (replicationStrand_row['end']+1) okey?
-#We assume that there are no overlapping intervals with positive and negative slopes.
-#To test it have one array for positive slope fill with 1s
+# We assume that there are no overlapping intervals with positive and negative slopes.
+# To test it have one array for positive slope fill with 1s
 #                one array for negative slope fill with -2a
 #                add them if you habe any -1 that means that you contradict this assumption.
 def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array):

@@ -1453,7 +1453,7 @@ def plot_bar_plot_in_given_axis(axis,
                                 signature_strand1_versus_strand2_df,
                                 y_axis_label = None):
     box = axis.get_position()
-    axis.set_position([box.x0, box.y0 + 0.125, box.width * 1, box.height * 1], which='both') # test
+    axis.set_position([box.x0, box.y0 + 0.125, box.width * 1, box.height * 1], which='both')
 
     mutation_types = six_mutation_types
     numberofSimulations=100
@@ -1731,7 +1731,7 @@ def plot_stacked_bar_plot_in_given_axis(axis,
                                         signature_strand1_versus_strand2_df,
                                         y_axis_label = None):
     box = axis.get_position()
-    axis.set_position([box.x0, box.y0+0.125, box.width * 1, box.height * 1], which='both') # test
+    axis.set_position([box.x0, box.y0+0.125, box.width * 1, box.height * 1], which='both')
 
     mutation_types = six_mutation_types
     numberofSimulations=100
@@ -2147,10 +2147,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
 
     #######################################################################
     if ((p_values_list is not None) and p_values_list):
-        # all_p_values_array = np.asarray(p_values_list)
-        # rejected, all_FDR_BH_adjusted_p_values = statsmodels.stats.multitest.fdrcorrection(all_p_values_array, alpha=0.05, method='indep', is_sorted=False)
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
-        # print('(len(all_FDR_BH_adjusted_p_values): %d' % (len(all_FDR_BH_adjusted_p_values)))
 
         #Add None q_values
         if LAGGING_VERSUS_LEADING in strand_bias_list:

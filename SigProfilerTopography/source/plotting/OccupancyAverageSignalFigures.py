@@ -92,6 +92,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE
 
 from SigProfilerTopography.source.commons.TopographyCommons import write_excel_file
+from SigProfilerTopography.source.commons.TopographyCommons import calculate_pvalue_teststatistics
 
 
 plt.rcParams.update({'figure.max_open_warning': 0})
@@ -108,7 +109,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 ##################### Read Average as Pandas Series #########################
 #############################################################################
 #Jobname has to be only jobname given in the argument
-def readData(sample,signatureName,analyseType,outputDir,jobname,occupancy_type,libraryFilenameMemo,partial_file_name):
+def readData(sample, signatureName, analyseType, outputDir, jobname, occupancy_type, libraryFilenameMemo, partial_file_name):
 
     #####################################################
     if (analyseType == SIGNATUREBASED):
@@ -177,7 +178,7 @@ def readAsNumpyArray(averageFilePath):
 #############################################################################
 ##################### Read Average for Simulations start ####################
 #############################################################################
-def readDataForSimulations(sample,signature,analyseType,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,partial_file_name):
+def readDataForSimulations(sample, signature, analyseType, outputDir, jobname, numberofSimulations, occupancy_type, libraryFilenameMemo, partial_file_name):
     # partial_file_name = 'AverageSignalArray'
 
     listofAverages = []
@@ -305,8 +306,6 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
             ax.spines[edge_i].set_linewidth(3)
 
         x = np.arange(-plusOrMinus ,plusOrMinus+1 ,1)
-        # print('x.shape:%s' %x.shape)
-        # plt.plot(x, average,'b-',label='test')
 
         listofLegends = []
         for label in label2NumpyArrayDict:
@@ -486,7 +485,7 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,num
         min_list.append(np.amin(realAverage))
         max_list.append(np.amax(realAverage))
 
-        #95%CI
+        # 95%CI
         simulationsSignatureBasedLows, simulationsSignatureBasedMeans, simulationsSignatureBasedHighs = takeAverage(listofSimulationsSignatureBased)
 
         from matplotlib import rcParams
@@ -505,8 +504,6 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,num
             ax.spines[edge_i].set_linewidth(3)
 
         x = np.arange(-plusOrMinus ,plusOrMinus+1 ,1)
-        # print('x.shape:%s' %x.shape)
-        # plt.plot(x, average,'b-',label='test')
 
         listofLegends = []
 
@@ -1881,12 +1878,7 @@ def get_biosample(file_memo,biosample_list,nucleosome_file):
 
 
 ########################################################
-#Sep24 2020 #Enrichment is done in this function.
-#Always ztest
-#one sample or two_sample?
-#I decided to use one sample because for simulations I will get vertical vector and average of that vertical vector  must be equal to avg_simulated_signal, there is a way to self verification
-#Comparing one mean with means of n simulations gives a more realistic p-value.
-#In case of comparison of two samples, ztest and ttest gives either 0 or very low p-values.
+# Sep24 2020 #Enrichment is done in this function.
 def calculate_fold_change_real_over_sim(center,
                                         plusorMinus,
                                         output_dir,
@@ -2026,16 +2018,9 @@ def calculate_fold_change_real_over_sim(center,
 
     if (avg_real_signal is not None) and (avg_sim_signal is not None):
         fold_change = avg_real_signal / avg_sim_signal
-        # print('avg_real_signal:%f' % (avg_real_signal))
-        # print('avg_sim_signal:%f' % (avg_sim_signal))
-        # print('fold change:%f' % (fold_change))
 
         if (simulationsHorizontalMeans is not None):
-            # zstat, pvalue_ztest_1sample = ztest(simulationsHorizontalMeans, value=avg_real_signal)
-            # if there is only one simulation mean in simulationsHorizontalMeans, then pvalue is nan
-            zstat, pvalue = ztest(simulationsHorizontalMeans,[avg_real_signal])
-            # print('%s %s %s  avg_real_signal:%f avg_sim_signal:%f min_sim_signal:%f max_sim_signal:%f fold_change:%f p_value: %.2E' %(signature, jobname, dna_element,avg_real_signal,avg_sim_signal,min_sim_signal,max_sim_signal, fold_change, Decimal(pvalue) ))
-            # print('###############################################################################################################################')
+            zstat, pvalue = calculate_pvalue_teststatistics(avg_real_signal, simulationsHorizontalMeans)
 
         return [jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count, list(simulationsHorizontalMeans)]
     else:
@@ -2315,7 +2300,7 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                 p_values_array=np.asarray(p_value_list)
 
                 try:
-                    test_statistic,combined_p_value=scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
+                    test_statistic, combined_p_value = scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
                 except FloatingPointError:
                     print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list))
                     if len(p_value_list)>0:
@@ -2432,7 +2417,7 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             p_values_array=np.asarray(p_value_list)
 
             try:
-                test_statistic,combined_p_value=scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
+                test_statistic, combined_p_value = scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
             except FloatingPointError:
                 print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list))
                 if len(p_value_list)>0:
@@ -2597,7 +2582,7 @@ def occupancyAverageSignalFigures(outputDir,jobname,numberofSimulations,sample_b
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS), exist_ok=True)
 
     # Read necessary dictionaries
-    mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
 
     for mutation_type_context in mutation_types_contexts:
         if (mutation_type_context in SBS_CONTEXTS):
