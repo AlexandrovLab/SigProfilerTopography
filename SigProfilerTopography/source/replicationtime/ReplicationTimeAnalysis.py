@@ -239,12 +239,14 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
 ##################################################################
 # August 1, 2020
 # Using numpy array
+# Main engine function
 def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                         mutation_type,
                                                                         chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                         ordered_signatures_cutoffs,
                                                                         signatures_mask_array,
                                                                         signature_decile_index_accumulated_np_array,
+                                                                        is_discreet,
                                                                         df_columns):
     # df_columns: numpy array
     indexofStart = np.where(df_columns == START) [0][0]
@@ -274,42 +276,92 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     # We aim to get rid of zero if any exists in slicedArray.
     uniqueIndexesArray = np.unique(slicedArray[np.nonzero(slicedArray)])
 
-    decile_index_array=np.zeros((10),dtype=int)
+    decile_index_array=np.zeros((10), dtype=int)
 
     #decile 10  will be accumulated in index 9
     #decile 1 will be accumulated in index 0
     #Therefore uniqueIndexesArray minus 1
     if (uniqueIndexesArray.size>0):
-        uniqueIndexesArray -=1
-        decile_index_array[uniqueIndexesArray]=1
+        uniqueIndexesArray -= 1
+        decile_index_array[uniqueIndexesArray] = 1
 
         probabilities = mutation_row[signatures_mask_array]
-        threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
 
-        # Convert True into 1, and False into 0
-        mask_array = threshold_mask_array.astype(int)
-        if  mutation_type == INDELS:
-            if (length >= 3):
-                # Order is important
-                # MICROHOMOLOGY --> 1
-                # REPEAT --> 0
-                # AGGREGATEDINDELS --> 1
-                mask_array = np.append(mask_array, [1, 0, 1])
+        # # old code starts
+        # threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
+        #
+        # # Convert True into 1, and False into 0
+        # mask_array = threshold_mask_array.astype(int)
+        # if  mutation_type == INDELS:
+        #     if (length >= 3):
+        #         # Order is important
+        #         # MICROHOMOLOGY --> 1
+        #         # REPEAT --> 0
+        #         # AGGREGATEDINDELS --> 1
+        #         mask_array = np.append(mask_array, [1, 0, 1])
+        #     else:
+        #         # Order is important
+        #         # MICROHOMOLOGY --> 0
+        #         # REPEAT --> 1
+        #         # AGGREGATEDINDELS --> 1
+        #         mask_array = np.append(mask_array, [0, 1, 1])
+        #
+        # else:
+        #     # Add 1 for the aggregated analysis to the mask array
+        #     # For SUBS and DINUCS
+        #     mask_array = np.append(mask_array, 1)
+        # # old code ends
+
+        # new code starts
+        if is_discreet:
+            # Discreet way 1 or 0
+            # Convert True into 1, and False into 0
+            threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
+            mask_array = threshold_mask_array.astype(int)
+            if mutation_type == INDELS:
+                if (length >= 3):
+                    # Order is important
+                    # MICROHOMOLOGY --> 1
+                    # REPEAT --> 0
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [1, 0, 1])
+                else:
+                    # Order is important
+                    # MICROHOMOLOGY --> 0
+                    # REPEAT --> 1
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [0, 1, 1])
+
             else:
-                # Order is important
-                # MICROHOMOLOGY --> 0
-                # REPEAT --> 1
-                # AGGREGATEDINDELS --> 1
-                mask_array = np.append(mask_array, [0, 1, 1])
+                # Add 1 for the aggregated analysis to the mask array
+                # For SUBS and DINUCS
+                mask_array = np.append(mask_array, 1)
 
         else:
-            # Add 1 for the aggregated analysis to the mask array
-            # For SUBS and DINUCS
-            mask_array = np.append(mask_array, 1)
+            mask_array = np.array(probabilities).astype(float)
+            if mutation_type == INDELS:
+                if (length >= 3):
+                    # Order is important
+                    # MICROHOMOLOGY --> 1
+                    # REPEAT --> 0
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [1.0, 0.0, 1.0])
+                else:
+                    # Order is important
+                    # MICROHOMOLOGY --> 0
+                    # REPEAT --> 1
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [0.0, 1.0, 1.0])
 
-        #Add 1 more dimension to the arrays
-        decile_index_array_1x10 = np.array([decile_index_array])
-        mask_array_1xnumofsignatures = np.array([mask_array])
+            else:
+                # Add 1 for the aggregated analysis to the mask array
+                # For SUBS and DINUCS
+                mask_array = np.append(mask_array, 1.0)
+        # new code ends
+
+        # Add 1 more dimension to the arrays
+        decile_index_array_1x10 = np.expand_dims(decile_index_array, axis=0)
+        mask_array_1xnumofsignatures = np.expand_dims(mask_array, axis=0)
 
         signatures_decile_index_np_array = mask_array_1xnumofsignatures.T * decile_index_array_1x10
         signature_decile_index_accumulated_np_array += signatures_decile_index_np_array
@@ -333,6 +385,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
                                                                         dinucs_signature_decile_index_accumulated_np_array,
                                                                         indels_signature_decile_index_accumulated_np_array,
                                                                         sample_based,
+                                                                        is_disceet,
                                                                         verbose,
                                                                         df_columns):
 
@@ -388,32 +441,56 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
         decile_index_array[uniqueIndexesArray]=1
 
         probabilities = mutation_row[signatures_mask_array]
-        threshold_mask_array = np.greater_equal(probabilities, cutoffs)
 
-        # Convert True into 1, and False into 0
-        mask_array = threshold_mask_array.astype(int)
-        if  mutation_row_type == INDELS:
-            if (length >= 3):
-                # Order is important
-                # MICROHOMOLOGY --> 1
-                # REPEAT --> 0
-                # AGGREGATEDINDELS --> 1
-                mask_array = np.append(mask_array, [1, 0, 1])
+        if is_disceet:
+            threshold_mask_array = np.greater_equal(probabilities, cutoffs)
+
+            # Convert True into 1, and False into 0
+            mask_array = threshold_mask_array.astype(int)
+            if  mutation_row_type == INDELS:
+                if (length >= 3):
+                    # Order is important
+                    # MICROHOMOLOGY --> 1
+                    # REPEAT --> 0
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [1, 0, 1])
+                else:
+                    # Order is important
+                    # MICROHOMOLOGY --> 0
+                    # REPEAT --> 1
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [0, 1, 1])
+
             else:
-                # Order is important
-                # MICROHOMOLOGY --> 0
-                # REPEAT --> 1
-                # AGGREGATEDINDELS --> 1
-                mask_array = np.append(mask_array, [0, 1, 1])
+                # Add 1 for the aggregated analysis to the mask array
+                # For SUBS and DINUCS
+                mask_array = np.append(mask_array, 1)
 
         else:
-            # Add 1 for the aggregated analysis to the mask array
-            # For SUBS and DINUCS
-            mask_array = np.append(mask_array, 1)
+            mask_array = np.array(probabilities).astype(float)
+            if mutation_row_type == INDELS:
+                if (length >= 3):
+                    # Order is important
+                    # MICROHOMOLOGY --> 1
+                    # REPEAT --> 0
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [1.0, 0.0, 1.0])
+                else:
+                    # Order is important
+                    # MICROHOMOLOGY --> 0
+                    # REPEAT --> 1
+                    # AGGREGATEDINDELS --> 1
+                    mask_array = np.append(mask_array, [0.0, 1.0, 1.0])
+
+            else:
+                # Add 1 for the aggregated analysis to the mask array
+                # For SUBS and DINUCS
+                mask_array = np.append(mask_array, 1.0)
+
 
         #Add 1 more dimension to the arrays
-        decile_index_array_1x10 = np.array([decile_index_array])
-        mask_array_1xnumofsignatures = np.array([mask_array])
+        mask_array_1xnumofsignatures = np.expand_dims(mask_array, axis=0)
+        decile_index_array_1x10 = np.expand_dims(decile_index_array, axis=0)
 
         signatures_decile_index_np_array = mask_array_1xnumofsignatures.T * decile_index_array_1x10
         signature_decile_index_accumulated_np_array += signatures_decile_index_np_array
@@ -423,30 +500,48 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
 
 
 ##################################################################
-#DEC 18, 2020
+# DEC 18, 2020
 def searchforAllMutations_using_numpy_array(sim_num,
                                             chrBased_simBased_subs_df,
                                             chrBased_simBased_dinucs_df,
                                             chrBased_simBased_indels_df,
                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                            ordered_all_sbs_signatures_array,
+                                            ordered_all_dbs_signatures_array,
+                                            ordered_all_id_signatures_array,
                                             ordered_sbs_signatures,
                                             ordered_dbs_signatures,
                                             ordered_id_signatures,
                                             ordered_sbs_signatures_cutoffs,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
+                                            is_discreet,
                                             verbose):
+
+    if is_discreet:
+        number_of_sbs_signatures = ordered_sbs_signatures.size
+        number_of_dbs_signatures = ordered_dbs_signatures.size
+        number_of_id_signatures = ordered_id_signatures.size
+    else:
+        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
+        number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
+        number_of_id_signatures = ordered_all_id_signatures_array.size
+
 
     # Add one more row for the Aggregated analysis, there are 10 deciles
     # Add three more rows for the Microhomology, Repeat Mediated and Aggregated analysis, there are 10 deciles
-    subs_signature_decile_index_accumulated_np_array = np.zeros((ordered_sbs_signatures.size + 1, 10), dtype=int)
-    dinucs_signature_decile_index_accumulated_np_array = np.zeros((ordered_dbs_signatures.size + 1, 10), dtype=int)
-    indels_signature_decile_index_accumulated_np_array = np.zeros((ordered_id_signatures.size + 3, 10), dtype=int)
+    subs_signature_decile_index_accumulated_np_array = np.zeros((number_of_sbs_signatures + 1, 10), dtype=float) # legacy int
+    dinucs_signature_decile_index_accumulated_np_array = np.zeros((number_of_dbs_signatures + 1, 10), dtype=float) # legacy int
+    indels_signature_decile_index_accumulated_np_array = np.zeros((number_of_id_signatures + 3, 10), dtype=float) # # legacy int
 
     #SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         df_columns = chrBased_simBased_subs_df.columns.values
-        df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+
+        if is_discreet:
+            df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+        else:
+            df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              SUBS,
@@ -454,12 +549,17 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_sbs_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             subs_signature_decile_index_accumulated_np_array,
+                                                                            is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
     #DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
         df_columns = chrBased_simBased_dinucs_df.columns.values
-        df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+
+        if is_discreet:
+            df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+        else:
+            df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              DINUCS,
@@ -467,12 +567,18 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_dbs_signatures_cutoffs,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
+                                                                            is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     #INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
         df_columns = chrBased_simBased_indels_df.columns.values
-        df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
+
+        if is_discreet:
+            df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
+        else:
+            df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
+
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              INDELS,
@@ -480,6 +586,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_id_signatures_cutoffs,
                                                                             df_columns_indels_signatures_mask_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
+                                                                            is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
     return sim_num, \
@@ -503,6 +610,7 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
                                             sample_based,
+                                            is_disceet,
                                             verbose):
 
     df_columns = chrBased_simBased_combined_df.columns.values
@@ -538,6 +646,7 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
                                                                             sample_based,
+                                                                            is_disceet,
                                                                             verbose,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df.values]
 
@@ -612,6 +721,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        sample_based,
+                                       is_discreet,
                                        verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
@@ -628,6 +738,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
                                                                                                 sample_based,
+                                                                                                is_discreet,
                                                                                                 verbose)
 
 ##################################################################
@@ -641,12 +752,16 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            chromSize,
                                                                                                            sim_num,
                                                                                                            chrBased_grouped_decile_df_list,
+                                                                                                           ordered_all_sbs_signatures_array,
+                                                                                                           ordered_all_dbs_signatures_array,
+                                                                                                           ordered_all_id_signatures_array,
                                                                                                            ordered_sbs_signatures,
                                                                                                            ordered_dbs_signatures,
                                                                                                            ordered_id_signatures,
                                                                                                            ordered_sbs_signatures_cutoffs,
                                                                                                            ordered_dbs_signatures_cutoffs,
                                                                                                            ordered_id_signatures_cutoffs,
+                                                                                                           is_discreet,
                                                                                                            verbose):
 
     #DEC18, 2020 To reduce memory usage
@@ -659,12 +774,16 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 chrBased_simBased_subs_df,
                                                                                                 chrBased_simBased_dinucs_df,
                                                                                                 chrBased_simBased_indels_df,
+                                                                                                ordered_all_sbs_signatures_array,
+                                                                                                ordered_all_dbs_signatures_array,
+                                                                                                ordered_all_id_signatures_array,
                                                                                                 ordered_sbs_signatures,
                                                                                                 ordered_dbs_signatures,
                                                                                                 ordered_id_signatures,
                                                                                                 ordered_sbs_signatures_cutoffs,
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
+                                                                                                is_discreet,
                                                                                                 verbose)
 
 ##################################################################
@@ -680,12 +799,16 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         chrBased_simBased_subs_df,
                                                                                         chrBased_simBased_dinucs_df,
                                                                                         chrBased_simBased_indels_df,
+                                                                                        ordered_all_sbs_signatures_array,
+                                                                                        ordered_all_dbs_signatures_array,
+                                                                                        ordered_all_id_signatures_array,
                                                                                         ordered_sbs_signatures,
                                                                                         ordered_dbs_signatures,
                                                                                         ordered_id_signatures,
                                                                                         ordered_sbs_signatures_cutoffs,
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
+                                                                                        is_discreet,
                                                                                         verbose):
 
     #Fill replication time numpy array
@@ -696,12 +819,16 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    chrBased_simBased_dinucs_df,
                                                    chrBased_simBased_indels_df,
                                                    chrBasedReplicationTimeDataArrayWithDecileIndex,
+                                                   ordered_all_sbs_signatures_array,
+                                                   ordered_all_dbs_signatures_array,
+                                                   ordered_all_id_signatures_array,
                                                    ordered_sbs_signatures,
                                                    ordered_dbs_signatures,
                                                    ordered_id_signatures,
                                                    ordered_sbs_signatures_cutoffs,
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
+                                                   is_discreet,
                                                    verbose)
 ##################################################################
 
@@ -722,6 +849,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
                                                                                         sample_based,
+                                                                                        is_discreet,
                                                                                         verbose):
 
     #Fill replication time numpy array
@@ -737,6 +865,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
                                                    sample_based,
+                                                   is_discreet,
                                                    verbose)
 ##################################################################
 
@@ -859,6 +988,9 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         chromSizesDict,
         chromNamesList,
         chrBased_grouped_decile_df_list,
+        ordered_all_sbs_signatures_array,
+        ordered_all_dbs_signatures_array,
+        ordered_all_id_signatures_array,
         ordered_sbs_signatures,
         ordered_dbs_signatures,
         ordered_id_signatures,
@@ -866,14 +998,24 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         ordered_dbs_signatures_cutoffs,
         ordered_id_signatures_cutoffs,
         sample_based,
+        is_discreet,
         verbose):
 
+    if is_discreet:
+        number_of_sbs_signatures = ordered_sbs_signatures.size
+        number_of_dbs_signatures = ordered_dbs_signatures.size
+        number_of_id_signatures = ordered_id_signatures.size
+    else:
+        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
+        number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
+        number_of_id_signatures = ordered_all_id_signatures_array.size
+
     ################################
-    #+1 for Aggregated
-    all_sims_subs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_sbs_signatures.size+1, 10), dtype=int)
-    all_sims_dinucs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_dbs_signatures.size+1, 10), dtype=int)
-    #+3 for Microhomology, Repeat, Aggregated
-    all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1,ordered_id_signatures.size+3, 10), dtype=int)
+    # +1 for Aggregated
+    all_sims_subs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1, number_of_sbs_signatures+1, 10), dtype=float) # int
+    all_sims_dinucs_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1, number_of_dbs_signatures+1, 10), dtype=float) # int
+    # +3 for Microhomology, Repeat, Aggregated
+    all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1, number_of_id_signatures+3, 10), dtype=float) # int
     ################################
 
     #########################################################################################
@@ -912,12 +1054,16 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        chromSize,
                                        simNum,
                                        chrBased_grouped_decile_df_list,
+                                       ordered_all_sbs_signatures_array,
+                                       ordered_all_dbs_signatures_array,
+                                       ordered_all_id_signatures_array,
                                        ordered_sbs_signatures,
                                        ordered_dbs_signatures,
                                        ordered_id_signatures,
                                        ordered_sbs_signatures_cutoffs,
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
+                                       is_discreet,
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
@@ -949,6 +1095,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        sample_based,
+                                       is_discreet,
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
@@ -1208,14 +1355,27 @@ def replicationTimeAnalysis(computationType,
                             numofSimulations,
                             job_tuples,
                             repliseqDataFilename,
-                            ordered_sbs_signatures,
-                            ordered_dbs_signatures,
-                            ordered_id_signatures,
+                            ordered_all_sbs_signatures_array,
+                            ordered_all_dbs_signatures_array,
+                            ordered_all_id_signatures_array,
+                            ordered_sbs_signatures_with_cutoffs,
+                            ordered_dbs_signatures_with_cutoffs,
+                            ordered_id_signatures_with_cutoffs,
                             ordered_sbs_signatures_cutoffs,
                             ordered_dbs_signatures_cutoffs,
                             ordered_id_signatures_cutoffs,
+                            is_discreet,
                             verbose,
                             matrix_generator_path):
+
+    if is_discreet:
+        sbs_signatures = ordered_sbs_signatures_with_cutoffs
+        dbs_signatures = ordered_dbs_signatures_with_cutoffs
+        id_signatures = ordered_id_signatures_with_cutoffs
+    else:
+        sbs_signatures = ordered_all_sbs_signatures_array
+        dbs_signatures = ordered_all_dbs_signatures_array
+        id_signatures = ordered_all_id_signatures_array
 
     print('\n#################################################################################')
     print('--- ReplicationTimeAnalysis starts')
@@ -1285,21 +1445,25 @@ def replicationTimeAnalysis(computationType,
         chromSizesDict,
         chromNamesList,
         chrBased_grouped_decile_df_list,
-        ordered_sbs_signatures,
-        ordered_dbs_signatures,
-        ordered_id_signatures,
+        ordered_all_sbs_signatures_array,
+        ordered_all_dbs_signatures_array,
+        ordered_all_id_signatures_array,
+        ordered_sbs_signatures_with_cutoffs,
+        ordered_dbs_signatures_with_cutoffs,
+        ordered_id_signatures_with_cutoffs,
         ordered_sbs_signatures_cutoffs,
         ordered_dbs_signatures_cutoffs,
         ordered_id_signatures_cutoffs,
         sample_based,
+        is_discreet,
         verbose)
 
     writeReplicationTimeDataUsingNumpyArray(outputDir,
                                             jobname,
                                             decile_df_list,
-                                            ordered_sbs_signatures,
-                                            ordered_dbs_signatures,
-                                            ordered_id_signatures,
+                                            sbs_signatures,
+                                            dbs_signatures,
+                                            id_signatures,
                                             all_sims_subs_signature_decile_index_accumulated_np_array,
                                             all_sims_dinucs_signature_decile_index_accumulated_np_array,
                                             all_sims_indels_signature_decile_index_accumulated_np_array)

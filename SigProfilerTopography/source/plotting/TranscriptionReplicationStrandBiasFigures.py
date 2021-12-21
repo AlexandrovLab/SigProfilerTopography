@@ -113,6 +113,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSig
 from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
 
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_NumberofMutations_AverageProbability_Filename
+
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2NumberofDinucsDictFilename
@@ -2028,15 +2032,21 @@ def plotBarPlotsUsingDataframes(outputDir,
 # April 20, 2020
 # July 4, 2020 starts
 # Using dataframes
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,numberofSimulations,mutation_types_contexts,strand_bias_list,plot_mode):
+def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, is_discreet, plot_mode):
+
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data
     subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
-    subsSignatures=np.array([])
-    dinucsSignatures=np.array([])
-    indelsSignatures=np.array([])
+
+    sbs_df = pd.DataFrame()
+    dbs_df = pd.DataFrame()
+    id_df = pd.DataFrame()
+
+    subsSignatures = np.array([])
+    dinucsSignatures = np.array([])
+    indelsSignatures = np.array([])
 
     #######################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
@@ -2068,6 +2078,21 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     #########################  Read dictionaries related with ################################
     #########################  signatures and samples ends  ##################################
     ##########################################################################################
+
+    if is_discreet:
+        sbs_df = subsSignature_cutoff_numberofmutations_averageprobability_df
+        dbs_df = dinucsSignature_cutoff_numberofmutations_averageprobability_df
+        id_df = indelsSignature_cutoff_numberofmutations_averageprobability_df
+    else:
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_SubsSignature_NumberofMutations_AverageProbability_Filename)):
+            sbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SubsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            subsSignatures = sbs_df['signature'].unique()
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_DinucsSignature_NumberofMutations_AverageProbability_Filename)):
+            dbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DinucsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            dinucsSignatures = dbs_df['signature'].unique()
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_IndelsSignature_NumberofMutations_AverageProbability_Filename)):
+            id_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_IndelsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            indelsSignatures = id_df['signature'].unique()
 
 
     #######################################################################
@@ -2646,25 +2671,25 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
                                                                                                     type_lagging_versus_leading_df,
                                                                                                     outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not sbs_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('subs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
-                                                                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                           sbs_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not dbs_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('dinucs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
-                                                                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                           dbs_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not id_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('indels', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
-                                                                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                                           id_df,
                                                                                            outputDir, jobname)
     ########################################################################
     ############## Mutation Types Scatter Plots ends #######################
@@ -2791,12 +2816,12 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     #################################################################
     ########### Plot sub signatures mutation types starts ###########
     #################################################################
-    if not subsSignature_cutoff_numberofmutations_averageprobability_df.empty:
+    if not sbs_df.empty:
         if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
             plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
-                     subsSignature_cutoff_numberofmutations_averageprobability_df,
+                     sbs_df,
                      isKeySample,
                      six_mutation_types,
                      signature_transcribed_versus_untranscribed_df,
@@ -2813,7 +2838,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
-                     subsSignature_cutoff_numberofmutations_averageprobability_df,
+                     sbs_df,
                      isKeySample,
                      six_mutation_types,
                     signature_genic_versus_intergenic_df,
@@ -2830,7 +2855,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
             plotBarPlotsUsingDataframes(outputDir,
                      jobname,
                      numberofSimulations,
-                     subsSignature_cutoff_numberofmutations_averageprobability_df,
+                     sbs_df,
                      isKeySample,
                      six_mutation_types,
                     signature_lagging_versus_leading_df,
@@ -2857,7 +2882,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,jobname,n
     # At middle ax, 3 bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     # At below ax, 3 normalized bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     if (TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list) and (LAGGING_VERSUS_LEADING in strand_bias_list):
-        sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+        sbs_signatures = sbs_df['signature'].unique()
         for sbs_signature in sbs_signatures:
             plot_circle_bar_plots_together(outputDir,
                                            jobname,

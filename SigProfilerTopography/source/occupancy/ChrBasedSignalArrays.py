@@ -736,7 +736,7 @@ def readFileInBEDFormat(file_with_path,discard_signal):
 #Dec 2, 2019
 #This function is used when user provides its own bed/np/narrowpeak files for occupancy analysis
 #Read at once writes in parallel
-def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome,BEDFileWithPath,occupancy_type,quantileValue,remove_outliers):
+def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWithPath, occupancy_type, quantileValue, remove_outliers):
     chromSizesDict = getChromSizesDict(genome)
     numofProcesses = multiprocessing.cpu_count()
 
