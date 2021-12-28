@@ -139,13 +139,13 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_
 from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
@@ -941,7 +941,6 @@ def deleteOldFigures(outputDir, jobname, occupancy_type):
 #######################################################
 
 
-#######################################################
 # Depreceated.
 # We assume that simulated data will have the same number_of_splits as the real data
 def get_job_tuples(chrlong_numberofmutations_df,numofSimulations):
@@ -961,7 +960,6 @@ def get_job_tuples(chrlong_numberofmutations_df,numofSimulations):
         ###############################################################
 
     return job_tuples
-#######################################################
 
 
 def get_all_signatures_array(ordered_all_sbs_signatures_wrt_probabilities_file_array, signature_starts_with):
@@ -1086,14 +1084,14 @@ def runAnalyses(genome,
 
     ###################################################
     if step1_sim_data:
-        step2_matgen_data=True
-        step3_prob_merged_data=True
-        step4_tables=True
+        step2_matgen_data = True
+        step3_prob_merged_data = True
+        step4_tables = True
     elif step2_matgen_data:
-        step3_prob_merged_data=True
-        step4_tables=True
+        step3_prob_merged_data = True
+        step4_tables = True
     elif step3_prob_merged_data:
-        step4_tables=True
+        step4_tables = True
     ###################################################
 
     ###################################################
@@ -1761,7 +1759,7 @@ def runAnalyses(genome,
                 sbs_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
                                                                          jobname,
                                                                          DATA,
-                                                                         Table_SubsSignature_NumberofMutations_AverageProbability_Filename),
+                                                                         Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
                                                             sep='\t', header=True, index=False)
 
                 # We are reading original data to fill the signature2PropertiesListDict
@@ -1786,7 +1784,10 @@ def runAnalyses(genome,
                                                                                         chromNamesList,
                                                                                         DINUCS)
 
-            dbs_signature_number_of_mutations_df.to_csv(os.path.join(outputDir, jobname, DATA, Table_DinucsSignature_NumberofMutations_AverageProbability_Filename),
+            dbs_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
+                                                                     jobname,
+                                                                     DATA,
+                                                                     Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
                                                         sep='\t', header=True, index=False)
 
             # We are reading original data to fill the signature2PropertiesListDict
@@ -1810,7 +1811,10 @@ def runAnalyses(genome,
                                                                                         chromNamesList,
                                                                                         INDELS)
 
-            id_signature_number_of_mutations_df.to_csv(os.path.join(outputDir, jobname, DATA, Table_IndelsSignature_NumberofMutations_AverageProbability_Filename),
+            id_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
+                                                                    jobname,
+                                                                    DATA,
+                                                                    Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
                                                         sep='\t', header=True, index=False)
 
             # We are reading original data to fill the signature2PropertiesListDict
@@ -1919,16 +1923,14 @@ def runAnalyses(genome,
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
-                subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+                subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
         if (DBS in mutation_types_contexts):
-            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
         if (ID in mutation_types_contexts):
-            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA, Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
     #######################################################################################################
     ################################### Step4 Fill Table ends #############################################
     #######################################################################################################
-
-
 
     ###################################################################################################################
     ################################################# All Steps ends ##################################################

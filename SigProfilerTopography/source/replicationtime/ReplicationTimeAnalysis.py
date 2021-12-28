@@ -278,9 +278,9 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
 
     decile_index_array=np.zeros((10), dtype=int)
 
-    #decile 10  will be accumulated in index 9
-    #decile 1 will be accumulated in index 0
-    #Therefore uniqueIndexesArray minus 1
+    # decile 10  will be accumulated in index 9
+    # decile 1 will be accumulated in index 0
+    # Therefore uniqueIndexesArray minus 1
     if (uniqueIndexesArray.size>0):
         uniqueIndexesArray -= 1
         decile_index_array[uniqueIndexesArray] = 1
@@ -527,14 +527,13 @@ def searchforAllMutations_using_numpy_array(sim_num,
         number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
         number_of_id_signatures = ordered_all_id_signatures_array.size
 
-
     # Add one more row for the Aggregated analysis, there are 10 deciles
     # Add three more rows for the Microhomology, Repeat Mediated and Aggregated analysis, there are 10 deciles
     subs_signature_decile_index_accumulated_np_array = np.zeros((number_of_sbs_signatures + 1, 10), dtype=float) # legacy int
     dinucs_signature_decile_index_accumulated_np_array = np.zeros((number_of_dbs_signatures + 1, 10), dtype=float) # legacy int
     indels_signature_decile_index_accumulated_np_array = np.zeros((number_of_id_signatures + 3, 10), dtype=float) # # legacy int
 
-    #SUBS
+    # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         df_columns = chrBased_simBased_subs_df.columns.values
 
@@ -552,7 +551,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
-    #DINUCS
+    # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
         df_columns = chrBased_simBased_dinucs_df.columns.values
 
@@ -570,7 +569,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
-    #INDELS
+    # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
         df_columns = chrBased_simBased_indels_df.columns.values
 

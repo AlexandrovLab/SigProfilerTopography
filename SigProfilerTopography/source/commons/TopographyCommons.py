@@ -283,15 +283,15 @@ Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename = "T
 Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_ID_Signature_NumberofMutations_AverageProbability.txt"
 Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_DBS_Signature_NumberofMutations_AverageProbability.txt"
 
-# Tables with cutoffs
-Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+# Tables Discreet mode with cutoffs
+Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
 
-# Tables considering all mutations
-Table_SubsSignature_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_NumberofMutations_AverageProbability.txt"
-Table_DinucsSignature_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_NumberofMutations_AverageProbability.txt"
-Table_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_NumberofMutations_AverageProbability.txt"
+# Tables Probability mode without cutoffs considering all mutations
+Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
+Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
+Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
 
 # Table
 Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
@@ -559,11 +559,38 @@ def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for
 # ############################################################
 
 ##################################################################
-#Dec 17, 2020
-def get_chrBased_simBased_dfs(outputDir,jobname,chrLong,simNum):
+# Dec 17, 2020
+def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
+    # Simulation number is added as the last column
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
     chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
     chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+
+    # In case of empty cells with no signature probability
+    # Fill empty cells with zeros
+    if chrBased_simBased_subs_df is not None:
+        # ['Sample' 'Chrom' 'Start' 'MutationLong' 'PyramidineStrand'
+        #  'TranscriptionStrand' 'Mutation' 'SBS1' 'SBS5' 'SBS9' 'SBS37' 'SBS40'
+        #  'SBS84' 'SBS85' 'Simulation_Number']
+        columns_list = chrBased_simBased_subs_df.columns.values.tolist()
+        mutation_index = columns_list.index(MUTATION)
+        sim_num_index = columns_list.index(SIMULATION_NUMBER)
+        for column in columns_list[mutation_index+1:sim_num_index]:
+            chrBased_simBased_subs_df[column] = chrBased_simBased_subs_df[column].fillna(0)
+
+    if chrBased_simBased_dinucs_df is not None:
+        columns_list = chrBased_simBased_dinucs_df.columns.values.tolist()
+        mutation_index = columns_list.index(MUTATION)
+        sim_num_index = columns_list.index(SIMULATION_NUMBER)
+        for column in columns_list[mutation_index+1:sim_num_index]:
+            chrBased_simBased_dinucs_df[column] = chrBased_simBased_dinucs_df[column].fillna(0)
+
+    if chrBased_simBased_indels_df is not None:
+        columns_list = chrBased_simBased_indels_df.columns.values.tolist()
+        mutation_index = columns_list.index(MUTATION)
+        sim_num_index = columns_list.index(SIMULATION_NUMBER)
+        for column in columns_list[mutation_index+1:sim_num_index]:
+            chrBased_simBased_indels_df[column] = chrBased_simBased_indels_df[column].fillna(0)
 
     return chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df
 ##################################################################
@@ -1182,11 +1209,11 @@ def fill_signature_number_of_mutations_df(outputDir,
             signatures = get_signatures(chrBased_mutation_df)
 
             for signature in signatures:
-                number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] > 0.0])
-                number_of_all_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= 0.0])
+                number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] > 0])
+                number_of_all_mutations = chrBased_mutation_df.shape[0] # number of rows: all mutations
 
-                samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > 0.0]['Sample'].unique()
-                sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] > 0.0])[signature]).values, dtype=np.float64)
+                samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > 0]['Sample'].unique()
+                sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] > 0])[signature]).values, dtype=np.float64)
 
                 if df[df['signature'] == signature].values.any():
                     # Update Accumulate
@@ -1337,15 +1364,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     if (mutation_type == SUBS):
         number_of_required_mutations = num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == DINUCS):
         number_of_required_mutations = num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == INDELS):
         number_of_required_mutations = num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
 
     # Third part starts
     # Find the signature based cufoff probability with number of mutations >= required number of mutations and average mutation probability >= required_probability
@@ -1572,6 +1599,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
          #################################################
 
          chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', header=0, dtype=mydtypes)
+
          # chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath,sep='\t', header=0, dtype=mydtypes,encoding='utf8',engine='python')
          chrBased_mutation_df[SIMULATION_NUMBER] = simulationNumber
 
@@ -2183,8 +2211,8 @@ def write_sample_based_strand1_strand2_as_dataframe(output_dir,
 ########################################################################
 
 ########################################################################
-#Main function for type
-#Fills a dictionary and writes it as a dataframe
+# Main function for type
+# Fills a dictionary and writes it as a dataframe
 def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_arrays_list,
                                                 all_types_np_array,
                                                 strand_bias,
@@ -2266,7 +2294,10 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
 
             #Calculate p value
             contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
-            oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+            if not np.isnan(contingency_table_array).any():
+                oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+            else:
+                lagging_versus_leading_p_value = np.nan
 
             #Set p_value
             type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE]=lagging_versus_leading_p_value
@@ -2290,20 +2321,27 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
 
             # Calculate p value
             contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
-            oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+            if not np.isnan(contingency_table_array).any():
+                oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+            else:
+                transcribed_versus_untranscribed_p_value = np.nan
+
 
             genic_real_count = transcribed_real_count + untranscribed_real_count
             genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
 
             # Calculate p value (transcribed + untranscribed) versus nontranscribed
             contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
-            oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+            if not np.isnan(contingency_table_array).any():
+                oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+            else:
+                genic_versus_intergenic_p_value = np.nan
 
             # Set p_values
             type2Strand2ListDict[my_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
             type2Strand2ListDict[my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
-    #Calculate q-value and significant_strand will be done during plotting figures
+    # Calculate q-value and significant_strand will be done during plotting figures
     ##################################################################################################
 
     ##################################################################################################
@@ -2324,8 +2362,7 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
 
 ########################################################################
 
-##############################################
-#subfunction for type
+# subfunction for type
 def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type, filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
 
@@ -2365,11 +2402,9 @@ def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type,
                                   strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
                                   strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
     df.to_csv(filepath, sep='\t', header=True, index=False)
-##############################################
 
 
-########################################################################
-#subfunction for type
+# subfunction for type
 def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_type, strand_bias_subtype, filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
 
@@ -2403,21 +2438,6 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
     strand3_max_sims_data = "%s_max_sims_count" %(strand3)
 
     if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-        # # Formerly writes Transcribed Untranscribed
-        # L = sorted([(cancer_type, my_type,
-        #              a[strand1][0], a[strand2][0],
-        #              a[strand1][2], a[strand2][2],
-        #              a[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
-        #              a[strand1][0], a[strand1][2], a[strand1][3], a[strand1][4], a[strand1][1],
-        #              a[strand2][0], a[strand2][2], a[strand2][3], a[strand2][4], a[strand2][1])
-        #             for my_type, a in type2Strand2ListDict.items()])
-        # df = pd.DataFrame(L, columns=['cancer_type', 'type',
-        #                               strand1_real_data, strand2_real_data,
-        #                               strand1_mean_sims_data, strand2_mean_sims_data,
-        #                               TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
-        #                               strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
-        #                               strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
-
         # Now writes Transcribed Untranscribed Nontranscribed
         L = sorted([(cancer_type, my_type,
                      a[strand1][0], a[strand2][0], a[strand3][0],
@@ -2454,7 +2474,6 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
                                       strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
                                       strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
         df.to_csv(filepath, sep='\t', header=True, index=False)
-########################################################################
 
 
 # Write replication strand bias for real data for each signature
@@ -2491,7 +2510,7 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                                                                     outputDir,
                                                                     jobname):
 
-    #Fill signature2MutationType2Strand2ListDict using np_arrays_list
+    # Fill signature2MutationType2Strand2ListDict using np_arrays_list
     signature2MutationType2Strand2ListDict = {}
 
     ##################################################################################################
@@ -2509,29 +2528,29 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                         if mutation_type in signature2MutationType2Strand2ListDict[signature]:
                             if strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
                                 strand_list = signature2MutationType2Strand2ListDict[signature][mutation_type][strand]
-                                if sim_index==0:
-                                    strand_list[0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
+                                if sim_index == 0:
+                                    strand_list[0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
                                 else:
                                     strand_list[1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
                             else:
-                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand]=[0,[]]
-                                if (sim_index==0):
-                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0,[]]
+                                if (sim_index == 0):
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
                                 else:
-                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index])
                         else:
                             signature2MutationType2Strand2ListDict[signature][mutation_type]={}
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
-                            if (sim_index==0):
-                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
+                            if (sim_index == 0):
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
                             else:
                                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
 
                     else:
-                        signature2MutationType2Strand2ListDict[signature]={}
-                        signature2MutationType2Strand2ListDict[signature][mutation_type]={}
+                        signature2MutationType2Strand2ListDict[signature] = {}
+                        signature2MutationType2Strand2ListDict[signature][mutation_type] = {}
                         signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
-                        if (sim_index==0):
+                        if (sim_index == 0):
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                         else:
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
@@ -2541,7 +2560,7 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
     # In strand_list we have
     # real_data
     # sims_data_list
-    #Add these to information strand_list
+    # Add these to information strand_list
     # mean_sims_data
     # min_sims_data
     # max_sims_data
@@ -2550,36 +2569,40 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
         for mutation_type in signature2MutationType2Strand2ListDict[signature]:
             for strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
                 sims_data_list=signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1]
-                mean_sims=np.nanmean(sims_data_list)
-                min_sims=np.min(sims_data_list)
-                max_sims=np.max(sims_data_list)
+                mean_sims = np.nanmean(sims_data_list)
+                min_sims = np.nanmin(sims_data_list)
+                max_sims = np.nanmax(sims_data_list)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(mean_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(min_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(max_sims)
     ##################################################################################################
 
     ##################################################################################################
-    #Calculate p-value only
+    # Calculate p-value only
     for signature in signature2MutationType2Strand2ListDict:
         for mutation_type in signature2MutationType2Strand2ListDict[signature]:
-            if (strand_bias==REPLICATIONSTRANDBIAS):
-                lagging_strand=strands[0]
-                leading_strand=strands[1]
+            if (strand_bias == REPLICATIONSTRANDBIAS):
+                lagging_strand = strands[0]
+                leading_strand = strands[1]
 
-                lagging_real_count=signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][0]
+                lagging_real_count = signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][0]
                 lagging_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][1]
                 lagging_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][lagging_strand][2]
 
-                leading_real_count=signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][0]
-                leading_sims_list=signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][1]
+                leading_real_count = signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][0]
+                leading_sims_list = signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][1]
                 leading_sims_mean_count = signature2MutationType2Strand2ListDict[signature][mutation_type][leading_strand][2]
 
-                #Calculate p value using Fisher's exact test
+                # Calculate p value using Fisher's exact test
                 contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
-                oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
 
-                #Set p_value
-                signature2MutationType2Strand2ListDict[signature][mutation_type][LAGGING_VERSUS_LEADING_P_VALUE]=lagging_versus_leading_p_value
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    lagging_versus_leading_p_value = np.nan
+
+                # Set p_value
+                signature2MutationType2Strand2ListDict[signature][mutation_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
 
             elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
                 transcribed_strand = strands[0]
@@ -2600,14 +2623,20 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
 
                 # Calculate p value
                 contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
-                oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    transcribed_versus_untranscribed_p_value = np.nan
 
                 genic_real_count = transcribed_real_count + untranscribed_real_count
                 genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
 
-                #Calculate p value (transcribed + untranscribed) versus nontranscribed
+                # Calculate p value (transcribed + untranscribed) versus nontranscribed
                 contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
-                oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    genic_versus_intergenic_p_value = np.nan
 
                 #Set p_values
                 signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
@@ -3116,7 +3145,6 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 ############################################################
 
 
-############################################################
 def readProbabilities(probabilitiesFile,verbose):
 
     #For Release and PCAWG_Matlab
@@ -3173,5 +3201,4 @@ def readProbabilities(probabilitiesFile,verbose):
         print('\tVerbose ##############################')
 
     return probabilities_df
-############################################################
 

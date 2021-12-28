@@ -101,21 +101,21 @@ from SigProfilerTopography.source.commons.TopographyCommons import write_excel_f
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT
 
-SIGNATURE='signature'
-CANCER_TYPE='cancer_type'
-MUTATION_TYPE='mutation_type'
+SIGNATURE = 'signature'
+CANCER_TYPE = 'cancer_type'
+MUTATION_TYPE = 'mutation_type'
 TYPE = 'type'
-SIGNIFICANT_STRAND='significant_strand'
+SIGNIFICANT_STRAND = 'significant_strand'
 
-SIGNIFICANCE_LEVEL=0.05
+SIGNIFICANCE_LEVEL = 0.05
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SubsSignature_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DinucsSignature_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_IndelsSignature_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
@@ -793,12 +793,38 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
 ########################################################################
 
 
-##################################################################
-#Only this method supports simulations
-#key can be a sample or a signature
-def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,isKeySample,numberofMutations,N,x_axis_labels,strand1_values,strand2_values,strand1_simulations_median_values ,strand2_simulations_median_values , fdr_bh_adjusted_pvalues, strand1Name, strand2Name, mutationsOrSignatures, color1, color2, figureName, width,plot_mode):
-    #Here we can take into difference between strand1_values and strand2_values while deciding on significance
+def is_there_at_least_10perc_diff(strand1_value, strand2_value):
+    diff = abs(strand1_value - strand2_value)
+    if (diff >= (strand1_value/10)) or (diff >= (strand2_value/10)):
+        return True
+    else:
+        return False
 
+# Only this method supports simulations
+# key can be a sample or a signature
+def plotStrandBiasFigureWithBarPlots(outputDir,
+                                     jobname,
+                                     numberofSimulations,
+                                     key,
+                                     isKeySample,
+                                     numberofMutations,
+                                     N,
+                                     x_axis_labels,
+                                     strand1_values,
+                                     strand2_values,
+                                     strand1_simulations_median_values,
+                                     strand2_simulations_median_values,
+                                     fdr_bh_adjusted_pvalues,
+                                     strand1Name,
+                                     strand2Name,
+                                     mutationsOrSignatures,
+                                     color1,
+                                     color2,
+                                     figureName,
+                                     width,
+                                     plot_mode):
+
+    # Here we can take into difference between strand1_values and strand2_values while deciding on significance
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
 
@@ -821,10 +847,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     if ((strand2_simulations_median_values is not None) and strand2_simulations_median_values):
         rects4 = ax.bar(ind +3*width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///')
 
-
     # add some text for labels, title and axes ticks
-
-    ###########################################################################
     if plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
         ax.tick_params(axis='x', labelsize=35)
         ax.tick_params(axis='y', labelsize=35)
@@ -832,20 +855,18 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
         locs, labels = plt.yticks()
         ax.set_ylim(0, locs[-1] + 5000)
 
-        ##############################
         # To make the bar width not too wide
         if len(ind) < 6:
             maxn = 6
             ax.set_xlim(-0.5, maxn - 0.5)
-        ##############################
 
-        #Set title
+        # Set title
         if key is not None:
             ax.set_title('%s %s vs. %s %s' %(key,strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
         else:
             ax.set_title('%s vs. %s %s' %(strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
 
-        #Set x tick labels
+        # Set x tick labels
         if len(x_axis_labels) > 6:
             ax.set_xticklabels(x_axis_labels, fontsize=35, rotation=90)
         else:
@@ -871,7 +892,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
                 if ((len(rects1) > 0) and (len(rects2) > 0)):
                     legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, ncol=1, loc='upper right')
 
-    elif plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+    elif plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
         # set axis ticks
         # ax.tick_params(axis='both', which='both', length=0)
         ax.tick_params(axis='x', which='both', length=0)
@@ -887,20 +908,16 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
 
             if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
                 if ((len(rects1) > 0) and (len(rects2) > 0) and (len(rects3) > 0) and (len(rects4) > 0)):
-                    #For SigProfilerTopography Overview Figure
-                    # legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 35}, ncol=2, loc='best')
-                    #For Replication Time and Strand Bias Overview Figure
                     legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 30}, ncol=1, loc='best')
 
         else:
             if ((rects1 is not None) and (rects2 is not None)):
                 if ((len(rects1) > 0) and (len(rects2) > 0)):
                     legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 35},loc='upper right')
-    ###########################################################################
 
-    #To make the barplot background white
+    # To make the barplot background white
     ax.set_facecolor('white')
-    #To makes spines black like a rectangle with black stroke
+    # To makes spines black like a rectangle with black stroke
     ax.spines["bottom"].set_color('black')
     ax.spines["left"].set_color('black')
     ax.spines["top"].set_color('black')
@@ -911,11 +928,10 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
         frame.set_facecolor('white')
         frame.set_edgecolor('black')
 
-    #########################################################################################################
-    #Add star above the bars for significant differences between the number of mutations on each strand starts
+    # Add star above the bars for significant differences between the number of mutations on each strand starts
     # For each bar: Place a label
     if fdr_bh_adjusted_pvalues is not None:
-        for fdr_bh_adjusted_pvalue, rect1, rect2 in zip(fdr_bh_adjusted_pvalues,rects1,rects2):
+        for fdr_bh_adjusted_pvalue, strand1_value, strand2_value, rect1, rect2 in zip(fdr_bh_adjusted_pvalues, strand1_values, strand2_values, rects1, rects2):
             # Get X and Y placement of label from rect.
             y_value = max(rect1.get_height(),rect2.get_height())
             x_value = rect1.get_x() + rect1.get_width()
@@ -936,7 +952,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
             label = "{:.1f}".format(y_value)
 
             # Create annotation
-            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue)<=0.0001):
+            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
                 plt.annotate(
                     '***',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -946,7 +962,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
                     va=va,
                     fontsize=20)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue)<=0.001):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
                 plt.annotate(
                     '**',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -956,7 +972,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
                     va=va,
                     fontsize=20)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue)<=0.05):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
                 plt.annotate(
                     '*',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -967,7 +983,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
                     fontsize=20)  # Vertically align label differently for
 
             # positive and negative values.
-    #Add star above the bars for significant differences between the number of mutations on each strand ends
+    # Add star above the bars for significant differences between the number of mutations on each strand ends
     #########################################################################################################
 
     if (key is None):
@@ -984,7 +1000,6 @@ def plotStrandBiasFigureWithBarPlots(outputDir,jobname,numberofSimulations,key,i
     fig.savefig(figureFile)
     plt.cla()
     plt.close(fig)
-##################################################################
 
 
 # June 2, 2021
@@ -1282,14 +1297,14 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
     # Here we can take into difference between strand1_values and strand2_values while deciding on significance
     # the x locations for the groups
     ind = np.arange(N)
-    if axis_given==None:
+    if axis_given == None:
         fig, ax = plt.subplots(figsize=(16,10),dpi=100)
     else:
-        ax=axis_given
+        ax = axis_given
 
-    legend=None
-    rects3=None
-    rects4=None
+    legend = None
+    rects3 = None
+    rects4 = None
 
     rects1 = ax.bar(ind, strand1_values, width=width, edgecolor='black', color=color1)
     rects2 = ax.bar(ind + width, strand2_values, width=width, edgecolor='black', color=color2)
@@ -1303,12 +1318,10 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
     ax.tick_params(axis='x', labelsize=35)
     ax.tick_params(axis='y', labelsize=35)
 
-    # Old way for y axis tick labels
-    # locs = ax.get_yticks() # numpy.ndarray
-    # ax.set_ylim(0, locs[-1] + 5000)
-
-    # New way for y axis ticks and labels
-    ymax = max(max(strand1_values), max(strand2_values), max(strand1_simulations_median_values), max(strand2_simulations_median_values))
+    ymax = np.nanmax([np.nanmax(strand1_values),
+                     np.nanmax(strand2_values),
+                     np.nanmax(strand1_simulations_median_values),
+                     np.nanmax(strand2_simulations_median_values)])
     y = ymax / 1.025
     ytick_offest = float(y / 3)
     ylabs = [0, ytick_offest, ytick_offest * 2, ytick_offest * 3, ytick_offest * 4]
@@ -1373,9 +1386,9 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
             if ((len(rects1) > 0) and (len(rects2) > 0)):
                 legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, ncol=1, loc='upper right')
 
-    #To make the barplot background white
+    # To make the barplot background white
     ax.set_facecolor('white')
-    #To makes spines black like a rectangle with black stroke
+    # To makes spines black like a rectangle with black stroke
     ax.spines["bottom"].set_color('black')
     ax.spines["left"].set_color('black')
     ax.spines["top"].set_color('black')
@@ -1386,10 +1399,10 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
         frame.set_facecolor('white')
         frame.set_edgecolor('black')
 
-    #Add star above the bars for significant differences between the number of mutations on each strand starts
+    # Add star above the bars for significant differences between the number of mutations on each strand starts
     # For each bar: Place a label
     if fdr_bh_adjusted_pvalues is not None:
-        for fdr_bh_adjusted_pvalue, rect1, rect2 in zip(fdr_bh_adjusted_pvalues,rects1,rects2):
+        for fdr_bh_adjusted_pvalue, strand1_value, strand2_value, rect1, rect2 in zip(fdr_bh_adjusted_pvalues, strand1_values, strand2_values, rects1, rects2):
             # Get X and Y placement of label from rect.
             y_value = max(rect1.get_height(),rect2.get_height())
             x_value = rect1.get_x() + rect1.get_width()
@@ -1410,7 +1423,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
             label = "{:.1f}".format(y_value)
 
             # Create annotation
-            if ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=0.0001):
+            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                 ax.annotate(
                     '***',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1420,7 +1433,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
                     va=va,
                     fontsize=25)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=0.001):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                 ax.annotate(
                     '**',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1430,7 +1443,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
                     va=va,
                     fontsize=25)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=SIGNIFICANCE_LEVEL):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL) and is_there_at_least_10perc_diff(strand1_value, strand2_value)) :
                 ax.annotate(
                     '*',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1440,7 +1453,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
                     va=va,
                     fontsize=25) # Vertically align label differently for
 
-    if axis_given==None:
+    if axis_given == None:
         filename = '%s_%s_with_bars.png' %(signature,strand_bias)
         figFile = os.path.join(strandbias_figures_outputDir, filename)
         fig.savefig(figFile, dpi=100, bbox_inches="tight")
@@ -1460,52 +1473,52 @@ def plot_bar_plot_in_given_axis(axis,
     axis.set_position([box.x0, box.y0 + 0.125, box.width * 1, box.height * 1], which='both')
 
     mutation_types = six_mutation_types
-    numberofSimulations=100
+    numberofSimulations = 100
     width = 0.20
 
-    if strand_bias==LAGGING_VERSUS_LEADING:
-        strands=strands_list
-        strand1="Lagging_real_count"
-        strand2="Leading_real_count"
-        strand1_sims="Lagging_mean_sims_count"
-        strand2_sims="Leading_mean_sims_count"
+    if strand_bias == LAGGING_VERSUS_LEADING:
+        strands = strands_list
+        strand1 = "Lagging_real_count"
+        strand2 = "Leading_real_count"
+        strand1_sims = "Lagging_mean_sims_count"
+        strand2_sims = "Leading_mean_sims_count"
         q_value_column_name = "lagging_versus_leading_q_value"
-        color1='indianred'
-        color2='goldenrod'
+        color1 = 'indianred'
+        color2 = 'goldenrod'
     elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
-        strands=strands_list
-        strand1="Transcribed_real_count"
-        strand2="UnTranscribed_real_count"
-        strand1_sims="Transcribed_mean_sims_count"
-        strand2_sims="UnTranscribed_mean_sims_count"
-        q_value_column_name="transcribed_versus_untranscribed_q_value"
-        color1='royalblue'
-        color2='yellowgreen'
-    elif strand_bias==GENIC_VERSUS_INTERGENIC:
-        strands=strands_list
-        strand1="genic_real_count"
-        strand2="intergenic_real_count"
-        strand1_sims="genic_mean_sims_count"
-        strand2_sims="intergenic_mean_sims_count"
-        q_value_column_name="genic_versus_intergenic_q_value"
-        color1='cyan'
-        color2='gray'
+        strands = strands_list
+        strand1 = "Transcribed_real_count"
+        strand2 = "UnTranscribed_real_count"
+        strand1_sims = "Transcribed_mean_sims_count"
+        strand2_sims = "UnTranscribed_mean_sims_count"
+        q_value_column_name = "transcribed_versus_untranscribed_q_value"
+        color1 = 'royalblue'
+        color2 = 'yellowgreen'
+    elif strand_bias == GENIC_VERSUS_INTERGENIC:
+        strands = strands_list
+        strand1 = "genic_real_count"
+        strand2 = "intergenic_real_count"
+        strand1_sims = "genic_mean_sims_count"
+        strand2_sims = "intergenic_mean_sims_count"
+        q_value_column_name = "genic_versus_intergenic_q_value"
+        color1 = 'cyan'
+        color2 = 'gray'
 
     groupby_df = signature_strand1_versus_strand2_df.groupby(['signature'])
     group_df = groupby_df.get_group(sbs_signature)
 
-    mutationtype_strand1_real_list=[]
-    mutationtype_strand2_real_list=[]
-    mutationtype_strand1_sims_mean_list=[]
-    mutationtype_strand2_sims_mean_list=[]
-    mutationtype_FDR_BH_adjusted_pvalues_list=[]
+    mutationtype_strand1_real_list = []
+    mutationtype_strand2_real_list = []
+    mutationtype_strand1_sims_mean_list = []
+    mutationtype_strand2_sims_mean_list = []
+    mutationtype_FDR_BH_adjusted_pvalues_list = []
 
     for mutation_type in six_mutation_types:
-        strand1_real_count=group_df[group_df['mutation_type']==mutation_type][strand1].values[0]
-        strand2_real_count=group_df[group_df['mutation_type']==mutation_type][strand2].values[0]
-        strand1_sims_count=group_df[group_df['mutation_type']==mutation_type][strand1_sims].values[0]
-        strand2_sims_count=group_df[group_df['mutation_type']==mutation_type][strand2_sims].values[0]
-        q_value=group_df[group_df['mutation_type']==mutation_type][q_value_column_name].values[0]
+        strand1_real_count=group_df[group_df['mutation_type'] == mutation_type][strand1].values[0]
+        strand2_real_count=group_df[group_df['mutation_type'] == mutation_type][strand2].values[0]
+        strand1_sims_count=group_df[group_df['mutation_type'] == mutation_type][strand1_sims].values[0]
+        strand2_sims_count=group_df[group_df['mutation_type'] == mutation_type][strand2_sims].values[0]
+        q_value=group_df[group_df['mutation_type'] == mutation_type][q_value_column_name].values[0]
         mutationtype_strand1_real_list.append(strand1_real_count)
         mutationtype_strand2_real_list.append(strand2_real_count)
         mutationtype_strand1_sims_mean_list.append(strand1_sims_count)
@@ -1569,7 +1582,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
 
     for x, y in zip(strand1_simulations_median_values, strand2_simulations_median_values):
         odds_sims = np.nan
-        if y>0:
+        if y > 0:
             odds_sims = x/y
         odds_sims_list.append(odds_sims)
 
@@ -1578,22 +1591,20 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
     # Here we can take into difference between strand1_values and strand2_values while deciding on significance
     # the x locations for the groups
     ind = np.arange(N)
-    if axis_given==None:
+    if axis_given == None:
         fig, ax = plt.subplots(figsize=(16,10),dpi=100)
     else:
-        ax=axis_given
+        ax = axis_given
 
     legend=None
-    rects3=None
-    rects4=None
 
     rects1 = ax.bar(ind, strand1_values, width=width, edgecolor='black', color=color1)
     rects2 = ax.bar(ind, strand2_values, width=width, edgecolor='black', color=color2, bottom=strand1_values)
 
     if ((strand1_simulations_median_values is not None) and strand1_simulations_median_values):
-        rects3 = ax.bar(ind + width, strand1_simulations_median_values, width=width, edgecolor='black', color=color1, hatch = '///')
+        ax.bar(ind + width, strand1_simulations_median_values, width=width, edgecolor='black', color=color1, hatch = '///')
     if ((strand2_simulations_median_values is not None) and strand2_simulations_median_values):
-        rects4 = ax.bar(ind + width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///', bottom=strand1_simulations_median_values)
+        ax.bar(ind + width, strand2_simulations_median_values, width=width, edgecolor='black', color=color2, hatch = '///', bottom=strand1_simulations_median_values)
 
     # Add some text for labels, title and axes ticks
     ax.tick_params(axis='x', labelsize=35)
@@ -1624,25 +1635,13 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
     # Set the x axis tick locations
     if (numberofSimulations > 0):
         ax.set_xticks(ind + (width/2))
-        realStrand1Name = 'Real %s' % (strand1Name)
-        realStrand2Name = 'Real %s' % (strand2Name)
-        simulationsStrand1Name = 'Simulated %s' % (strand1Name)
-        simulationsStrand2Name = 'Simulated %s' % (strand2Name)
-        # # Let's not have a legend
-        # if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
-        #     if ((len(rects1) > 0) and (len(rects2) > 0) and (len(rects3) > 0) and (len(rects4) > 0)):
-        #         legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),
-        #                            (realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 25}, ncol=1, loc='best')
     else:
         # Old way with no simulations
         ax.set_xticks(ind + width / 2)
-        # if ((rects1 is not None) and (rects2 is not None)):
-        #     if ((len(rects1) > 0) and (len(rects2) > 0)):
-        #         legend = ax.legend((rects1[0], rects2[0]), (strand1Name, strand2Name), prop={'size': 25}, ncol=1, loc='upper right')
 
-    #To make the barplot background white
+    # To make the barplot background white
     ax.set_facecolor('white')
-    #To makes spines black like a rectangle with black stroke
+    # To makes spines black like a rectangle with black stroke
     ax.spines["bottom"].set_color('black')
     ax.spines["left"].set_color('black')
     ax.spines["top"].set_color('black')
@@ -1653,10 +1652,10 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
         frame.set_facecolor('white')
         frame.set_edgecolor('black')
 
-    #Add star above the bars for significant differences between the number of mutations on each strand starts
+    # Add star above the bars for significant differences between the number of mutations on each strand starts
     # For each bar: Place a label
     if odds_ratio_list is not None:
-        for odds_ratio, fdr_bh_adjusted_pvalue, rect1, rect2 in zip(odds_ratio_list, fdr_bh_adjusted_pvalues, rects1, rects2):
+        for odds_ratio, fdr_bh_adjusted_pvalue, strand1_value, strand2_value, rect1, rect2 in zip(odds_ratio_list, fdr_bh_adjusted_pvalues, strand1_values, strand2_values, rects1, rects2):
             # Get X and Y placement of label from rect.
             # y_value = max(rect1.get_height(),rect2.get_height())
             y_value = rect1.get_height() + rect2.get_height()
@@ -1679,7 +1678,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
 
             # Create annotation
             if not np.isnan(odds_ratio):
-                if ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=0.0001):
+                if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                     ax.annotate(
                         '%.2f ***' %(odds_ratio),  # Use `label` as label
                         (x_value, y_value),  # Place label at end of the bar
@@ -1689,7 +1688,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
                         va=va,
                         fontsize=25)  # Vertically align label differently for
 
-                elif ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=0.001):
+                elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                     ax.annotate(
                         '%.2f **' %(odds_ratio),  # Use `label` as label
                         (x_value, y_value),  # Place label at end of the bar
@@ -1699,7 +1698,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
                         va=va,
                         fontsize=25)  # Vertically align label differently for
 
-                elif ((fdr_bh_adjusted_pvalue is not None) and fdr_bh_adjusted_pvalue<=SIGNIFICANCE_LEVEL):
+                elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                     ax.annotate(
                         '%.2f *' %(odds_ratio),  # Use `label` as label
                         (x_value, y_value),  # Place label at end of the bar
@@ -1738,52 +1737,52 @@ def plot_stacked_bar_plot_in_given_axis(axis,
     axis.set_position([box.x0, box.y0+0.125, box.width * 1, box.height * 1], which='both')
 
     mutation_types = six_mutation_types
-    numberofSimulations=100
+    numberofSimulations = 100
     width = 0.20
 
-    if strand_bias==LAGGING_VERSUS_LEADING:
-        strands=strands_list
-        strand1="Lagging_real_count"
-        strand2="Leading_real_count"
-        strand1_sims="Lagging_mean_sims_count"
-        strand2_sims="Leading_mean_sims_count"
+    if strand_bias == LAGGING_VERSUS_LEADING:
+        strands = strands_list
+        strand1 = "Lagging_real_count"
+        strand2 = "Leading_real_count"
+        strand1_sims = "Lagging_mean_sims_count"
+        strand2_sims = "Leading_mean_sims_count"
         q_value_column_name = "lagging_versus_leading_q_value"
-        color1='indianred'
-        color2='goldenrod'
-    elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
-        strands=strands_list
-        strand1="Transcribed_real_count"
-        strand2="UnTranscribed_real_count"
-        strand1_sims="Transcribed_mean_sims_count"
-        strand2_sims="UnTranscribed_mean_sims_count"
-        q_value_column_name="transcribed_versus_untranscribed_q_value"
-        color1='royalblue'
-        color2='yellowgreen'
-    elif strand_bias==GENIC_VERSUS_INTERGENIC:
-        strands=strands_list
-        strand1="genic_real_count"
-        strand2="intergenic_real_count"
-        strand1_sims="genic_mean_sims_count"
-        strand2_sims="intergenic_mean_sims_count"
-        q_value_column_name="genic_versus_intergenic_q_value"
-        color1='cyan'
-        color2='gray'
+        color1 = 'indianred'
+        color2 = 'goldenrod'
+    elif strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED:
+        strands = strands_list
+        strand1 = "Transcribed_real_count"
+        strand2 = "UnTranscribed_real_count"
+        strand1_sims = "Transcribed_mean_sims_count"
+        strand2_sims = "UnTranscribed_mean_sims_count"
+        q_value_column_name = "transcribed_versus_untranscribed_q_value"
+        color1 = 'royalblue'
+        color2 = 'yellowgreen'
+    elif strand_bias == GENIC_VERSUS_INTERGENIC:
+        strands = strands_list
+        strand1 = "genic_real_count"
+        strand2 = "intergenic_real_count"
+        strand1_sims = "genic_mean_sims_count"
+        strand2_sims = "intergenic_mean_sims_count"
+        q_value_column_name = "genic_versus_intergenic_q_value"
+        color1 = 'cyan'
+        color2 = 'gray'
 
     groupby_df = signature_strand1_versus_strand2_df.groupby(['signature'])
     group_df = groupby_df.get_group(sbs_signature)
 
-    mutationtype_strand1_real_list=[]
-    mutationtype_strand2_real_list=[]
-    mutationtype_strand1_sims_mean_list=[]
-    mutationtype_strand2_sims_mean_list=[]
-    mutationtype_FDR_BH_adjusted_pvalues_list=[]
+    mutationtype_strand1_real_list = []
+    mutationtype_strand2_real_list = []
+    mutationtype_strand1_sims_mean_list = []
+    mutationtype_strand2_sims_mean_list = []
+    mutationtype_FDR_BH_adjusted_pvalues_list = []
 
     for mutation_type in six_mutation_types:
-        strand1_real_count=group_df[group_df['mutation_type']==mutation_type][strand1].values[0]
-        strand2_real_count=group_df[group_df['mutation_type']==mutation_type][strand2].values[0]
-        strand1_sims_count=group_df[group_df['mutation_type']==mutation_type][strand1_sims].values[0]
-        strand2_sims_count=group_df[group_df['mutation_type']==mutation_type][strand2_sims].values[0]
-        q_value=group_df[group_df['mutation_type']==mutation_type][q_value_column_name].values[0]
+        strand1_real_count=group_df[group_df['mutation_type'] == mutation_type][strand1].values[0]
+        strand2_real_count=group_df[group_df['mutation_type'] == mutation_type][strand2].values[0]
+        strand1_sims_count=group_df[group_df['mutation_type'] == mutation_type][strand1_sims].values[0]
+        strand2_sims_count=group_df[group_df['mutation_type'] == mutation_type][strand2_sims].values[0]
+        q_value=group_df[group_df['mutation_type'] == mutation_type][q_value_column_name].values[0]
         mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
 
         if (strand1_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT) or (strand2_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT):
@@ -1834,7 +1833,6 @@ def plot_circle_bar_plots_together(outputDir,
                                replication_strands):
 
     x_ticklabels_list = percentage_strings * 6
-    # fig = plt.figure(figsize=(5 + 1.5 * len(x_ticklabels_list), 30 + 1.5))
     fig = plt.figure(figsize=(5 + 1.5 * len(x_ticklabels_list), 30 + 1.5))
     plt.rc('axes', edgecolor='lightgray')
 
@@ -1912,10 +1910,7 @@ def plot_circle_bar_plots_together(outputDir,
     plt.close(fig)
 
 
-
-##################################################################
-# July 5, 2020 starts
-#Key can be signature or sample
+# Key can be signature or sample
 def plotBarPlotsUsingDataframes(outputDir,
                  jobname,
                  numberofSimulations,
@@ -1974,11 +1969,11 @@ def plotBarPlotsUsingDataframes(outputDir,
                 strand2_sims_mean_count_Column_name=LEADING_SIMULATIONS_MEAN_COUNT
                 q_value_column_name = LAGGING_VERSUS_LEADING_Q_VALUE
 
-            strand1_real_count=0
-            strand1_sims_mean_count=0
-            strand2_real_count=0
-            strand2_sims_mean_count=0
-            q_value=None
+            strand1_real_count = 0
+            strand1_sims_mean_count = 0
+            strand2_real_count = 0
+            strand2_sims_mean_count = 0
+            q_value = None
 
             if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values.size>0):
                 strand1_real_count=signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values[0]
@@ -2023,8 +2018,6 @@ def plotBarPlotsUsingDataframes(outputDir,
                                          width,
                                          plot_mode)
 
-# July 5, 2020 ends
-##################################################################
 
 
 
@@ -2048,17 +2041,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     dinucsSignatures = np.array([])
     indelsSignatures = np.array([])
 
-    #######################################################################
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,BAR_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,CIRCLE_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,CIRCLE_BAR_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,TABLES), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS,EXCEL_FILES), exist_ok=True)
-    strandbias_figures_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
-    strandbias_figures_tables_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES)
-    strandbias_figures_excel_files_outputDir= os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES)
-    #######################################################################
+
+    strandbias_figures_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
+    strandbias_figures_tables_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TABLES)
+    strandbias_figures_excel_files_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES)
+
 
     ##########################################################################################
     #########################  Read dictionaries related with ################################
@@ -2066,13 +2059,13 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     ##########################################################################################
     for mutation_type_context in mutation_types_contexts:
         if (mutation_type_context in SBS_CONTEXTS):
-            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_SubsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
             subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     if (DBS in mutation_types_contexts):
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_DinucsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     if (ID in mutation_types_contexts):
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA,Table_IndelsSignature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
     ##########################################################################################
     #########################  Read dictionaries related with ################################
@@ -2084,21 +2077,21 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         dbs_df = dinucsSignature_cutoff_numberofmutations_averageprobability_df
         id_df = indelsSignature_cutoff_numberofmutations_averageprobability_df
     else:
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_SubsSignature_NumberofMutations_AverageProbability_Filename)):
-            sbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SubsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
+            sbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
             subsSignatures = sbs_df['signature'].unique()
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_DinucsSignature_NumberofMutations_AverageProbability_Filename)):
-            dbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DinucsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
+            dbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
             dinucsSignatures = dbs_df['signature'].unique()
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_IndelsSignature_NumberofMutations_AverageProbability_Filename)):
-            id_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_IndelsSignature_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
+            id_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
             indelsSignatures = id_df['signature'].unique()
 
 
     #######################################################################
-    #Step1 Read p_value
+    # Step1 Read p_value
     if LAGGING_VERSUS_LEADING in strand_bias_list:
-        #Replication Strand Bias
+        # Replication Strand Bias
         signature_mutation_type_lagging_versus_leading_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
         signature_mutation_type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS,signature_mutation_type_lagging_versus_leading_table_file_name)
         signature_lagging_versus_leading_df = pd.read_csv(signature_mutation_type_lagging_versus_leading_table_filepath, header=0, sep='\t')
@@ -2108,7 +2101,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_lagging_versus_leading_df = pd.read_csv(type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
-        #Transcription Strand Bias
+        # Transcription Strand Bias
         signature_mutation_type_transcribed_versus_untranscribed_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         signature_mutation_type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_transcribed_versus_untranscribed_table_file_name)
         signature_transcribed_versus_untranscribed_df = pd.read_csv(signature_mutation_type_transcribed_versus_untranscribed_table_filepath, header=0, sep='\t')
@@ -2118,7 +2111,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_transcribed_versus_untranscribed_df = pd.read_csv(type_transcribed_versus_untranscribed_table_filepath, header=0, sep='\t')
 
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
-        #Transcription Strand Bias
+        # Transcription Strand Bias
         signature_mutation_type_genic_versus_intergenic_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
         signature_mutation_type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_genic_versus_intergenic_table_file_name)
         signature_genic_versus_intergenic_df = pd.read_csv(signature_mutation_type_genic_versus_intergenic_table_filepath, header=0, sep='\t')
@@ -2129,11 +2122,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     #######################################################################
 
     #######################################################################
-    #Step2 Compute q_value
+    # Step2 Compute q_value
     p_values_list=[]
     element_names=[]
 
-    #Fill p_values_list
+    # Fill p_values_list
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         for index, row in signature_lagging_versus_leading_df.iterrows():
             element_name = (row[CANCER_TYPE], row[SIGNATURE], row[MUTATION_TYPE], LAGGING_VERSUS_LEADING)
@@ -2174,7 +2167,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     if ((p_values_list is not None) and p_values_list):
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
 
-        #Add None q_values
+        # Add None q_values
         if LAGGING_VERSUS_LEADING in strand_bias_list:
             signature_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] = np.nan
             type_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] = np.nan
@@ -2187,19 +2180,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
             signature_genic_versus_intergenic_df[GENIC_VERSUS_INTERGENIC_Q_VALUE]= np.nan
             type_genic_versus_intergenic_df[GENIC_VERSUS_INTERGENIC_Q_VALUE]= np.nan
 
-        #Update q_value
+        # Update q_value
         for element_index, element_name in enumerate(element_names,0):
             (cancer_type, signature, mutation_type, versus_type)=element_name
             q_value=all_FDR_BH_adjusted_p_values[element_index]
 
-            # print('%s %s %s %s -----  q_value: %f' %(cancer_type,signature,mutation_type,versus_type,q_value))
-
-            if (signature is not None) and (versus_type==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+            if (signature is not None) and (versus_type == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
                 signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[CANCER_TYPE]==cancer_type) &
                                                    (signature_transcribed_versus_untranscribed_df[SIGNATURE]==signature) &
                                                    (signature_transcribed_versus_untranscribed_df[MUTATION_TYPE]==mutation_type),TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE]=q_value
 
-            elif (signature is not None) and (versus_type==GENIC_VERSUS_INTERGENIC):
+            elif (signature is not None) and (versus_type == GENIC_VERSUS_INTERGENIC):
                 signature_genic_versus_intergenic_df.loc[(signature_genic_versus_intergenic_df[CANCER_TYPE]==cancer_type) &
                                                    (signature_genic_versus_intergenic_df[SIGNATURE]==signature) &
                                                    (signature_genic_versus_intergenic_df[MUTATION_TYPE]==mutation_type),GENIC_VERSUS_INTERGENIC_Q_VALUE]=q_value
@@ -2299,7 +2290,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     ##################################################################################################################################
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         signature_lagging_versus_leading_filtered_q_value_df = signature_lagging_versus_leading_df[signature_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
-        type_lagging_versus_leading_filtered_q_value_df= type_lagging_versus_leading_df[type_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE]<= SIGNIFICANCE_LEVEL].copy()
+        type_lagging_versus_leading_filtered_q_value_df= type_lagging_versus_leading_df[type_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
 
         signature_lagging_versus_leading_filtered_q_value_df[SIGNIFICANT_STRAND] = None
         type_lagging_versus_leading_filtered_q_value_df[SIGNIFICANT_STRAND] = None
@@ -2308,19 +2299,19 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
             signature_lagging_versus_leading_filtered_q_value_df[percentage_string] = None
             type_lagging_versus_leading_filtered_q_value_df[percentage_string] = None
 
-        signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] >signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
-        signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] >signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]), SIGNIFICANT_STRAND] = LEADING
-        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]>type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND]=LAGGING
-        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]>type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]),SIGNIFICANT_STRAND]=LEADING
+        signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
+        signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]), SIGNIFICANT_STRAND] = LEADING
+        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND]=LAGGING
+        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]),SIGNIFICANT_STRAND]=LEADING
 
         for percentage_index, percentage_number in enumerate(percentage_numbers, 0):
             percentage_string = percentage_strings[percentage_index]
             # Set percentages for signature mutation_type
-            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] -signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
-            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] -signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
             # Set percentages for type
-            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] -type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
-            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] -type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (LAGGING_VERSUS_LEADING)
         signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2343,8 +2334,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
             signature_transcribed_versus_untranscribed_filtered_q_value_df[percentage_string]=None
             type_transcribed_versus_untranscribed_filtered_q_value_df[percentage_string] = None
 
-        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] >signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
-        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] >signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
         type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
         type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
 
@@ -2384,7 +2375,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
         type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = INTERGENIC
 
-        #Set percentages
+        # Set percentages
         for percentage_index, percentage_number in enumerate(percentage_numbers,0):
             percentage_string=percentage_strings[percentage_index]
             # Set percentages for signature mutation_type
@@ -2543,7 +2534,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     #######################################################################
 
     #######################################################################
-    #Step4 Fill this dictionary
+    # Step4 Fill this dictionary
     type2strand2percentagedict={}
 
     df_list=[]
@@ -2628,7 +2619,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
 
 
     #######################################################################
-    #Step5 Plot figures
+    # Step5 Plot figures
     plot_legend(strandbias_figures_outputDir)
 
     for strand_bias in strand_bias_list:
@@ -2656,7 +2647,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                                            type2strand2percentagedict,
                                            percentage_strings)
 
-    #Circle plots ends
+    # Circle plots ends
     #######################################################################
 
     ########################################################################
@@ -2718,66 +2709,66 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
 
         for strand_bias in strand_bias_list:
             if (strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-                type_strand1_versus_strand2_df=type_transcribed_versus_untranscribed_df
-                strand1=transcriptionStrands[0]
-                strand2=transcriptionStrands[1]
-                strand1_real_count_column_name='Transcribed_real_count'
-                strand2_real_count_column_name='UnTranscribed_real_count'
-                strand1_sims_mean_count_column_name='Transcribed_mean_sims_count'
-                strand2_sims_mean_count_column_name='UnTranscribed_mean_sims_count'
-                q_value_column_name='transcribed_versus_untranscribed_q_value'
-                color1='royalblue'
-                color2='yellowgreen'
-                figureName='%s_transcription_strand_bias' %(sub_figure_name)
+                type_strand1_versus_strand2_df = type_transcribed_versus_untranscribed_df
+                strand1 = transcriptionStrands[0]
+                strand2 = transcriptionStrands[1]
+                strand1_real_count_column_name = 'Transcribed_real_count'
+                strand2_real_count_column_name = 'UnTranscribed_real_count'
+                strand1_sims_mean_count_column_name = 'Transcribed_mean_sims_count'
+                strand2_sims_mean_count_column_name = 'UnTranscribed_mean_sims_count'
+                q_value_column_name = 'transcribed_versus_untranscribed_q_value'
+                color1 = 'royalblue'
+                color2 = 'yellowgreen'
+                figureName = '%s_transcription_strand_bias' %(sub_figure_name)
 
             elif (strand_bias == GENIC_VERSUS_INTERGENIC):
-                type_strand1_versus_strand2_df=type_genic_versus_intergenic_df
-                strand1=genicVersusIntergenicStrands[0]
-                strand2=genicVersusIntergenicStrands[1]
-                strand1_real_count_column_name='genic_real_count'
-                strand2_real_count_column_name='intergenic_real_count'
-                strand1_sims_mean_count_column_name='genic_mean_sims_count'
-                strand2_sims_mean_count_column_name='intergenic_mean_sims_count'
-                q_value_column_name='genic_versus_intergenic_q_value'
-                color1='cyan'
-                color2='gray'
-                figureName='%s_genic_versus_intergenic_strand_bias' %(sub_figure_name)
+                type_strand1_versus_strand2_df = type_genic_versus_intergenic_df
+                strand1 = genicVersusIntergenicStrands[0]
+                strand2 = genicVersusIntergenicStrands[1]
+                strand1_real_count_column_name = 'genic_real_count'
+                strand2_real_count_column_name = 'intergenic_real_count'
+                strand1_sims_mean_count_column_name = 'genic_mean_sims_count'
+                strand2_sims_mean_count_column_name = 'intergenic_mean_sims_count'
+                q_value_column_name = 'genic_versus_intergenic_q_value'
+                color1 = 'cyan'
+                color2 = 'gray'
+                figureName = '%s_genic_versus_intergenic_strand_bias' %(sub_figure_name)
 
             elif (strand_bias == LAGGING_VERSUS_LEADING):
                 type_strand1_versus_strand2_df = type_lagging_versus_leading_df
-                strand1=replicationStrands[0]
-                strand2=replicationStrands[1]
-                strand1_real_count_column_name='Lagging_real_count'
-                strand2_real_count_column_name='Leading_real_count'
-                strand1_sims_mean_count_column_name='Lagging_mean_sims_count'
-                strand2_sims_mean_count_column_name='Leading_mean_sims_count'
-                q_value_column_name='lagging_versus_leading_q_value'
-                color1='indianred'
-                color2='goldenrod'
-                figureName='%s_replication_strand_bias' %(sub_figure_name)
+                strand1 = replicationStrands[0]
+                strand2 = replicationStrands[1]
+                strand1_real_count_column_name = 'Lagging_real_count'
+                strand2_real_count_column_name = 'Leading_real_count'
+                strand1_sims_mean_count_column_name = 'Lagging_mean_sims_count'
+                strand2_sims_mean_count_column_name = 'Leading_mean_sims_count'
+                q_value_column_name = 'lagging_versus_leading_q_value'
+                color1 = 'indianred'
+                color2 = 'goldenrod'
+                figureName = '%s_replication_strand_bias' %(sub_figure_name)
 
-            types_strand1_real_count_list=[]
-            types_strand2_real_count_list=[]
-            types_strand1_sims_mean_count_list=[]
-            types_strand2_sims_mean_count_list=[]
-            types_strand1_versus_strand2_FDR_BH_adjusted_pvalues=[]
+            types_strand1_real_count_list = []
+            types_strand2_real_count_list = []
+            types_strand1_sims_mean_count_list = []
+            types_strand2_sims_mean_count_list = []
+            types_strand1_versus_strand2_FDR_BH_adjusted_pvalues = []
 
             for my_type in x_axis_labels:
-                strand1_real_count=0
-                strand2_real_count=0
-                strand1_sims_mean_count=0
-                strand2_sims_mean_count=0
-                q_value=None
+                strand1_real_count = 0
+                strand2_real_count = 0
+                strand1_sims_mean_count = 0
+                strand2_sims_mean_count = 0
+                q_value = None
 
-                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type']==my_type)][strand1_real_count_column_name].values.size>0:
+                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand1_real_count_column_name].values.size>0:
                     strand1_real_count= type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand1_real_count_column_name].values[0]
-                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type']==my_type)][strand2_real_count_column_name].values.size>0:
+                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand2_real_count_column_name].values.size>0:
                     strand2_real_count= type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand2_real_count_column_name].values[0]
-                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type']==my_type)][strand1_sims_mean_count_column_name].values.size>0:
+                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand1_sims_mean_count_column_name].values.size>0:
                     strand1_sims_mean_count= type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand1_sims_mean_count_column_name].values[0]
-                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type']==my_type)][strand2_sims_mean_count_column_name].values.size>0:
+                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand2_sims_mean_count_column_name].values.size>0:
                     strand2_sims_mean_count= type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][strand2_sims_mean_count_column_name].values[0]
-                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type']==my_type)][q_value_column_name].values.size>0:
+                if type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][q_value_column_name].values.size>0:
                     q_value= type_strand1_versus_strand2_df[(type_strand1_versus_strand2_df['type'] == my_type)][q_value_column_name].values[0]
 
                 types_strand1_real_count_list.append(strand1_real_count)
@@ -2786,7 +2777,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                 types_strand2_sims_mean_count_list.append(strand2_sims_mean_count)
                 types_strand1_versus_strand2_FDR_BH_adjusted_pvalues.append(q_value)
 
-            if ((len(x_axis_labels)>0) and types_strand1_real_count_list and types_strand2_real_count_list and types_strand1_sims_mean_count_list and types_strand2_sims_mean_count_list and (len(types_strand1_versus_strand2_FDR_BH_adjusted_pvalues)>0)):
+            if ((len(x_axis_labels) > 0) and types_strand1_real_count_list and types_strand2_real_count_list and types_strand1_sims_mean_count_list and types_strand2_sims_mean_count_list and (len(types_strand1_versus_strand2_FDR_BH_adjusted_pvalues)>0)):
 
                 if (types_strand1_real_count_list and types_strand2_real_count_list):
                     plotStrandBiasFigureWithBarPlots(outputDir,
@@ -2841,10 +2832,10 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                      sbs_df,
                      isKeySample,
                      six_mutation_types,
-                    signature_genic_versus_intergenic_df,
+                     signature_genic_versus_intergenic_df,
                      width,
                      GENIC_VERSUS_INTERGENIC,
-                    genicVersusIntergenicStrands,
+                     genicVersusIntergenicStrands,
                      'cyan',
                      'gray',
                      'All Mutations',

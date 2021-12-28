@@ -250,7 +250,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
     if sample_based:
         indexofSample = np.where(df_columns == SAMPLE)[0][0]
         mutation_sample = mutation_row[indexofSample]
-        sample_index=np.where(all_samples_np_array == mutation_sample)[0][0]
+        sample_index = np.where(all_samples_np_array == mutation_sample)[0][0]
 
     indexofStart = np.where(df_columns == START)[0][0]
     start = mutation_row[indexofStart]
@@ -264,9 +264,9 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
     probabilities = mutation_row[df_columns_signatures_mask_array]
 
     #############################################################################################################
-    if(my_type==SUBS):
+    if(my_type == SUBS):
         end = start+1
-        #e.g.: C>A
+        # e.g.: C>A
 
         indexofMutation = np.where(df_columns == MUTATION)[0][0]
         SBS6_mutation_type = mutation_row[indexofMutation]
@@ -289,7 +289,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         else:
             subs_signatures_mask_array = np.array(probabilities).astype(float)
 
-        #Concetanate
+        # Concetanate
         all_types_mask_array = np.concatenate((SBS6_mutation_types_mask_array,
                                               SBS96_mutation_types_mask_array,
                                               subs_signatures_mask_array, # SUBS
@@ -314,7 +314,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         # to_be_accumulated_array.shape (num_of_subs_signatures,96)
         subs_signature_SBS96_mutation_type_mask_array = subs_signatures_mask_array_2d.T * SBS96_mutation_types_mask_array_2d
 
-    elif (my_type==DINUCS):
+    elif (my_type == DINUCS):
         end = start+2
 
         if is_discreet:
@@ -324,16 +324,16 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         else:
             dinucs_signatures_mask_array = np.array(probabilities).astype(float)
 
-        #Concetanate
+        # Concetanate
         all_types_mask_array= np.concatenate((SBS6_mutation_types_default_zeros_array,
                                               SBS96_mutation_types_default_zeros_array,
                                               subs_signatures_default_zeros_array,
                                               dinucs_signatures_mask_array, # DINUCS
                                               indels_signatures_default_zeros_array), axis=None)
 
-    elif (my_type==INDELS):
+    elif (my_type == INDELS):
         indexofLength = np.where(df_columns == LENGTH)[0][0]
-        end = start+int(mutation_row[indexofLength])
+        end = start + int(mutation_row[indexofLength])
 
         if is_discreet:
             # Convert True into 1, and False into 0
@@ -342,7 +342,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         else:
             indels_signatures_mask_array = np.array(probabilities).astype(float)
 
-        #Concetanate
+        # Concetanate
         all_types_mask_array= np.concatenate((SBS6_mutation_types_default_zeros_array,
                                               SBS96_mutation_types_default_zeros_array,
                                               subs_signatures_default_zeros_array,
@@ -375,7 +375,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                     subs_signature_SBS96_mutation_type_lagging_np_array += subs_signature_SBS96_mutation_type_mask_array
 
         elif ((uniqueValueArray.size==2) and (pyramidineStrand!=0)):
-            #Increment both LEADING and LAGGING
+            # Increment both LEADING and LAGGING
             all_types_leading_np_array += all_types_mask_array
             all_types_lagging_np_array += all_types_mask_array
             subs_signature_SBS6_mutation_type_leading_np_array += subs_signature_SBS6_mutation_type_mask_array
@@ -845,7 +845,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
     ###############################################################################
 
     ################################################################################
-    #SUBS
+    # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
@@ -889,6 +889,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                             all_samples_np_array,
                                                                             is_discreet,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
+
         ##############################################################################################
 
     ################################################################################
