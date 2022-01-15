@@ -70,13 +70,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
 from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofSubsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2NumberofIndelsDict
@@ -898,7 +894,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
 #############################################################################
 
 
-#########################################################
 def checkValidness(analsesType,outputDir,jobname,occupancy_type):
     #Check whether directory exists and there are files under it.
     data_file_path = os.path.join(outputDir,jobname,DATA,occupancy_type,analsesType)
@@ -914,7 +909,6 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
         #     return False
     else:
         return False
-#########################################################
 
 
 def plotSignatureBasedFigures(mutationType,
@@ -928,18 +922,17 @@ def plotSignatureBasedFigures(mutationType,
                               occupancy_type,
                               plusOrMinus,
                               verbose,
-                              plot_mode,
-                              is_discreet):
+                              plot_mode):
 
-    if (occupancy_type==NUCLEOSOMEOCCUPANCY):
+    if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         ylabel = 'Average nucleosome signal'
-    elif (occupancy_type==EPIGENOMICSOCCUPANCY):
+    elif (occupancy_type == EPIGENOMICSOCCUPANCY):
         ylabel = 'Average epigenomics signal'
     else:
-        #For epigenomics, epigenomics_dir_name can be different from EPIGENOMICSOCCUPANCY
+        # For epigenomics, epigenomics_dir_name can be different from EPIGENOMICSOCCUPANCY
         ylabel = 'Average epigenomics signal'
 
-    if (mutationType==SBS96):
+    if (mutationType == SBS96):
         xlabel = 'Interval around single base substitution (bp)'
         # label = 'Single Base Substitutions'
         label = 'SBSs'
@@ -947,7 +940,7 @@ def plotSignatureBasedFigures(mutationType,
         color = 'royalblue'
         fillcolor = 'lightblue'
         linestyle='dashed'
-    elif (mutationType==ID):
+    elif (mutationType == ID):
         xlabel = 'Interval around insertion and deletion (bp)'
         # label = 'Insertions and Deletions'
         label = 'IDs'
@@ -955,7 +948,7 @@ def plotSignatureBasedFigures(mutationType,
         color = 'darkgreen'
         fillcolor = 'lightgreen'
         linestyle='dashed'
-    elif (mutationType==DBS):
+    elif (mutationType == DBS):
         xlabel = 'Interval around doublet base substitution (bp)'
         # label = 'Doublet Base Substitutions'
         label = 'DBSs'
@@ -968,14 +961,10 @@ def plotSignatureBasedFigures(mutationType,
         # discreet mode [cancer_type     signature       cutoff  number_of_mutations     average_probability
         # samples_list    len(samples_list)       len(all_samples_list)   percentage_of_samples]
         #
-        # probability mode [cancer_type     signature       number_of_mutations     number_of_all_mutations
-        # average_probability     samples_list    len(samples_list)       len(all_samples_list)   percentage_of_samples]
-        if is_discreet:
-            signature_based_num_of_mutations = int(signature_df[signature_df['signature']==signature]['number_of_mutations'].values[0])
-        else:
-            num_of_mutations = int(signature_df[signature_df['signature'] == signature]['number_of_mutations'].values[0])
-            average_probability = float(signature_df[signature_df['signature'] == signature]['average_probability'].values[0])
-            signature_based_num_of_mutations = int(num_of_mutations * average_probability) # int truncates
+        # probability mode [cancer_type     signature       cutoff  number_of_mutations_w_prob_gt_zero
+        # number_of_mutations     number_of_all_mutations average_probability     samples_list    len(samples_list)       len(all_samples_list)   percentage_of_samples]
+
+        signature_based_num_of_mutations = int(signature_df[signature_df['signature']==signature]['number_of_mutations'].values[0])
         plotSignatureBasedAverageOccupancyFigureWithSimulations(None,
                                                                 signature,
                                                                 signature_based_num_of_mutations,
@@ -1023,7 +1012,7 @@ def plotSignatureBasedFigures(mutationType,
 
 
 ########################################################
-#Plot heatmaps
+# Plot heatmaps
 # Used for after Step2
 # For Step4 and Step5
 def fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements):
@@ -1531,7 +1520,6 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           plusOrMinus_epigenomics,
                                           plusOrMinus_nucleosome,
                                           epigenomics_heatmap_significance_level,
-                                          is_discreet,
                                           verbose):
 
     if verbose: print('\tVerbose epigenomics_files_memos:%s' % (epigenomics_files_memos))
@@ -1547,54 +1535,29 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
     if (numberofSimulations>=1):
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
-                if is_discreet:
-                    subsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename)
-                    subsSignature_df = pd.read_csv(subsSignature_df_file_path,
-                                                   sep='\t',
-                                                   header=0,
-                                                   dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
-                    sbs_signatures = subsSignature_df['signature'].unique().tolist()
-                else:
-                    subsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)
-                    subsSignature_df = pd.read_csv(subsSignature_df_file_path,
-                                                   sep='\t',
-                                                   header=0,
-                                                   dtype={'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
-                    sbs_signatures = subsSignature_df['signature'].unique().tolist()
+                subsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+                subsSignature_df = pd.read_csv(subsSignature_df_file_path,
+                                               sep='\t',
+                                               header=0,
+                                               dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+                sbs_signatures = subsSignature_df['signature'].unique().tolist()
 
         if (DBS in mutation_types_contexts):
-            if is_discreet:
-                dinucs_df_file_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename)
-                dinucsSignature_df = pd.read_csv(dinucs_df_file_path,
-                                                 sep='\t',
-                                                 header=0,
-                                                 dtype={'cutoff':np.float32, 'signature':str, 'number_of_mutations':np.int32, 'average_probability':np.float32})
-                dbs_signatures = dinucsSignature_df['signature'].unique().tolist()
-
-            else:
-                dinucs_df_file_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)
-                dinucsSignature_df = pd.read_csv(dinucs_df_file_path,
-                                                 sep='\t',
-                                                 header=0,
-                                                 dtype={'signature':str, 'number_of_mutations':np.int32, 'average_probability':np.float32})
-                dbs_signatures = dinucsSignature_df['signature'].unique().tolist()
+            dinucs_df_file_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+            dinucsSignature_df = pd.read_csv(dinucs_df_file_path,
+                                             sep='\t',
+                                             header=0,
+                                             dtype={'cutoff':np.float32, 'signature':str, 'number_of_mutations':np.int32, 'average_probability':np.float32})
+            dbs_signatures = dinucsSignature_df['signature'].unique().tolist()
 
 
         if (ID in mutation_types_contexts):
-            if is_discreet:
-                indelsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename)
-                indelsSignature_df = pd.read_csv(indelsSignature_df_file_path,
-                                                 sep='\t',
-                                                 header=0,
-                                                 dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32, 'average_probability': np.float32})
-                id_signatures = indelsSignature_df['signature'].unique().tolist()
-            else:
-                indelsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)
-                indelsSignature_df = pd.read_csv(indelsSignature_df_file_path,
-                                                 sep='\t',
-                                                 header=0,
-                                                 dtype={'signature': str, 'number_of_mutations': np.int32, 'average_probability': np.float32})
-                id_signatures = indelsSignature_df['signature'].unique().tolist()
+            indelsSignature_df_file_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+            indelsSignature_df = pd.read_csv(indelsSignature_df_file_path,
+                                             sep='\t',
+                                             header=0,
+                                             dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32, 'average_probability': np.float32})
+            id_signatures = indelsSignature_df['signature'].unique().tolist()
 
         sbs_signatures.append(AGGREGATEDSUBSTITUTIONS)
         dbs_signatures.append(AGGREGATEDDINUCS)
@@ -2553,11 +2516,10 @@ def occupancyAverageSignalFigures(outputDir,
                                   libraryFilenameMemo,
                                   occupancy_type,
                                   plusOrMinus,
-                                  is_discreet,
                                   verbose,
                                   plot_mode):
 
-    if (occupancy_type==NUCLEOSOMEOCCUPANCY):
+    if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         ylabel='Average nucleosome signal'
     else:
         #For epigenomics, epigenomics_dir_name can be different than EPIGENOMICSOCCUPANCY
@@ -2569,13 +2531,9 @@ def occupancyAverageSignalFigures(outputDir,
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
 
-    sbs_df = pd.DataFrame()
-    dbs_df = pd.DataFrame()
-    id_df = pd.DataFrame()
-
-    if occupancy_type==NUCLEOSOMEOCCUPANCY:
+    if occupancy_type == NUCLEOSOMEOCCUPANCY:
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type), exist_ok=True)
-    elif occupancy_type==EPIGENOMICSOCCUPANCY:
+    elif occupancy_type == EPIGENOMICSOCCUPANCY:
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS), exist_ok=True)
 
     # Read necessary dictionaries
@@ -2583,11 +2541,11 @@ def occupancyAverageSignalFigures(outputDir,
 
     for mutation_type_context in mutation_types_contexts:
         if (mutation_type_context in SBS_CONTEXTS):
-            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     if (DBS in mutation_types_contexts):
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,dtype={'cutoff': np.float32,'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
     if (ID in mutation_types_contexts):
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
 
     if sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
@@ -2636,26 +2594,14 @@ def occupancyAverageSignalFigures(outputDir,
                                               plusOrMinus,
                                               plot_mode)
 
-    if is_discreet:
-        sbs_df = subsSignature_cutoff_numberofmutations_averageprobability_df
-        dbs_df = dinucsSignature_cutoff_numberofmutations_averageprobability_df
-        id_df = indelsSignature_cutoff_numberofmutations_averageprobability_df
-    else:
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
-            sbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
-            dbs_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-        if os.path.exists(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename)):
-            id_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-
     # Plot Signature Based
     # ncomms11383 Fig3b signature based average nucleosome occupancy figures
     if checkValidness(SIGNATUREBASED, outputDir, jobname, occupancy_type):
-        if (not sbs_df.empty):
+        if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Subs Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo))
             plotSignatureBasedFigures(SBS96,
-                                      sbs_df,
+                                      subsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2SubsSignature2NumberofMutationsDict,
                                       outputDir,
                                       jobname,
@@ -2665,13 +2611,13 @@ def occupancyAverageSignalFigures(outputDir,
                                       occupancy_type,
                                       plusOrMinus,
                                       verbose,
-                                      plot_mode,
-                                      is_discreet)
-        if (not dbs_df.empty):
+                                      plot_mode)
+
+        if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Dinucs Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo))
             plotSignatureBasedFigures(DBS,
-                                      dbs_df,
+                                      dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2DinucsSignature2NumberofMutationsDict,
                                       outputDir,
                                       jobname,
@@ -2681,13 +2627,13 @@ def occupancyAverageSignalFigures(outputDir,
                                       occupancy_type,
                                       plusOrMinus,
                                       verbose,
-                                      plot_mode,
-                                      is_discreet)
-        if (not id_df.empty):
+                                      plot_mode)
+
+        if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Indels Signatures
             if verbose: print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()), libraryFilenameMemo))
             plotSignatureBasedFigures(ID,
-                                      id_df,
+                                      indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2IndelsSignature2NumberofMutationsDict,
                                       outputDir,
                                       jobname,
@@ -2697,12 +2643,11 @@ def occupancyAverageSignalFigures(outputDir,
                                       occupancy_type,
                                       plusOrMinus,
                                       verbose,
-                                      plot_mode,
-                                      is_discreet)
+                                      plot_mode)
 
     if sample_based:
-        #ALL SAMPLES IN ONE
-        #Plot "all samples pooled" and "sample based" signature based in one figure
+        # ALL SAMPLES IN ONE
+        # Plot "all samples pooled" and "sample based" signature based in one figure
         if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
         if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):

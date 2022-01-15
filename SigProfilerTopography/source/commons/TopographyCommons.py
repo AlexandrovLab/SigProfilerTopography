@@ -27,51 +27,51 @@ from statsmodels.stats.weightstats import ztest
 # import warnings
 # warnings.filterwarnings("error")
 
-LINUX='linux'
-UNIX='unix'
-WINDOWS='windows'
+LINUX = 'linux'
+UNIX = 'unix'
+WINDOWS = 'windows'
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
-LEADING= 'Leading'
+LEADING = 'Leading'
 LAGGING = 'Lagging'
 
-GENIC='Genic'
-INTERGENIC='Intergenic'
+GENIC = 'Genic'
+INTERGENIC = 'Intergenic'
 
 UNTRANSCRIBED_STRAND = 'UnTranscribed'
 TRANSCRIBED_STRAND = 'Transcribed'
 NONTRANSCRIBED_STRAND = 'NonTranscribed'
 
-LAGGING_VERSUS_LEADING='Lagging_Versus_Leading'
-TRANSCRIBED_VERSUS_UNTRANSCRIBED='Transcribed_Versus_Untranscribed'
-GENIC_VERSUS_INTERGENIC='Genic_Versus_Intergenic'
+LAGGING_VERSUS_LEADING = 'Lagging_Versus_Leading'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED = 'Transcribed_Versus_Untranscribed'
+GENIC_VERSUS_INTERGENIC = 'Genic_Versus_Intergenic'
 
-LAGGING_VERSUS_LEADING_P_VALUE='lagging_versus_leading_p_value'
-TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE='transcribed_versus_untranscribed_p_value'
-GENIC_VERSUS_INTERGENIC_P_VALUE='genic_versus_intergenic_p_value'
+LAGGING_VERSUS_LEADING_P_VALUE = 'lagging_versus_leading_p_value'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE = 'transcribed_versus_untranscribed_p_value'
+GENIC_VERSUS_INTERGENIC_P_VALUE = 'genic_versus_intergenic_p_value'
 
-LAGGING_VERSUS_LEADING_Q_VALUE='lagging_versus_leading_q_value'
-TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE='transcribed_versus_untranscribed_q_value'
-GENIC_VERSUS_INTERGENIC_Q_VALUE='genic_versus_intergenic_q_value'
+LAGGING_VERSUS_LEADING_Q_VALUE = 'lagging_versus_leading_q_value'
+TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE = 'transcribed_versus_untranscribed_q_value'
+GENIC_VERSUS_INTERGENIC_Q_VALUE = 'genic_versus_intergenic_q_value'
 
-TRANSCRIBED_REAL_COUNT='Transcribed_real_count'
-UNTRANSCRIBED_REAL_COUNT='UnTranscribed_real_count'
+TRANSCRIBED_REAL_COUNT = 'Transcribed_real_count'
+UNTRANSCRIBED_REAL_COUNT = 'UnTranscribed_real_count'
 
-GENIC_REAL_COUNT='genic_real_count'
-INTERGENIC_REAL_COUNT='intergenic_real_count'
+GENIC_REAL_COUNT = 'genic_real_count'
+INTERGENIC_REAL_COUNT = 'intergenic_real_count'
 
-LAGGING_REAL_COUNT ='Lagging_real_count'
-LEADING_REAL_COUNT ='Leading_real_count'
+LAGGING_REAL_COUNT = 'Lagging_real_count'
+LEADING_REAL_COUNT = 'Leading_real_count'
 
-TRANSCRIBED_SIMULATIONS_MEAN_COUNT='Transcribed_mean_sims_count'
-UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT='UnTranscribed_mean_sims_count'
+TRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'Transcribed_mean_sims_count'
+UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'UnTranscribed_mean_sims_count'
 
-GENIC_SIMULATIONS_MEAN_COUNT ='genic_mean_sims_count'
-INTERGENIC_SIMULATIONS_MEAN_COUNT ='intergenic_mean_sims_count'
+GENIC_SIMULATIONS_MEAN_COUNT = 'genic_mean_sims_count'
+INTERGENIC_SIMULATIONS_MEAN_COUNT = 'intergenic_mean_sims_count'
 
-LAGGING_SIMULATIONS_MEAN_COUNT ='Lagging_mean_sims_count'
-LEADING_SIMULATIONS_MEAN_COUNT ='Leading_mean_sims_count'
+LAGGING_SIMULATIONS_MEAN_COUNT = 'Lagging_mean_sims_count'
+LEADING_SIMULATIONS_MEAN_COUNT = 'Leading_mean_sims_count'
 
 AT_LEAST_5_PERCENT_DIFF = '5%'
 AT_LEAST_10_PERCENT_DIFF = '10%'
@@ -93,19 +93,19 @@ MAXIMUM_CHROMOSOME_LENGTH = 250000000
 GIGABYTE_IN_BYTES = 1073741824
 MEGABYTE_IN_BYTES = 1048576
 
-NUMBER_OF_MUTATIONS_IN_EACH_SPLIT=100000
-MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE=50
+NUMBER_OF_MUTATIONS_IN_EACH_SPLIT = 100000
+MAXIMUM_NUMBER_JOBS_IN_THE_POOL_AT_ONCE = 50
 
-BIGWIG='BIGWIG'
-BIGBED='BIGBED'
-WIG='WIG'
-BED='BED'
-BEDGRAPH='BEDGRAPH'
-NARROWPEAK='narrowpeak'
-LIBRARY_FILE_TYPE_OTHER='LIBRARY_FILE_TYPE_OTHER'
+BIGWIG = 'BIGWIG'
+BIGBED = 'BIGBED'
+WIG = 'WIG'
+BED = 'BED'
+BEDGRAPH = 'BEDGRAPH'
+NARROWPEAK = 'narrowpeak'
+LIBRARY_FILE_TYPE_OTHER = 'LIBRARY_FILE_TYPE_OTHER'
 
-BED_6PLUS4='BED6+4'
-BED_9PLUS2='BED9+2'
+BED_6PLUS4 = 'BED6+4'
+BED_9PLUS2 = 'BED9+2'
 
 SAMPLE_MMR_DEFICIENT_THRESHOLD = 10000
 SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD = 1000
@@ -128,31 +128,30 @@ NUCLEOSOME = 'nucleosome'
 REPLICATION = 'replication'
 UCSCGENOME = 'ucscgenome'
 
-HISTONE_MODIFICATION= "histone modification"
-TRANSCRIPTION_FACTOR= "transcription factor"
+HISTONE_MODIFICATION = "histone modification"
+TRANSCRIPTION_FACTOR = "transcription factor"
 
 NCBI = 'ncbi'
 ENSEMBL = 'ensembl'
 
 GM12878 = 'GM12878'
 K562 = 'K562'
-MCF7='MCF7'
-HEPG2='HEPG2'
-HELAS3='HELAS3'
-SKNSH='SKNSH'
-IMR90='IMR90'
-NHEK='NHEK'
-BJ='BJ'
-HUVEC='HUVEC'
-BG02ES='BG02ES'
-GM06990='GM06990'
-GM12801='GM12801'
-GM12812='GM12812'
-GM12813='GM12813'
+MCF7 = 'MCF7'
+HEPG2 = 'HEPG2'
+HELAS3 = 'HELAS3'
+SKNSH = 'SKNSH'
+IMR90 = 'IMR90'
+NHEK = 'NHEK'
+BJ = 'BJ'
+HUVEC = 'HUVEC'
+BG02ES = 'BG02ES'
+GM06990 = 'GM06990'
+GM12801 = 'GM12801'
+GM12812 = 'GM12812'
+GM12813 = 'GM12813'
+MEF = "MEF"
 
-MEF="MEF"
-
-#Epigenomics File for GRCh37
+# Epigenomics File for GRCh37
 DEFAULT_H3K27ME3_OCCUPANCY_FILE = 'ENCFF291WFP_breast_epithelium_H3K27me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
 DEFAULT_H3K36ME3_OCCUPANCY_FILE = 'ENCFF906MJM_breast_epithelium_H3K36me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
 DEFAULT_H3K9ME3_OCCUPANCY_FILE = 'ENCFF065FJK_breast_epithelium_H3K9me3.bed' # Homo sapiens breast epithelium tissue female adult (53 years)
@@ -162,20 +161,20 @@ DEFAULT_H3K4ME3_OCCUPANCY_FILE = 'ENCFF065TIH_breast_epithelium_H3K4me3.bed' # H
 DEFAULT_CTCF_OCCUPANCY_FILE = 'ENCFF782GCQ_breast_epithelium_Normal_CTCF-human.bed' # Homo sapiens breast epithelium tissue male adult (54 years)
 DEFAULT_ATAC_SEQ_OCCUPANCY_FILE = 'ENCFF035ICJ_breast_epithelium_Normal_ATAC-seq.wig' # Homo sapiens breast epithelium tissue male adult (54 years)
 
-#Epigenomics File for mm10
-ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq="ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq.wig"
-ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1="ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1.bed"
-ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3="ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3.bed"
-ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF="ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF.bed"
-ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A="ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A.bed"
-ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac="ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac.bed"
+# Epigenomics File for mm10
+ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq = "ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq.wig"
+ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1 = "ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1.bed"
+ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3 = "ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3.bed"
+ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF = "ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF.bed"
+ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A = "ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A.bed"
+ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac = "ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac.bed"
 
-#NUCLEOSOME OCCUPANCY FILES
-MM10_MEF_NUCLEOSOME_FILE='Mus_musculus.mmNuc0030101.nucleosome.shift.bw'
+# NUCLEOSOME OCCUPANCY FILES
+MM10_MEF_NUCLEOSOME_FILE = 'Mus_musculus.mmNuc0030101.nucleosome.shift.bw'
 GM12878_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
 K562_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeK562Sig.bigWig'
 
-SIGPROFILERTOPOGRAPHY_DEFAULT_FILES=[GM12878_NUCLEOSOME_OCCUPANCY_FILE,K562_NUCLEOSOME_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
+SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE,K562_NUCLEOSOME_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
 
 #REPLICATION  TIME FILES
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
@@ -240,8 +239,8 @@ GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
 
 MEF_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JVQ_mm10_embryonic_fibroblast_wavelet_smoothed_signal.wig'
 
-available_nucleosome_biosamples=[GM12878,K562,MEF]
-available_replication_time_biosamples=[GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
+available_nucleosome_biosamples = [GM12878,K562,MEF]
+available_replication_time_biosamples = [GM12878,K562,MCF7,HEPG2,HELAS3,SKNSH,IMR90,NHEK,BJ,HUVEC,BG02ES,GM06990,GM12801,GM12812,GM12813]
 
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
@@ -258,23 +257,22 @@ MM10 = 'mm10'
 GRCh37 = 'GRCh37'
 GRCh38 = 'GRCh38'
 
-FIXED_STEP='fixedStep'
-VARIABLE_STEP='variableStep'
+FIXED_STEP = 'fixedStep'
+VARIABLE_STEP = 'variableStep'
 
-###################################################################################################
-COMBINE_P_VALUES_METHOD_FISHER='fisher'
-COMBINE_P_VALUES_METHOD_STOUFFER='stouffer'
-WEIGHTED_AVERAGE_METHOD='WEIGHTED_AVERAGE_METHOD'
-COLORBAR_SEISMIC='seismic'
-COLORBAR_DISCREET='discreet'
-NUCLEOSOME_BIOSAMPLE="K562"
-PLOTS='plots'
-TABLES='tables'
-DETAILED='detailed'
-EXCEL_FILES='excel_files'
-NUCLEOSOME_DNA_ELEMENT='Nucleosome'
-ATAC_DNA_ELEMENT='ATAC'
-OPEN_CHROMATIN='Open\nChromatin'
+COMBINE_P_VALUES_METHOD_FISHER = 'fisher'
+COMBINE_P_VALUES_METHOD_STOUFFER = 'stouffer'
+WEIGHTED_AVERAGE_METHOD = 'WEIGHTED_AVERAGE_METHOD'
+COLORBAR_SEISMIC = 'seismic'
+COLORBAR_DISCREET = 'discreet'
+NUCLEOSOME_BIOSAMPLE = "K562"
+PLOTS = 'plots'
+TABLES = 'tables'
+DETAILED = 'detailed'
+EXCEL_FILES = 'excel_files'
+NUCLEOSOME_DNA_ELEMENT = 'Nucleosome'
+ATAC_DNA_ELEMENT = 'ATAC'
+OPEN_CHROMATIN = 'Open\nChromatin'
 ###################################################################################################
 
 ###################################################################################################
@@ -283,15 +281,20 @@ Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename = "T
 Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_ID_Signature_NumberofMutations_AverageProbability.txt"
 Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_DBS_Signature_NumberofMutations_AverageProbability.txt"
 
-# Tables Discreet mode with cutoffs
-Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
-Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+# Common Table both for discreet mode and probability mode
+Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
+Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
-# Tables Probability mode without cutoffs considering all mutations
-Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
-Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
-Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
+# # Tables Discreet mode with cutoffs
+# Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+# Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+# Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
+
+# # Tables Probability mode without cutoffs considering all mutations
+# Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
+# Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
+# Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
 
 # Table
 Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
@@ -1174,17 +1177,21 @@ def writeAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2NumberofMutationsA
 
     allcutoffs_signature_numberofmutations_averageprobability.close()
 
-
+# Run in probability mode
+# Run in SigProfilerTopography discreet_mode = False
 def fill_signature_number_of_mutations_df(outputDir,
                                           jobname,
                                           chromNamesList,
                                           mutation_type):
-    # Create empty dataframe
+
+    # Create empty dataframe with the following columns
     # Fill this dataframe
     df = pd.DataFrame(columns=['cancer_type',
                                'signature',
-                               'number_of_mutations',
-                               'number_of_all_mutations',
+                               'cutoff',
+                               'number_of_mutations_w_prob_gt_zero', # additional column for probability mode
+                               'number_of_all_mutations',  # additional column for probability mode
+                               'number_of_mutations', # average_probability * number_of_mutations_w_prob_gt_zero
                                'average_probability',
                                'samples_list',
                                'len(samples_list)',
@@ -1209,7 +1216,7 @@ def fill_signature_number_of_mutations_df(outputDir,
             signatures = get_signatures(chrBased_mutation_df)
 
             for signature in signatures:
-                number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] > 0])
+                number_of_mutations_w_prob_gt_zero = len(chrBased_mutation_df[chrBased_mutation_df[signature] > 0])
                 number_of_all_mutations = chrBased_mutation_df.shape[0] # number of rows: all mutations
 
                 samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > 0]['Sample'].unique()
@@ -1217,7 +1224,7 @@ def fill_signature_number_of_mutations_df(outputDir,
 
                 if df[df['signature'] == signature].values.any():
                     # Update Accumulate
-                    df.loc[df['signature'] == signature, 'number_of_mutations'] = df.loc[df['signature'] == signature, 'number_of_mutations'] + number_of_mutations
+                    df.loc[df['signature'] == signature, 'number_of_mutations_w_prob_gt_zero'] = df.loc[df['signature'] == signature, 'number_of_mutations_w_prob_gt_zero'] + number_of_mutations_w_prob_gt_zero
                     df.loc[df['signature'] == signature, 'number_of_all_mutations'] = df.loc[df['signature'] == signature, 'number_of_all_mutations'] + number_of_all_mutations
 
                     # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
@@ -1227,16 +1234,21 @@ def fill_signature_number_of_mutations_df(outputDir,
                 else:
                     df = df.append({'cancer_type':jobname,
                                'signature': signature,
-                               'number_of_mutations': number_of_mutations,
+                               'cutoff' : np.nan,
+                               'number_of_mutations_w_prob_gt_zero': number_of_mutations_w_prob_gt_zero,
                                'number_of_all_mutations': number_of_all_mutations,
+                               'number_of_mutations': np.nan,
                                'average_probability' : sum_of_probabilities,
                                'samples_list' : list(samples_array),
                                'len(samples_list)' : len(samples_array),
                                'len(all_samples_list)' : np.nan,
                                'percentage_of_samples': np.nan}, ignore_index=True)
 
-    df['average_probability'] = [x / y if y > 0 else 0 for x, y in zip(df['average_probability'], df['number_of_mutations'])]
+    df['average_probability'] = [x / y if y > 0 else 0 for x, y in zip(df['average_probability'], df['number_of_mutations_w_prob_gt_zero'])]
     # df['average_probability'] = df['average_probability'] /df['number_of_mutations'] # ZeroDivisionError
+
+    df['number_of_mutations'] = df['number_of_mutations_w_prob_gt_zero'] * df['average_probability']
+    df['number_of_mutations'] = df['number_of_mutations'].astype(int)
 
     df['len(samples_list)'] = df['samples_list'].str.len()
     df['len(all_samples_list)'] = len(all_samples)
@@ -1245,7 +1257,7 @@ def fill_signature_number_of_mutations_df(outputDir,
 
     return df
 
-##################################################################
+# Run in SigProfilerTopography discreet_mode = True
 def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                   jobname,
                                                   chromNamesList,
@@ -1309,7 +1321,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
 
                     # This results in infinity
                     # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
-                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature]).values,dtype=np.float64)
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values,dtype=np.float64)
 
                     if cutoff not in cutoff2Signature2PropertiesListDict:
                         cutoff2Signature2PropertiesListDict[cutoff] = {}
@@ -1332,7 +1344,6 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                         existing_samples_list = cutoff2Signature2PropertiesListDict[cutoff][signature][2]
                         #Update existing_samples with new samples
                         cutoff2Signature2PropertiesListDict[cutoff][signature][2] = list(set(existing_samples_list).union(set(samples_array)))
-
 
     # Second part starts
     # Second: Find average probability
@@ -1364,15 +1375,15 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     if (mutation_type == SUBS):
         number_of_required_mutations = num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == DINUCS):
         number_of_required_mutations = num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == INDELS):
         number_of_required_mutations = num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
+        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 
     # Third part starts
     # Find the signature based cufoff probability with number of mutations >= required number of mutations and average mutation probability >= required_probability
@@ -1439,19 +1450,13 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                                                            'percentage_of_samples'
                                                                                          ])
 
-    signature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir,jobname,DATA, table_signature_cutoff_numberofmutations_averageprobability_filename), sep='\t', index=False)
-
-    signature_cutoff_numberofmutations_averageprobability_df.drop(['cancer_type', 'samples_list', 'len(samples_list)', 'len(all_samples_list)', 'percentage_of_samples'], inplace=True, axis=1)
-
     return signature_cutoff_numberofmutations_averageprobability_df
 
 
-##################################################################
 # We are filling and writing
 # Sample2NumberofMutationsDictFilename
 # Signature2NumberofMutationsDictFilename
 # Sample2Signature2NumberofMutationsDictFilename
-
 # We are writing Signature2NumberofMutationsDictFilename for the signatures in signature2PropertiesListDict using chrBased_mutation_df
 # At the end, Signature2NumberofMutationsDictFilename and signature2PropertiesListDict must match
 # It is like double check
@@ -2300,7 +2305,7 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
                 lagging_versus_leading_p_value = np.nan
 
             #Set p_value
-            type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE]=lagging_versus_leading_p_value
+            type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
 
         elif strand_bias==TRANSCRIPTIONSTRANDBIAS:
             transcribed_strand = strands[0]

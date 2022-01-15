@@ -139,13 +139,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_
 from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ChrLong_NumberofMutations_Filename
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename
-
-from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
-from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
@@ -174,8 +170,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEIS
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
 ############################################################
-#Can be move to DataPreparationCommons under /source/commons
-#read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
+# Can be moved to DataPreparationCommons under /source/commons
+# Read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
 def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,
                                                                        inputDir,
                                                                        outputDir,
@@ -189,7 +185,6 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
                                                                        PCAWG,
                                                                        verbose):
 
-    ###########################################################################################
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/DBS
     #original matrix generator chrbased data will be under inputDir/output/vcf_files/ID
@@ -204,15 +199,10 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     for simNum in range(1,endSimNum+1):
         simName = 'sim%d' % (simNum)
         os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED,simName), exist_ok=True)
-    ###########################################################################################
 
-    ###########################################################################################
     if ((mutations_probabilities_file_path is not None) and (os.path.exists(mutations_probabilities_file_path))):
-
-        ##########################################################################################
         mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path, verbose)
         df_columns_contain_ordered_signatures = mutations_probabilities_df.columns.values
-        ##########################################################################################
 
         if verbose:
             print('\tVerbose mutations_probabilities_df.head()')
@@ -220,9 +210,8 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
             print('\tVerbose mutations_probabilities_df.columns.values')
             print('\tVerbose %s' %(mutations_probabilities_df.columns.values))
 
-        ##########################################################################################
-        #Step1 SigProfilerTopography Python Package
-        #For Release we will use SAMPLE as it is, no change in SAMPLE column is needed.
+        # Step1 SigProfilerTopography Python Package
+        # For Release we will use SAMPLE as it is, no change in SAMPLE column is needed.
 
         # For PCAWG_Matlab
         # This statement below is customized for  PCAWG_Matlab
@@ -230,20 +219,15 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         # Breast-LobularCA_SP124191
         if PCAWG:
             mutations_probabilities_df[SAMPLE] = mutations_probabilities_df[SAMPLE].str.split('_',expand=True)[1]
-        ##########################################################################################
 
         ############################################################################################
         ##############################  pool.apply_async starts ####################################
         ############################################################################################
 
-        ################################
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
-        ################################
 
-        ################################
         jobs = []
-        ################################
 
         sim_nums = range(startSimNum,endSimNum+1)
         sim_num_chr_tuples = ((sim_num, chrShort) for sim_num in sim_nums for chrShort in chromShortNamesList)
@@ -268,26 +252,18 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
                 inputList.append(simNum)
                 inputList.append(PCAWG)
                 jobs.append(pool.apply_async(readChrBasedMutationsMergeWithProbabilitiesAndWrite,args=(inputList,)))
-        ################################################################################
 
-        ##############################################################################
         # wait for all jobs to finish
         for job in jobs:
             if verbose: print('\tVerbose Transcription Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-        ##############################################################################
 
-        ################################
         pool.close()
         pool.join()
-        ################################
 
         ############################################################################################
         ##############################  pool.apply_async ends ######################################
         ############################################################################################
 
-    ###########################################################################################
-
-    ###########################################################################################
     elif ((mutations_probabilities_file_path is None) or (not (os.path.exists(mutations_probabilities_file_path)))):
 
         #For Information
@@ -297,14 +273,10 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         ##############################  pool.apply_async starts ####################################
         ############################################################################################
 
-        ################################
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
-        ################################
 
-        ################################
         jobs = []
-        ################################
 
         sim_nums = range(startSimNum,endSimNum+1)
         sim_num_chr_tuples = ((sim_num, chrShort) for sim_num in sim_nums for chrShort in chromShortNamesList)
@@ -329,27 +301,19 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
                 inputList.append(simNum)
                 inputList.append(PCAWG)
                 jobs.append(pool.apply_async(readChrBasedMutationsMergeWithProbabilitiesAndWrite,args=(inputList,)))
-        ################################################################################
 
-        ##############################################################################
         # wait for all jobs to finish
         for job in jobs:
             if verbose: print('\tVerbose Transcription Strand Bias Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-        ##############################################################################
 
-        ################################
         pool.close()
         pool.join()
-        ################################
 
         ############################################################################################
         ##############################  pool.apply_async ends ######################################
         ############################################################################################
 
     return df_columns_contain_ordered_signatures
-    ###########################################################################################
-
-############################################################
 
 
 #######################################################
@@ -676,7 +640,7 @@ def runOccupancyAnalyses(genome,
                          plusorMinus,
                          remove_outliers,
                          quantileValue,
-                         is_discreet,
+                         discreet_mode,
                          verbose):
 
     #######################################################################
@@ -711,7 +675,7 @@ def runOccupancyAnalyses(genome,
                       ordered_id_signatures_cutoffs,
                       remove_outliers,
                       quantileValue,
-                      is_discreet,
+                      discreet_mode,
                       verbose)
 #######################################################
 
@@ -735,7 +699,7 @@ def runReplicationTimeAnalysis(genome,
                                ordered_sbs_signatures_cutoffs,
                                ordered_dbs_signatures_cutoffs,
                                ordered_id_signatures_cutoffs,
-                               is_discreet,
+                               discreet_mode,
                                verbose,
                                matrix_generator_path):
 
@@ -762,7 +726,7 @@ def runReplicationTimeAnalysis(genome,
                             ordered_sbs_signatures_cutoffs,
                             ordered_dbs_signatures_cutoffs,
                             ordered_id_signatures_cutoffs,
-                            is_discreet,
+                            discreet_mode,
                             verbose,
                             matrix_generator_path)
     ###############################################
@@ -770,7 +734,6 @@ def runReplicationTimeAnalysis(genome,
 #######################################################
 
 
-#######################################################
 def runReplicationStrandBiasAnalysis(outputDir,
                                      jobname,
                                      numofSimulations,
@@ -792,7 +755,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                      ordered_sbs_signatures_cutoffs,
                                      ordered_dbs_signatures_cutoffs,
                                      ordered_id_signatures_cutoffs,
-                                     is_discreet,
+                                     discreet_mode,
                                      verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
@@ -825,13 +788,10 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                   ordered_sbs_signatures_cutoffs,
                                   ordered_dbs_signatures_cutoffs,
                                   ordered_id_signatures_cutoffs,
-                                  is_discreet,
+                                  discreet_mode,
                                   verbose)
-    ###############################################
 
-#######################################################
 
-#######################################################
 def runTranscriptionStradBiasAnalysis(outputDir,
                                       jobname,
                                       numofSimulations,
@@ -849,7 +809,7 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                       ordered_sbs_signatures_cutoffs,
                                       ordered_dbs_signatures_cutoffs,
                                       ordered_id_signatures_cutoffs,
-                                      is_discreet,
+                                      discreet_mode,
                                       verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
@@ -874,10 +834,8 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                     ordered_sbs_signatures_cutoffs,
                                     ordered_dbs_signatures_cutoffs,
                                     ordered_id_signatures_cutoffs,
-                                    is_discreet,
+                                    discreet_mode,
                                     verbose)
-    ###############################################
-#######################################################
 
 
 #######################################################
@@ -1022,7 +980,7 @@ def runAnalyses(genome,
                 step2_matgen_data = True,
                 step3_prob_merged_data = True,
                 step4_tables = True,
-                is_discreet = True,
+                discreet_mode = True,
                 average_probability = DEFAULT_AVERAGE_PROBABILITY,
                 num_of_sbs_required = DEFAULT_NUM_OF_SBS_REQUIRED,
                 num_of_dbs_required = DEFAULT_NUM_OF_DBS_REQUIRED,
@@ -1327,7 +1285,7 @@ def runAnalyses(genome,
     print('\n--- mutation_types_contexts:%s' %mutation_types_contexts)
     print('--- mutation_types_contexts_for_signature_probabilities:%s' %mutation_types_contexts_for_signature_probabilities)
     print('--- computation_type:%s' %computation_type)
-    print('--- mutation contribution is_discreet:%s\n' %is_discreet)
+    print('--- SigProfilerTopography run mode discreet:%s\n' %discreet_mode)
     if sample_based:
         print('--- Sample Based Analysis.')
 
@@ -1751,24 +1709,45 @@ def runAnalyses(genome,
 
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
-                sbs_signature_number_of_mutations_df = fill_signature_number_of_mutations_df(outputDir,
-                                                                                             jobname,
-                                                                                             chromNamesList,
-                                                                                             SUBS)
+                if discreet_mode:
+                    # We are reading original data to fill the signature2PropertiesListDict
+                    # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
+                    subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
+                        outputDir,
+                        jobname,
+                        chromNamesList,
+                        SUBS,
+                        cutoffs,
+                        average_probability,
+                        num_of_sbs_required,
+                        num_of_id_required,
+                        num_of_dbs_required,
+                        mutationType2PropertiesDict,
+                        chrLong2NumberofMutationsDict)
+                else:
+                    # Probability Mode
+                    subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
+                                                                                                 jobname,
+                                                                                                 chromNamesList,
+                                                                                                 SUBS)
 
-                sbs_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
-                                                                         jobname,
-                                                                         DATA,
-                                                                         Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
-                                                            sep='\t', header=True, index=False)
+                subsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir, jobname, DATA,
+                                     Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', index=False)
 
+                subsSignature_cutoff_numberofmutations_averageprobability_df.drop(['cancer_type', 'samples_list',
+                                                                                       'len(samples_list)',
+                                                                                       'len(all_samples_list)',
+                                                                                       'percentage_of_samples'], inplace=True, axis=1)
+
+        if (DBS in mutation_types_contexts):
+            if discreet_mode:
                 # We are reading original data to fill the signature2PropertiesListDict
                 # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
-                subsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
+                dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
                     outputDir,
                     jobname,
                     chromNamesList,
-                    SUBS,
+                    DINUCS,
                     cutoffs,
                     average_probability,
                     num_of_sbs_required,
@@ -1776,61 +1755,54 @@ def runAnalyses(genome,
                     num_of_dbs_required,
                     mutationType2PropertiesDict,
                     chrLong2NumberofMutationsDict)
+            else:
+                # Probability Mode
+                dinucsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
+                                                                                            jobname,
+                                                                                            chromNamesList,
+                                                                                            DINUCS)
 
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
+                    os.path.join(outputDir, jobname, DATA,
+                                 Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename),
+                    sep='\t', index=False)
 
-        if (DBS in mutation_types_contexts):
-            dbs_signature_number_of_mutations_df = fill_signature_number_of_mutations_df(outputDir,
-                                                                                        jobname,
-                                                                                        chromNamesList,
-                                                                                        DINUCS)
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df.drop(
+                    ['cancer_type', 'samples_list', 'len(samples_list)', 'len(all_samples_list)',
+                     'percentage_of_samples'], inplace=True, axis=1)
 
-            dbs_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
-                                                                     jobname,
-                                                                     DATA,
-                                                                     Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
-                                                        sep='\t', header=True, index=False)
-
-            # We are reading original data to fill the signature2PropertiesListDict
-            # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
-            dinucsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
-                outputDir,
-                jobname,
-                chromNamesList,
-                DINUCS,
-                cutoffs,
-                average_probability,
-                num_of_sbs_required,
-                num_of_id_required,
-                num_of_dbs_required,
-                mutationType2PropertiesDict,
-                chrLong2NumberofMutationsDict)
 
         if (ID in mutation_types_contexts):
-            id_signature_number_of_mutations_df = fill_signature_number_of_mutations_df(outputDir,
-                                                                                        jobname,
-                                                                                        chromNamesList,
-                                                                                        INDELS)
+            if discreet_mode:
+                # We are reading original data to fill the signature2PropertiesListDict
+                # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
+                indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
+                    outputDir,
+                    jobname,
+                    chromNamesList,
+                    INDELS,
+                    cutoffs,
+                    average_probability,
+                    num_of_sbs_required,
+                    num_of_id_required,
+                    num_of_dbs_required,
+                    mutationType2PropertiesDict,
+                    chrLong2NumberofMutationsDict)
+            else:
+                # Probability Mode
+                indelsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
+                                                                                            jobname,
+                                                                                            chromNamesList,
+                                                                                            INDELS)
 
-            id_signature_number_of_mutations_df.to_csv(os.path.join(outputDir,
-                                                                    jobname,
-                                                                    DATA,
-                                                                    Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename),
-                                                        sep='\t', header=True, index=False)
+            indelsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
+                    os.path.join(outputDir, jobname, DATA,
+                                 Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename),
+                    sep='\t', index=False)
 
-            # We are reading original data to fill the signature2PropertiesListDict
-            # We are writing all samples_mutations_cutoffs_tables and signature based decided samples_mutations_cutoffs_tables in table format.
-            indelsSignature_cutoff_numberofmutations_averageprobability_df = fillCutoff2Signature2PropertiesListDictionary(
-                outputDir,
-                jobname,
-                chromNamesList,
-                INDELS,
-                cutoffs,
-                average_probability,
-                num_of_sbs_required,
-                num_of_id_required,
-                num_of_dbs_required,
-                mutationType2PropertiesDict,
-                chrLong2NumberofMutationsDict)
+            indelsSignature_cutoff_numberofmutations_averageprobability_df.drop(
+                    ['cancer_type', 'samples_list', 'len(samples_list)', 'len(all_samples_list)',
+                     'percentage_of_samples'], inplace=True, axis=1)
 
         ####################################################################
         # Add the last row
@@ -1887,7 +1859,8 @@ def runAnalyses(genome,
             for mutation_type_context in mutation_types_contexts:
                 if (mutation_type_context in SBS_CONTEXTS):
                     fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SUBS,
-                                                      subsSignature_cutoff_numberofmutations_averageprobability_df, num_of_sbs_required, num_of_id_required,
+                                                      subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                      num_of_sbs_required, num_of_id_required,
                                                       num_of_dbs_required)
             if (DBS in mutation_types_contexts):
                 fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
@@ -1911,7 +1884,7 @@ def runAnalyses(genome,
         #################################################################################
 
     else:
-        mutationtype_numberofmutations_numberofsamples_sampleslist_df=pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
+        mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
 
         all_samples_string=mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
         all_samples_list=eval(all_samples_string)
@@ -1923,11 +1896,11 @@ def runAnalyses(genome,
         chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
-                subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+                subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
         if (DBS in mutation_types_contexts):
-            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
+            dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t',header=0, dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
         if (ID in mutation_types_contexts):
-            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA, Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
+            indelsSignature_cutoff_numberofmutations_averageprobability_df= pd.read_csv(os.path.join(outputDir,jobname,DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
     #######################################################################################################
     ################################### Step4 Fill Table ends #############################################
     #######################################################################################################
@@ -1936,7 +1909,6 @@ def runAnalyses(genome,
     ################################################# All Steps ends ##################################################
     ###################################################################################################################
 
-    ####################################################################################################################
     # Fill numpy arrays with the signatures in cutoff files
     sbs_signatures_with_cutoffs = np.array([])
     dbs_signatures_with_cutoffs = np.array([])
@@ -1991,13 +1963,22 @@ def runAnalyses(genome,
     ordered_sbs_signatures_cutoffs = np.array(ordered_sbs_signatures_cutoffs)
     ordered_dbs_signatures_cutoffs = np.array(ordered_dbs_signatures_cutoffs)
     ordered_id_signatures_cutoffs = np.array(ordered_id_signatures_cutoffs)
-    ####################################################################################################################
-
 
     # Get all signatures ordered array w.r.t. the probabilities file
     ordered_all_sbs_signatures_array = get_all_signatures_array(ordered_all_sbs_signatures_wrt_probabilities_file_array, SBS)
     ordered_all_dbs_signatures_array = get_all_signatures_array(ordered_all_dbs_signatures_wrt_probabilities_file_array, DBS)
     ordered_all_id_signatures_array = get_all_signatures_array(ordered_all_id_signatures_wrt_probabilities_file_array, ID)
+
+    if discreet_mode:
+        print('--- ordered_all_sbs_signatures_array:', ordered_all_sbs_signatures_array)
+        print('--- ordered_all_dbs_signatures_array:', ordered_all_dbs_signatures_array)
+        print('--- ordered_all_id_signatures_array:', ordered_all_id_signatures_array)
+        print('--- ordered_sbs_signatures_with_cutoffs:', ordered_sbs_signatures_with_cutoffs)
+        print('--- ordered_dbs_signatures_with_cutoffs:', ordered_dbs_signatures_with_cutoffs)
+        print('--- ordered_id_signatures_with_cutoffs:', ordered_id_signatures_with_cutoffs)
+        print('--- ordered_sbs_signatures_cutoffs:', ordered_sbs_signatures_cutoffs)
+        print('--- ordered_dbs_signatures_cutoffs:', ordered_dbs_signatures_cutoffs)
+        print('---  ordered_id_signatures_cutoffs:', ordered_id_signatures_cutoffs)
 
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis starts ######################################
@@ -2011,7 +1992,7 @@ def runAnalyses(genome,
         job_tuples=[]
 
     if (nucleosome):
-        #Nucleosome Occupancy
+        # Nucleosome Occupancy
         occupancy_type = NUCLEOSOMEOCCUPANCY
 
         if delete_old:
@@ -2044,7 +2025,7 @@ def runAnalyses(genome,
                              plusorMinus_nucleosome,
                              remove_outliers,
                              quantileValue,
-                             is_discreet,
+                             discreet_mode,
                              verbose)
         print('#################################################################################')
         print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
@@ -2078,7 +2059,7 @@ def runAnalyses(genome,
                                    ordered_sbs_signatures_cutoffs,
                                    ordered_dbs_signatures_cutoffs,
                                    ordered_id_signatures_cutoffs,
-                                   is_discreet,
+                                   discreet_mode,
                                    verbose,
                                    matrix_generator_path)
         print('#################################################################################')
@@ -2114,7 +2095,7 @@ def runAnalyses(genome,
                                          ordered_sbs_signatures_cutoffs,
                                          ordered_dbs_signatures_cutoffs,
                                          ordered_id_signatures_cutoffs,
-                                         is_discreet,
+                                         discreet_mode,
                                          verbose)
         print('#################################################################################')
         print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
@@ -2144,7 +2125,7 @@ def runAnalyses(genome,
                                           ordered_sbs_signatures_cutoffs,
                                           ordered_dbs_signatures_cutoffs,
                                           ordered_id_signatures_cutoffs,
-                                          is_discreet,
+                                          discreet_mode,
                                           verbose)
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
@@ -2216,7 +2197,7 @@ def runAnalyses(genome,
                                  plusorMinus_epigenomics,
                                  remove_outliers,
                                  quantileValue,
-                                 is_discreet,
+                                 discreet_mode,
                                  verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))
@@ -2257,7 +2238,6 @@ def runAnalyses(genome,
                     plusorMinus_epigenomics,
                     plusorMinus_nucleosome,
                     epigenomics_heatmap_significance_level,
-                    is_discreet,
                     verbose,
                     plot_epigenomics,
                     plot_nucleosome,
@@ -2308,7 +2288,6 @@ def plotFigures(outputDir,
                 plusOrMinus_epigenomics,
                 plusOrMinus_nucleosome,
                 epigenomics_heatmap_significance_level,
-                is_discreet,
                 verbose,
                 plot_epigenomics,
                 plot_nucleosome,
@@ -2323,7 +2302,7 @@ def plotFigures(outputDir,
                 num_of_real_data_avg_overlap):
 
     if (nucleosome or plot_nucleosome):
-        occupancy_type=NUCLEOSOMEOCCUPANCY
+        occupancy_type = NUCLEOSOMEOCCUPANCY
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
         nucleosome_file_basename = os.path.basename(nucleosome_file)
@@ -2336,7 +2315,6 @@ def plotFigures(outputDir,
                                       None,
                                       occupancy_type,
                                       plusOrMinus_nucleosome,
-                                      is_discreet,
                                       verbose,
                                       plot_mode)
         print("--- Plot nucleosome occupancy ends")
@@ -2350,7 +2328,6 @@ def plotFigures(outputDir,
                                                         numberofSimulations,
                                                         sample_based,
                                                         mutation_types_contexts,
-                                                        is_discreet,
                                                         plot_mode)
         print("--- Plot replication time starts")
 
@@ -2360,15 +2337,15 @@ def plotFigures(outputDir,
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, is_discreet, plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode)
         print("--- Plot strand bias ends")
     elif (replication_strand_bias or plot_replication_strand_bias):
         strand_bias_list=[LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, is_discreet, plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode)
         print("--- Plot strand bias ends")
     elif (transcription_strand_bias or plot_transcription_strand_bias):
         strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, is_discreet, plot_mode)
+        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode)
         print("--- Plot strand bias ends")
 
     if (processivity or plot_processivity):
@@ -2408,7 +2385,6 @@ def plotFigures(outputDir,
                                                epigenomics_file_memo,
                                                occupancy_type,
                                                plusOrMinus_epigenomics,
-                                               is_discreet,
                                                verbose,
                                                plot_mode,)))
 
@@ -2441,7 +2417,6 @@ def plotFigures(outputDir,
                                               plusOrMinus_epigenomics,
                                               plusOrMinus_nucleosome,
                                               epigenomics_heatmap_significance_level,
-                                              is_discreet,
                                               verbose)
         print("--- Plot epigenomics heatmaps ends")
 

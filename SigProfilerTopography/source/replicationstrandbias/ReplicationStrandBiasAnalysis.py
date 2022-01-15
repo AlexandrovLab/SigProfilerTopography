@@ -244,7 +244,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         all_samples_subs_signature_mutation_type_lagging_np_array,
         sample_based,
         all_samples_np_array,
-        is_discreet,
+        discreet_mode,
         df_columns):
 
     if sample_based:
@@ -281,7 +281,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         SBS6_mutation_types_mask_array = np.where(SBS6_mutation_types_np_array == SBS6_mutation_type, 1, 0)
         SBS96_mutation_types_mask_array = np.where(SBS96_mutation_types_np_array == SBS96_mutation_type, 1, 0)
 
-        if is_discreet:
+        if discreet_mode:
             # Convert True into 1, and False into 0
             # subs_signatures_mask_array.shape (num_of_subs_signatures,)
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
@@ -317,7 +317,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
     elif (my_type == DINUCS):
         end = start+2
 
-        if is_discreet:
+        if discreet_mode:
             # Convert True into 1, and False into 0
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
             dinucs_signatures_mask_array = threshold_mask_array.astype(int)
@@ -335,7 +335,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         indexofLength = np.where(df_columns == LENGTH)[0][0]
         end = start + int(mutation_row[indexofLength])
 
-        if is_discreet:
+        if discreet_mode:
             # Convert True into 1, and False into 0
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
             indels_signatures_mask_array = threshold_mask_array.astype(int)
@@ -447,7 +447,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         subs_signature_mutation_type_leading_np_array,
         subs_signature_mutation_type_lagging_np_array,
         sample_based,
-        is_discreet,
+        discreet_mode,
         df_columns):
 
     indexofStart = np.where(df_columns == START)[0][0]
@@ -475,7 +475,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
 
         probabilities = mutation_row[df_columns_subs_signatures_mask_array]
 
-        if is_discreet:
+        if discreet_mode:
             threshold_mask_array = np.greater_equal(probabilities, ordered_sbs_signatures_cutoffs)
             # Convert True into 1, and False into 0
             # subs_signatures_mask_array.shape (num_of_subs_signatures,)
@@ -504,7 +504,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
 
         probabilities = mutation_row[df_columns_dinucs_signatures_mask_array]
 
-        if is_discreet:
+        if discreet_mode:
             threshold_mask_array = np.greater_equal(probabilities, ordered_dbs_signatures_cutoffs)
             # Convert True into 1, and False into 0
             dinucs_signatures_mask_array = threshold_mask_array.astype(int)
@@ -523,7 +523,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
 
         probabilities = mutation_row[df_columns_indels_signatures_mask_array]
 
-        if is_discreet:
+        if discreet_mode:
             threshold_mask_array = np.greater_equal(probabilities, ordered_id_signatures_cutoffs)
             # Convert True into 1, and False into 0
             indels_signatures_mask_array = threshold_mask_array.astype(int)
@@ -721,7 +721,7 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
                                             subs_signature_mutation_type_leading_np_array,
                                             subs_signature_mutation_type_lagging_np_array,
                                             sample_based,
-                                            is_discreet,
+                                            discreet_mode,
                                             verbose):
 
     ################################################################################
@@ -770,7 +770,7 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
                                                                             subs_signature_mutation_type_leading_np_array,
                                                                             subs_signature_mutation_type_lagging_np_array,
                                                                             sample_based,
-                                                                            is_discreet,
+                                                                            discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df_split.values]
         ##############################################################################################
 
@@ -818,10 +818,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             all_samples_subs_signature_mutation_type_lagging_np_array,
                                             sample_based,
                                             all_samples_np_array,
-                                            is_discreet,
+                                            discreet_mode,
                                             verbose):
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
         number_of_dbs_signatures = ordered_dbs_signatures.size
         number_of_id_signatures = ordered_id_signatures.size
@@ -852,7 +852,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # df_columns numpy array
         df_columns = chrBased_simBased_subs_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
         else:
             df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
@@ -887,7 +887,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                             all_samples_subs_signature_mutation_type_lagging_np_array,
                                                                             sample_based,
                                                                             all_samples_np_array,
-                                                                            is_discreet,
+                                                                            discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
         ##############################################################################################
@@ -900,7 +900,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # df_columns numpy array
         df_columns = chrBased_simBased_dinucs_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
         else:
             df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
@@ -935,7 +935,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_samples_subs_signature_mutation_type_lagging_np_array,
                                                                                               sample_based,
                                                                                               all_samples_np_array,
-                                                                                              is_discreet,
+                                                                                              discreet_mode,
                                                                                               df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
         ##############################################################################################
 
@@ -947,7 +947,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # df_columns numpy array
         df_columns = chrBased_simBased_indels_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
         else:
             df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
@@ -982,7 +982,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_samples_subs_signature_mutation_type_lagging_np_array,
                                                                                               sample_based,
                                                                                               all_samples_np_array,
-                                                                                              is_discreet,
+                                                                                              discreet_mode,
                                                                                               df_columns) for mutation_row in chrBased_simBased_indels_df.values]
         ##############################################################################################
 
@@ -1018,7 +1018,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                                               ordered_id_signatures_cutoffs,
                                                                               all_types_np_array_size,
                                                                               sample_based,
-                                                                              is_discreet,
+                                                                              discreet_mode,
                                                                               verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
@@ -1053,7 +1053,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                           subs_signature_mutation_type_leading_np_array,
                                                           subs_signature_mutation_type_lagging_np_array,
                                                           sample_based,
-                                                          is_discreet,
+                                                          discreet_mode,
                                                           verbose)
     else:
         return (simNum,
@@ -1085,13 +1085,13 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    all_types_np_array_size,
                                                                    sample_based,
                                                                    all_samples_np_array,
-                                                                   is_discreet,
+                                                                   discreet_mode,
                                                                    verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
     chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
     else:
         number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
@@ -1146,7 +1146,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           all_samples_subs_signature_mutation_type_lagging_np_array,
                                                           sample_based,
                                                           all_samples_np_array,
-                                                          is_discreet,
+                                                          discreet_mode,
                                                           verbose)
     else:
         return (simNum,
@@ -1247,7 +1247,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                   ordered_sbs_signatures_cutoffs,
                                   ordered_dbs_signatures_cutoffs,
                                   ordered_id_signatures_cutoffs,
-                                  is_discreet,
+                                  discreet_mode,
                                   verbose):
 
     print('\n#################################################################################')
@@ -1268,7 +1268,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                                     for nucleotide_right in nucleotides
                                                         for middle in mutations])
 
-    if is_discreet:
+    if discreet_mode:
         all_types_np_array = np.concatenate((SBS6_mutation_types_np_array,
                                          SBS96_mutation_types_np_array,
                                          ordered_sbs_signatures,
@@ -1378,7 +1378,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                           all_types_np_array_size,
                                           sample_based,
                                           all_samples_np_array,
-                                          is_discreet,
+                                          discreet_mode,
                                           verbose,),
                                     callback=accumulate_np_arrays))
         pool.close()
@@ -1407,7 +1407,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                           ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           sample_based,
-                                          is_discreet,
+                                          discreet_mode,
                                           verbose,),
                                     callback=accumulate_np_arrays))
 

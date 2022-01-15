@@ -126,7 +126,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                              ordered_dbs_signatures_cutoffs,
                                                              ordered_id_signatures_cutoffs,
                                                              plusorMinus,
-                                                             is_discreet,
+                                                             discreet_mode,
                                                              verbose):
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
@@ -217,7 +217,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 print('Exception %s' %library_file_with_path)
     #################################################################################################################
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
         number_of_dbs_signatures = ordered_dbs_signatures.size
         number_of_id_signatures = ordered_id_signatures.size
@@ -255,7 +255,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             # df_columns is a numpy array
             df_columns = chrBased_simBased_subs_df.columns.values
 
-            if is_discreet:
+            if discreet_mode:
                 subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
             else:
                 subsSignatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
@@ -275,7 +275,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 subsSignature_accumulated_signal_np_array,
                 subsSignature_accumulated_count_np_array,
                 plusorMinus,
-                is_discreet,
+                discreet_mode,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_subs_df[df_columns].values]
 
@@ -285,7 +285,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             # df_columns is a numpy array
             df_columns = chrBased_simBased_dinucs_df.columns.values
 
-            if is_discreet:
+            if discreet_mode:
                 dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
             else:
                 dinucsSignatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
@@ -305,7 +305,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 dinucsSignature_accumulated_signal_np_array,
                 dinucsSignature_accumulated_count_np_array,
                 plusorMinus,
-                is_discreet,
+                discreet_mode,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_dinucs_df[df_columns].values]
 
@@ -315,7 +315,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             #df_columns is a numpy array
             df_columns = chrBased_simBased_indels_df.columns.values
 
-            if is_discreet:
+            if discreet_mode:
                 indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
             else:
                 indelsSignatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
@@ -335,7 +335,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 indelsSignature_accumulated_signal_np_array,
                 indelsSignature_accumulated_count_np_array,
                 plusorMinus,
-                is_discreet,
+                discreet_mode,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_indels_df[df_columns].values]
 
@@ -394,7 +394,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         ordered_dbs_signatures_cutoffs,
         ordered_id_signatures_cutoffs,
         plusorMinus,
-        is_discreet,
+        discreet_mode,
         verbose):
 
     # occupancy_type=input_list[0]
@@ -441,7 +441,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
                                                                         ordered_dbs_signatures_cutoffs,
                                                                         ordered_id_signatures_cutoffs,
                                                                         plusorMinus,
-                                                                        is_discreet,
+                                                                        discreet_mode,
                                                                         verbose)
     except Exception as e:
         print("Exception: %s" % (e))
@@ -471,7 +471,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                                   ordered_dbs_signatures_cutoffs,
                                                                                   ordered_id_signatures_cutoffs,
                                                                                   plusorMinus,
-                                                                                  is_discreet,
+                                                                                  discreet_mode,
                                                                                   verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
@@ -493,7 +493,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                     ordered_dbs_signatures_cutoffs,
                                                                     ordered_id_signatures_cutoffs,
                                                                     plusorMinus,
-                                                                    is_discreet,
+                                                                    discreet_mode,
                                                                     verbose)
 ########################################################################################
 
@@ -520,7 +520,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                                                              ordered_dbs_signatures_cutoffs,
                                                              ordered_id_signatures_cutoffs,
                                                              plusorMinus,
-                                                             is_discreet,
+                                                             discreet_mode,
                                                              verbose):
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
@@ -666,7 +666,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                 dinucsSignature_accumulated_count_np_array,
                 indelsSignature_accumulated_count_np_array,
                 plusorMinus,
-                is_discreet,
+                discreet_mode,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_combined_df_split[df_columns].values]
 
@@ -726,7 +726,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         dinucsSignature_accumulated_count_np_array,
         indelsSignature_accumulated_count_np_array,
         plusOrMinus,
-        is_discreet,
+        discreet_mode,
         df_columns,
         occupancy_calculation_type):
 
@@ -859,7 +859,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     if (window_array is not None) and (np.any(window_array)):
         probabilities = row[signatures_mask_array]
 
-        if is_discreet:
+        if discreet_mode:
             threshold_mask_array = np.greater_equal(probabilities, cutoffs)
             #Convert True into 1, and False into 0
             mask_array = threshold_mask_array.astype(int)
@@ -1005,7 +1005,7 @@ def accumulate_arrays(row,
                       occupancy_calculation_type,
                       accumulated_signal_np_array,
                       accumulated_count_np_array,
-                      is_discreet):
+                      discreet_mode):
 
     # September 18, 2020 NO SIGNAL case is added
     # Vectorize July 25, 2020
@@ -1013,7 +1013,7 @@ def accumulate_arrays(row,
     if (window_array is not None) and (np.any(window_array)):
         probabilities = row[signatures_mask_array]
 
-        if is_discreet:
+        if discreet_mode:
             # Discreet way 1 or 0
             # Convert True into 1, and False into 0
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
@@ -1061,7 +1061,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
         accumulated_signal_np_array,
         accumulated_count_np_array,
         plusOrMinus,
-        is_discreet,
+        discreet_mode,
         df_columns,
         occupancy_calculation_type):
 
@@ -1085,7 +1085,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
                       occupancy_calculation_type,
                       accumulated_signal_np_array,
                       accumulated_count_np_array,
-                      is_discreet)
+                      discreet_mode)
 ########################################################################################
 
 
@@ -1142,10 +1142,10 @@ def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,
 
 
 ########################################################################################
-#main function
-#Using pyBigWig for bigBed and bigWig files starts Optional for unix, linux
-#Using chrBasedSignalArrays for big files
-#Using dataframes for small bed files
+# main function
+# Using pyBigWig for bigBed and bigWig files starts Optional for unix, linux
+# Using chrBasedSignalArrays for big files
+# Using dataframes for small bed files
 def occupancyAnalysis(genome,
                        computation_type,
                         occupancy_type,
@@ -1171,7 +1171,7 @@ def occupancyAnalysis(genome,
                         ordered_id_signatures_cutoffs,
                         remove_outliers,
                         quantileValue,
-                        is_discreet,
+                        discreet_mode,
                         verbose):
 
     print('\n#################################################################################')
@@ -1193,14 +1193,13 @@ def occupancyAnalysis(genome,
     # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1)
     ##########################################################################
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
         number_of_dbs_signatures = ordered_dbs_signatures.size
         number_of_id_signatures = ordered_id_signatures.size
         subsSignatures = np.append(ordered_sbs_signatures, AGGREGATEDSUBSTITUTIONS)
         dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
         indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
-
     else:
         number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
         number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
@@ -1334,7 +1333,7 @@ def occupancyAnalysis(genome,
                                    ordered_dbs_signatures_cutoffs,
                                    ordered_id_signatures_cutoffs,
                                    plusorMinus,
-                                   is_discreet,
+                                   discreet_mode,
                                    verbose,),
                              callback=accumulate_apply_async_result_vectorization))
 
@@ -1369,7 +1368,7 @@ def occupancyAnalysis(genome,
                                                ordered_dbs_signatures_cutoffs,
                                                ordered_id_signatures_cutoffs,
                                                plusorMinus,
-                                               is_discreet,
+                                               discreet_mode,
                                                verbose,),
                                          callback=accumulate_apply_async_result_vectorization))
         pool.close()

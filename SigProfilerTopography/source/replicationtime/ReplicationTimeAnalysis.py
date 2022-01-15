@@ -385,7 +385,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
                                                                         dinucs_signature_decile_index_accumulated_np_array,
                                                                         indels_signature_decile_index_accumulated_np_array,
                                                                         sample_based,
-                                                                        is_disceet,
+                                                                        discreet_mode,
                                                                         verbose,
                                                                         df_columns):
 
@@ -442,7 +442,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
 
         probabilities = mutation_row[signatures_mask_array]
 
-        if is_disceet:
+        if discreet_mode:
             threshold_mask_array = np.greater_equal(probabilities, cutoffs)
 
             # Convert True into 1, and False into 0
@@ -515,10 +515,10 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                             ordered_sbs_signatures_cutoffs,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
-                                            is_discreet,
+                                            discreet_mode,
                                             verbose):
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
         number_of_dbs_signatures = ordered_dbs_signatures.size
         number_of_id_signatures = ordered_id_signatures.size
@@ -537,7 +537,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         df_columns = chrBased_simBased_subs_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
         else:
             df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
@@ -548,14 +548,14 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_sbs_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             subs_signature_decile_index_accumulated_np_array,
-                                                                            is_discreet,
+                                                                            discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
     # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
         df_columns = chrBased_simBased_dinucs_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
         else:
             df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
@@ -566,14 +566,14 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_dbs_signatures_cutoffs,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
-                                                                            is_discreet,
+                                                                            discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
         df_columns = chrBased_simBased_indels_df.columns.values
 
-        if is_discreet:
+        if discreet_mode:
             df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
         else:
             df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
@@ -585,7 +585,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             ordered_id_signatures_cutoffs,
                                                                             df_columns_indels_signatures_mask_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
-                                                                            is_discreet,
+                                                                            discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
     return sim_num, \
@@ -609,7 +609,7 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
                                             sample_based,
-                                            is_disceet,
+                                            discreet_mode,
                                             verbose):
 
     df_columns = chrBased_simBased_combined_df.columns.values
@@ -645,7 +645,7 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
                                                                             sample_based,
-                                                                            is_disceet,
+                                                                            discreet_mode,
                                                                             verbose,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df.values]
 
@@ -720,7 +720,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        sample_based,
-                                       is_discreet,
+                                       discreet_mode,
                                        verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
@@ -737,7 +737,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
                                                                                                 sample_based,
-                                                                                                is_discreet,
+                                                                                                discreet_mode,
                                                                                                 verbose)
 
 ##################################################################
@@ -760,7 +760,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            ordered_sbs_signatures_cutoffs,
                                                                                                            ordered_dbs_signatures_cutoffs,
                                                                                                            ordered_id_signatures_cutoffs,
-                                                                                                           is_discreet,
+                                                                                                           discreet_mode,
                                                                                                            verbose):
 
     #DEC18, 2020 To reduce memory usage
@@ -782,7 +782,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_sbs_signatures_cutoffs,
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
-                                                                                                is_discreet,
+                                                                                                discreet_mode,
                                                                                                 verbose)
 
 ##################################################################
@@ -807,7 +807,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_sbs_signatures_cutoffs,
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
-                                                                                        is_discreet,
+                                                                                        discreet_mode,
                                                                                         verbose):
 
     #Fill replication time numpy array
@@ -827,7 +827,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_sbs_signatures_cutoffs,
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
-                                                   is_discreet,
+                                                   discreet_mode,
                                                    verbose)
 ##################################################################
 
@@ -848,7 +848,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
                                                                                         sample_based,
-                                                                                        is_discreet,
+                                                                                        discreet_mode,
                                                                                         verbose):
 
     #Fill replication time numpy array
@@ -864,7 +864,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
                                                    sample_based,
-                                                   is_discreet,
+                                                   discreet_mode,
                                                    verbose)
 ##################################################################
 
@@ -997,10 +997,10 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         ordered_dbs_signatures_cutoffs,
         ordered_id_signatures_cutoffs,
         sample_based,
-        is_discreet,
+        discreet_mode,
         verbose):
 
-    if is_discreet:
+    if discreet_mode:
         number_of_sbs_signatures = ordered_sbs_signatures.size
         number_of_dbs_signatures = ordered_dbs_signatures.size
         number_of_id_signatures = ordered_id_signatures.size
@@ -1062,7 +1062,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        ordered_sbs_signatures_cutoffs,
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
-                                       is_discreet,
+                                       discreet_mode,
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
@@ -1094,7 +1094,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        sample_based,
-                                       is_discreet,
+                                       discreet_mode,
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
@@ -1363,11 +1363,11 @@ def replicationTimeAnalysis(computationType,
                             ordered_sbs_signatures_cutoffs,
                             ordered_dbs_signatures_cutoffs,
                             ordered_id_signatures_cutoffs,
-                            is_discreet,
+                            discreet_mode,
                             verbose,
                             matrix_generator_path):
 
-    if is_discreet:
+    if discreet_mode:
         sbs_signatures = ordered_sbs_signatures_with_cutoffs
         dbs_signatures = ordered_dbs_signatures_with_cutoffs
         id_signatures = ordered_id_signatures_with_cutoffs
@@ -1454,7 +1454,7 @@ def replicationTimeAnalysis(computationType,
         ordered_dbs_signatures_cutoffs,
         ordered_id_signatures_cutoffs,
         sample_based,
-        is_discreet,
+        discreet_mode,
         verbose)
 
     writeReplicationTimeDataUsingNumpyArray(outputDir,
