@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -782,12 +788,8 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
            all_types_lagging_np_array,
            subs_signature_mutation_type_leading_np_array,
            subs_signature_mutation_type_lagging_np_array)
-########################################################################
 
 
-
-
-########################################################################
 # Using Numpy Arrays
 # Search for all mutations
 def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
@@ -797,9 +799,6 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             sim_num,
                                             SBS6_mutation_types_np_array,
                                             SBS96_mutation_types_np_array,
-                                            ordered_all_sbs_signatures_array,
-                                            ordered_all_dbs_signatures_array,
-                                            ordered_all_id_signatures_array,
                                             ordered_sbs_signatures,
                                             ordered_dbs_signatures,
                                             ordered_id_signatures,
@@ -821,14 +820,9 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             discreet_mode,
                                             verbose):
 
-    if discreet_mode:
-        number_of_sbs_signatures = ordered_sbs_signatures.size
-        number_of_dbs_signatures = ordered_dbs_signatures.size
-        number_of_id_signatures = ordered_id_signatures.size
-    else:
-        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-        number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-        number_of_id_signatures = ordered_all_id_signatures_array.size
+    number_of_sbs_signatures = ordered_sbs_signatures.size
+    number_of_dbs_signatures = ordered_dbs_signatures.size
+    number_of_id_signatures = ordered_id_signatures.size
 
     ###############################################################################
     ################################ Initialization ###############################
@@ -844,20 +838,14 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
     ################################ Initialization ###############################
     ###############################################################################
 
-    ################################################################################
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
         # df_columns numpy array
         df_columns = chrBased_simBased_subs_df.columns.values
+        df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
 
-        if discreet_mode:
-            df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-        else:
-            df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
-
-        ##############################################################################################
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
@@ -890,22 +878,14 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                             discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
-        ##############################################################################################
-
-    ################################################################################
     # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
         # df_columns numpy array
         df_columns = chrBased_simBased_dinucs_df.columns.values
+        df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
 
-        if discreet_mode:
-            df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-        else:
-            df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
-
-        ##############################################################################################
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
@@ -937,22 +917,15 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_samples_np_array,
                                                                                               discreet_mode,
                                                                                               df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
-        ##############################################################################################
 
-    ################################################################################
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
         # df_columns numpy array
         df_columns = chrBased_simBased_indels_df.columns.values
+        df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
 
-        if discreet_mode:
-            df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-        else:
-            df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
-
-        ##############################################################################################
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
@@ -984,10 +957,8 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               all_samples_np_array,
                                                                                               discreet_mode,
                                                                                               df_columns) for mutation_row in chrBased_simBased_indels_df.values]
-        ##############################################################################################
 
         if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ################################################################################
 
     return(sim_num,
            all_types_leading_np_array,
@@ -1000,10 +971,8 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
            all_samples_all_types_lagging_np_array,
            all_samples_subs_signature_mutation_type_leading_np_array,
            all_samples_subs_signature_mutation_type_lagging_np_array)
-########################################################################
 
 
-########################################################################
 def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(outputDir,
                                                                               jobname,
                                                                               chrLong,
@@ -1064,7 +1033,6 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
 ########################################################################
 
 
-########################################################################
 # April 30, 2020
 # Read chromBased and simBased combined (SBS, DBS and ID) dataframe in the process
 def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
@@ -1073,9 +1041,6 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    simNum,
                                                                    SBS6_mutation_types_np_array,
                                                                    SBS96_mutation_types_np_array,
-                                                                   ordered_all_sbs_signatures_array,
-                                                                   ordered_all_dbs_signatures_array,
-                                                                   ordered_all_id_signatures_array,
                                                                    ordered_sbs_signatures,
                                                                    ordered_dbs_signatures,
                                                                    ordered_id_signatures,
@@ -1091,10 +1056,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
     chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
 
-    if discreet_mode:
-        number_of_sbs_signatures = ordered_sbs_signatures.size
-    else:
-        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
+    number_of_sbs_signatures = ordered_sbs_signatures.size
 
     # Initialization
     all_types_leading_np_array = np.zeros((all_types_np_array_size)) # dtype=int
@@ -1125,9 +1087,6 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           simNum,
                                                           SBS6_mutation_types_np_array,
                                                           SBS96_mutation_types_np_array,
-                                                          ordered_all_sbs_signatures_array,
-                                                          ordered_all_dbs_signatures_array,
-                                                          ordered_all_id_signatures_array,
                                                           ordered_sbs_signatures,
                                                           ordered_dbs_signatures,
                                                           ordered_id_signatures,
@@ -1238,9 +1197,6 @@ def replicationStrandBiasAnalysis(outputDir,
                                   smoothedWaveletRepliseqDataFilename,
                                   valleysBEDFilename,
                                   peaksBEDFilename,
-                                  ordered_all_sbs_signatures_array,
-                                  ordered_all_dbs_signatures_array,
-                                  ordered_all_id_signatures_array,
                                   ordered_sbs_signatures,
                                   ordered_dbs_signatures,
                                   ordered_id_signatures,
@@ -1268,27 +1224,14 @@ def replicationStrandBiasAnalysis(outputDir,
                                                     for nucleotide_right in nucleotides
                                                         for middle in mutations])
 
-    if discreet_mode:
-        all_types_np_array = np.concatenate((SBS6_mutation_types_np_array,
+    all_types_np_array = np.concatenate((SBS6_mutation_types_np_array,
                                          SBS96_mutation_types_np_array,
                                          ordered_sbs_signatures,
                                          ordered_dbs_signatures,
                                          ordered_id_signatures), axis=None)
 
-        number_of_sbs_signatures = ordered_sbs_signatures.size
-        sbs_signatures = ordered_sbs_signatures
-
-    else:
-        all_types_np_array = np.concatenate((SBS6_mutation_types_np_array,
-                                         SBS96_mutation_types_np_array,
-                                         ordered_all_sbs_signatures_array,
-                                         ordered_all_dbs_signatures_array,
-                                         ordered_all_id_signatures_array), axis=None)
-        sbs_signatures = ordered_all_sbs_signatures_array
-
-
-        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-
+    number_of_sbs_signatures = ordered_sbs_signatures.size
+    sbs_signatures = ordered_sbs_signatures
 
     all_types_np_array_size = all_types_np_array.size
     #########################################################################################
@@ -1348,9 +1291,8 @@ def replicationStrandBiasAnalysis(outputDir,
 
     jobs = []
 
-    ###############################################################################
-    #April 30, 2020
-    #read chrom based sim based mutations data and chrom based replication time data in each worker process
+    # April 30, 2020
+    # read chrom based sim based mutations data and chrom based replication time data in each worker process
     if (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
         sim_nums = range(0, numofSimulations + 1)
         sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
@@ -1366,9 +1308,6 @@ def replicationStrandBiasAnalysis(outputDir,
                                           simNum,
                                           SBS6_mutation_types_np_array,
                                           SBS96_mutation_types_np_array,
-                                          ordered_all_sbs_signatures_array,
-                                          ordered_all_dbs_signatures_array,
-                                          ordered_all_id_signatures_array,
                                           ordered_sbs_signatures,
                                           ordered_dbs_signatures,
                                           ordered_id_signatures,
@@ -1383,10 +1322,8 @@ def replicationStrandBiasAnalysis(outputDir,
                                     callback=accumulate_np_arrays))
         pool.close()
         pool.join()
-    ###############################################################################
 
-    ###############################################################################
-    #July 23, 2020 starts
+    # July 23, 2020 starts
     elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
@@ -1413,9 +1350,6 @@ def replicationStrandBiasAnalysis(outputDir,
 
         pool.close()
         pool.join()
-    #July 23, 2020 ends
-    ###############################################################################
-
 
     ############################################################################################################
     #####################################       Output starts      #############################################

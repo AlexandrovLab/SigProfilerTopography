@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -50,11 +56,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import calculate_pva
 plt.rcParams.update({'figure.max_open_warning': 0})
 
 # SigProfilerTopography PROCESSIVITY CONSTRAINTS
-PROCESSIVITY_SIGNIFICANCE_LEVEL = 0.01
 MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH = 2
 MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS = 2
 
-###################################################################
 def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = {}
 
@@ -68,9 +72,8 @@ def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
             simulation2Signature2ProcessiveGroupLength2PropertiesDict[simNum] = signature2ProcessiveGroupLength2PropertiesDict
 
     return simulation2Signature2ProcessiveGroupLength2PropertiesDict
-###################################################################
 
-###################################################################
+
 def plot_color_bar(outputDir,jobname,norm):
 
     # Make a figure and axes with dimensions as desired.
@@ -98,8 +101,7 @@ def plot_color_bar(outputDir,jobname,norm):
 
     cb.set_label("-log10\n  (q-value)", horizontalalignment='right', rotation=0, labelpad=150)
 
-    ##################################################################################
-    #create the directory if it does not exists
+    # create the directory if it does not exists
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
     filename = '%s_Processivity_ColorBar.png' %(jobname)
 
@@ -107,18 +109,21 @@ def plot_color_bar(outputDir,jobname,norm):
     fig.savefig(figFile)
     plt.cla()
     plt.close(fig)
-    ##################################################################################
 
-###################################################################
 
-###################################################################
+
+
 def set_radius(df):
     df['radius'] = df['log10_number_of_processive_groups'] / df['log10_number_of_processive_groups'].max() * 0.48
     return df
-###################################################################
 
-###################################################################
-def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir, jobname, processivity_df, numberofSimulations, verbose):
+
+def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,
+                                                                              jobname,
+                                                                              processivity_df,
+                                                                              numberofSimulations,
+                                                                              processivity_significance_level,
+                                                                              verbose):
     # processivity_df: columns below
     # Simulation_Number
     # Signature
@@ -128,17 +133,13 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     # Median_Distance_Between_Consecutive_Mutations
     # Median_Number_of_Mutations_Within_1MB
 
-    ####################################################
     # Get the list of signatures using original
     signatures_list = processivity_df[processivity_df['Simulation_Number']==0]['Signature'].unique()
     sorted_signature_list = sorted(signatures_list,reverse=True,key=natural_key)
-    ####################################################
 
-    ####################################################
     # Get the list of processive group lengths using original
     processsive_group_length_list = processivity_df[processivity_df['Simulation_Number']==0]['Processsive_Group_Length'].unique()
     sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
-    ####################################################
 
     # We will fill this dataframe
     signature_processive_group_length_properties_df = pd.DataFrame(columns=["signature",
@@ -202,7 +203,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     ##########################################################################################
     ############################# Calculate p-values starts ##################################
     ##########################################################################################
-    #p values
+    # p-values
     all_p_values = []
     names_list = []
 
@@ -297,7 +298,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     all_p_values_array = np.asarray(all_p_values)
     all_FDR_BH_adjusted_p_values=None
 
-    #FDR BH Multiple Testing Correction
+    # FDR BH Multiple Testing Correction
     try:
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
     except ZeroDivisionError:
@@ -346,19 +347,22 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     # Get the highest processive group length with a nonzero radius
     if (len(signature_processive_group_length_properties_df.index)>0):
         max_processive_group_length = signature_processive_group_length_properties_df[
-            (round(signature_processive_group_length_properties_df['radius'],2)>0) &
-            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['processive_group_length'].max()
+            (round(signature_processive_group_length_properties_df['radius'],2) > 0) &
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS) &
+            (signature_processive_group_length_properties_df['qvalue'] <= processivity_significance_level)]['processive_group_length'].max()
 
         # Update sorted_processsive_group_length_list
         processsive_group_length_list = signature_processive_group_length_properties_df[
             (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
-            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['processive_group_length'].unique()
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS) &
+            (signature_processive_group_length_properties_df['qvalue'] <= processivity_significance_level)]['processive_group_length'].unique()
         sorted_processsive_group_length_list = sorted(processsive_group_length_list, key=int)
 
         # Update sorted_signature_list
         signatures_list = signature_processive_group_length_properties_df[
             (round(signature_processive_group_length_properties_df['radius'], 2) > 0) &
-            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS)]['signature'].unique()
+            (signature_processive_group_length_properties_df['number_of_processive_groups'] >= MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS) &
+            (signature_processive_group_length_properties_df['qvalue'] <= processivity_significance_level)]['signature'].unique()
         sorted_signature_list = sorted(signatures_list, reverse=True, key=natural_key)
 
         if verbose: print('\tVerbose #############################################')
@@ -397,11 +401,9 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         f.write("\n")
         all_mutations_loci_df.to_csv(f, sep='\t', header=True, index=False)
         f.close()
-###################################################################
 
 
 
-###################################################################
 def plot_processivity_figure(outputDir,
                              jobname,
                              numberofSimulations,
@@ -424,13 +426,13 @@ def plot_processivity_figure(outputDir,
         plot1, panel1 = plt.subplots(figsize=(20+1.5*len(sorted_processsive_group_length_list), 10+1.5*len(sorted_signature_list)))
         plt.rc('axes', edgecolor='lightgray')
 
-        #make aspect ratio square
+        # make aspect ratio square
         panel1.set_aspect(1.0)
 
-        #set title
+        # set title
         panel1.text(0.1, 1.2, jobname,horizontalalignment='center', verticalalignment='top', fontsize=60, fontweight='bold', fontname='Arial',transform=panel1.transAxes)
 
-        #To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
+        # To get rid of  UserWarning: Attempting to set identical left==right results in singular transformations; automatically expanding.
         if (len(sorted_processsive_group_length_list)>1):
             panel1.set_xlim([1,index+1])
             panel1.set_xticks(np.arange(0,index+2,1))
@@ -448,7 +450,7 @@ def plot_processivity_figure(outputDir,
         cmap = cm.get_cmap('YlOrRd')  # Looks better good
         v_min = 2
         v_max = 20
-        #Very important: You have to normalize
+        # Very important: You have to normalize
         norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
 
         if not signature_processive_group_length_properties_df.empty:
@@ -494,7 +496,7 @@ def plot_processivity_figure(outputDir,
                         panel1.add_patch(circle)
 
         panel1.set_facecolor('white')
-        #When there are subplots, this is needed.
+        # When there are subplots, this is needed.
         panel1.grid(color='black')
 
         for edge, spine in panel1.spines.items():
@@ -508,7 +510,7 @@ def plot_processivity_figure(outputDir,
 
         # Put the color bar if there are simulations
         if (numberofSimulations>0):
-            #Vertical/Horizontal Colorbar
+            # Vertical/Horizontal Colorbar
             # Vertical volorbar to the right
             cb = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))  # this works because of the scatter
             # cb.ax.set_ylabel("-log10 (q-value)", va="bottom", rotation=-90, labelpad=25)
@@ -518,7 +520,7 @@ def plot_processivity_figure(outputDir,
             # cb = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), orientation='horizontal')  # this works because of the scatter
             # cb.ax.set_xlabel("colorbar label", fontsize=50, labelpad=25)
 
-            #common for horizontal colorbar and vertical colorbar
+            # common for horizontal colorbar and vertical colorbar
             cbax = cb.ax
             cbax.tick_params(labelsize=40)
             text_x = cbax.xaxis.label
@@ -562,17 +564,15 @@ def plot_processivity_figure(outputDir,
 
         plt.cla()
         plt.close(plot1)
-###################################################################
 
-###################################################################
-def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
+def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, verbose):
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,PROCESSIVITY)
     if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
 
-    processivity_table_file_list=[]
-    processivity_df_list=[]
-    #Fill signature_processive_group_length_number_of_processive_groups_median_number_of_processive_groups_in_MB_df
+    processivity_table_file_list = []
+    processivity_df_list = []
+    # Fill signature_processive_group_length_number_of_processive_groups_median_number_of_processive_groups_in_MB_df
 
     for simNum in range(0,numberofSimulations+1):
         filename="Sim%d_Processivity.txt" %(simNum)
@@ -596,5 +596,9 @@ def processivityFigures(outputDir,jobname,numberofSimulations,verbose):
     processivity_df = pd.concat(processivity_df_list)
 
     # Using dataframes
-    plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,jobname,processivity_df,numberofSimulations,verbose)
-###################################################################
+    plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,
+                                                                              jobname,
+                                                                              processivity_df,
+                                                                              numberofSimulations,
+                                                                              processivity_significance_level,
+                                                                              verbose)

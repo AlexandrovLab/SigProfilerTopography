@@ -1,9 +1,14 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 import os
 import matplotlib
 import multiprocessing
 import pandas as pd
 import numpy as np
-
 
 BACKEND = 'Agg'
 if matplotlib.get_backend().lower() != BACKEND.lower():

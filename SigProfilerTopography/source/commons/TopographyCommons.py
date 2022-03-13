@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -397,15 +403,15 @@ USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_S
 USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT'
 USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST='USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT_USING_POOL_INPUT_LIST'
 
-CONSIDER_DISTANCE='CONSIDER_DISTANCE' #default
-CONSIDER_COUNT='CONSIDER_COUNT'
-CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER='CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER'
+CONSIDER_DISTANCE = 'CONSIDER_DISTANCE' #default
+CONSIDER_COUNT = 'CONSIDER_COUNT'
+CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER = 'CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER'
 
-MISSING_SIGNAL='MISSING_SIGNAL'  # Default. Signal value of 0 considered as missing or unreliable data.
-NO_SIGNAL='NO_SIGNAL' # Signal value of 0 considered as reliable data but do not have any signal in the dataset.
+MISSING_SIGNAL = 'MISSING_SIGNAL'  # Default. Signal value of 0 considered as missing or unreliable data.
+NO_SIGNAL = 'NO_SIGNAL' # Signal value of 0 considered as reliable data but do not have any signal in the dataset.
 
-RELAXED='relaxed'
-STRINGENT='stringent'
+RELAXED = 'relaxed'
+STRINGENT = 'stringent'
 
 DEFAULT_AVERAGE_PROBABILITY = 0.75
 
@@ -508,9 +514,9 @@ AVERAGE_SIGNAL_ARRAY = 'AverageSignalArray'
 ACCUMULATED_COUNT_ARRAY = 'AccumulatedCountArray'
 ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 
-PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
-PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
-PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE='PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
+PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
+PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
+PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
 
 
 # Always ztest
@@ -1097,13 +1103,13 @@ def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
 def getChromSizesDict(genome):
     chromSizesDict = {}
 
-    if (genome==GRCh37):
+    if (genome == GRCh37):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
-    elif (genome==GRCh38):
+    elif (genome == GRCh38):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh38ChromSizesDictFilename)
-    elif (genome==MM9):
+    elif (genome == MM9):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM9ChromSizesDictFilename)
-    elif (genome==MM10):
+    elif (genome == MM10):
         chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM10ChromSizesDictFilename)
 
     if (os.path.exists(chromSizesDictPath)):
@@ -1182,7 +1188,10 @@ def writeAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2NumberofMutationsA
 def fill_signature_number_of_mutations_df(outputDir,
                                           jobname,
                                           chromNamesList,
-                                          mutation_type):
+                                          mutation_type,
+                                          number_of_required_mutations,
+                                          mutationType2PropertiesDict,
+                                          chrLong2NumberofMutationsDict):
 
     # Create empty dataframe with the following columns
     # Fill this dataframe
@@ -1206,6 +1215,25 @@ def fill_signature_number_of_mutations_df(outputDir,
                                                                          mutation_type,
                                                                          0,
                                                                          return_number_of_samples = True)
+
+        all_samples = all_samples.union(chrbased_samples)
+
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+
+            if mutation_type in mutationType2PropertiesDict:
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+            else:
+                mutationType2PropertiesDict[mutation_type] = {}
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+
+            if chrLong in chrLong2NumberofMutationsDict:
+                chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
+            else:
+                chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
 
         # update all_samples
         all_samples = all_samples.union(chrbased_samples)
@@ -1255,7 +1283,172 @@ def fill_signature_number_of_mutations_df(outputDir,
     df['percentage_of_samples'] = [100 * x / y if y > 0 else 0 for x, y in zip(df['len(samples_list)'] , df['len(all_samples_list)'])]
     # df['percentage_of_samples'] = 100 * df['len(samples_list)'] / df['len(all_samples_list)'] # ZeroDivisionError
 
+    # remove signatures where number_of_mutations_w_prob_gt_zero is 0
+    # cancer_type     signature       cutoff  number_of_mutations_w_prob_gt_zero      number_of_all_mutations number_of_mutations     average_probability     samples_list    len(samples_list)       len(all_samples_list)   percentage_of_samples
+    df = df[df['number_of_mutations_w_prob_gt_zero']>0]
+
+    # remove signatures where number_of_mutations is less than number_of_required_mutations
+    df = df[df['number_of_mutations'] >= number_of_required_mutations]
+
     return df
+
+# fill df with cutoffs if discreet_mode == False for strand-coordinated mutagenesis analysis
+def fill_signatures_cutoffs_for_processivity(outputDir,
+                                        jobname,
+                                        chromNamesList,
+                                        mutation_type,
+                                        cutoffs,
+                                        average_probability,
+                                        number_of_required_mutations):
+
+    # First round of accumulation
+    # Filled in the first part
+    # PropertiesList consists of [sum_of_number_of_mutations, sum_of_probabilities, samples_list]
+    cutoff2Signature2PropertiesListDict = {}
+
+    # First round of averaging
+    # Filled in the second part
+    # [number of mutations, average probability, samples_list]
+    cutoff2Signature2NumberofMutationsAverageProbabilityListDict = {}
+
+    # Filled in the third part
+    # PropertiesList=[ cutoff number_of_mutations average_mutation_probability samples_list]
+    signature2PropertiesListDict = {}
+
+    # This samples are for this mutation type
+    all_samples = set()
+
+    for chrLong in chromNamesList:
+        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, 0, return_number_of_samples=True)
+
+        all_samples = all_samples.union(chrbased_samples)
+
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+            # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
+            # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
+            signatures = get_signatures(chrBased_mutation_df)
+
+            # First part starts
+            # First accumulate number of mutations and sum of probabilities with mutations with probability >= cutoff probability
+            for cutoff in cutoffs:
+                for signature in signatures:
+                    # chrBased_mutation_df[signature]=chrBased_mutation_df[signature].astype(np.float64)
+                    number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])
+                    # Samples having mutations with prob ge cutoff for given cutoff and signature
+                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)]['Sample'].unique()
+
+                    # This results in infinity
+                    # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values,dtype=np.float64)
+
+                    if cutoff not in cutoff2Signature2PropertiesListDict:
+                        cutoff2Signature2PropertiesListDict[cutoff] = {}
+                        cutoff2Signature2PropertiesListDict[cutoff][signature] = []
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(samples_array.tolist())
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0] += number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1] += sum_of_probabilities
+                    elif signature not in cutoff2Signature2PropertiesListDict[cutoff]:
+                        cutoff2Signature2PropertiesListDict[cutoff][signature] = []
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.int64(0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(np.float64(0.0))
+                        cutoff2Signature2PropertiesListDict[cutoff][signature].append(samples_array.tolist())
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0] += number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1] += sum_of_probabilities
+                    else:
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][0] += number_of_mutations
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][1] += sum_of_probabilities
+                        existing_samples_list = cutoff2Signature2PropertiesListDict[cutoff][signature][2]
+                        #Update existing_samples with new samples
+                        cutoff2Signature2PropertiesListDict[cutoff][signature][2] = list(set(existing_samples_list).union(set(samples_array)))
+
+    # Second part starts
+    # Second: Find average probability
+    # Fill another dictionary: cutoff2Signature2NumberofMutationsAverageProbabilityListDict
+    # In fact, in this part, we can fill a dataframe
+    for cutoff in cutoff2Signature2PropertiesListDict:
+        for signature in cutoff2Signature2PropertiesListDict[cutoff]:
+            if (cutoff2Signature2PropertiesListDict[cutoff][signature][0]>0):
+                if cutoff not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict:
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]={}
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
+                elif signature not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
+                else:
+                    print('There is a situation/problem in fillCutoff2Signature2PropertiesListDictionary method.')
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
+    # Second part ends
+
+    # Third part starts
+    # Find the signature based cufoff probability with number of mutations >= required number of mutations and average mutation probability >= required_probability
+    sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
+    for cutoff in sorted_cutoffs:
+        for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
+            if signature not in signature2PropertiesListDict:
+                if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0] >= number_of_required_mutations) and \
+                        (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1] >= average_probability):
+                    signature2PropertiesListDict[signature] = [cutoff,
+                                                             np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),
+                                                             np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]),
+                                                             cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][2]]
+    # Third part ends
+
+    # Write the dictionaries
+    os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
+
+    L = sorted([(jobname,
+                 signature,
+                 cutoff_numberofmutations_averageprobability[0],
+                 cutoff_numberofmutations_averageprobability[1],
+                 cutoff_numberofmutations_averageprobability[2],
+                 cutoff_numberofmutations_averageprobability[3],
+                 len(cutoff_numberofmutations_averageprobability[3]),
+                 len(all_samples),
+                 len(cutoff_numberofmutations_averageprobability[3])*100/len(all_samples))
+                 for signature, cutoff_numberofmutations_averageprobability in signature2PropertiesListDict.items()])
+
+    if L:
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(L,columns=['cancer_type',
+                                                                                           'signature',
+                                                                                           'cutoff',
+                                                                                           'number_of_mutations',
+                                                                                           'average_probability',
+                                                                                           'samples_list',
+                                                                                           'len(samples_list)',
+                                                                                           'len(all_samples_list)',
+                                                                                           'percentage_of_samples'])
+
+        signature_cutoff_numberofmutations_averageprobability_df['cancer_type']=signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
+        signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
+        signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
+        signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
+        signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
+        signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'] = signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'].astype(np.float32)
+
+    else:
+        # Create empty dataframe
+        signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cancer_type',
+                                                                                           'signature',
+                                                                                           'cutoff',
+                                                                                           'number_of_mutations',
+                                                                                           'average_probability',
+                                                                                           'samples_list',
+                                                                                           'len(samples_list)',
+                                                                                           'len(all_samples_list)',
+                                                                                           'percentage_of_samples'
+                                                                                         ])
+
+    return signature_cutoff_numberofmutations_averageprobability_df
+
 
 # Run in SigProfilerTopography discreet_mode = True
 def fillCutoff2Signature2PropertiesListDictionary(outputDir,
@@ -2178,8 +2371,8 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
 
 
 ########################################################################
-#Lagging_Count Leading_Count
-#Transcribed_Count UnTranscribed_Count
+# Lagging_Count Leading_Count
+# Transcribed_Count UnTranscribed_Count
 def write_sample_based_strand1_strand2_as_dataframe(output_dir,
                                                     jobname,
                                                     num_of_simulations,
@@ -2283,9 +2476,9 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
 
 
     ##################################################################################################
-    #Calculate p-value only
+    # Calculate p-value only
     for my_type in type2Strand2ListDict:
-        if strand_bias==REPLICATIONSTRANDBIAS:
+        if strand_bias == REPLICATIONSTRANDBIAS:
             lagging_strand=strands[0]
             leading_strand=strands[1]
 
@@ -2307,7 +2500,7 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             #Set p_value
             type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
 
-        elif strand_bias==TRANSCRIPTIONSTRANDBIAS:
+        elif strand_bias == TRANSCRIPTIONSTRANDBIAS:
             transcribed_strand = strands[0]
             untranscribed_strand = strands[1]
             nontranscribed_strand = strands[2]

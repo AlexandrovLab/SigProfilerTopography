@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -132,6 +138,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import getChromSizes
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
 from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
 from SigProfilerTopography.source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
+from SigProfilerTopography.source.commons.TopographyCommons import fill_signatures_cutoffs_for_processivity
 from SigProfilerTopography.source.commons.TopographyCommons import fill_signature_number_of_mutations_df
 from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
 from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_type_context_for_probabilities_file
@@ -169,7 +176,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEIS
 
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 
-############################################################
 # Can be moved to DataPreparationCommons under /source/commons
 # Read chr based dinucs (provided by SigProfilerMatrixGenerator) and merge with probabilities (provided by SigProfilerTopography)
 def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShortNamesList,
@@ -316,8 +322,7 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     return df_columns_contain_ordered_signatures
 
 
-#######################################################
-#JAN 9, 2020
+# JAN 9, 2020
 def check_download_replication_time_files(replication_time_signal_file,replication_time_valley_file,replication_time_peak_file):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
@@ -393,7 +398,6 @@ def check_download_replication_time_files(replication_time_signal_file,replicati
     #go back
     os.chdir(current_abs_path)
 
-#######################################################
 
 def check_download_sample_probability_files():
     current_path = os.getcwd()
@@ -527,8 +531,7 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList):
     #go back
     os.chdir(current_abs_path)
 
-#######################################################
-#Nov25, 2019
+# Nov25, 2019
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
 # We are using this function if user is using our available nucleosome data for GM12878 adnd K562 cell lines
 def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
@@ -570,12 +573,11 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file,chromNamesList):
                         print("The UCSD ftp site is not responding...")
 
     else:
-        #It has to be an absolute path
+        # It has to be an absolute path
         print('%s is not an absolute path.' %(chrombased_npy_path))
 
-    #go back
+    # go back to current directory
     os.chdir(current_abs_path)
-#######################################################
 
 
 def install_default_nucleosome(genome):
@@ -612,9 +614,8 @@ def install_sample_probability_files():
     check_download_sample_probability_files()
 
 
-#######################################################
-#For Skin-Melanoma USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT is better
-#For others USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM is better
+# For Skin-Melanoma USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT is better
+# For others USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM is better
 def runOccupancyAnalyses(genome,
                          outputDir,
                          jobname,
@@ -625,9 +626,6 @@ def runOccupancyAnalyses(genome,
                          library_file_memo,
                          chromSizesDict,
                          chromNamesList,
-                         ordered_all_sbs_signatures_array,
-                         ordered_all_dbs_signatures_array,
-                         ordered_all_id_signatures_array,
                          ordered_sbs_signatures_with_cutoffs_array,
                          ordered_dbs_signatures_with_cutoffs_array,
                          ordered_id_signatures_with_cutoffs_array,
@@ -643,11 +641,10 @@ def runOccupancyAnalyses(genome,
                          discreet_mode,
                          verbose):
 
-    #######################################################################
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES) and (not os.path.exists(library_file_with_path)):
         print('There is no such file under %s' %(library_file_with_path))
-    #######################################################################
 
+    # common
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
     occupancyAnalysis(genome,
@@ -664,9 +661,6 @@ def runOccupancyAnalyses(genome,
                       job_tuples,
                       library_file_with_path,
                       library_file_memo,
-                      ordered_all_sbs_signatures_array,
-                      ordered_all_dbs_signatures_array,
-                      ordered_all_id_signatures_array,
                       ordered_sbs_signatures_with_cutoffs_array,
                       ordered_dbs_signatures_with_cutoffs_array,
                       ordered_id_signatures_with_cutoffs_array,
@@ -677,9 +671,7 @@ def runOccupancyAnalyses(genome,
                       quantileValue,
                       discreet_mode,
                       verbose)
-#######################################################
 
-#######################################################
 def runReplicationTimeAnalysis(genome,
                                outputDir,
                                jobname,
@@ -690,9 +682,6 @@ def runReplicationTimeAnalysis(genome,
                                chromSizesDict,
                                chromNamesList,
                                computation_type,
-                               ordered_all_sbs_signatures_array,
-                               ordered_all_dbs_signatures_array,
-                               ordered_all_id_signatures_array,
                                ordered_sbs_signatures_with_cutoffs,
                                ordered_dbs_signatures_with_cutoffs,
                                ordered_id_signatures_with_cutoffs,
@@ -705,8 +694,8 @@ def runReplicationTimeAnalysis(genome,
 
     # Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
     # Supported computation types
-    # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-    # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+    # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+    # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
     replicationTimeAnalysis(computation_type,
                             sample_based,
                             genome,
@@ -717,9 +706,6 @@ def runReplicationTimeAnalysis(genome,
                             numofSimulations,
                             job_tuples,
                             replicationTimeFilename,
-                            ordered_all_sbs_signatures_array,
-                            ordered_all_dbs_signatures_array,
-                            ordered_all_id_signatures_array,
                             ordered_sbs_signatures_with_cutoffs,
                             ordered_dbs_signatures_with_cutoffs,
                             ordered_id_signatures_with_cutoffs,
@@ -729,9 +715,6 @@ def runReplicationTimeAnalysis(genome,
                             discreet_mode,
                             verbose,
                             matrix_generator_path)
-    ###############################################
-
-#######################################################
 
 
 def runReplicationStrandBiasAnalysis(outputDir,
@@ -746,9 +729,6 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                      chromSizesDict,
                                      chromNamesList,
                                      computation_type,
-                                     ordered_all_sbs_signatures_array,
-                                     ordered_all_dbs_signatures_array,
-                                     ordered_all_id_signatures_array,
                                      ordered_sbs_signatures,
                                      ordered_dbs_signatures,
                                      ordered_id_signatures,
@@ -779,9 +759,6 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                   smoothedWaveletRepliseqDataFilename,
                                   valleysBEDFilename,
                                   peaksBEDFilename,
-                                  ordered_all_sbs_signatures_array,
-                                  ordered_all_dbs_signatures_array,
-                                  ordered_all_id_signatures_array,
                                   ordered_sbs_signatures,
                                   ordered_dbs_signatures,
                                   ordered_id_signatures,
@@ -800,9 +777,9 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                       all_samples_np_array,
                                       chromNamesList,
                                       computation_type,
-                                      ordered_all_sbs_signatures_array,
-                                      ordered_all_dbs_signatures_array,
-                                      ordered_all_id_signatures_array,
+                                      # ordered_all_sbs_signatures_array,
+                                      # ordered_all_dbs_signatures_array,
+                                      # ordered_all_id_signatures_array,
                                       ordered_sbs_signatures,
                                       ordered_dbs_signatures,
                                       ordered_id_signatures,
@@ -815,8 +792,8 @@ def runTranscriptionStradBiasAnalysis(outputDir,
     os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
 
     # Supported computation types
-    # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
-    # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
+    # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+    # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
     transcriptionStrandBiasAnalysis(outputDir,
                                     jobname,
                                     numofSimulations,
@@ -825,9 +802,9 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                     all_samples_np_array,
                                     computation_type,
                                     chromNamesList,
-                                    ordered_all_sbs_signatures_array,
-                                    ordered_all_dbs_signatures_array,
-                                    ordered_all_id_signatures_array,
+                                    # ordered_all_sbs_signatures_array,
+                                    # ordered_all_dbs_signatures_array,
+                                    # ordered_all_id_signatures_array,
                                     ordered_sbs_signatures,
                                     ordered_dbs_signatures,
                                     ordered_id_signatures,
@@ -838,68 +815,56 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                     verbose)
 
 
-#######################################################
 def runProcessivityAnalysis(mutation_types_contexts,
                             outputDir,
                             jobname,
                             numofSimulations,
                             chromNamesList,
                             processivity_calculation_type,
-                            inter_mutational_distance_for_processivity,
+                            processivity_inter_mutational_distance,
                             subsSignature_cutoff_numberofmutations_averageprobability_df,
                             verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,PROCESSIVITY),exist_ok=True)
 
-    #Internally Set
+    # Internally Set
     considerProbabilityInProcessivityAnalysis = True
 
     processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
                          processivity_calculation_type,
-                         inter_mutational_distance_for_processivity,
+                         processivity_inter_mutational_distance,
                          outputDir,
                          jobname,
                          numofSimulations,
                          considerProbabilityInProcessivityAnalysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                          verbose)
-    ###############################################
-#######################################################
 
 
-#######################################################
 def deleteOldData(outputDir,jobname,occupancy_type):
-    #############################################
     # Delete the output/jobname/DATA/occupancy_type if exists
     jobnamePath = os.path.join(outputDir,jobname,DATA,occupancy_type)
 
-    ################################################
     if (os.path.exists(jobnamePath)):
         try:
             shutil.rmtree(jobnamePath)
         except OSError as e:
             print('Error: %s - %s.' % (e.filename, e.strerror))
-    ################################################
-#######################################################
 
-#######################################################
+
 def deleteOldFigures(outputDir, jobname, occupancy_type):
 
     jobnamePath = os.path.join(outputDir, jobname, FIGURE, occupancy_type)
     print('Topography.py jobnamePath:%s ' %jobnamePath)
 
-    ############################################################
     if (os.path.exists(jobnamePath)):
         try:
             shutil.rmtree(jobnamePath)
         except OSError as e:
             print('Error: %s - %s.' % (e.filename, e.strerror))
-    ############################################################
-#######################################################
 
 
-# Depreceated.
 # We assume that simulated data will have the same number_of_splits as the real data
 def get_job_tuples(chrlong_numberofmutations_df,numofSimulations):
 
@@ -987,7 +952,8 @@ def runAnalyses(genome,
                 num_of_id_required = DEFAULT_NUM_OF_ID_REQUIRED,
                 plusorMinus_epigenomics = 1000,
                 plusorMinus_nucleosome = 1000,
-                epigenomics_heatmap_significance_level = 0.01,
+                epigenomics_heatmap_significance_level = 0.05,
+                processivity_significance_level = 0.05,
                 verbose = False,
                 matrix_generator_path = MATRIX_GENERATOR_PATH,
                 PCAWG = False,
@@ -1004,7 +970,7 @@ def runAnalyses(genome,
                 plot_mode = PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
                 occupancy_calculation_type = MISSING_SIGNAL,
                 processivity_calculation_type = CONSIDER_DISTANCE,
-                inter_mutational_distance_for_processivity = 10000,
+                processivity_inter_mutational_distance = 10000,
                 combine_p_values_method = COMBINE_P_VALUES_METHOD_FISHER,
                 fold_change_window_size = 100,
                 num_of_real_data_avg_overlap = DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED):
@@ -1134,51 +1100,49 @@ def runAnalyses(genome,
     ###############################################
 
     ###############################################
-    if genome==MM10:
-        #Case1: File is not set, Biosample is not set
+    if genome == MM10:
+        # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = MEF
             nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-        #Case2: File is not set, Biosample is set
+        # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
             nucleosome_biosample = UNDECLARED
-        #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-        #Do nothing use as it is
-    elif genome==GRCh37:
-        #Case1: File is not set, Biosample is not set
+        # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+        # Do nothing use as it is
+    elif genome == GRCh37:
+        # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = K562
             nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-        #Case2: File is not set, Biosample is set
+        # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(nucleosome_biosample)
-        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
             nucleosome_biosample = UNDECLARED
-        #Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-        #Do nothing use as it is
-    ###############################################
+        # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+        # Do nothing use as it is
 
-    ###############################################
-    if genome==MM10:
+    if genome == MM10:
         # Case1: Files are not set, Biosample is not set
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample=MEF
-            #We only set replication_time_signal_file
+            # We only set replication_time_signal_file
             # replication_time_valley_file is None
             # replication_time_peak_file is None
             replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
 
-    elif genome==GRCh37:
+    elif genome == GRCh37:
         # We need full path of the library files
         # By default replication_time_biosample=MCF7 and signal, valley, peak files are None
         # Case1: Files are not set, Biosample is not set
@@ -1189,7 +1153,7 @@ def runAnalyses(genome,
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
 
-        #Case2: Files are not set, Biosample is set
+        # Case2: Files are not set, Biosample is set
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in available_replication_time_biosamples):
                 replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample)
@@ -1197,13 +1161,11 @@ def runAnalyses(genome,
                     # For using SigProfilerTopography Provided Replication Time Files
                     check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
 
-        #Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
             replication_time_biosample = UNDECLARED
-        #Case4: Files are set. Biosample is set. Use as it is. Do nothing.
-    ###############################################
+        # Case4: Files are set. Biosample is set. Use as it is. Do nothing.
 
-    ###############################################
     # data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
     epigenomics_file_memos_created = []
 
@@ -1219,13 +1181,11 @@ def runAnalyses(genome,
 
     if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
         epigenomics_biosamples = [UNDECLARED]
-    ###############################################
 
     #################################################################################
     ################## Set full path library files ends #############################
     ################################## Setting ends #################################
     #################################################################################
-
 
     print('#################################################################################')
     # print('--- %s' %platform.platform())
@@ -1308,7 +1268,11 @@ def runAnalyses(genome,
     print('--- step4_tables:%s' %step4_tables)
 
     print('--- plot_figures:%s' %plot_figures)
-    print('--- average mutation probability required %0.2f' %average_probability)
+    if discreet_mode:
+        print('--- discreet_mode: %s' %discreet_mode)
+        print('--- average mutation probability required: %0.2f' %average_probability)
+    else:
+        print('--- discreet_mode: %s' %discreet_mode)
     print('--- minimum number of sbs mutations required: %d' %num_of_sbs_required)
     print('--- minimum number of id mutations required: %d' %num_of_id_required)
     print('--- minimum number of dbs mutations required: %d' %num_of_dbs_required)
@@ -1362,7 +1326,6 @@ def runAnalyses(genome,
     ######################### SigProfilerMatrixGenerator for original data ends #######################
     ###################################################################################################
 
-
     ###################################################################################################################
     ################################## Step1 Simulations if any starts ################################################
     ###################################################################################################################
@@ -1385,7 +1348,7 @@ def runAnalyses(genome,
             mutation_type_context_for_simulator.append(mutation_type_context)
             # Please notice that Simulator reverse the given input mutationTypes_for_simulator
             print('--- SigProfilerSimulator is running for %s' %(mutation_type_context))
-            simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,simulations=numofSimulations,chrom_based=True, gender='male')
+            simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator, simulations=numofSimulations,chrom_based=True)
 
         print("--- SigProfilerSimulator for %d simulations: %s seconds" %(numofSimulations,(time.time() -  start_time)))
         print("--- SigProfilerSimulator for %d simulations: %f minutes" %(numofSimulations,float((time.time()-start_time)/60)))
@@ -1451,22 +1414,22 @@ def runAnalyses(genome,
             ###################################################################################################
 
             ###################################################################################################
-            #Important note: Separate directory creation is necessary for Matrix Generator
-            #inputDir/output/simulations/simX/96/X.maf
-            #inputDir/output/simulations/simX/ID/X.maf
-            #inputDir/output/simulations/simX/DBS/X.maf
+            # Important note: Separate directory creation is necessary for Matrix Generator
+            # inputDir/output/simulations/simX/96/X.maf
+            # inputDir/output/simulations/simX/ID/X.maf
+            # inputDir/output/simulations/simX/DBS/X.maf
 
-            #enables MatrixGenerator to create chr based simulated data files under
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/96/output/vcf_files/SNV
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/ID/output/vcf_files/ID
-            #sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/DBS/output/vcf_files/DBS
+            # enables MatrixGenerator to create chr based simulated data files under
+            # sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/96/output/vcf_files/SNV
+            # sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/ID/output/vcf_files/ID
+            # sim1 matrix generator chrbased data will be under inputDir/output/simulations/simX/DBS/output/vcf_files/DBS
 
-            #otherwise all simulations maf files will be under
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_96
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_DBS
-            #inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_ID
+            # otherwise all simulations maf files will be under
+            # inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_96
+            # inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_DBS
+            # inputDir/output/simulations/Skin-Melanoma_simulations_GRCh37_ID
 
-            #Then running MatrixGenerator for each simulation will not be possible.
+            # Then running MatrixGenerator for each simulation will not be possible.
             ###################################################################################################
 
             ###################################################################################################
@@ -1592,8 +1555,8 @@ def runAnalyses(genome,
             print('#################################################################################')
             print('--- Merge simulations chr based files with Mutation Probabilities starts')
             print('#################################################################################')
-            startSimNum=1
-            endSimNum=numofSimulations
+            startSimNum = 1
+            endSimNum = numofSimulations
             start_time = time.time()
             # SBS
             for mutation_type_context in mutation_types_contexts:
@@ -1729,7 +1692,10 @@ def runAnalyses(genome,
                     subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
                                                                                                  jobname,
                                                                                                  chromNamesList,
-                                                                                                 SUBS)
+                                                                                                 SUBS,
+                                                                                                 num_of_sbs_required,
+                                                                                                mutationType2PropertiesDict,
+                                                                                                chrLong2NumberofMutationsDict)
 
                 subsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir, jobname, DATA,
                                      Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', index=False)
@@ -1760,7 +1726,10 @@ def runAnalyses(genome,
                 dinucsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
                                                                                             jobname,
                                                                                             chromNamesList,
-                                                                                            DINUCS)
+                                                                                            DINUCS,
+                                                                                            num_of_dbs_required,
+                                                                                            mutationType2PropertiesDict,
+                                                                                            chrLong2NumberofMutationsDict)
 
             dinucsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
                     os.path.join(outputDir, jobname, DATA,
@@ -1793,7 +1762,10 @@ def runAnalyses(genome,
                 indelsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
                                                                                             jobname,
                                                                                             chromNamesList,
-                                                                                            INDELS)
+                                                                                            INDELS,
+                                                                                            num_of_id_required,
+                                                                                            mutationType2PropertiesDict,
+                                                                                            chrLong2NumberofMutationsDict)
 
             indelsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
                     os.path.join(outputDir, jobname, DATA,
@@ -1804,7 +1776,6 @@ def runAnalyses(genome,
                     ['cancer_type', 'samples_list', 'len(samples_list)', 'len(all_samples_list)',
                      'percentage_of_samples'], inplace=True, axis=1)
 
-        ####################################################################
         # Add the last row
         numberofMutations = 0
         all_samples = set()
@@ -1836,22 +1807,19 @@ def runAnalyses(genome,
         # write this dataframe
         mutationtype_numberofmutations_numberofsamples_sampleslist_df.to_csv(filePath, sep='\t', header=True, index=False)
         # Write dictionary as a dataframe ends
-        ####################################################################
 
-        # Write chrLong2NumberofMutationsDict dictionary as a dataframe starts
-        filePath = os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename)
+        # Write chrLong2NumberofMutationsDict dictionary as a dataframe
+        if chrLong2NumberofMutationsDict:
+            filePath = os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename)
 
-        L = sorted([(chrLong, number_of_mutations)
-                    for chrLong, number_of_mutations in chrLong2NumberofMutationsDict.items()])
+            L = sorted([(chrLong, number_of_mutations)
+                        for chrLong, number_of_mutations in chrLong2NumberofMutationsDict.items()])
 
-        if L:
-            chrlong_numberofmutations_df = pd.DataFrame(L, columns=['chrLong', 'number_of_mutations'])
-        # write this dataframe
-        chrlong_numberofmutations_df.to_csv(filePath, sep='\t', header=True, index=False)
-        # Write dictionary as a dataframe ends
+            if L:
+                chrlong_numberofmutations_df = pd.DataFrame(L, columns=['chrLong', 'number_of_mutations'])
+            # write this dataframe
+            chrlong_numberofmutations_df.to_csv(filePath, sep='\t', header=True, index=False)
 
-
-        ##################################################################################
         # We are reading original data again to fill the mutationType based, sample based and signature based dictionaries
         # This part is deprecated
         if sample_based:
@@ -1876,12 +1844,10 @@ def runAnalyses(genome,
                                                   num_of_id_required,
                                                   num_of_dbs_required)
 
-        ##################################################################################
         print("--- Fill tables/dictionaries using original data: %s seconds" % (time.time() - start_time))
         print("--- Fill tables/dictionaries using original data: %f minutes" % (float((time.time() - start_time) / 60)))
         print('--- Fill tables/dictionaries using original data ends')
         print('#################################################################################\n')
-        #################################################################################
 
     else:
         mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
@@ -1893,7 +1859,7 @@ def runAnalyses(genome,
 
         print('sample_based:%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,len(all_samples_list), all_samples_list))
 
-        chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t',header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
+        chrlong_numberofmutations_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ChrLong_NumberofMutations_Filename), sep='\t', header=0, dtype={'chrLong': str, 'number_of_mutations': np.int32})
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
                 subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0, dtype={'cutoff':np.float32,'signature':str, 'number_of_mutations':np.int32,'average_probability':np.float32})
@@ -1969,16 +1935,17 @@ def runAnalyses(genome,
     ordered_all_dbs_signatures_array = get_all_signatures_array(ordered_all_dbs_signatures_wrt_probabilities_file_array, DBS)
     ordered_all_id_signatures_array = get_all_signatures_array(ordered_all_id_signatures_wrt_probabilities_file_array, ID)
 
+    print('--- discreet_mode:', discreet_mode)
+    print('--- ordered_all_sbs_signatures_array:', ordered_all_sbs_signatures_array)
+    print('--- ordered_all_dbs_signatures_array:', ordered_all_dbs_signatures_array)
+    print('--- ordered_all_id_signatures_array:', ordered_all_id_signatures_array)
+    print('--- ordered_sbs_signatures_with_cutoffs:', ordered_sbs_signatures_with_cutoffs)
+    print('--- ordered_dbs_signatures_with_cutoffs:', ordered_dbs_signatures_with_cutoffs)
+    print('--- ordered_id_signatures_with_cutoffs:', ordered_id_signatures_with_cutoffs)
     if discreet_mode:
-        print('--- ordered_all_sbs_signatures_array:', ordered_all_sbs_signatures_array)
-        print('--- ordered_all_dbs_signatures_array:', ordered_all_dbs_signatures_array)
-        print('--- ordered_all_id_signatures_array:', ordered_all_id_signatures_array)
-        print('--- ordered_sbs_signatures_with_cutoffs:', ordered_sbs_signatures_with_cutoffs)
-        print('--- ordered_dbs_signatures_with_cutoffs:', ordered_dbs_signatures_with_cutoffs)
-        print('--- ordered_id_signatures_with_cutoffs:', ordered_id_signatures_with_cutoffs)
         print('--- ordered_sbs_signatures_cutoffs:', ordered_sbs_signatures_cutoffs)
         print('--- ordered_dbs_signatures_cutoffs:', ordered_dbs_signatures_cutoffs)
-        print('---  ordered_id_signatures_cutoffs:', ordered_id_signatures_cutoffs)
+        print('--- ordered_id_signatures_cutoffs:', ordered_id_signatures_cutoffs)
 
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis starts ######################################
@@ -1986,10 +1953,11 @@ def runAnalyses(genome,
     print('#################################################################################')
     print('--- Run SigProfilerTopography Analysis starts')
 
-    if (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-        job_tuples=get_job_tuples(chrlong_numberofmutations_df,numofSimulations)
+    if (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+        job_tuples = get_job_tuples(chrlong_numberofmutations_df,numofSimulations)
+
     else:
-        job_tuples=[]
+        job_tuples = []
 
     if (nucleosome):
         # Nucleosome Occupancy
@@ -2010,9 +1978,6 @@ def runAnalyses(genome,
                              None,
                              chromSizesDict,
                              chromNamesList,
-                             ordered_all_sbs_signatures_array,
-                             ordered_all_dbs_signatures_array,
-                             ordered_all_id_signatures_array,
                              ordered_sbs_signatures_with_cutoffs,
                              ordered_dbs_signatures_with_cutoffs,
                              ordered_id_signatures_with_cutoffs,
@@ -2050,9 +2015,6 @@ def runAnalyses(genome,
                                    chromSizesDict,
                                    chromNamesList,
                                    computation_type,
-                                   ordered_all_sbs_signatures_array,
-                                   ordered_all_dbs_signatures_array,
-                                   ordered_all_id_signatures_array,
                                    ordered_sbs_signatures_with_cutoffs,
                                    ordered_dbs_signatures_with_cutoffs,
                                    ordered_id_signatures_with_cutoffs,
@@ -2086,9 +2048,6 @@ def runAnalyses(genome,
                                          chromSizesDict,
                                          chromNamesList,
                                          computation_type,
-                                         ordered_all_sbs_signatures_array,
-                                         ordered_all_dbs_signatures_array,
-                                         ordered_all_id_signatures_array,
                                          ordered_sbs_signatures_with_cutoffs,
                                          ordered_dbs_signatures_with_cutoffs,
                                          ordered_id_signatures_with_cutoffs,
@@ -2116,9 +2075,9 @@ def runAnalyses(genome,
                                           all_samples_np_array,
                                           chromNamesList,
                                           computation_type,
-                                          ordered_all_sbs_signatures_array,
-                                          ordered_all_dbs_signatures_array,
-                                          ordered_all_id_signatures_array,
+                                          # ordered_all_sbs_signatures_array,
+                                          # ordered_all_dbs_signatures_array,
+                                          # ordered_all_id_signatures_array,
                                           ordered_sbs_signatures_with_cutoffs,
                                           ordered_dbs_signatures_with_cutoffs,
                                           ordered_id_signatures_with_cutoffs,
@@ -2139,15 +2098,41 @@ def runAnalyses(genome,
 
         start_time = time.time()
 
-        runProcessivityAnalysis(mutation_types_contexts,
-                                outputDir,
-                                jobname,
-                                numofSimulations,
-                                chromNamesList,
-                                processivity_calculation_type,
-                                inter_mutational_distance_for_processivity,
-                                subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                verbose)
+        if discreet_mode:
+            runProcessivityAnalysis(mutation_types_contexts,
+                                    outputDir,
+                                    jobname,
+                                    numofSimulations,
+                                    chromNamesList,
+                                    processivity_calculation_type,
+                                    processivity_inter_mutational_distance,
+                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    verbose)
+
+        else:
+            cutoffs = []
+            for cufoff in np.arange(0.5, 0.91, 0.01):
+                cutoffs.append("%.2f" % (cufoff))
+
+            processivity_subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signatures_cutoffs_for_processivity(outputDir,
+                                                     jobname,
+                                                     chromNamesList,
+                                                     SUBS,
+                                                     cutoffs,
+                                                     average_probability,
+                                                     num_of_sbs_required)
+
+            runProcessivityAnalysis(mutation_types_contexts,
+                                    outputDir,
+                                    jobname,
+                                    numofSimulations,
+                                    chromNamesList,
+                                    processivity_calculation_type,
+                                    processivity_inter_mutational_distance,
+                                    processivity_subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                    verbose)
+
+
         print('#################################################################################')
         print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
         print("--- Run Processivity Analyses: %f minutes ---" %(float((time.time()-start_time)/60)))
@@ -2182,9 +2167,6 @@ def runAnalyses(genome,
                                  epigenomics_file_memo,
                                  chromSizesDict,
                                  chromNamesList,
-                                 ordered_all_sbs_signatures_array,
-                                 ordered_all_dbs_signatures_array,
-                                 ordered_all_id_signatures_array,
                                  ordered_sbs_signatures_with_cutoffs,
                                  ordered_dbs_signatures_with_cutoffs,
                                  ordered_id_signatures_with_cutoffs,
@@ -2238,6 +2220,7 @@ def runAnalyses(genome,
                     plusorMinus_epigenomics,
                     plusorMinus_nucleosome,
                     epigenomics_heatmap_significance_level,
+                    processivity_significance_level,
                     verbose,
                     plot_epigenomics,
                     plot_nucleosome,
@@ -2288,6 +2271,7 @@ def plotFigures(outputDir,
                 plusOrMinus_epigenomics,
                 plusOrMinus_nucleosome,
                 epigenomics_heatmap_significance_level,
+                processivity_significance_level,
                 verbose,
                 plot_epigenomics,
                 plot_nucleosome,
@@ -2336,7 +2320,7 @@ def plotFigures(outputDir,
             deleteOldFigures(outputDir, jobname, STRANDBIAS)
         # old way
         # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
-        strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
+        strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode)
         print("--- Plot strand bias ends")
     elif (replication_strand_bias or plot_replication_strand_bias):
@@ -2351,7 +2335,13 @@ def plotFigures(outputDir,
     if (processivity or plot_processivity):
         if delete_old:
             deleteOldFigures(outputDir, jobname, PROCESSIVITY)
-        processivityFigures(outputDir,jobname,numberofSimulations,verbose)
+
+        processivityFigures(outputDir,
+                            jobname,
+                            numberofSimulations,
+                            processivity_significance_level,
+                            verbose)
+
         print("--- Plot processivity ends")
 
     if (epigenomics or plot_epigenomics):

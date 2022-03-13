@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -116,9 +122,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                              chromSizesDict,
                                                              library_file_with_path,
                                                              library_file_type,
-                                                             ordered_all_sbs_signatures_array,
-                                                             ordered_all_dbs_signatures_array,
-                                                             ordered_all_id_signatures_array,
                                                              ordered_sbs_signatures,
                                                              ordered_dbs_signatures,
                                                              ordered_id_signatures,
@@ -134,12 +137,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     maximum_chrom_size = chromSizesDict[chrLong]
     start_time = time.time()
 
-    ##############################################################
     chrBasedSignalArray = None # Will be filled from chrBasedSignal files if they exists
     library_file_opened_by_pyBigWig = None # Will be filled by pyBigWig from bigWig or bigBed
     my_upperBound = None
     signal_index = None
-    ##############################################################
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
     # if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_simBased_combined_df_split: %f in MB -- chrLong:%s simNum:%d' % (
@@ -148,9 +149,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     #         sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
     #         sys.getsizeof(chrBased_simBased_combined_df_split) / MEGABYTE_IN_BYTES,
     #         chrLong, simNum))
-    #################################################################################################################
 
-    #################################################################################################################
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
@@ -164,14 +163,14 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
         #It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
 
-    #Downloaded or created runtime
+    # Downloaded or created runtime
     if (os.path.exists(chrBasedSignalFile)):
         #Can this cause to deep sleep of processes?
         # chrBasedSignalArray = np.load(chrBasedSignalFile, mmap_mode='r')
         chrBasedSignalArray = np.load(chrBasedSignalFile)
 
-    #If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
-    #For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension, it is not absolute path
+    # If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
+    # For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension, it is not absolute path
     if os.path.isabs(library_file_with_path):
 
         # Comment below to make it run in windows
@@ -215,16 +214,19 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                     my_upperBound = np.iinfo(np.int16).max
             except:
                 print('Exception %s' %library_file_with_path)
-    #################################################################################################################
 
-    if discreet_mode:
-        number_of_sbs_signatures = ordered_sbs_signatures.size
-        number_of_dbs_signatures = ordered_dbs_signatures.size
-        number_of_id_signatures = ordered_id_signatures.size
-    else:
-        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-        number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-        number_of_id_signatures = ordered_all_id_signatures_array.size
+    number_of_sbs_signatures = ordered_sbs_signatures.size
+    number_of_dbs_signatures = ordered_dbs_signatures.size
+    number_of_id_signatures = ordered_id_signatures.size
+
+    # if discreet_mode:
+    #     number_of_sbs_signatures = ordered_sbs_signatures.size
+    #     number_of_dbs_signatures = ordered_dbs_signatures.size
+    #     number_of_id_signatures = ordered_id_signatures.size
+    # else:
+    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
+    #     number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
+    #     number_of_id_signatures = ordered_all_id_signatures_array.size
 
     ###############################################################################
     ################################ Initialization ###############################
@@ -242,25 +244,25 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     ################################ Initialization ###############################
     ###############################################################################
 
-    #################################################################################################################
     if ((chrBasedSignalArray is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
 
-        #For Subs
+        # For subs
         if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
 
             # df_columns is a numpy array
             df_columns = chrBased_simBased_subs_df.columns.values
 
-            if discreet_mode:
-                subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-            else:
-                subsSignatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
+            subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+            # if discreet_mode:
+            #     subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
+            # else:
+            #     subsSignatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
 
-            #July 25, 2020
+            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
@@ -285,12 +287,13 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             # df_columns is a numpy array
             df_columns = chrBased_simBased_dinucs_df.columns.values
 
-            if discreet_mode:
-                dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-            else:
-                dinucsSignatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
+            dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+            # if discreet_mode:
+            #     dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
+            # else:
+            #     dinucsSignatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
 
-            #July 25, 2020
+            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
@@ -315,10 +318,11 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             #df_columns is a numpy array
             df_columns = chrBased_simBased_indels_df.columns.values
 
-            if discreet_mode:
-                indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-            else:
-                indelsSignatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
+            indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
+            # if discreet_mode:
+            #     indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
+            # else:
+            #     indelsSignatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
 
             #July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
@@ -366,7 +370,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     SignalArrayAndCountArrayList.append(indelsSignature_accumulated_count_np_array)
 
     return SignalArrayAndCountArrayList
-########################################################################################
+
 
 
 ########################################################################################
@@ -384,9 +388,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         chromSizesDict,
         library_file_with_path,
         library_file_type,
-        ordered_all_sbs_signatures_array,
-        ordered_all_dbs_signatures_array,
-        ordered_all_id_signatures_array,
         ordered_sbs_signatures,
         ordered_dbs_signatures,
         ordered_id_signatures,
@@ -431,9 +432,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
                                                                         chromSizesDict,
                                                                         library_file_with_path,
                                                                         library_file_type,
-                                                                        ordered_all_sbs_signatures_array,
-                                                                        ordered_all_dbs_signatures_array,
-                                                                        ordered_all_id_signatures_array,
                                                                         ordered_sbs_signatures,
                                                                         ordered_dbs_signatures,
                                                                         ordered_id_signatures,
@@ -450,8 +448,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         # raise e
 ########################################################################################
 
-########################################################################################
-#May 19, 2020
+# May 19, 2020
 # For apply_async split using poolInputList
 # Read chromBased simBased combined mutations df split in the process
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type,
@@ -474,7 +471,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                                   discreet_mode,
                                                                                   verbose):
 
-    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum,splitIndex)
+    chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
 
     return chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupancy_type,
                                                                     occupancy_calculation_type,
@@ -495,7 +492,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                     plusorMinus,
                                                                     discreet_mode,
                                                                     verbose)
-########################################################################################
 
 
 ########################################################################################
@@ -558,14 +554,14 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
         #It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
 
-    #Downloaded or created runtime
+    # Downloaded or created runtime
     if (os.path.exists(chrBasedSignalFile)):
         #Can this cause to deep sleep of processes?
         # chrBasedSignalArray = np.load(chrBasedSignalFile, mmap_mode='r')
         chrBasedSignalArray = np.load(chrBasedSignalFile)
 
-    #If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
-    #For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension, it is not absolute path
+    # If library_file_with_path is abs path and library_file_type is BIGWIG or BIGBED
+    # For nucleosome_biosample==GM12878 or nucleosome_biosample==K562 library_file_with_path is only filename with extension, it is not absolute path
     if os.path.isabs(library_file_with_path):
 
         # Comment below to make it run in windows
@@ -619,31 +615,30 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
         if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
 
-            #df_columns is a numpy array
+            # df_columns is a numpy array
             df_columns = chrBased_simBased_combined_df_split.columns.values
 
             ###############################################################################
             ################################ Initialization ###############################
             ###############################################################################
-
             subsSignatures_mask_array = np.isin(df_columns,ordered_sbs_signatures)
             dinucsSignatures_mask_array = np.isin(df_columns,ordered_dbs_signatures)
             indelsSignatures_mask_array = np.isin(df_columns,ordered_id_signatures)
 
             # Add one more row for the aggregated analysis
-            subsSignature_accumulated_signal_np_array = np.zeros((ordered_sbs_signatures.size+1, plusorMinus*2+1))
-            dinucsSignature_accumulated_signal_np_array = np.zeros((ordered_dbs_signatures.size+1, plusorMinus*2+1))
-            indelsSignature_accumulated_signal_np_array = np.zeros((ordered_id_signatures.size+1, plusorMinus*2+1))
+            subsSignature_accumulated_signal_np_array = np.zeros((ordered_sbs_signatures.size + 1, plusorMinus * 2 + 1))
+            dinucsSignature_accumulated_signal_np_array = np.zeros((ordered_dbs_signatures.size + 1, plusorMinus * 2 + 1))
+            indelsSignature_accumulated_signal_np_array = np.zeros((ordered_id_signatures.size + 1, plusorMinus * 2 + 1))
 
             # Add one more row for the aggregated analysis
-            subsSignature_accumulated_count_np_array = np.zeros((ordered_sbs_signatures.size+1, plusorMinus*2+1))
-            dinucsSignature_accumulated_count_np_array = np.zeros((ordered_dbs_signatures.size+1, plusorMinus*2+1))
-            indelsSignature_accumulated_count_np_array = np.zeros((ordered_id_signatures.size+1, plusorMinus*2+1))
+            subsSignature_accumulated_count_np_array = np.zeros((ordered_sbs_signatures.size + 1, plusorMinus * 2 + 1))
+            dinucsSignature_accumulated_count_np_array = np.zeros((ordered_dbs_signatures.size + 1, plusorMinus * 2 + 1))
+            indelsSignature_accumulated_count_np_array = np.zeros((ordered_id_signatures.size + 1, plusorMinus * 2 + 1))
             ###############################################################################
             ################################ Initialization ###############################
             ###############################################################################
 
-            #July 25, 2020
+            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp_for_df_split(
                 row,
                 chrLong,
@@ -670,7 +665,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_combined_df_split[df_columns].values]
 
-
         if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
         ###############################################################################
         ################### Fill signal and count array ends ##########################
@@ -689,6 +683,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
     SignalArrayAndCountArrayList = []
 
     # new way
+    SignalArrayAndCountArrayList.append(chrLong)
     SignalArrayAndCountArrayList.append(simNum)
     SignalArrayAndCountArrayList.append(subsSignature_accumulated_signal_np_array)
     SignalArrayAndCountArrayList.append(dinucsSignature_accumulated_signal_np_array)
@@ -702,8 +697,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
 
 
 ########################################################################################
-#For df_split
-#July 25, 2020, Vectorization
+# For df_split
+# July 25, 2020, Vectorization
 def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         row,
         chrLong,
@@ -755,7 +750,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     ###########################################
 
     window_array = None
-    windowSize = plusOrMinus*2+1
+    windowSize = plusOrMinus * 2 + 1
 
     # df_columns 'numpy.ndarray'
     # df_columns: ['Sample', 'Chrom', 'Start', 'MutationLong', 'PyramidineStrand', 'TranscriptionStrand', 'Mutation',
@@ -769,7 +764,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     #              'ID11', 'ID12', 'ID13', 'ID14', 'ID15', 'ID16', 'ID17', 'DBS1', 'DBS2', 'DBS3', 'DBS4', 'DBS5', 'DBS6',
     #              'DBS7', 'DBS8', 'DBS9', 'DBS10', 'DBS11']
 
-    #Get or fill window_array using Case1, Case2, and Case3
+    # Get or fill window_array using Case1, Case2, and Case3
     # Case 1: start is very close to the chromosome start
     if (mutation_row_start < plusOrMinus):
         # print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row_start))
@@ -826,7 +821,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
                     # We did not handle outliers for BigBed files.
                     [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusOrMinus))) for entry in list_of_entries]
 
-    #Case 3: No problem
+    # Case 3: No problem
     else:
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
@@ -849,13 +844,13 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     ##########################################################
 
     ##########################################################
-    #Get the sample at this mutation_row
+    # Get the sample at this mutation_row
     # sample = mutation_row_sample
     # simulationNumber= mutation_row_simulation_number
 
-    #September 18, 2020 NO SIGNAL caseis added
-    #Vectorize July 25, 2020
-    #Fill numpy arrays using window_array
+    # September 18, 2020 NO SIGNAL caseis added
+    # Vectorize July 25, 2020
+    # Fill numpy arrays using window_array
     if (window_array is not None) and (np.any(window_array)):
         probabilities = row[signatures_mask_array]
 
@@ -870,7 +865,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
             # Add 1 for the Aggregated analysis to the mask array
             mask_array = np.append(mask_array, 1.0)
 
-        #Add one more dimension to window_array and mask_array
+        # Add one more dimension to window_array and mask_array
         window_array_1x2001=np.array([window_array])
         mask_array_1xnumofsignatures=np.array([mask_array])
 
@@ -880,8 +875,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         # count is prob * 1 case otherwise y-axis range becomes quite low
         to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001 > 0).astype(int)
 
-
-        #default
+        # default
         if occupancy_calculation_type == MISSING_SIGNAL:
             # accumulated_count_np_array += (to_be_accumulated_signal_array>0)
             accumulated_count_np_array += to_be_accumulated_count_array
@@ -1046,7 +1040,7 @@ def accumulate_arrays(row,
 
 
 ########################################################################################
-#July 25, 2020, Vectorization
+# July 25, 2020, Vectorization
 def fillSignalArrayAndCountArray_using_list_comp(
         row,
         chrLong,
@@ -1160,9 +1154,6 @@ def occupancyAnalysis(genome,
                         job_tuples,
                         library_file_with_path,
                         library_file_memo,
-                        ordered_all_sbs_signatures_array,
-                        ordered_all_dbs_signatures_array,
-                        ordered_all_id_signatures_array,
                         ordered_sbs_signatures,
                         ordered_dbs_signatures,
                         ordered_id_signatures,
@@ -1193,25 +1184,18 @@ def occupancyAnalysis(genome,
     # pool = multiprocessing.Pool(numofProcesses, maxtasksperchild=1)
     ##########################################################################
 
-    if discreet_mode:
-        number_of_sbs_signatures = ordered_sbs_signatures.size
-        number_of_dbs_signatures = ordered_dbs_signatures.size
-        number_of_id_signatures = ordered_id_signatures.size
-        subsSignatures = np.append(ordered_sbs_signatures, AGGREGATEDSUBSTITUTIONS)
-        dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
-        indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
-    else:
-        number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-        number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-        number_of_id_signatures = ordered_all_id_signatures_array.size
-        subsSignatures = np.append(ordered_all_sbs_signatures_array, AGGREGATEDSUBSTITUTIONS)
-        dinucsSignatures = np.append(ordered_all_dbs_signatures_array, AGGREGATEDDINUCS)
-        indelsSignatures = np.append(ordered_all_id_signatures_array, AGGREGATEDINDELS)
+    number_of_sbs_signatures = ordered_sbs_signatures.size
+    number_of_dbs_signatures = ordered_dbs_signatures.size
+    number_of_id_signatures = ordered_id_signatures.size
+
+    subsSignatures = np.append(ordered_sbs_signatures, AGGREGATEDSUBSTITUTIONS)
+    dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
+    indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
 
     ##########################################################################
-    #July 26, 2020
-    #For Vectorization
-    #These are used in writing tables
+    # July 26, 2020
+    # For Vectorization
+    # These are used in writing tables
     allSims_subsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1, number_of_sbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_dinucsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1, number_of_dbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_indelsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1, number_of_id_signatures + 1, plusorMinus * 2 + 1))
@@ -1228,14 +1212,14 @@ def occupancyAnalysis(genome,
     library_file_type=None
 
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES):
-        #What is the type of the signal_file_with_path?
-        #If it is a bed file read signal_file_with_path here
+        # What is the type of the signal_file_with_path?
+        # If it is a bed file read signal_file_with_path here
         file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
-        if ((file_extension.lower()=='.bigwig') or (file_extension.lower()=='.bw')):
+        if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bw')):
             library_file_type=BIGWIG
             #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
-        elif ((file_extension.lower()=='.bigbed') or (file_extension.lower()=='.bb')):
+        elif ((file_extension.lower() == '.bigbed') or (file_extension.lower() == '.bb')):
             library_file_type=BIGBED
             #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
         elif (file_extension.lower()=='.bed'):
@@ -1246,19 +1230,19 @@ def occupancyAnalysis(genome,
             readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
         elif (file_extension.lower()=='.wig'):
             library_file_type=WIG
-            #For inhouse preparation
-            #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
-            #readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
+            # For inhouse preparation
+            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
+            # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
             isFileTypeBEDGRAPH=decideFileType(library_file_with_path)
             if isFileTypeBEDGRAPH:
                 if verbose: start_time = time.time()
-                #Read by chunks
+                # Read by chunks
                 # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
-                #Read at once
+                # Read at once
                 readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue)
                 if verbose: print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)))
 
-                #For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
+                # For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
                 # start_time = time.time()
                 # readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type,verbose)
                 # print('Without pool Took %f seconds' %((time.time() - start_time)))
@@ -1275,7 +1259,6 @@ def occupancyAnalysis(genome,
     ##############################################################
 
 
-    #########################################################################################
     def accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList):
         try:
             chrLong = simulatonBased_SignalArrayAndCountArrayList[0]
@@ -1287,7 +1270,7 @@ def occupancyAnalysis(genome,
             dinucsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[6]
             indelsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[7]
 
-            #Accumulation
+            # Accumulation
             allSims_subsSignature_accumulated_signal_np_array[simNum] += subsSignature_accumulated_signal_np_array
             allSims_dinucsSignature_accumulated_signal_np_array[simNum] += dinucsSignature_accumulated_signal_np_array
             allSims_indelsSignature_accumulated_signal_np_array[simNum] += indelsSignature_accumulated_signal_np_array
@@ -1296,9 +1279,9 @@ def occupancyAnalysis(genome,
             allSims_dinucsSignature_accumulated_count_np_array[simNum] += dinucsSignature_accumulated_count_np_array
             allSims_indelsSignature_accumulated_count_np_array[simNum] += indelsSignature_accumulated_count_np_array
             # print('ACCUMULATION chrLong:%s simNum:%d ENDS' %(chrLong,simNum))
+
         except Exception as e:
-            print("Exception: %s" % (e))
-    #########################################################################################
+            print("Exception in accumulate_apply_async_result_vectorization function: %s" % (e))
 
     jobs=[]
 
@@ -1323,9 +1306,6 @@ def occupancyAnalysis(genome,
                                    chromSizesDict,
                                    library_file_with_path,
                                    library_file_type,
-                                   ordered_all_sbs_signatures_array,
-                                   ordered_all_dbs_signatures_array,
-                                   ordered_all_id_signatures_array,
                                    ordered_sbs_signatures,
                                    ordered_dbs_signatures,
                                    ordered_id_signatures,

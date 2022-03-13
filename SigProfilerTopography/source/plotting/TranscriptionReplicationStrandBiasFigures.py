@@ -1,3 +1,9 @@
+# !/usr/bin/env python3
+
+# Author: burcakotlu
+
+# Contact: burcakotlu@eng.ucsd.edu
+
 # This source code file is a part of SigProfilerTopography
 # SigProfilerTopography is a tool included as part of the SigProfiler
 # computational framework for comprehensive analysis of mutational
@@ -108,6 +114,8 @@ TYPE = 'type'
 SIGNIFICANT_STRAND = 'significant_strand'
 
 SIGNIFICANCE_LEVEL = 0.05
+SIGNIFICANCE_LEVEL_0_01 = 0.01
+SIGNIFICANCE_LEVEL_0_001 = 0.001
 
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -948,7 +956,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
             label = "{:.1f}".format(y_value)
 
             # Create annotation
-            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
+            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_001) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
                 plt.annotate(
                     '***',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -958,7 +966,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
                     va=va,
                     fontsize=20)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_01) and (is_there_at_least_10perc_diff(strand1_value, strand2_value))):
                 plt.annotate(
                     '**',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1419,7 +1427,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
             label = "{:.1f}".format(y_value)
 
             # Create annotation
-            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
+            if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                 ax.annotate(
                     '***',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1429,7 +1437,7 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
                     va=va,
                     fontsize=25)  # Vertically align label differently for
 
-            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
+            elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_01) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                 ax.annotate(
                     '**',  # Use `label` as label
                     (x_value, y_value),  # Place label at end of the bar
@@ -1674,7 +1682,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
 
             # Create annotation
             if not np.isnan(odds_ratio):
-                if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.0001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
+                if ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                     ax.annotate(
                         '%.2f ***' %(odds_ratio),  # Use `label` as label
                         (x_value, y_value),  # Place label at end of the bar
@@ -1684,7 +1692,7 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
                         va=va,
                         fontsize=25)  # Vertically align label differently for
 
-                elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= 0.001) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
+                elif ((fdr_bh_adjusted_pvalue is not None) and (fdr_bh_adjusted_pvalue <= SIGNIFICANCE_LEVEL_0_01) and is_there_at_least_10perc_diff(strand1_value, strand2_value)):
                     ax.annotate(
                         '%.2f **' %(odds_ratio),  # Use `label` as label
                         (x_value, y_value),  # Place label at end of the bar
@@ -1897,7 +1905,6 @@ def plot_circle_bar_plots_together(outputDir,
                                         replication_strands,
                                         signature_lagging_versus_leading_df)
 
-    # filename = '%s_circle_bar_plot_together_%s.png' % (sbs_signature, str(significance_level).replace('.', '_'))
     filename = '%s_circle_bar_plots.png' % (sbs_signature)
     figurepath = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, CIRCLE_BAR_PLOTS, filename)
     fig.savefig(figurepath, dpi=100, bbox_inches="tight")
@@ -1936,90 +1943,88 @@ def plotBarPlotsUsingDataframes(outputDir,
     N = len(x_axis_labels)
 
     for signature in signatures:
+        if signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['number_of_mutations'].values.any():
+            numberofMutations = int(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['number_of_mutations'].values[0])
 
-        numberofMutations = int(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature'] == signature]['number_of_mutations'].values[0])
+            mutationtype_strand1_real_list=[]
+            mutationtype_strand2_real_list=[]
+            mutationtype_strand1_sims_mean_list=[]
+            mutationtype_strand2_sims_mean_list=[]
+            mutationtype_FDR_BH_adjusted_pvalues_list=[]
 
-        mutationtype_strand1_real_list=[]
-        mutationtype_strand2_real_list=[]
-        mutationtype_strand1_sims_mean_list=[]
-        mutationtype_strand2_sims_mean_list=[]
-        mutationtype_FDR_BH_adjusted_pvalues_list=[]
+            for mutation_type in existingMutationTypesList:
+                if (strand1_versus_strand2==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+                    strand1_real_count_column_name=TRANSCRIBED_REAL_COUNT
+                    strand1_sims_mean_count_Column_name=TRANSCRIBED_SIMULATIONS_MEAN_COUNT
+                    strand2_real_count_column_name=UNTRANSCRIBED_REAL_COUNT
+                    strand2_sims_mean_count_Column_name=UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT
+                    q_value_column_name = TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE
+                elif (strand1_versus_strand2 == GENIC_VERSUS_INTERGENIC):
+                    strand1_real_count_column_name=GENIC_REAL_COUNT
+                    strand1_sims_mean_count_Column_name=GENIC_SIMULATIONS_MEAN_COUNT
+                    strand2_real_count_column_name=INTERGENIC_REAL_COUNT
+                    strand2_sims_mean_count_Column_name=INTERGENIC_SIMULATIONS_MEAN_COUNT
+                    q_value_column_name = GENIC_VERSUS_INTERGENIC_Q_VALUE
+                elif (strand1_versus_strand2 == LAGGING_VERSUS_LEADING):
+                    strand1_real_count_column_name=LAGGING_REAL_COUNT
+                    strand1_sims_mean_count_Column_name=LAGGING_SIMULATIONS_MEAN_COUNT
+                    strand2_real_count_column_name=LEADING_REAL_COUNT
+                    strand2_sims_mean_count_Column_name=LEADING_SIMULATIONS_MEAN_COUNT
+                    q_value_column_name = LAGGING_VERSUS_LEADING_Q_VALUE
 
-        for mutation_type in existingMutationTypesList:
-            if (strand1_versus_strand2==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
-                strand1_real_count_column_name=TRANSCRIBED_REAL_COUNT
-                strand1_sims_mean_count_Column_name=TRANSCRIBED_SIMULATIONS_MEAN_COUNT
-                strand2_real_count_column_name=UNTRANSCRIBED_REAL_COUNT
-                strand2_sims_mean_count_Column_name=UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT
-                q_value_column_name = TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE
-            elif (strand1_versus_strand2 == GENIC_VERSUS_INTERGENIC):
-                strand1_real_count_column_name=GENIC_REAL_COUNT
-                strand1_sims_mean_count_Column_name=GENIC_SIMULATIONS_MEAN_COUNT
-                strand2_real_count_column_name=INTERGENIC_REAL_COUNT
-                strand2_sims_mean_count_Column_name=INTERGENIC_SIMULATIONS_MEAN_COUNT
-                q_value_column_name = GENIC_VERSUS_INTERGENIC_Q_VALUE
-            elif (strand1_versus_strand2 == LAGGING_VERSUS_LEADING):
-                strand1_real_count_column_name=LAGGING_REAL_COUNT
-                strand1_sims_mean_count_Column_name=LAGGING_SIMULATIONS_MEAN_COUNT
-                strand2_real_count_column_name=LEADING_REAL_COUNT
-                strand2_sims_mean_count_Column_name=LEADING_SIMULATIONS_MEAN_COUNT
-                q_value_column_name = LAGGING_VERSUS_LEADING_Q_VALUE
+                strand1_real_count = 0
+                strand1_sims_mean_count = 0
+                strand2_real_count = 0
+                strand2_sims_mean_count = 0
+                q_value = None
 
-            strand1_real_count = 0
-            strand1_sims_mean_count = 0
-            strand2_real_count = 0
-            strand2_sims_mean_count = 0
-            q_value = None
+                if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values.size>0):
+                    strand1_real_count=signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values[0]
 
-            if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values.size>0):
-                strand1_real_count=signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand1_real_count_column_name].values[0]
+                if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand1_sims_mean_count_Column_name].values.size>0):
+                    strand1_sims_mean_count = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand1_sims_mean_count_Column_name].values[0]
 
-            if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand1_sims_mean_count_Column_name].values.size>0):
-                strand1_sims_mean_count = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand1_sims_mean_count_Column_name].values[0]
+                if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand2_real_count_column_name].values.size>0):
+                    strand2_real_count=signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand2_real_count_column_name].values[0]
 
-            if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand2_real_count_column_name].values.size>0):
-                strand2_real_count=signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature']==signature) & (signature_strand1_versus_strand2_df['mutation_type']==mutation_type)][strand2_real_count_column_name].values[0]
+                if  (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand2_sims_mean_count_Column_name].values.size>0):
+                    strand2_sims_mean_count = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand2_sims_mean_count_Column_name].values[0]
 
-            if  (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand2_sims_mean_count_Column_name].values.size>0):
-                strand2_sims_mean_count = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][strand2_sims_mean_count_Column_name].values[0]
+                if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][q_value_column_name].values.size>0):
+                    q_value = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][q_value_column_name].values[0]
 
-            if (signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][q_value_column_name].values.size>0):
-                q_value = signature_strand1_versus_strand2_df[(signature_strand1_versus_strand2_df['signature'] == signature) & (signature_strand1_versus_strand2_df['mutation_type'] == mutation_type)][q_value_column_name].values[0]
+                mutationtype_strand1_real_list.append(strand1_real_count)
+                mutationtype_strand1_sims_mean_list.append(strand1_sims_mean_count)
+                mutationtype_strand2_real_list.append(strand2_real_count)
+                mutationtype_strand2_sims_mean_list.append(strand2_sims_mean_count)
+                mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
 
-            mutationtype_strand1_real_list.append(strand1_real_count)
-            mutationtype_strand1_sims_mean_list.append(strand1_sims_mean_count)
-            mutationtype_strand2_real_list.append(strand2_real_count)
-            mutationtype_strand2_sims_mean_list.append(strand2_sims_mean_count)
-            mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
-
-        plotStrandBiasFigureWithBarPlots(outputDir,
-                                         jobname,
-                                         numberofSimulations,
-                                         signature,
-                                         isKeySample,
-                                         numberofMutations,
-                                         N,
-                                         x_axis_labels,
-                                         mutationtype_strand1_real_list,
-                                         mutationtype_strand2_real_list,
-                                         mutationtype_strand1_sims_mean_list,
-                                         mutationtype_strand2_sims_mean_list,
-                                         mutationtype_FDR_BH_adjusted_pvalues_list,
-                                         strands[0],
-                                         strands[1],
-                                         title,
-                                         color1,
-                                         color2,
-                                         figureName,
-                                         width,
-                                         plot_mode)
-
-
+            plotStrandBiasFigureWithBarPlots(outputDir,
+                                             jobname,
+                                             numberofSimulations,
+                                             signature,
+                                             isKeySample,
+                                             numberofMutations,
+                                             N,
+                                             x_axis_labels,
+                                             mutationtype_strand1_real_list,
+                                             mutationtype_strand2_real_list,
+                                             mutationtype_strand1_sims_mean_list,
+                                             mutationtype_strand2_sims_mean_list,
+                                             mutationtype_FDR_BH_adjusted_pvalues_list,
+                                             strands[0],
+                                             strands[1],
+                                             title,
+                                             color1,
+                                             color2,
+                                             figureName,
+                                             width,
+                                             plot_mode)
 
 
-###################################################################
-# April 20, 2020
-# July 4, 2020 starts
+
+
+# main function
 # Using dataframes
 def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode):
 
@@ -2098,8 +2103,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
 
     #######################################################################
     # Step2 Compute q_value
-    p_values_list=[]
-    element_names=[]
+    p_values_list = []
+    element_names = []
 
     # Fill p_values_list
     if LAGGING_VERSUS_LEADING in strand_bias_list:
@@ -2394,10 +2399,10 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
 
 
     #######################################################################
-    #Circle plots starts
+    # Circle plots starts
 
     #######################################################################
-    #Step4 Fill this dictionary
+    # Step4 Fill this dictionary
     signature2mutation_type2strand2percentagedict={}
 
     df_list=[]
@@ -2862,10 +2867,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                                             transcriptionStrands,
                                             replicationStrands)
 
-###################################################################
 
 
-############################################################################################################################
 def plot_dbs_and_id_signatures_circle_figures(signature_type,
                                        signatures,
                                        strand_bias,
@@ -2876,18 +2879,15 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
     rows_signatures=[]
 
-    #####################################################################
     if strand_bias==LAGGING_VERSUS_LEADING:
         strands=replicationStrands
     elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
         strands=transcriptionStrands
     elif strand_bias==GENIC_VERSUS_INTERGENIC:
         strands=genicVersusIntergenicStrands
-    #####################################################################
 
-    #####################################################################
-    #Fill rows_DBS_signatures
-    #Fill rows_ID_signatures
+    # Fill rows_DBS_signatures
+    # Fill rows_ID_signatures
     for signature in signatures:
         if signature  in type2strand2percentagedict:
             for strand in strands:
@@ -2897,23 +2897,16 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                             print('signature:%s strand:%s percentage_string:%s' %(signature,strand,percentage_string))
                             if signature not in rows_signatures:
                                 rows_signatures.append(signature)
-    #####################################################################
 
-    #####################################################################
     rows_signatures=sorted(rows_signatures,key=natural_key,reverse=True)
-    #####################################################################
 
-
-    if (len(rows_signatures)>0):
-        #####################################################################
-        #New plot (width,height)
+    if (len(rows_signatures) > 0):
+        # New plot (width,height)
         fig, ax = plt.subplots(figsize=(5+1.5*len(percentage_strings), 10+1.5*len(rows_signatures)))
 
         #make aspect ratio square
         ax.set_aspect(1.0)
-        #####################################################################
 
-        ######################################################################################################################################
         for percentage_diff_index, percentage_string in enumerate(percentage_strings):
             for row_signature_index, row_signature in enumerate(rows_signatures):
                 if (strand_bias==LAGGING_VERSUS_LEADING):
@@ -3037,10 +3030,8 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                                 #Second transcribed
                                 circle = plt.Circle((percentage_diff_index + 0.5, row_signature_index + 0.5), radius_genic, color='cyan', fill=True)
                                 ax.add_artist(circle)
-        ######################################################################################################################################
 
 
-        ##################################################################################
         # CODE GOES HERE TO CENTER X-AXIS LABELS...
         ax.set_xlim([0,len(percentage_strings)])
         ax.set_xticklabels([])
@@ -3068,10 +3059,8 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
             which='major',  # both major and minor ticks are affected
             bottom=False,  # ticks along the bottom edge are off
             top=False)  # labels along the bottom edge are off
-        ##################################################################################
 
 
-        ##################################################################################
         # CODE GOES HERE TO CENTER Y-AXIS LABELS...
         ax.set_ylim([0,len(rows_signatures)])
         ax.set_yticklabels([])
@@ -3088,14 +3077,10 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
             axis='y',  # changes apply to the x-axis
             which='major',  # both major and minor ticks are affected
             left=False)  # labels along the bottom edge are off
-        ##################################################################################
 
-        ##################################################################################
         # Gridlines based on major ticks
         ax.grid(which='major', color='black')
-        ##################################################################################
 
-        ##################################################################################
         # create the directory if it does not exists
         filename = '%s_Signatures_%s_with_circles_%s.png' % (signature_type,strand_bias,str(SIGNIFICANCE_LEVEL).replace('.','_'))
         figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
@@ -3104,26 +3089,18 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
         plt.cla()
         plt.close(fig)
-        ##################################################################################
-
-############################################################################################################################
 
 
-
-############################################################################################################################
-#Plot Legend only
+# Plot Legend only
 def plot_legend(strandbias_figures_outputDir):
 
     strand_biases=[TRANSCRIBED_VERSUS_UNTRANSCRIBED, GENIC_VERSUS_INTERGENIC, LAGGING_VERSUS_LEADING]
 
     for strandbias in strand_biases:
-        ##################################################################################
         fig = plt.figure(figsize=(4,1), dpi=300)
         ax = plt.gca()
         plt.axis('off')
-        ##################################################################################
 
-        ##################################################################################
         if strandbias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
                 Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=20),
@@ -3138,9 +3115,7 @@ def plot_legend(strandbias_figures_outputDir):
                 Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=20)]
 
         ax.legend(handles=legend_elements, bbox_to_anchor=(0, 0.5), loc='center left' ,fontsize = 20)
-        ##################################################################################
 
-        ##################################################################################
         # create the directory if it does not exists
         filename = 'Legend_%s.png' % (strandbias)
         figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
@@ -3149,13 +3124,8 @@ def plot_legend(strandbias_figures_outputDir):
 
         plt.cla()
         plt.close(fig)
-        ##################################################################################
-
-############################################################################################################################
 
 
-############################################################################################################################
-#Sep 19, 2020
 def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             strand_bias,
             strandbias_figures_outputDir,
@@ -3165,19 +3135,16 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
 
     mutation_types=six_mutation_types
 
-    #####################################################################
     if strand_bias==LAGGING_VERSUS_LEADING:
         strands=replicationStrands
     elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
         strands=transcriptionStrands
     elif strand_bias==GENIC_VERSUS_INTERGENIC:
         strands=genicVersusIntergenicStrands
-    #####################################################################
 
-    #####################################################################
     rows_sbs_signatures=[]
 
-    #Fill rows_sbs_signatures
+    # Fill rows_sbs_signatures
     for signature in sbs_signatures:
         if signature in signature2mutation_type2strand2percentagedict:
             for mutation_type in signature2mutation_type2strand2percentagedict[signature]:
@@ -3187,31 +3154,23 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                             if (percentage_string in signature2mutation_type2strand2percentagedict[signature][mutation_type][strand]) and (signature2mutation_type2strand2percentagedict[signature][mutation_type][strand][percentage_string]==1):
                                 if signature not in rows_sbs_signatures:
                                     rows_sbs_signatures.append(signature)
-    #####################################################################
 
-    #####################################################################
+
     rows_sbs_signatures=sorted(rows_sbs_signatures,key=natural_key,reverse=True)
-    #####################################################################
 
-    #####################################################################
     xticklabels_list = percentage_strings * len(mutation_types)
-    #####################################################################
 
     if (len(rows_sbs_signatures)>0):
 
-        #####################################################################
         plot1, panel1 = plt.subplots(figsize=(5+1.5*len(xticklabels_list), 10+1.5*len(rows_sbs_signatures)))
         # plot1, panel1 = plt.subplots(figsize=(5+1.4*len(xticklabels_list), 10+len(rows_sbs_signatures))) Title and mutation texts are not seen.
         plt.rc('axes', edgecolor='lightgray')
         # panel1 = plt.axes([0.04, 0.09, 0.95, 0.75])
 
-        #make aspect ratio square
+        # make aspect ratio square
         panel1.set_aspect(1.0)
-        #####################################################################
 
-
-        ##################################################################################
-        #set title
+        # set title
         if strand_bias==LAGGING_VERSUS_LEADING:
             title='Lagging versus Leading Strand Bias'
         elif strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
@@ -3219,10 +3178,8 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
         elif strand_bias==GENIC_VERSUS_INTERGENIC:
             title='Genic versus Intergenic Strand Bias'
         panel1.text(len(percentage_strings)*3, len(rows_sbs_signatures)+2.5, title,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
-        ##################################################################################
 
-        ##################################################################################
-        #Colors from SigProfilerPlotting tool to be consistent
+        # Colors from SigProfilerPlotting tool to be consistent
         colors = [[3 / 256, 189 / 256, 239 / 256],
                   [1 / 256, 1 / 256, 1 / 256],
                   [228 / 256, 41 / 256, 38 / 256],
@@ -3230,7 +3187,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                   [162 / 256, 207 / 256, 99 / 256],
                   [236 / 256, 199 / 256, 197 / 256]]
 
-        #Put rectangles
+        # Put rectangles
         x = 0
 
         for i in range(0, len(mutation_types), 1):
@@ -3238,18 +3195,16 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             panel1.add_patch(plt.Rectangle((x+.0415, len(rows_sbs_signatures)+0.75), len(percentage_strings)-(2*.0415), .5, facecolor=colors[i], clip_on=False))
             panel1.add_patch(plt.Rectangle((x, 0), len(percentage_strings), len(rows_sbs_signatures), facecolor=colors[i], zorder=0, alpha=0.25,edgecolor='grey'))
             x += len(percentage_strings)
-        ##################################################################################
 
-        ##################################################################################
         # CODE GOES HERE TO CENTER X-AXIS LABELS...
         panel1.set_xlim([0,len(mutation_types)*len(percentage_strings)])
         panel1.set_xticklabels([])
 
         panel1.tick_params(axis='x', which='minor', length=0, labelsize=35)
 
-        #major ticks
+        # major ticks
         panel1.set_xticks(np.arange(0, len(mutation_types)*len(percentage_strings), 1))
-        #minor ticks
+        # minor ticks
         panel1.set_xticks(np.arange(0, len(mutation_types)*len(percentage_strings), 1)+0.5,minor=True)
 
         panel1.set_xticklabels(xticklabels_list,minor=True)
@@ -3262,10 +3217,8 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             which='major',  # both major and minor ticks are affected
             bottom=False,  # ticks along the bottom edge are off
             top=False)  # labels along the bottom edge are off
-        ##################################################################################
 
 
-        ##################################################################################
         # CODE GOES HERE TO CENTER Y-AXIS LABELS...
         panel1.set_ylim([0,len(rows_sbs_signatures)])
         panel1.set_yticklabels([])
@@ -3283,15 +3236,11 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             axis='y',  # changes apply to the x-axis
             which='major',  # both major and minor ticks are affected
             left=False)  # labels along the bottom edge are off
-        ##################################################################################
 
-        ##################################################################################
         # Gridlines based on major ticks
         panel1.grid(which='major', color='black', zorder=3)
-        ##################################################################################
 
-        ##################################################################################
-        #Put the legend
+        # Put the legend
         if strand_bias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
                 Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=40),
@@ -3306,10 +3255,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                 Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
 
         panel1.legend(handles=legend_elements,ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40)
-        ##################################################################################
 
-
-        ######################################################################################################################################
         for percentage_diff_index, percentage_string in enumerate(percentage_strings):
              for mutation_type_index, mutation_type in enumerate(mutation_types):
                 for row_sbs_signature_index, row_sbs_signature in enumerate(rows_sbs_signatures):
@@ -3425,10 +3371,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True))
                                         # Second transcribed
                                         panel1.add_patch(plt.Circle((mutation_type_index * len(percentage_strings) + percentage_diff_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True))
-        ######################################################################################################################################
 
-
-        ##################################################################################
         # create the directory if it does not exists
         filename = 'SBS_Signatures_%s_with_circle_plot_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
         figFile = os.path.join(strandbias_figures_outputDir,CIRCLE_PLOTS, filename)
@@ -3437,6 +3380,4 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
 
         plt.cla()
         plt.close(plot1)
-        ##################################################################################
 
-############################################################################################################################
