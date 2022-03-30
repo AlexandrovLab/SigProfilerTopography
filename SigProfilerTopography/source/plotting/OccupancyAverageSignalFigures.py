@@ -114,10 +114,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 #############################################################################
 ##################### Read Average as Pandas Series #########################
 #############################################################################
-#Jobname has to be only jobname given in the argument
+# Jobname has to be only jobname given in the argument
 def readData(sample, signatureName, analyseType, outputDir, jobname, occupancy_type, libraryFilenameMemo, partial_file_name):
 
-    #####################################################
     if (analyseType == SIGNATUREBASED):
         if libraryFilenameMemo is None:
             filename = '%s_%s.txt' %(signatureName,partial_file_name)
@@ -132,9 +131,8 @@ def readData(sample, signatureName, analyseType, outputDir, jobname, occupancy_t
             filename = '%s_%s_%s.txt' %(jobname,libraryFilenameMemo,partial_file_name)
 
         averageFilePath = os.path.join(outputDir, jobname, DATA, occupancy_type, analyseType, filename)
-    #####################################################
 
-    #####################################################
+
     if (analyseType == SAMPLEBASED_SIGNATUREBASED):
         if libraryFilenameMemo is None:
             filename = '%s_%s_%s.txt' % (signatureName, sample,partial_file_name)
@@ -162,7 +160,6 @@ def readData(sample, signatureName, analyseType, outputDir, jobname, occupancy_t
         else:
             filename = '%s_%s_%s_%s.txt' % (sample, jobname,libraryFilenameMemo,partial_file_name)
         averageFilePath = os.path.join(outputDir, jobname, DATA, SAMPLES, sample, occupancy_type, AGGREGATEDDINUCS, filename)
-    #####################################################
 
     return readAsNumpyArray(averageFilePath)
 #############################################################################
@@ -170,7 +167,6 @@ def readData(sample, signatureName, analyseType, outputDir, jobname, occupancy_t
 #############################################################################
 
 
-#############################################################################
 def readAsNumpyArray(averageFilePath):
     if os.path.exists(averageFilePath):
         average = np.loadtxt(averageFilePath, dtype=float, delimiter='\t')
@@ -178,12 +174,10 @@ def readAsNumpyArray(averageFilePath):
         return average
     else:
         return None
-#############################################################################
 
 
-#############################################################################
-##################### Read Average for Simulations start ####################
-#############################################################################
+
+# Read Average for Simulations
 def readDataForSimulations(sample, signature, analyseType, outputDir, jobname, numberofSimulations, occupancy_type, libraryFilenameMemo, partial_file_name):
     # partial_file_name = 'AverageSignalArray'
 
@@ -217,7 +211,6 @@ def readDataForSimulations(sample, signature, analyseType, outputDir, jobname, n
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
 
-    #########################################################################
     if (analyseType == SAMPLEBASED_SIGNATUREBASED):
         for simNum in range(1,numberofSimulations+1):
             if (libraryFilenameMemo is None):
@@ -261,17 +254,13 @@ def readDataForSimulations(sample, signature, analyseType, outputDir, jobname, n
             averageNucleosomeOccupancy = readAsNumpyArray(averageFilePath)
             if (averageNucleosomeOccupancy is not None):
                 listofAverages.append(averageNucleosomeOccupancy)
-    #########################################################################
 
     return listofAverages
-#############################################################################
-##################### Read Average for Simulations end ######################
-#############################################################################
 
 
-#############################################################################
-########################## Plot Figure starts  ##############################
-#############################################################################
+
+
+# Plot Figure starts
 def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cutoff_numberofmutations_averageprobability_df,sample2Signature2NumberofMutationsDict,outputDir,jobname,color,xlabel,ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus):
 
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
@@ -295,7 +284,6 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
                 label = '%s_%s' %(sample,signature)
                 label2NumpyArrayDict[label] = realAverage
 
-        ####################################### plottoing starts #######################################
         from matplotlib import rcParams
         rcParams.update({'figure.autolayout': True})
 
@@ -344,60 +332,7 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
         # plt.xticks(np.arange(-1000, +1001, step=500), fontsize=30)
         plt.xticks(np.arange(-plusOrMinus, plusOrMinus+1, step=500), fontsize=30)
 
-        #July 27, 2018
-        # plt.xlim((-1000, 1000))
         plt.xlim((-plusOrMinus, plusOrMinus))
-
-        #Let's comment for HM figures
-        # ###################################################################################
-        # if (len(min_list)>0 and len(max_list)>0):
-        #     ###################################################################################
-        #     min_average_nucleosome_signal = np.amin(min_list)
-        #     max_average_nucleosome_signal = np.amax(max_list)
-        #
-        #     if (min_average_nucleosome_signal >= 0.55 and max_average_nucleosome_signal <= 1.35):
-        #         # Comment these lines to see the values out of range
-        #         plt.yticks(np.arange(0.55, 1.4, step=0.1), fontsize=30)
-        #         # This code overwrites the y tick labels
-        #         ax.set_yticklabels(['0.55', '', '0.75', '', '0.95', '', '1.15', '', '1.35'])
-        #         # This code provides some extra space
-        #         plt.ylim((0.54, 1.4))
-        #     else:
-        #         yticklabels = []
-        #
-        #         ymin = 0.55
-        #         while (ymin > min_average_nucleosome_signal):
-        #             ymin -= 0.1
-        #
-        #         ymax = 1.35
-        #         while (ymax < max_average_nucleosome_signal):
-        #             ymax += 0.1
-        #
-        #         ymin = round(ymin, 2)
-        #         ymax = round(ymax, 2)
-        #
-        #         ytick = ymin
-        #         while (ytick <= ymax):
-        #             yticklabels.append(round(ytick, 2))
-        #             if (ytick < ymax):
-        #                 yticklabels.append('')
-        #             ytick = round(ytick + 0.1, 2)
-        #
-        #         if ymax not in yticklabels:
-        #             yticklabels.append(ymax)
-        #
-        #         plt.yticks(np.arange(ymin, ymax, step=0.05), fontsize=30)
-        #         ax.set_yticklabels(yticklabels)
-        #         plt.ylim((ymin - 0.01, ymax + 0.01))
-        #     ###################################################################################
-        # else:
-        #     # Comment these lines to see the values out of range
-        #     plt.yticks(np.arange(0.55, 1.4, step=0.1), fontsize=30)
-        #     # This code overwrites the y tick labels
-        #     ax.set_yticklabels(['0.55', '', '0.75', '', '0.95', '', '1.15', '', '1.35'])
-        #     # This code provides some extra space
-        #     plt.ylim((0.54, 1.4))
-        # ###################################################################################
 
         # This code puts the tick marks
         plt.tick_params(axis='both', which='major', labelsize=30,width=3,length=10)
@@ -420,16 +355,9 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
         plt.clf()
         plt.cla()
         plt.close(fig)
-        ####################################### plotting ends #######################################
-
-#############################################################################
-########################## Plot Figure ends  ################################
-#############################################################################
 
 
-#############################################################################
-########################## Plot Figure starts  ##############################
-#############################################################################
+
 # Called by plotSignatureBasedFigures
 def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
 
@@ -614,14 +542,9 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,num
         #Clears the axis without removing the axis itself
         plt.cla()
         plt.close()
-#############################################################################
-########################## Plot Figure starts  ##############################
-#############################################################################
 
 
-#############################################################################
-############################ Plot Figure ####################################
-#############################################################################
+
 def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,plot_mode):
     if mutationType==SBS96:
         to_be_added_to_the_filename='SBS%s' %(mutationType)
@@ -646,7 +569,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     min_average_nucleosome_signal=0
     max_average_nucleosome_signal=0
 
-    #######################################################################################################################
     if (sample is None):
         if libraryFilenameMemo is None:
             filename = 'Aggregated_All_Mutations_%s_%s.png' %(to_be_added_to_the_filename,filenameEnd)
@@ -667,10 +589,8 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
                 listofSimulationsAggregatedIndels = readDataForSimulations(None,None,AGGREGATEDINDELS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
             if (DBS==mutationType):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(None,None,AGGREGATEDDINUCS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-    #######################################################################################################################
 
 
-    #######################################################################################################################
     else:
         # filename = '%s_%s_Aggregated_Substitutions_%d_Indels_%d.png' % (sample, jobname, numberofSPMs, numberofIndels)
         if (libraryFilenameMemo is None):
@@ -692,18 +612,14 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
                 listofSimulationsAggregatedIndels = readDataForSimulations(sample, None,SAMPLEBASED_AGGREGATEDINDELS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
             if (DBS == mutationType):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDDINUCS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-    #######################################################################################################################
 
-    #####################################################################
-    #95%CI
+
+    # 95%CI
     simulationsAggregatedSubstitutionsLows,simulationsAggregatedSubstitutionsMedians,simulationsAggregatedSubstitutionsHighs = takeAverage(listofSimulationsAggregatedSubstitutions)
     simulationsAggregatedIndelsLows,simulationsAggregatedIndelsMedians,simulationsAggregatedIndelsHighs = takeAverage(listofSimulationsAggregatedIndels)
     simulationsAggregatedDinucsLows,simulationsAggregatedDinucsMedians,simulationsAggregatedDinucsHighs = takeAverage(listofSimulationsAggregatedDinucs)
-    #####################################################################
 
-    #####################################################################
-    #####################################################################
-    #####################################################################
+
     fig = plt.figure(figsize=(20, 10), facecolor=None, dpi=100)
     plt.style.use('ggplot')
 
@@ -735,7 +651,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         real_label = 'Real'
         simulated_label = 'Simulated'
 
-    ##############################################################
     if (realAggregatedSubstitutions is not None):
         aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label,linewidth=3, zorder=10)
         listofLegends.append(aggSubs[0])
@@ -744,9 +659,8 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         listofLegends.append(simsAggSubs[0])
         if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
-    ##############################################################
 
-    ##############################################################
+
     if (realAggregatedIndels is not None):
         aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label,linewidth=3,zorder=10)
         listofLegends.append(aggIndels[0])
@@ -755,9 +669,8 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         listofLegends.append(simsAggIndels[0])
         if (simulationsAggregatedIndelsLows is not None) and (simulationsAggregatedIndelsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
-    ##############################################################
 
-    ##############################################################
+
     if (realAggregatedDinucs is not None):
         aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label,linewidth=3,zorder=10)
         listofLegends.append(aggDinucs[0])
@@ -766,27 +679,25 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         listofLegends.append(simsAggDinucs[0])
         if (simulationsAggregatedDinucsLows is not None) and (simulationsAggregatedDinucsHighs is not None):
             plt.fill_between(x,np.array(simulationsAggregatedDinucsLows),np.array(simulationsAggregatedDinucsHighs),facecolor='lightpink',zorder=5)
-    ##############################################################
 
     plt.legend(loc= 'lower left',handles = listofLegends, prop={'size': 24}, shadow=False, edgecolor='white', facecolor ='white',framealpha=0)
 
-    #######################################################################
     # put the number of subs, indels and dinucs
     text=""
 
-    #Subs
+    # Subs
     if (mutationType==SBS96) and (numberofSubs>0):
         subs_text="{:,} subs".format(numberofSubs)
         text=subs_text
 
-    #Indels
+    # Indels
     if (mutationType==ID) and (numberofIndels>0):
         indels_text = "{:,} indels".format(numberofIndels)
         if len(text)>0:
             text= text + ', ' + indels_text
         else:
             text= indels_text
-    #Dinucs
+    # Dinucs
     if (mutationType==DBS) and (numberofDinucs>0):
         dinucs_text = "{:,} dinucs".format(numberofDinucs)
         if len(text)>0:
@@ -794,14 +705,13 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         else:
             text= dinucs_text
 
-    #put number of mutations
+    # put number of mutations
     plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
-    #######################################################################
 
-    #put the library filename
+    # put the library filename
     plt.text(0.01, 0.99, libraryFilename, verticalalignment='top', horizontalalignment='left', transform=ax.transAxes,fontsize=24)
 
-    #Put vertical line at x=0
+    # Put vertical line at x=0
     plt.axvline(x=0, color='gray', linestyle='--')
 
     plt.tick_params(axis='both', which='major', labelsize=24)
@@ -815,58 +725,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     # plt.xticks(np.arange(-1000, +1001, step=500), fontsize=30)
     plt.xticks(np.arange(-plusOrMinus, plusOrMinus+1, step=500), fontsize=30)
 
-    #July 27, 2018
-    # plt.xlim((-1000, 1000))
     plt.xlim((-plusOrMinus, plusOrMinus))
-
-    # Let's comment this for HM figures.
-    # ###################################################################################
-    # if (len(min_list)>0 and len(max_list)>0):
-    #     ###################################################################################
-    #     min_average_nucleosome_signal=np.amin(min_list)
-    #     max_average_nucleosome_signal=np.amax(max_list)
-    #
-    #     if (min_average_nucleosome_signal >= 0.7 and max_average_nucleosome_signal <= 1.1):
-    #         plt.yticks(np.arange(0.7, 1.1, step=0.05), fontsize=30)
-    #         # This code overwrites the y tick labels
-    #         ax.set_yticklabels(['0.7', '', '0.8', '', '0.9', '', '1.0', '', '1.1'])
-    #         # This code provides some extra space
-    #         plt.ylim((0.65, 1.15))
-    #     else:
-    #         yticklabels = []
-    #
-    #         ymin = 0.7
-    #         while (ymin > min_average_nucleosome_signal):
-    #             ymin -= 0.1
-    #
-    #         ymax = 1.1
-    #         while (ymax < max_average_nucleosome_signal):
-    #             ymax += 0.1
-    #
-    #         ymin = round(ymin, 2)
-    #         ymax = round(ymax, 2)
-    #
-    #         ytick = ymin
-    #         while (ytick <= ymax):
-    #             yticklabels.append(round(ytick, 2))
-    #             if (ytick < ymax):
-    #                 yticklabels.append('')
-    #             ytick = round(ytick + 0.1, 2)
-    #
-    #         if ymax not in yticklabels:
-    #             yticklabels.append(ymax)
-    #
-    #         plt.yticks(np.arange(ymin, ymax, step=0.05), fontsize=30)
-    #         ax.set_yticklabels(yticklabels)
-    #         plt.ylim((ymin-0.01, ymax+0.01))
-    #     ###################################################################################
-    # else:
-    #     plt.yticks(np.arange(0.7, 1.1, step=0.05), fontsize=30)
-    #     # This code overwrites the y tick labels
-    #     ax.set_yticklabels(['0.7', '', '0.8', '', '0.9', '', '1.0', '', '1.1'])
-    #     # This code provides some extra space
-    #     plt.ylim((0.65, 1.15))
-    # ###################################################################################
 
     if (sample is not None):
         plt.title(sample, fontsize=40, fontweight='bold')
@@ -876,7 +735,6 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     plt.xlabel(xlabel, fontsize=32, fontweight='semibold')
     plt.ylabel(ylabel, fontsize=32, fontweight='semibold')
 
-    ######################################################################################
     if (sample is None):
         if occupancy_type==EPIGENOMICSOCCUPANCY:
             figureFile = os.path.join(outputDir,jobname,FIGURE,occupancy_type,PLOTS,filename)
@@ -885,19 +743,13 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     else:
         os.makedirs(os.path.join(outputDir, jobname,FIGURE,SAMPLES,sample,occupancy_type), exist_ok=True)
         figureFile = os.path.join(outputDir,jobname,FIGURE,SAMPLES,sample,occupancy_type,filename)
-    ######################################################################################
+
 
     fig.savefig(figureFile,dpi=100, bbox_inches="tight")
     plt.clf()
     plt.cla()
     plt.close()
-    #####################################################################
-    #####################################################################
-    #####################################################################
 
-#############################################################################
-############################ Plot Figure ####################################
-#############################################################################
 
 
 def checkValidness(analsesType,outputDir,jobname,occupancy_type):
@@ -1017,7 +869,6 @@ def plotSignatureBasedFigures(mutationType,
 
 
 
-########################################################
 # Plot heatmaps
 # Used for after Step2
 # For Step4 and Step5
@@ -1056,11 +907,9 @@ def fill_average_fold_change_array_rows_signatures_columns_dna_elements(signatur
                 average_fold_change_array[signature_index, dna_element_index] = np.nan
 
     return signatures, dna_elements, average_fold_change_array
-########################################################
 
 
-########################################################
-#Plot heatmaps
+# Plot heatmaps
 # For Step3
 def fill_average_fold_change_array_rows_biosamples_columns_dna_elements(biosample2DNAElementPooled2AverageFoldChangeDict):
     biosamples=[]
@@ -1075,7 +924,7 @@ def fill_average_fold_change_array_rows_biosamples_columns_dna_elements(biosampl
     # sort the biosamples
     biosamples = sorted(biosamples,key=natural_key)
 
-    #sort the hms
+    # sort the hms
     dna_elements=sorted(dna_elements,key=natural_key)
 
     #Initialize
@@ -1093,10 +942,9 @@ def fill_average_fold_change_array_rows_biosamples_columns_dna_elements(biosampl
                 average_fold_change_array[biosample_index, dna_element_index] = np.nan
 
     return biosamples, dna_elements, average_fold_change_array
-########################################################
 
-########################################################
-#For Step2
+
+# For Step2
 def fill_average_fold_change_array_row_each_biosample(ENCODEHM2FoldChangeDict):
     encode_hms=[]
     for encode_hm in ENCODEHM2FoldChangeDict:
@@ -1106,7 +954,7 @@ def fill_average_fold_change_array_row_each_biosample(ENCODEHM2FoldChangeDict):
     # sort the hms
     encode_hms = sorted(encode_hms, key=natural_key)
 
-    #Initialize
+    # Initialize
     average_fold_change_array = np.zeros((1, len(encode_hms)))
 
     for hm_index,hm in enumerate(encode_hms,0):
@@ -1121,7 +969,6 @@ def fill_average_fold_change_array_row_each_biosample(ENCODEHM2FoldChangeDict):
             average_fold_change_array[0,hm_index]=np.nan
 
     return encode_hms, average_fold_change_array
-########################################################
 
 
 def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
@@ -1134,7 +981,7 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
     plt.sca(current_ax)
     return im.axes.figure.colorbar(im, cax=cax, **kwargs)
 
-###################################################################
+
 def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
             cbar_kw={}, cbarlabel="", **kwargs):
     """
@@ -1203,10 +1050,8 @@ def heatmap(data, row_labels, col_labels,ax=None, fontsize=None,
     # return im, cbar
     return im
 
-###################################################################
 
 
-###################################################################
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=["black", "white"],
                      threshold=None, **textkw):
@@ -1265,10 +1110,9 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
             texts.append(text)
 
     return texts
-###################################################################
 
-###################################################################
-#November 10, 2020
+
+
 def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
                                                              epigenomics_dna_elements,
                                                              cancer_type,
@@ -1280,7 +1124,7 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
 
         biosamples, dna_elements, average_fold_change_array= fill_average_fold_change_array_rows_signatures_columns_dna_elements(step2_signature2biosample2dna_element2avg_fold_change_dict[signature],epigenomics_dna_elements)
 
-        #Update ATAC-Seq to Chromatin
+        # Update ATAC-Seq to Chromatin
         dna_elements = ['Chromatin' if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
 
         if verbose:
@@ -1288,7 +1132,6 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
             print('dna_elements: %s' %(dna_elements))
             print('average_fold_change_array: %s' %(average_fold_change_array))
 
-        ##########################################################################
         fig, ax = plt.subplots(figsize=(len(dna_elements),len(biosamples)))
 
         try:
@@ -1309,19 +1152,13 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
         # Results in big squares when array is small
         plt.tight_layout()
 
-        #############################################################################################################
         filename = 'Step2_%s_rows_biosamples_columns_dna_elements_heatmap.png' %(signature)
         figureFile = os.path.join(heatmaps_output_dir, filename)
         fig.savefig(figureFile,bbox_inches='tight')
         plt.close()
-        ##########################################################################
-
-###################################################################
 
 
-########################################################
-#March 30, 2020
-#After Filtering, After Filtering and Significant Ones
+# After Filtering, After Filtering and Significant Ones
 def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
                                                              signature2dna_element2significancedict,
                                                              epigenomics_dna_elements,
@@ -1348,7 +1185,6 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
         print('dna_elements: %s' %(dna_elements))
         print('average_fold_change_array: %s' %(average_fold_change_array))
 
-    ##########################################################################
     fig, ax = plt.subplots(figsize=(len(dna_elements),len(signatures)))
 
     try:
@@ -1422,24 +1258,19 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     # Results in big squares when array is small
     plt.tight_layout()
 
-    #############################################################################################################
-    #Add signature type
+    # Add signature type
     if filename_text:
        filename = '%s_rows_%s_signatures_columns_dna_elements_heatmap.png' %(filename_text,signatureType)
     else:
         filename = 'rows_%s_signatures_columns_dna_elements_heatmap.png' % (signatureType)
-    #############################################################################################################
+
 
     figureFile = os.path.join(heatmaps_output_dir, filename)
     fig.savefig(figureFile,bbox_inches='tight')
     plt.close()
-    ##########################################################################
-
-########################################################
 
 
 
-########################################################
 # Detailed heatmap before filtering: row biosample, column DNA elements (unpooled and uncombined)
 # Under heatmaps/detailed
 def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosample2DNAElement2FoldChangeDict,cancer_type,heatmap_output_path,verbose):
@@ -1452,7 +1283,6 @@ def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosa
             cancer_type_encode_biosamples_list=[]
             cancer_type_encode_biosamples_list.append('%s, %s' %(cancer_type,biosample))
 
-            ##########################################################################
             fig, ax = plt.subplots(figsize=(len(encode_hms), len(cancer_type_encode_biosamples_list)))
 
             if verbose: print('\tVerbose min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
@@ -1471,13 +1301,12 @@ def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosa
             plt.clf()
             plt.cla()
             plt.close(fig)
-            ##########################################################################
+
     if verbose: print('\tVerbose Plotting ends for Step2 using signature2Biosample2DNAElement2FoldChangeDict')
 
-########################################################
 
 
-########################################################
+
 def accumulate(signature,
     signature_type,
     signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,
@@ -1505,12 +1334,9 @@ def accumulate(signature,
                 accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]=signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature]
         else:
             print('There is a situation: %s' %accumulated_idSignature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict[signature])
-########################################################
 
 
 
-########################################################
-#Sep24, 2020
 def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           fold_change_window_size,
                                           num_of_real_data_avg_overlap,
@@ -1569,7 +1395,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
         dbs_signatures.append(AGGREGATEDDINUCS)
         id_signatures.append(AGGREGATEDINDELS)
 
-        #For tests
+        # For tests
         # signatures.append(('DBS6',DBS))
         # signatures.append(('SBS17b',SBS))
         # signatures.append(('SBS18',SBS))
@@ -1596,10 +1422,8 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                                     verbose)
 
 
-########################################################
 
-########################################################
-#Sep24, 2020
+
 def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_method,
                                                     fold_change_window_size,
                                                     num_of_real_data_avg_overlap,
@@ -1777,10 +1601,9 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     df_list = [step1_p_value_df,step2_combined_p_value_df, step3_combined_p_value_df, step4_q_value_df, step5_filtered_q_value_df]
     sheet_list = ['step1_p_value', 'step2_combined_p_value', 'step3_combined_p_value', 'step4_q_value', 'step5_filtered_q_value']
     write_excel_file(df_list, sheet_list, excel_file_path)
-########################################################
 
 
-########################################################
+
 def breakdown_signatures(signature2dna_element2avg_fold_change_dict,sbs_signatures,dbs_signatures,id_signatures):
     sbs_signature2dna_element2avg_fold_change_dict={}
     dbs_signature2dna_element2avg_fold_change_dict={}
@@ -1795,40 +1618,36 @@ def breakdown_signatures(signature2dna_element2avg_fold_change_dict,sbs_signatur
             id_signature2dna_element2avg_fold_change_dict[signature]=signature2dna_element2avg_fold_change_dict[signature]
 
     return sbs_signature2dna_element2avg_fold_change_dict, dbs_signature2dna_element2avg_fold_change_dict, id_signature2dna_element2avg_fold_change_dict
-########################################################
 
-########################################################
-#Used for search for dna_elements
-def get_dna_element(dna_element_long,epigenomics_dna_elements,nucleosome_file):
+
+# Used for search for dna_elements
+def get_dna_element(dna_element_long, epigenomics_dna_elements, nucleosome_file):
     if epigenomics_dna_elements:
         for dna_element in epigenomics_dna_elements:
-            dna_element_with_underscore= "_%s" %dna_element
-            if dna_element_with_underscore in dna_element_long:
+            # dna_element_with_underscore= "_%s" %dna_element
+            if dna_element.upper() in dna_element_long.upper():
                 return dna_element
     if (nucleosome_file is not None) and (dna_element_long in nucleosome_file):
         return NUCLEOSOME_DNA_ELEMENT
     print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(dna_element_long))
     return UNDECLARED
-########################################################
 
 
-########################################################
-#Used for search for biosamples
-def get_biosample(file_memo,biosample_list,nucleosome_file):
+# Used for search for biosamples
+def get_biosample(file_memo, biosample_list, nucleosome_file):
     if biosample_list:
         for biosample in biosample_list:
-            biosample_with_underscore= "_%s_" %biosample
-            if biosample_with_underscore in file_memo:
+            # biosample_with_underscore= "_%s_" %biosample
+            if biosample.upper() in file_memo.upper():
                 return biosample
     if (nucleosome_file is not None) and (file_memo in nucleosome_file):
         return NUCLEOSOME_DNA_ELEMENT
     print('Put ---- %s --- into epigenomics_dna_elements or epigenomics_biosamples' %(file_memo))
     return UNDECLARED
-########################################################
 
 
-########################################################
-# Sep24 2020 #Enrichment is done in this function.
+
+# Enrichment is done in this function.
 def calculate_fold_change_real_over_sim(center,
                                         plusorMinus,
                                         output_dir,
@@ -1857,19 +1676,18 @@ def calculate_fold_change_real_over_sim(center,
     dna_element=None
     dna_element_to_be_read=None
 
-    if occupancy_type==EPIGENOMICSOCCUPANCY:
-        biosample=get_biosample(epigenomics_file_memo,epigenomics_biosamples,nucleosome_file)
-        dna_element=epigenomics_file_memo
+    if occupancy_type == EPIGENOMICSOCCUPANCY:
+        biosample = get_biosample(epigenomics_file_memo, epigenomics_biosamples, nucleosome_file)
+        dna_element = epigenomics_file_memo
         dna_element_to_be_read = epigenomics_file_memo
-    elif occupancy_type==NUCLEOSOMEOCCUPANCY:
+    elif occupancy_type == NUCLEOSOMEOCCUPANCY:
         biosample = nucleosome_biosample
         dna_element = os.path.basename(nucleosome_file)
         dna_element_to_be_read = None
 
-    start=center-plusorMinus
-    end=center+plusorMinus+1
+    start = center - plusorMinus
+    end = center + plusorMinus + 1
 
-    ####################################################################################################################
     # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
     if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
         real_data_avg_signal_array = readData(None, None, signature, output_dir, jobname, occupancy_type, dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
@@ -1879,10 +1697,8 @@ def calculate_fold_change_real_over_sim(center,
     if real_data_avg_signal_array is not None:
         #If there is nan in the list np.mean returns nan.
         avg_real_signal = np.nanmean(real_data_avg_signal_array[start:end])
-    ####################################################################################################################
 
-    ####################################################################################################################
-    #Read accumulated_count_array
+    # Read accumulated_count_array
     if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
         real_data_accumulated_count_array = readData(None, None, signature, output_dir, jobname, occupancy_type, dna_element_to_be_read,ACCUMULATED_COUNT_ARRAY)
     else:
@@ -1891,10 +1707,8 @@ def calculate_fold_change_real_over_sim(center,
     if real_data_accumulated_count_array is not None:
         #If there is nan in the list np.mean returns nan.
         real_data_avg_count = np.nanmean(real_data_accumulated_count_array[start:end])
-    ####################################################################################################################
 
 
-    ####################################################################################################################
     if (numberofSimulations > 0):
         if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
             listofSimulationsSignatureBased = readDataForSimulations(None, None, signature, output_dir,jobname, numberofSimulations, occupancy_type,dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
@@ -1902,22 +1716,22 @@ def calculate_fold_change_real_over_sim(center,
             listofSimulationsSignatureBased = readDataForSimulations(None, signature, SIGNATUREBASED, output_dir,jobname, numberofSimulations, occupancy_type,dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
 
         if ((listofSimulationsSignatureBased is not None) and listofSimulationsSignatureBased):
-            #This is the simulations data
+            # This is the simulations data
             stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
             (rows, cols) = stackedSimulationsSignatureBased.shape
             num_of_sims = rows
 
-            #One sample way
+            # One sample way
             # print('stackedSimulationsSignatureBased.shape')
             # print(stackedSimulationsSignatureBased.shape)
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased[:,start:end]
             # print('stackedSimulationsSignatureBased_of_interest.shape')
             # print(stackedSimulationsSignatureBased_of_interest.shape)
 
-            #Get rid of rows with all nans
+            # Get rid of rows with all nans
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
 
-            #Take mean row-wise
+            # Take mean row-wise
             simulationsHorizontalMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
             avg_sim_signal = np.nanmean(simulationsHorizontalMeans)
             min_sim_signal = np.nanmin(simulationsHorizontalMeans)
@@ -1940,9 +1754,8 @@ def calculate_fold_change_real_over_sim(center,
             # print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
             # print(np.argwhere(np.isnan(simulationsHorizontalMeans)))
             # print(simulationsHorizontalMeans)
-    ####################################################################################################################
 
-    ####################################################################################################################
+
     if (numberofSimulations > 0):
         if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
             listofSimulationsSignatureBased = readDataForSimulations(None, None, signature, output_dir,jobname, numberofSimulations, occupancy_type,dna_element_to_be_read,ACCUMULATED_COUNT_ARRAY)
@@ -1963,7 +1776,6 @@ def calculate_fold_change_real_over_sim(center,
             #Take mean row-wise
             simulationsHorizontalCountMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
             sim_avg_count = np.nanmean(simulationsHorizontalCountMeans)
-    ####################################################################################################################
 
 
     if (avg_real_signal is not None) and (avg_sim_signal is not None):
@@ -1978,10 +1790,9 @@ def calculate_fold_change_real_over_sim(center,
             return [jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count, list(simulationsHorizontalMeans)]
         else:
             return [jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal, max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count, None]
-########################################################
 
 
-########################################################
+
 # complete list with p value
 #[jobname,
 # signature,
@@ -2007,12 +1818,10 @@ def write_dictionary_as_dataframe_step1_p_value(step1_signature2Biosample2DNAEle
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
-########################################################
 
 
-########################################################
-#Combined p value
-#[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
+# Combined p value
+# [avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 def write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath):
     L = sorted([(signature, biosample, dna_element, combined_p_value_list[0], combined_p_value_list[1], combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5], combined_p_value_list[6])
                 for signature, a in signature2biosample2pooled_dna_element2combined_p_value_list_dict.items()
@@ -2022,12 +1831,11 @@ def write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2poo
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
-########################################################
 
 
-########################################################
-#Combined p value
-#[avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
+
+# Combined p value
+# [avg_real_signal_list,avg_sim_signal_list,fold_change_list,avg_fold_change,p_value_list,combined_p_value]
 def write_dictionary_as_dataframe_step3_combined_p_value(step2_signature2dna_element2combined_p_value_list_dict,filepath):
     L = sorted([(signature, dna_element, combined_p_value_list[0], combined_p_value_list[1],combined_p_value_list[2], combined_p_value_list[3], combined_p_value_list[4], combined_p_value_list[5],combined_p_value_list[6])
                 for signature, a in step2_signature2dna_element2combined_p_value_list_dict.items()
@@ -2036,12 +1844,10 @@ def write_dictionary_as_dataframe_step3_combined_p_value(step2_signature2dna_ele
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
-########################################################
 
 
-########################################################
 # Q Value List
-#[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
+# [avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
 def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_value_list_dict,filepath):
     L = sorted([(signature, dna_element, q_value_list[0], q_value_list[1], q_value_list[2], q_value_list[3], q_value_list[4], q_value_list[5], q_value_list[6], q_value_list[7])
                 for signature, a in step3_signature2dna_element2q_value_list_dict.items()
@@ -2051,11 +1857,10 @@ def write_dictionary_as_dataframe_step4_q_value(step3_signature2dna_element2q_va
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
-########################################################
 
 
-########################################################
-#[avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value,q_value]
+
+# [avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value,q_value]
 def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_element2filtered_q_list_dict,epigenomics_heatmap_significance_level,filepath):
     L = sorted([(signature, dna_element, filtered_q_value_list[0], filtered_q_value_list[1], filtered_q_value_list[2], filtered_q_value_list[3], filtered_q_value_list[4], filtered_q_value_list[5], filtered_q_value_list[6], filtered_q_value_list[7])
                 for signature, a in step4_signature2dna_element2filtered_q_list_dict.items()
@@ -2068,11 +1873,9 @@ def write_dictionary_as_dataframe_step5_filtered_q_value(step4_signature2dna_ele
     df.to_csv(filepath, sep='\t', header=True, index=False)
 
     return df
-########################################################
 
 
-########################################################
-#Sep24, 2020
+
 # Step1
 # Epigenomics Signatures
 # Epigenomics AGGREGATEDSUBSTITUTIONS AGGREGATEDDINUCS AGGREGATEDINDELS
@@ -2091,20 +1894,14 @@ def step1_calculate_p_value(fold_change_window_size,
                         signatures,
                         heatmaps_output_dir):
 
-    #######################################################################
+
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
-    #######################################################################
 
-    ########################################################
     signature2Biosample2DNAElement2PValueDict = {}
-    ########################################################
-
-    ########################################################
     plusorMinus = fold_change_window_size//2
-    ########################################################
 
-    ########################################################
+
     def update_dictionary(complete_list):
         # complete_list:[jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
         #  max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count,
@@ -2126,29 +1923,37 @@ def step1_calculate_p_value(fold_change_window_size,
             signature2Biosample2DNAElement2PValueDict[signature] = {}
             signature2Biosample2DNAElement2PValueDict[signature][biosample] = {}
             signature2Biosample2DNAElement2PValueDict[signature][biosample][dna_element] = complete_list
-    ########################################################
 
-    ########################################################################
+
     for signature in signatures:
-        #Epigenomics
-        occupancy_type=EPIGENOMICSOCCUPANCY
+        # Epigenomics
+        occupancy_type = EPIGENOMICSOCCUPANCY
         for epigenomics_file_memo in epigenomics_files_memos:
             pool.apply_async(calculate_fold_change_real_over_sim,
                              args=(epigenomics_center,plusorMinus,output_dir,jobname,numberofSimulations,signature,nucleosome_file,nucleosome_biosample,epigenomics_file_memo,epigenomics_biosamples,occupancy_type,),
                              callback=update_dictionary)
-        #Nucleosome
+        # Nucleosome
         # if data files are ready it returns otherwise it returns None
-        occupancy_type=NUCLEOSOMEOCCUPANCY
-        epigenomics_file_memo=None
+        occupancy_type = NUCLEOSOMEOCCUPANCY
+        epigenomics_file_memo = None
         pool.apply_async(calculate_fold_change_real_over_sim,
-                 args=(nucleosome_center,plusorMinus,output_dir,jobname,numberofSimulations,signature,nucleosome_file,nucleosome_biosample,epigenomics_file_memo,epigenomics_biosamples,occupancy_type,),
+                 args=(nucleosome_center,
+                       plusorMinus,
+                       output_dir,
+                       jobname,
+                       numberofSimulations,
+                       signature,
+                       nucleosome_file,
+                       nucleosome_biosample,
+                       epigenomics_file_memo,
+                       epigenomics_biosamples,
+                       occupancy_type,),
                  callback=update_dictionary)
-    ########################################################################
 
-    #######################################################################
+
     pool.close()
     pool.join()
-    #######################################################################
+
 
     # print('##############################################################')
     # print('Step1 Getting p-values')
@@ -2159,11 +1964,8 @@ def step1_calculate_p_value(fold_change_window_size,
     # print('##############################################################')
 
     return step1_p_value_df, signature2Biosample2DNAElement2PValueDict
-########################################################
 
 
-########################################################
-#November 10, 2020
 def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           heatmaps_output_dir,
                           combine_p_values_method,
@@ -2171,11 +1973,11 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           nucleosome_file,
                           epigenomics_dna_elements):
 
-    #Fill and return this dictionary
+    # Fill and return this dictionary
     signature2biosample2pooled_dna_element2combined_p_value_list_dict = {}
     signature2biosample2pooled_dna_element2avg_fold_change_dict = {}
 
-    #Pooling for biosample and dna_element combine q_values
+    # Pooling for biosample and dna_element combine q_values
     for signature in signature2Biosample2DNAElement2PValueDict:
         for biosample in signature2Biosample2DNAElement2PValueDict[signature]:
             # dna_element_long <-- epigenomics_file_memo
@@ -2284,10 +2086,8 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
     step2_combined_p_value_df=write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath)
 
     return step2_combined_p_value_df, signature2biosample2pooled_dna_element2combined_p_value_list_dict, signature2biosample2pooled_dna_element2avg_fold_change_dict
-########################################################
 
 
-########################################################
 def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           heatmaps_output_dir,
                           combine_p_values_method,
@@ -2390,10 +2190,9 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
     step3_combined_p_value_df = write_dictionary_as_dataframe_step3_combined_p_value(signature2dna_element2combined_p_value_list_dict,filepath)
 
     return step3_combined_p_value_df, signature2dna_element2combined_p_value_list_dict, signature2dna_element2avg_fold_change_dict
-########################################################
 
-########################################################
-#[dna_element_long_list, avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
+
+# [dna_element_long_list, avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
 def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir):
     signature2dna_element2q_value_list_dict={}
 
@@ -2453,10 +2252,8 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
     step4_q_value_df=write_dictionary_as_dataframe_step4_q_value(signature2dna_element2q_value_list_dict,filepath)
 
     return step4_q_value_df,signature2dna_element2q_value_list_dict
-########################################################
 
 
-########################################################
 def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,heatmaps_output_dir,epigenomics_heatmap_significance_level):
     signature2dna_element2filtered_q_list_dict={}
     signature2dna_element2average_fold_changedict={}
@@ -2508,11 +2305,8 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
     step5_filtered_q_value_df=write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,epigenomics_heatmap_significance_level,filepath)
 
     return step5_filtered_q_value_df,signature2dna_element2average_fold_changedict,signature2dna_element2significancedict
-########################################################
 
 
-
-#########################################################
 def occupancyAverageSignalFigures(outputDir,
                                   jobname,
                                   numberofSimulations,

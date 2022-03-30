@@ -106,8 +106,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNA
 from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
-########################################################################################
-# April 27, 2020
+
 # requires chrBased_simBased_combined_df_split which can be real split or whole in fact
 # This is common for pool.imap_unordered and pool.apply_async variations
 def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
@@ -130,6 +129,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                              ordered_id_signatures_cutoffs,
                                                              plusorMinus,
                                                              discreet_mode,
+                                                             default_cutoff,
                                                              verbose):
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
@@ -219,15 +219,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
 
-    # if discreet_mode:
-    #     number_of_sbs_signatures = ordered_sbs_signatures.size
-    #     number_of_dbs_signatures = ordered_dbs_signatures.size
-    #     number_of_id_signatures = ordered_id_signatures.size
-    # else:
-    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-    #     number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-    #     number_of_id_signatures = ordered_all_id_signatures_array.size
-
     ###############################################################################
     ################################ Initialization ###############################
     ###############################################################################
@@ -257,12 +248,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             df_columns = chrBased_simBased_subs_df.columns.values
 
             subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-            # if discreet_mode:
-            #     subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-            # else:
-            #     subsSignatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
 
-            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
@@ -278,6 +264,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 subsSignature_accumulated_count_np_array,
                 plusorMinus,
                 discreet_mode,
+                default_cutoff,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_subs_df[df_columns].values]
 
@@ -288,12 +275,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             df_columns = chrBased_simBased_dinucs_df.columns.values
 
             dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-            # if discreet_mode:
-            #     dinucsSignatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-            # else:
-            #     dinucsSignatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
 
-            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
@@ -309,6 +291,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 dinucsSignature_accumulated_count_np_array,
                 plusorMinus,
                 discreet_mode,
+                default_cutoff,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_dinucs_df[df_columns].values]
 
@@ -319,12 +302,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
             df_columns = chrBased_simBased_indels_df.columns.values
 
             indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-            # if discreet_mode:
-            #     indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-            # else:
-            #     indelsSignatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
 
-            #July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp(
                 row,
                 chrLong,
@@ -340,6 +318,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 indelsSignature_accumulated_count_np_array,
                 plusorMinus,
                 discreet_mode,
+                default_cutoff,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_indels_df[df_columns].values]
 
@@ -373,8 +352,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 
 
 
-########################################################################################
-# May 5, 2020
 # For apply_async
 # Read chromBased simBased combined mutations df in the process
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
@@ -396,6 +373,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         ordered_id_signatures_cutoffs,
         plusorMinus,
         discreet_mode,
+        default_cutoff,
         verbose):
 
     # occupancy_type=input_list[0]
@@ -440,15 +418,15 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
                                                                         ordered_id_signatures_cutoffs,
                                                                         plusorMinus,
                                                                         discreet_mode,
+                                                                        default_cutoff,
                                                                         verbose)
     except Exception as e:
         print("Exception: %s" % (e))
         # print(e)
         # traceback.print_exc()
         # raise e
-########################################################################################
 
-# May 19, 2020
+
 # For apply_async split using poolInputList
 # Read chromBased simBased combined mutations df split in the process
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split(occupancy_type,
@@ -469,6 +447,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                                   ordered_id_signatures_cutoffs,
                                                                                   plusorMinus,
                                                                                   discreet_mode,
+                                                                                  default_cutoff,
                                                                                   verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
@@ -491,12 +470,11 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                     ordered_id_signatures_cutoffs,
                                                                     plusorMinus,
                                                                     discreet_mode,
+                                                                    default_cutoff,
                                                                     verbose)
 
 
-########################################################################################
 # For df_split
-# April 27, 2020
 # requires chrBased_simBased_combined_df_split which can be real split or whole in fact
 # This is common for pool.imap_unordered and pool.apply_async variations
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupancy_type,
@@ -517,6 +495,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                                                              ordered_id_signatures_cutoffs,
                                                              plusorMinus,
                                                              discreet_mode,
+                                                             default_cutoff,
                                                              verbose):
 
     if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
@@ -524,12 +503,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
     maximum_chrom_size = chromSizesDict[chrLong]
     start_time = time.time()
 
-    ##############################################################
     chrBasedSignalArray = None #Will be filled from chrBasedSignal files if they exists
     library_file_opened_by_pyBigWig = None #Will be filled by pyBigWig from bigWig or bigBed
     my_upperBound = None
     signal_index = None
-    ##############################################################
 
     if (chrBased_simBased_combined_df_split is not None) and verbose:
         print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_simBased_combined_df_split.shape[0],chrBased_simBased_combined_df_split.shape[1]))
@@ -541,9 +518,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
             sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
             sys.getsizeof(chrBased_simBased_combined_df_split) / MEGABYTE_IN_BYTES,
             chrLong, simNum))
-    #################################################################################################################
 
-    #################################################################################################################
+
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
     if (occupancy_type==NUCLEOSOMEOCCUPANCY):
@@ -605,9 +581,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                     my_upperBound = np.iinfo(np.int16).max
             except:
                 print('Exception %s' %library_file_with_path)
-    #################################################################################################################
 
-    #################################################################################################################
+
     if ((chrBasedSignalArray is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
@@ -638,7 +613,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
             ################################ Initialization ###############################
             ###############################################################################
 
-            # July 25, 2020
             [fillSignalArrayAndCountArray_using_list_comp_for_df_split(
                 row,
                 chrLong,
@@ -662,6 +636,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                 indelsSignature_accumulated_count_np_array,
                 plusorMinus,
                 discreet_mode,
+                default_cutoff,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_combined_df_split[df_columns].values]
 
@@ -693,12 +668,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
     SignalArrayAndCountArrayList.append(indelsSignature_accumulated_count_np_array)
 
     return SignalArrayAndCountArrayList
-########################################################################################
 
 
-########################################################################################
 # For df_split
-# July 25, 2020, Vectorization
+# Vectorization
 def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         row,
         chrLong,
@@ -722,6 +695,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         indelsSignature_accumulated_count_np_array,
         plusOrMinus,
         discreet_mode,
+        default_cutoff,
         df_columns,
         occupancy_calculation_type):
 
@@ -731,7 +705,6 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     mutation_row_type = row[indexofType]
     mutation_row_start = row[indexofStart]
 
-    ###########################################
     if mutation_row_type == SUBS:
         accumulated_signal_np_array = subsSignature_accumulated_signal_np_array
         accumulated_count_np_array = subsSignature_accumulated_count_np_array
@@ -747,7 +720,6 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         accumulated_count_np_array = indelsSignature_accumulated_count_np_array
         cutoffs = ordered_id_signatures_cutoffs
         signatures_mask_array = indelsSignatures_mask_array
-    ###########################################
 
     window_array = None
     windowSize = plusOrMinus * 2 + 1
@@ -841,9 +813,8 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
                     window_array = np.zeros((windowSize,),dtype=np.float32)
                     # We did not handle outliers for BigBed files.
                     [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusOrMinus))) for entry in list_of_entries]
-    ##########################################################
 
-    ##########################################################
+
     # Get the sample at this mutation_row
     # sample = mutation_row_sample
     # simulationNumber= mutation_row_simulation_number
@@ -861,6 +832,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
             #Add 1 for the Aggregated analysis to the mask array
             mask_array = np.append(mask_array, 1)
         else:
+            probabilities[probabilities < default_cutoff] = 0
             mask_array = np.array(probabilities).astype(float)
             # Add 1 for the Aggregated analysis to the mask array
             mask_array = np.append(mask_array, 1.0)
@@ -881,9 +853,8 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
             accumulated_count_np_array += to_be_accumulated_count_array
         else:
             accumulated_count_np_array += 1
-    ##########################################################
 
-########################################################################################
+
 
 
 def get_window_array(mutation_row_start,
@@ -999,7 +970,8 @@ def accumulate_arrays(row,
                       occupancy_calculation_type,
                       accumulated_signal_np_array,
                       accumulated_count_np_array,
-                      discreet_mode):
+                      discreet_mode,
+                      default_cutoff):
 
     # September 18, 2020 NO SIGNAL case is added
     # Vectorize July 25, 2020
@@ -1015,6 +987,7 @@ def accumulate_arrays(row,
             # Add 1 for the Aggregated analysis to the mask array
             mask_array = np.append(mask_array, 1) # For discreet 1
         else:
+            probabilities[probabilities < default_cutoff ] = 0
             mask_array = np.array(probabilities).astype(float)
             # Add 1 for the Aggregated analysis to the mask array
             mask_array = np.append(mask_array, 1.0)
@@ -1039,8 +1012,7 @@ def accumulate_arrays(row,
             accumulated_count_np_array += 1
 
 
-########################################################################################
-# July 25, 2020, Vectorization
+# Vectorization
 def fillSignalArrayAndCountArray_using_list_comp(
         row,
         chrLong,
@@ -1056,6 +1028,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
         accumulated_count_np_array,
         plusOrMinus,
         discreet_mode,
+        default_cutoff,
         df_columns,
         occupancy_calculation_type):
 
@@ -1079,12 +1052,11 @@ def fillSignalArrayAndCountArray_using_list_comp(
                       occupancy_calculation_type,
                       accumulated_signal_np_array,
                       accumulated_count_np_array,
-                      discreet_mode)
-########################################################################################
+                      discreet_mode,
+                      default_cutoff)
 
 
-#######################################################
-#October 13, 2020
+
 def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,atac_seq_file,chromNamesList):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
@@ -1129,13 +1101,11 @@ def check_download_chrbased_npy_atac_seq_files(outputDir,jobname,occupancy_type,
         #It has to be an absolute path
         print('%s is not an absolute path.' %(chrombased_npy_path))
 
-    #go back
+    # go back
     os.chdir(current_abs_path)
-#######################################################
 
 
 
-########################################################################################
 # main function
 # Using pyBigWig for bigBed and bigWig files starts Optional for unix, linux
 # Using chrBasedSignalArrays for big files
@@ -1163,6 +1133,7 @@ def occupancyAnalysis(genome,
                         remove_outliers,
                         quantileValue,
                         discreet_mode,
+                        default_cutoff,
                         verbose):
 
     print('\n#################################################################################')
@@ -1192,8 +1163,6 @@ def occupancyAnalysis(genome,
     dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
     indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
 
-    ##########################################################################
-    # July 26, 2020
     # For Vectorization
     # These are used in writing tables
     allSims_subsSignature_accumulated_signal_np_array = np.zeros((numofSimulations+1, number_of_sbs_signatures + 1, plusorMinus * 2 + 1))
@@ -1203,9 +1172,8 @@ def occupancyAnalysis(genome,
     allSims_subsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_sbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_dinucsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_dbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_indelsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_id_signatures+1, plusorMinus * 2 + 1))
-    ##########################################################################
 
-    ##############################################################
+
     # This code reads the file abd preaore chrbased signal files
     # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
     # No need for preparing here
@@ -1314,15 +1282,15 @@ def occupancyAnalysis(genome,
                                    ordered_id_signatures_cutoffs,
                                    plusorMinus,
                                    discreet_mode,
+                                   default_cutoff,
                                    verbose,),
                              callback=accumulate_apply_async_result_vectorization))
 
         pool.close()
         pool.join()
-    ##################################################################################
 
 
-    ##################################################################################
+
     elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
         print(USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT, flush=True)
 
@@ -1349,15 +1317,15 @@ def occupancyAnalysis(genome,
                                                ordered_id_signatures_cutoffs,
                                                plusorMinus,
                                                discreet_mode,
+                                               default_cutoff,
                                                verbose,),
                                          callback=accumulate_apply_async_result_vectorization))
         pool.close()
         pool.join()
-    ##################################################################################
 
 
-    ##################################################################################
-    #July 26, 2020, For Vectorization
+
+    # For Vectorization
     writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
                                                    sample_based,
                                                    plusorMinus,
@@ -1374,9 +1342,9 @@ def occupancyAnalysis(genome,
                                                    jobname,
                                                    numofSimulations,
                                                    library_file_memo)
-    ##################################################################################
+
 
     print('--- %s Analysis ends' %(occupancy_type))
     print('#################################################################################\n')
 
-########################################################################################
+

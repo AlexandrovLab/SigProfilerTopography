@@ -108,6 +108,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_A
 from SigProfilerTopography.source.commons.TopographyCommons import STRINGENT
 
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_AVERAGE_PROBABILITY
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CUTOFF
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_SBS_REQUIRED
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_DBS_REQUIRED
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_NUM_OF_ID_REQUIRED
@@ -639,6 +640,7 @@ def runOccupancyAnalyses(genome,
                          remove_outliers,
                          quantileValue,
                          discreet_mode,
+                         default_cutoff,
                          verbose):
 
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES) and (not os.path.exists(library_file_with_path)):
@@ -670,6 +672,7 @@ def runOccupancyAnalyses(genome,
                       remove_outliers,
                       quantileValue,
                       discreet_mode,
+                      default_cutoff,
                       verbose)
 
 def runReplicationTimeAnalysis(genome,
@@ -689,8 +692,10 @@ def runReplicationTimeAnalysis(genome,
                                ordered_dbs_signatures_cutoffs,
                                ordered_id_signatures_cutoffs,
                                discreet_mode,
+                               default_cutoff,
                                verbose,
                                matrix_generator_path):
+
 
     # Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
     # Supported computation types
@@ -713,6 +718,7 @@ def runReplicationTimeAnalysis(genome,
                             ordered_dbs_signatures_cutoffs,
                             ordered_id_signatures_cutoffs,
                             discreet_mode,
+                            default_cutoff,
                             verbose,
                             matrix_generator_path)
 
@@ -736,6 +742,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                      ordered_dbs_signatures_cutoffs,
                                      ordered_id_signatures_cutoffs,
                                      discreet_mode,
+                                     default_cutoff,
                                      verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS),exist_ok=True)
@@ -766,6 +773,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
                                   ordered_dbs_signatures_cutoffs,
                                   ordered_id_signatures_cutoffs,
                                   discreet_mode,
+                                  default_cutoff,
                                   verbose)
 
 
@@ -787,6 +795,7 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                       ordered_dbs_signatures_cutoffs,
                                       ordered_id_signatures_cutoffs,
                                       discreet_mode,
+                                      default_cutoff,
                                       verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,TRANSCRIPTIONSTRANDBIAS),exist_ok=True)
@@ -812,6 +821,7 @@ def runTranscriptionStradBiasAnalysis(outputDir,
                                     ordered_dbs_signatures_cutoffs,
                                     ordered_id_signatures_cutoffs,
                                     discreet_mode,
+                                    default_cutoff,
                                     verbose)
 
 
@@ -947,6 +957,7 @@ def runAnalyses(genome,
                 step4_tables = True,
                 discreet_mode = True,
                 average_probability = DEFAULT_AVERAGE_PROBABILITY,
+                default_cutoff = DEFAULT_CUTOFF,
                 num_of_sbs_required = DEFAULT_NUM_OF_SBS_REQUIRED,
                 num_of_dbs_required = DEFAULT_NUM_OF_DBS_REQUIRED,
                 num_of_id_required = DEFAULT_NUM_OF_ID_REQUIRED,
@@ -987,7 +998,6 @@ def runAnalyses(genome,
     ordered_all_dbs_signatures_wrt_probabilities_file_array = None
     ordered_all_id_signatures_wrt_probabilities_file_array = None
 
-    ###################################################
     if mutation_types_contexts is None:
         mutation_types_contexts=[]
         if (sbs_probabilities is not None):
@@ -1004,9 +1014,7 @@ def runAnalyses(genome,
 
     if mutation_types_contexts_for_signature_probabilities is None:
         mutation_types_contexts_for_signature_probabilities=mutation_types_contexts
-    ###################################################
 
-    ###################################################
     if step1_sim_data:
         step2_matgen_data = True
         step3_prob_merged_data = True
@@ -1016,15 +1024,12 @@ def runAnalyses(genome,
         step4_tables = True
     elif step3_prob_merged_data:
         step4_tables = True
-    ###################################################
 
-    ###################################################
     if (average_probability!=DEFAULT_AVERAGE_PROBABILITY) or \
             (num_of_sbs_required!=DEFAULT_NUM_OF_SBS_REQUIRED) or \
             (num_of_dbs_required!=DEFAULT_NUM_OF_DBS_REQUIRED) or \
             (num_of_id_required!=DEFAULT_NUM_OF_ID_REQUIRED):
         step4_tables = True
-    ###################################################
 
     #################################################################################
     ################################## Setting starts ###############################
@@ -1033,7 +1038,6 @@ def runAnalyses(genome,
     if genome is None:
         print('Parameter genome:%s must be set for SigProfilerTopography Analysis.' %(genome))
 
-    ###############################################
     if strand_bias:
         replication_strand_bias=True
         transcription_strand_bias=True
@@ -1041,9 +1045,7 @@ def runAnalyses(genome,
     if plot_strand_bias:
         plot_replication_strand_bias=True
         plot_transcription_strand_bias=True
-    ###############################################
 
-    ###############################################
     # We need full path of the library files
     if (genome==GRCh37) and (epigenomics_files==None):
         epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
@@ -1097,9 +1099,7 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-    ###############################################
 
-    ###############################################
     if genome == MM10:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
@@ -1690,10 +1690,11 @@ def runAnalyses(genome,
                 else:
                     # Probability Mode
                     subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
-                                                                                                 jobname,
-                                                                                                 chromNamesList,
-                                                                                                 SUBS,
-                                                                                                 num_of_sbs_required,
+                                                                                                jobname,
+                                                                                                chromNamesList,
+                                                                                                SUBS,
+                                                                                                default_cutoff,
+                                                                                                num_of_sbs_required,
                                                                                                 mutationType2PropertiesDict,
                                                                                                 chrLong2NumberofMutationsDict)
 
@@ -1727,6 +1728,7 @@ def runAnalyses(genome,
                                                                                             jobname,
                                                                                             chromNamesList,
                                                                                             DINUCS,
+                                                                                            default_cutoff,
                                                                                             num_of_dbs_required,
                                                                                             mutationType2PropertiesDict,
                                                                                             chrLong2NumberofMutationsDict)
@@ -1763,6 +1765,7 @@ def runAnalyses(genome,
                                                                                             jobname,
                                                                                             chromNamesList,
                                                                                             INDELS,
+                                                                                            default_cutoff,
                                                                                             num_of_id_required,
                                                                                             mutationType2PropertiesDict,
                                                                                             chrLong2NumberofMutationsDict)
@@ -1991,6 +1994,7 @@ def runAnalyses(genome,
                              remove_outliers,
                              quantileValue,
                              discreet_mode,
+                             default_cutoff,
                              verbose)
         print('#################################################################################')
         print("--- Run Nucleosome Occupancy Analyses: %s seconds --- %s" %((time.time()-start_time),nucleosome_file))
@@ -2022,6 +2026,7 @@ def runAnalyses(genome,
                                    ordered_dbs_signatures_cutoffs,
                                    ordered_id_signatures_cutoffs,
                                    discreet_mode,
+                                   default_cutoff,
                                    verbose,
                                    matrix_generator_path)
         print('#################################################################################')
@@ -2055,6 +2060,7 @@ def runAnalyses(genome,
                                          ordered_dbs_signatures_cutoffs,
                                          ordered_id_signatures_cutoffs,
                                          discreet_mode,
+                                         default_cutoff,
                                          verbose)
         print('#################################################################################')
         print("--- Run Replication Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
@@ -2085,6 +2091,7 @@ def runAnalyses(genome,
                                           ordered_dbs_signatures_cutoffs,
                                           ordered_id_signatures_cutoffs,
                                           discreet_mode,
+                                          default_cutoff,
                                           verbose)
         print('#################################################################################')
         print("--- Run Transcription Strand Bias Analyses: %s seconds --- %s" %((time.time()-start_time),computation_type))
@@ -2180,6 +2187,7 @@ def runAnalyses(genome,
                                  remove_outliers,
                                  quantileValue,
                                  discreet_mode,
+                                 default_cutoff,
                                  verbose)
             print('#################################################################################')
             print("--- Run Epigenomics Analyses: %s seconds --- %s" %((time.time()-start_time),epigenomics_file))

@@ -239,11 +239,9 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
     if verbose: print('\tVerbose Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
 
     return (chrLong,chrBased_wavelet_processed_df_group)
-##################################################################
 
 
-##################################################################
-# August 1, 2020
+
 # Using numpy array
 # Main engine function
 def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
@@ -252,7 +250,8 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
                                                                         ordered_signatures_cutoffs,
                                                                         signatures_mask_array,
                                                                         signature_decile_index_accumulated_np_array,
-                                                                        is_discreet,
+                                                                        discreet_mode,
+                                                                        default_cutoff,
                                                                         df_columns):
     # df_columns: numpy array
     indexofStart = np.where(df_columns == START) [0][0]
@@ -261,15 +260,15 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     # For single point mutations start and end are the same, therefore we need to add 1 to mutation_row[END]
     # end is exclusive for subs, indels and dinucs provided by readChrBased methods
 
-    #Simulation Number
+    # Simulation Number
     index_of_sim_num = np.where(df_columns == 'Simulation_Number')[0][0]
     sim_num = mutation_row[index_of_sim_num]
 
-    if mutation_type==SUBS:
+    if mutation_type == SUBS:
         end = start + 1
-    elif mutation_type==DINUCS:
+    elif mutation_type == DINUCS:
         end = start + 2
-    elif mutation_type==INDELS:
+    elif mutation_type == INDELS:
         indexofLength = np.where(df_columns == LENGTH)
         length=mutation_row[indexofLength]
         end = start + int(length)
@@ -287,7 +286,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     # decile 10  will be accumulated in index 9
     # decile 1 will be accumulated in index 0
     # Therefore uniqueIndexesArray minus 1
-    if (uniqueIndexesArray.size>0):
+    if (uniqueIndexesArray.size > 0):
         uniqueIndexesArray -= 1
         decile_index_array[uniqueIndexesArray] = 1
 
@@ -319,7 +318,7 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
         # # old code ends
 
         # new code starts
-        if is_discreet:
+        if discreet_mode:
             # Discreet way 1 or 0
             # Convert True into 1, and False into 0
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
@@ -344,7 +343,13 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
                 mask_array = np.append(mask_array, 1)
 
         else:
+            # new way
+            probabilities[probabilities < default_cutoff ] = 0
             mask_array = np.array(probabilities).astype(float)
+
+            # old way
+            # mask_array = np.array(probabilities).astype(float)
+
             if mutation_type == INDELS:
                 if (length >= 3):
                     # Order is important
@@ -371,13 +376,9 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
 
         signatures_decile_index_np_array = mask_array_1xnumofsignatures.T * decile_index_array_1x10
         signature_decile_index_accumulated_np_array += signatures_decile_index_np_array
-##################################################################
 
 
-
-##################################################################
 # For df_split
-# August 1, 2020
 # Using numpy array
 def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_split(mutation_row,
                                                                         chrBasedReplicationTimeDataArrayWithDecileIndex,
@@ -401,7 +402,6 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
     indexofStart = np.where(df_columns == START) [0][0]
     indexofSimulationNumber = np.where(df_columns == SIMULATION_NUMBER)[0][0]
 
-    ###########################################
     mutation_row_type = mutation_row[indexofType]
     sample = mutation_row[indexofSample]
     start = mutation_row[indexofStart]
@@ -427,7 +427,6 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
         cutoffs=ordered_id_signatures_cutoffs
         signatures_mask_array=df_columns_indels_signatures_mask_array
         signature_decile_index_accumulated_np_array = indels_signature_decile_index_accumulated_np_array
-    ###########################################
 
     slicedArray = chrBasedReplicationTimeDataArrayWithDecileIndex[start:end]
 
@@ -501,20 +500,14 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
         signatures_decile_index_np_array = mask_array_1xnumofsignatures.T * decile_index_array_1x10
         signature_decile_index_accumulated_np_array += signatures_decile_index_np_array
 
-##################################################################
 
 
 
-##################################################################
-# DEC 18, 2020
 def searchforAllMutations_using_numpy_array(sim_num,
                                             chrBased_simBased_subs_df,
                                             chrBased_simBased_dinucs_df,
                                             chrBased_simBased_indels_df,
                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
-                                            # ordered_all_sbs_signatures_array,
-                                            # ordered_all_dbs_signatures_array,
-                                            # ordered_all_id_signatures_array,
                                             ordered_sbs_signatures,
                                             ordered_dbs_signatures,
                                             ordered_id_signatures,
@@ -522,20 +515,12 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
                                             discreet_mode,
+                                            default_cutoff,
                                             verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
-
-    # if discreet_mode:
-    #     number_of_sbs_signatures = ordered_sbs_signatures.size
-    #     number_of_dbs_signatures = ordered_dbs_signatures.size
-    #     number_of_id_signatures = ordered_id_signatures.size
-    # else:
-    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-    #     number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-    #     number_of_id_signatures = ordered_all_id_signatures_array.size
 
     # Add one more row for the Aggregated analysis, there are 10 deciles
     # Add three more rows for the Microhomology, Repeat Mediated and Aggregated analysis, there are 10 deciles
@@ -549,11 +534,6 @@ def searchforAllMutations_using_numpy_array(sim_num,
 
         df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
 
-        # if discreet_mode:
-        #     df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-        # else:
-        #     df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
-
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              SUBS,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
@@ -561,6 +541,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             subs_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
+                                                                            default_cutoff,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
     # DINUCS
@@ -569,11 +550,6 @@ def searchforAllMutations_using_numpy_array(sim_num,
 
         df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
 
-        # if discreet_mode:
-        #     df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-        # else:
-        #     df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
-
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              DINUCS,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
@@ -581,6 +557,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
+                                                                            default_cutoff,
                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     # INDELS
@@ -589,12 +566,6 @@ def searchforAllMutations_using_numpy_array(sim_num,
 
         df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
 
-        # if discreet_mode:
-        #     df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-        # else:
-        #     df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
-
-
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
                                                                              INDELS,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
@@ -602,16 +573,16 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             df_columns_indels_signatures_mask_array,
                                                                             indels_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
+                                                                            default_cutoff,
                                                                             df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
     return sim_num, \
            subs_signature_decile_index_accumulated_np_array, \
            dinucs_signature_decile_index_accumulated_np_array, \
            indels_signature_decile_index_accumulated_np_array
-##################################################################
 
 
-##################################################################
+
 # For df split
 # August 1, 2020
 # Using numpy arrays
@@ -666,11 +637,10 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df.values]
 
     return sim_num, subs_signature_decile_index_accumulated_np_array, dinucs_signature_decile_index_accumulated_np_array, indels_signature_decile_index_accumulated_np_array
-##################################################################
 
 
-##################################################################
-#Please notice that replication time data are not overlappig data therefore only setting one decileIndex will be correct.
+
+# Please notice that replication time data are not overlappig data therefore only setting one decileIndex will be correct.
 # e.g.:
 # start end
 #   10 1009
@@ -679,15 +649,15 @@ def fillArray(chrBased_replicationtimedata_row,chrBasedDecileIndexArray,decileIn
     start= chrBased_replicationtimedata_row[START]
     end = chrBased_replicationtimedata_row[END] + 1
     chrBasedDecileIndexArray[start:end] = decileIndex
-##################################################################
 
-##################################################################
-#Explanation of this function
-#This function is called for each chromosome
-#For each chromosome, a numpy array is filled.
-#If there is a chromosome locus with a decile index 8 let's say, in the array that locus is filled with 8.
-#Decile index can be between 1-10.
-#In this function, each available interval with an index is filled in the corresponding numpy array with chrom size
+
+
+# Explanation of this function
+# This function is called for each chromosome
+# For each chromosome, a numpy array is filled.
+# If there is a chromosome locus with a decile index 8 let's say, in the array that locus is filled with 8.
+# Decile index can be between 1-10.
+# In this function, each available interval with an index is filled in the corresponding numpy array with chrom size
 def fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile_df_list):
     #We can set the starting index as 1 in builtin function enumerate
     #First chrBased_grouped_decile has index of 1
@@ -716,11 +686,8 @@ def fillChrBasedReplicationTimeNPArray(chrLong,chromSize,chrBased_grouped_decile
         #         chrBased_replicationtimedata_df.apply(fillArray,chrBasedDecileIndexArray=chrBasedReplicationTimeDataArrayWithDecileIndex,decileIndex=decileIndex, axis=1)
 
     return chrBasedReplicationTimeDataArrayWithDecileIndex
-##################################################################
 
 
-##################################################################
-# August 2, 2020
 # Using numpy array
 def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_splitbased_using_numpy_array(outputDir,
                                        jobname,
@@ -757,7 +724,6 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 verbose)
 
 
-# August 1, 2020
 # using numpy arrays
 def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_using_numpy_array(outputDir,
                                                                                                            jobname,
@@ -772,9 +738,10 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            ordered_dbs_signatures_cutoffs,
                                                                                                            ordered_id_signatures_cutoffs,
                                                                                                            discreet_mode,
+                                                                                                           default_cutoff,
                                                                                                            verbose):
 
-    # DEC18, 2020 To reduce memory usage
+    # To reduce memory usage
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
 
     return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
@@ -791,11 +758,11 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
                                                                                                 discreet_mode,
+                                                                                                default_cutoff,
                                                                                                 verbose)
 
 
 
-# Dec 18, 2020
 # using numpy arrays
 def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
                                                                                         chromSize,
@@ -811,6 +778,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
                                                                                         discreet_mode,
+                                                                                        default_cutoff,
                                                                                         verbose):
 
     # Fill replication time numpy array
@@ -828,6 +796,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
                                                    discreet_mode,
+                                                   default_cutoff,
                                                    verbose)
 
 
@@ -962,7 +931,6 @@ def getMutationDensityDict(decile_df_list,decileBasedAllChrAccumulatedCountDict)
     return numberofMutations, decileBasedMutationDensityDict, numberofMutationsList, numberofAttributableBasesList
 
 
-# August 2, 2020
 # Using numpy array
 def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(computationType,
         outputDir,
@@ -980,6 +948,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         ordered_id_signatures_cutoffs,
         sample_based,
         discreet_mode,
+        default_cutoff,
         verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
@@ -1006,7 +975,6 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
 
     jobs = []
 
-    # August 1, 2020
     # Using numpy array
     if (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
         sim_nums = range(0, numofSimulations + 1)
@@ -1032,6 +1000,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        discreet_mode,
+                                       default_cutoff,
                                        verbose,),
                                  callback=accumulate_np_arrays))
 
@@ -1308,6 +1277,7 @@ def replicationTimeAnalysis(computationType,
                             ordered_dbs_signatures_cutoffs,
                             ordered_id_signatures_cutoffs,
                             discreet_mode,
+                            default_cutoff,
                             verbose,
                             matrix_generator_path):
 
@@ -1340,12 +1310,11 @@ def replicationTimeAnalysis(computationType,
     # Fist decile_df in decile_df_list contains the intervals that are replicated the earliest.
     # Last decile_df in decile_df_list contains the intervals that are replicated the latest.
     # Please note that each decile_df contains intervals from all chroms (mixed chroms)
-    #What is the type of deciles? Deciles is a list of dataframes.
+    # What is the type of deciles? Deciles is a list of dataframes.
     # if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA STARTS  %s MB' % (str(os.getpid()), memory_usage()))
     if verbose: print('\tVerbose READ Repliseq DATA STARTS')
-    #Whole genome is needed here
-    #Formerly I was reading 2bit files using twobitreader
-    #Now, formerly downloaded matrix generator reference genome is being used.
+
+    # formerly downloaded matrix generator reference genome is being used.
     chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,chromNamesList,repliseqDataFilename,matrix_generator_path,verbose)
     # if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
     if verbose: print('\tVerbose READ Repliseq DATA ENDS')
@@ -1390,6 +1359,7 @@ def replicationTimeAnalysis(computationType,
         ordered_id_signatures_cutoffs,
         sample_based,
         discreet_mode,
+        default_cutoff,
         verbose)
 
     writeReplicationTimeDataUsingNumpyArray(outputDir,

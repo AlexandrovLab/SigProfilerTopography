@@ -184,8 +184,6 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
 
 
 
-# April 24, 2020
-# Updated July 29, 2020
 def search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             my_type,
                                                                             sample_based,
@@ -211,6 +209,7 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
                                                                             all_samples_subs_signature_mutation_type_untranscribed_np_array,
                                                                             all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                                                             discreet_mode,
+                                                                            default_cutoff,
                                                                             df_columns):
 
     if sample_based:
@@ -226,8 +225,8 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
     probabilities = mutation_row[df_columns_signatures_mask_array]
 
     ##########################################
-    if (my_type==SUBS):
-        #e.g.: C>A
+    if (my_type == SUBS):
+        # e.g.: C>A
         indexofMutation = np.where(df_columns == MUTATION)[0][0]
         mutationType = mutation_row[indexofMutation]
 
@@ -238,8 +237,12 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
             threshold_mask_array = np.greater_equal(probabilities, ordered_signatures_cutoffs)
             subs_signatures_mask_array = threshold_mask_array.astype(int)
         else:
+            # new way
+            probabilities[probabilities < default_cutoff] = 0
             subs_signatures_mask_array = np.array(probabilities).astype(float)
 
+            # old way
+            # subs_signatures_mask_array = np.array(probabilities).astype(float)
 
         # Concetanate
         all_types_mask_array= np.concatenate((six_mutation_types_mask_array,
@@ -260,7 +263,11 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
             # Convert True into 1, and False into 0
             dinucs_signatures_mask_array = threshold_mask_array.astype(int)
         else:
+            # new way
+            probabilities[probabilities < default_cutoff] = 0
             dinucs_signatures_mask_array = np.array(probabilities).astype(float)
+            # old way
+            # dinucs_signatures_mask_array = np.array(probabilities).astype(float)
 
         # Concetanate
         all_types_mask_array= np.concatenate((six_mutation_types_default_zeros_array,
@@ -274,7 +281,11 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
             # Convert True into 1, and False into 0
             indels_signatures_mask_array = threshold_mask_array.astype(int)
         else:
+            # new way
+            probabilities[probabilities < default_cutoff] = 0
             indels_signatures_mask_array = np.array(probabilities).astype(float)
+            # old way
+            # indels_signatures_mask_array = np.array(probabilities).astype(float)
 
         # Concetanate
         all_types_mask_array= np.concatenate((six_mutation_types_default_zeros_array,
@@ -410,12 +421,9 @@ def searchAllMutations_for_df_split(chrBased_simBased_combined_df,
             subs_signature_mutation_type_transcribed_np_array,
             subs_signature_mutation_type_untranscribed_np_array,
             subs_signature_mutation_type_nontranscribed_np_array)
-########################################################################
 
 
 
-########################################################################
-# April 30, 2020
 def searchAllMutations(chrBased_simBased_subs_df,
             chrBased_simBased_dinucs_df,
             chrBased_simBased_indels_df,
@@ -423,9 +431,6 @@ def searchAllMutations(chrBased_simBased_subs_df,
             sample_based,
             all_samples_np_array,
             six_mutation_types_np_array,
-            # ordered_all_sbs_signatures_array,
-            # ordered_all_dbs_signatures_array,
-            # ordered_all_id_signatures_array,
             ordered_sbs_signatures,
             ordered_dbs_signatures,
             ordered_id_signatures,
@@ -445,20 +450,13 @@ def searchAllMutations(chrBased_simBased_subs_df,
             all_samples_subs_signature_mutation_type_untranscribed_np_array,
             all_samples_subs_signature_mutation_type_nontranscribed_np_array,
             discreet_mode,
+            default_cutoff,
             verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
 
-    # if discreet_mode:
-    #     number_of_sbs_signatures = ordered_sbs_signatures.size
-    #     number_of_dbs_signatures = ordered_dbs_signatures.size
-    #     number_of_id_signatures = ordered_id_signatures.size
-    # else:
-    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-    #     number_of_dbs_signatures = ordered_all_dbs_signatures_array.size
-    #     number_of_id_signatures = ordered_all_id_signatures_array.size
 
     ###############################################################################
     ################################ Initialization ###############################
@@ -472,22 +470,16 @@ def searchAllMutations(chrBased_simBased_subs_df,
     ################################ Initialization ###############################
     ###############################################################################
 
-    ################################################################################
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
-        #df_columns numpy array
+        # df_columns numpy array
         df_columns = chrBased_simBased_subs_df.columns.values
 
         df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
 
-        # if discreet_mode:
-        #     df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
-        # else:
-        #     df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_all_sbs_signatures_array)
-
-        #Search for each row using Numpy Array
+        # Search for each row using Numpy Array
         [search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             SUBS,
                                                                             sample_based,
@@ -513,6 +505,7 @@ def searchAllMutations(chrBased_simBased_subs_df,
                                                                             all_samples_subs_signature_mutation_type_untranscribed_np_array,
                                                                             all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                                                             discreet_mode,
+                                                                            default_cutoff,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
 
@@ -524,11 +517,6 @@ def searchAllMutations(chrBased_simBased_subs_df,
         df_columns = chrBased_simBased_dinucs_df.columns.values
 
         df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-
-        # if discreet_mode:
-        #     df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
-        # else:
-        #     df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_all_dbs_signatures_array)
 
         # Search for each row using Numpy Array
         [search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array(mutation_row,
@@ -556,6 +544,7 @@ def searchAllMutations(chrBased_simBased_subs_df,
                                                                                               all_samples_subs_signature_mutation_type_untranscribed_np_array,
                                                                                               all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                                                                               discreet_mode,
+                                                                                              default_cutoff,
                                                                                               df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     # INDELS
@@ -566,11 +555,6 @@ def searchAllMutations(chrBased_simBased_subs_df,
         df_columns = chrBased_simBased_indels_df.columns.values
 
         df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-
-        # if discreet_mode:
-        #     df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures)
-        # else:
-        #     df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_all_id_signatures_array)
 
         # Search for each row using Numpy Array
         [search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array(mutation_row,
@@ -598,8 +582,10 @@ def searchAllMutations(chrBased_simBased_subs_df,
                                                                                               all_samples_subs_signature_mutation_type_untranscribed_np_array,
                                                                                               all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                                                                               discreet_mode,
+                                                                                              default_cutoff,
                                                                                               df_columns) for mutation_row in chrBased_simBased_indels_df.values]
-    ################################################################################
+
+
 
     return (sim_num,
             all_types_transcribed_np_array,
@@ -614,10 +600,10 @@ def searchAllMutations(chrBased_simBased_subs_df,
             all_samples_subs_signature_mutation_type_transcribed_np_array,
             all_samples_subs_signature_mutation_type_untranscribed_np_array,
             all_samples_subs_signature_mutation_type_nontranscribed_np_array)
-########################################################################
 
 
-########################################################################
+
+
 def searchAllMutations_simbased_chrombased_splitbased(outputDir,
                                            jobname,
                                            chrLong,
@@ -661,9 +647,9 @@ def searchAllMutations_simbased_chrombased_splitbased(outputDir,
                               subs_signature_mutation_type_nontranscribed_np_array,
                               discreet_mode,
                               verbose)
-########################################################################
 
-########################################################################
+
+
 def searchAllMutations_simbased_chrombased(outputDir,
                                         jobname,
                                         chrLong,
@@ -671,9 +657,6 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                         sample_based,
                                         all_samples_np_array,
                                         six_mutation_types_np_array,
-                                        # ordered_all_sbs_signatures_array,
-                                        # ordered_all_dbs_signatures_array,
-                                        # ordered_all_id_signatures_array,
                                         ordered_sbs_signatures,
                                         ordered_dbs_signatures,
                                         ordered_id_signatures,
@@ -682,16 +665,12 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                         ordered_id_signatures_cutoffs,
                                         all_types_np_array_size,
                                         discreet_mode,
+                                        default_cutoff,
                                         verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
 
-    # if discreet_mode:
-    #     number_of_sbs_signatures = ordered_sbs_signatures.size
-    # else:
-    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-
-    #Initialization for each chr and sim
+    # Initialization for each chr and sim
     all_types_transcribed_np_array = np.zeros((all_types_np_array_size))  # dtype=int
     all_types_untranscribed_np_array = np.zeros((all_types_np_array_size)) # dtype=int
     all_types_nontranscribed_np_array = np.zeros((all_types_np_array_size))  # dtype=int
@@ -702,7 +681,6 @@ def searchAllMutations_simbased_chrombased(outputDir,
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
 
     if sample_based:
-        #Jan 21, 2021
         all_samples_np_array_size=all_samples_np_array.size
         all_samples_all_types_transcribed_np_array = np.zeros((all_samples_np_array_size,all_types_np_array_size))  # dtype=int
         all_samples_all_types_untranscribed_np_array = np.zeros((all_samples_np_array_size,all_types_np_array_size)) #  dtype=int
@@ -711,7 +689,6 @@ def searchAllMutations_simbased_chrombased(outputDir,
         all_samples_subs_signature_mutation_type_untranscribed_np_array = np.zeros((all_samples_np_array_size, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
         all_samples_subs_signature_mutation_type_nontranscribed_np_array = np.zeros((all_samples_np_array_size, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
     else:
-        #Jan 21, 2021
         all_samples_all_types_transcribed_np_array = None
         all_samples_all_types_untranscribed_np_array = None
         all_samples_all_types_nontranscribed_np_array = None
@@ -726,9 +703,6 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                sample_based,
                                all_samples_np_array,
                                six_mutation_types_np_array,
-                               # ordered_all_sbs_signatures_array,
-                               # ordered_all_dbs_signatures_array,
-                               # ordered_all_id_signatures_array,
                                ordered_sbs_signatures,
                                ordered_dbs_signatures,
                                ordered_id_signatures,
@@ -748,11 +722,11 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                all_samples_subs_signature_mutation_type_untranscribed_np_array,
                                all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                discreet_mode,
+                               default_cutoff,
                                verbose)
 ########################################################################
 
 
-########################################################################
 # main function
 def transcriptionStrandBiasAnalysis(outputDir,
                                     jobname,
@@ -772,6 +746,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                     ordered_dbs_signatures_cutoffs,
                                     ordered_id_signatures_cutoffs,
                                     discreet_mode,
+                                    default_cutoff,
                                     verbose):
 
     print('\n#################################################################################')
@@ -787,26 +762,6 @@ def transcriptionStrandBiasAnalysis(outputDir,
     number_of_sbs_signatures = ordered_sbs_signatures.size
     sbs_signatures = ordered_sbs_signatures
 
-    # if discreet_mode:
-    #     all_types_np_array = np.concatenate((six_mutation_types_np_array,
-    #                                          ordered_sbs_signatures,
-    #                                          ordered_dbs_signatures,
-    #                                          ordered_id_signatures), axis=None)
-    #     all_types_np_array_size = six_mutation_types_np_array.size + ordered_sbs_signatures.size + ordered_dbs_signatures.size + ordered_id_signatures.size
-    #     number_of_sbs_signatures = ordered_sbs_signatures.size
-    #     sbs_signatures = ordered_sbs_signatures
-    # else:
-    #     all_types_np_array = np.concatenate((six_mutation_types_np_array,
-    #                                          ordered_all_sbs_signatures_array,
-    #                                          ordered_all_dbs_signatures_array,
-    #                                          ordered_all_id_signatures_array), axis=None)
-    #     all_types_np_array_size = six_mutation_types_np_array.size + ordered_all_sbs_signatures_array.size + ordered_all_dbs_signatures_array.size + ordered_all_id_signatures_array.size
-    #     number_of_sbs_signatures = ordered_all_sbs_signatures_array.size
-    #     sbs_signatures = ordered_all_sbs_signatures_array
-
-
-
-    #########################################################################################
     # Initialization for accumulated arrays
     all_sims_all_types_transcribed_np_array = np.zeros((numofSimulations+1, all_types_np_array_size)) #  dtype=int
     all_sims_all_types_untranscribed_np_array = np.zeros((numofSimulations+1, all_types_np_array_size)) # dtype=int
@@ -814,9 +769,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
     all_sims_subs_signature_mutation_type_transcribed_np_array = np.zeros((numofSimulations+1, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
     all_sims_subs_signature_mutation_type_untranscribed_np_array= np.zeros((numofSimulations+1, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
     all_sims_subs_signature_mutation_type_nontranscribed_np_array= np.zeros((numofSimulations+1, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
-    #########################################################################################
 
-    #########################################################################################
     if sample_based:
         # Initialization for accumulated arrays
         all_samples_np_array_size=all_samples_np_array.size
@@ -826,9 +779,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
         all_sims_all_samples_subs_signature_mutation_type_transcribed_np_array = np.zeros((numofSimulations+1, all_samples_np_array_size, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
         all_sims_all_samples_subs_signature_mutation_type_untranscribed_np_array= np.zeros((numofSimulations+1, all_samples_np_array_size, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
         all_sims_all_samples_subs_signature_mutation_type_nontranscribed_np_array= np.zeros((numofSimulations+1, all_samples_np_array_size, number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
-    #########################################################################################
 
-    #########################################################################################
     # Accumulate Numpy Arrays
     # July 27, 2020
     def accumulate_np_arrays(result_tuple):
@@ -863,12 +814,10 @@ def transcriptionStrandBiasAnalysis(outputDir,
             all_sims_all_samples_subs_signature_mutation_type_transcribed_np_array[sim_num] += all_samples_subs_signature_mutation_type_transcribed_np_array
             all_sims_all_samples_subs_signature_mutation_type_untranscribed_np_array[sim_num] += all_samples_subs_signature_mutation_type_untranscribed_np_array
             all_sims_all_samples_subs_signature_mutation_type_nontranscribed_np_array[sim_num] += all_samples_subs_signature_mutation_type_nontranscribed_np_array
-    #########################################################################################
+
 
     jobs = []
 
-    ###############################################################################
-    # April 30, 2020
     # Read the chrom based sim based mutations data in the worker process
     if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
         sim_nums = range(0, numofSimulations + 1)
@@ -897,14 +846,13 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                           ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           discreet_mode,
+                                          default_cutoff,
                                           verbose,),
                                     callback=accumulate_np_arrays))
 
         pool.close()
         pool.join()
-    ###############################################################################
 
-    ###############################################################################
     elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
@@ -929,7 +877,6 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                     callback=accumulate_np_arrays))
         pool.close()
         pool.join()
-    ###############################################################################
 
     #################################################################################################################
     ##########################################      Output starts      ##############################################
@@ -982,4 +929,3 @@ def transcriptionStrandBiasAnalysis(outputDir,
     print('--- TranscriptionStrandBias Analysis ends')
     print('#################################################################################\n')
 
-########################################################################
