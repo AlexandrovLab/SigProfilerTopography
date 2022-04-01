@@ -21,6 +21,7 @@
 # sys.path.append(commonsPath)
 # #############################################################
 
+import os
 import math
 import time
 import numpy as np
@@ -139,7 +140,6 @@ from SigProfilerTopography.source.commons.TopographyCommons import getChromSizes
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
 from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
 from SigProfilerTopography.source.commons.TopographyCommons import fillCutoff2Signature2PropertiesListDictionary
-from SigProfilerTopography.source.commons.TopographyCommons import fill_signatures_cutoffs_for_processivity
 from SigProfilerTopography.source.commons.TopographyCommons import fill_signature_number_of_mutations_df
 from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
 from SigProfilerTopography.source.commons.TopographyCommons import get_mutation_type_context_for_probabilities_file
@@ -1649,11 +1649,10 @@ def runAnalyses(genome,
 
     if (step4_tables):
 
-        #################################################################################
         print('#################################################################################')
         print('--- Fill tables/dictionaries using original data starts')
         start_time = time.time()
-        ##################################################################################
+
         # For each signature we will find a cutoff value for mutations with average probability >=0.9
         # Our aim is to have at most 10% false positive rate in mutations
         # number of mutations >= 5K for subs signatures
@@ -2105,40 +2104,17 @@ def runAnalyses(genome,
 
         start_time = time.time()
 
-        if discreet_mode:
-            runProcessivityAnalysis(mutation_types_contexts,
-                                    outputDir,
-                                    jobname,
-                                    numofSimulations,
-                                    chromNamesList,
-                                    processivity_calculation_type,
-                                    processivity_inter_mutational_distance,
-                                    subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                    verbose)
-
-        else:
-            cutoffs = []
-            for cufoff in np.arange(0.5, 0.91, 0.01):
-                cutoffs.append("%.2f" % (cufoff))
-
-            processivity_subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signatures_cutoffs_for_processivity(outputDir,
-                                                     jobname,
-                                                     chromNamesList,
-                                                     SUBS,
-                                                     cutoffs,
-                                                     average_probability,
-                                                     num_of_sbs_required)
-
-            runProcessivityAnalysis(mutation_types_contexts,
-                                    outputDir,
-                                    jobname,
-                                    numofSimulations,
-                                    chromNamesList,
-                                    processivity_calculation_type,
-                                    processivity_inter_mutational_distance,
-                                    processivity_subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                    verbose)
-
+        # we can use subsSignature_cutoff_numberofmutations_averageprobability_df
+        # either filled w.r.t. discreet mode or prob_mode_default_cutoff
+        runProcessivityAnalysis(mutation_types_contexts,
+                                outputDir,
+                                jobname,
+                                numofSimulations,
+                                chromNamesList,
+                                processivity_calculation_type,
+                                processivity_inter_mutational_distance,
+                                subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                verbose)
 
         print('#################################################################################')
         print("--- Run Processivity Analyses: %s seconds ---" %(time.time()-start_time))
@@ -2396,9 +2372,18 @@ def plotFigures(outputDir,
         pool.join()
         print("--- Plot epigenomics occupancy ends")
 
-        # original old call
-        # sequential
-        # occupancyAverageSignalFigures(outputDir, jobname, figureAugmentation, numberofSimulations,sample_based, mutationTypes,epigenomics_file_basename,epigenomics_file_memo,occupancy_type,plusOrMinus_epigenomics,verbose)
+        # # sequential call for testing or debugging
+        # occupancyAverageSignalFigures(outputDir,
+        #                               jobname,
+        #                               numberofSimulations,
+        #                               sample_based,
+        #                               mutation_types_contexts,
+        #                               epigenomics_file_basename,
+        #                               epigenomics_file_memo,
+        #                               occupancy_type,
+        #                               plusOrMinus_epigenomics,
+        #                               verbose,
+        #                               plot_mode)
 
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
@@ -2420,42 +2405,32 @@ def plotFigures(outputDir,
 
 
 
-
-##############################################################
-#To run on laptob
-import os
-
+# To run on local machine
 if __name__== "__main__":
 
     genome = 'GRCh37'
     jobname = 'Test-Skin-Melanoma'
     numberofSimulations = 2
-
     inputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input/PCAWG_Matlab_Clean/Skin-Melanoma/filtered/'
     outputDir = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_test')
-
     sbs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_sbs96_mutation_probabilities.txt')
     id_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_id83_mutation_probabilities.txt')
     dbs_probabilities_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','output_for_extractor','PCAWG_Matlab','Skin-Melanoma_dbs_mutation_probabilities.txt')
-
-    # user_provided_replication_time_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekWaveSignalRep1.wig')
-    # user_provided_replication_time_valley_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekValleysRep1.bed')
-    # user_provided_replication_time_peak_file_path = os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','replication','wgEncodeUwRepliSeqNhekPkRep1.bed')
-
-    # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeK562Sig.wig')
     user_provided_nucleosome_file_path = os.path.join('C:\\', 'Users', 'burcak', 'Developer', 'Python','SigProfilerTopography', 'SigProfilerTopography', 'lib','nucleosome', 'wgEncodeSydhNsomeGm12878Sig.wig')
-    # user_provided_nucleosome_file_path= os.path.join('C:\\','Users','burcak','Developer','Python','SigProfilerTopography','SigProfilerTopography','lib','nucleosome','wgEncodeSydhNsomeGm12878Sig.bigWig')
 
-    runAnalyses(genome, inputDir, outputDir, jobname, numberofSimulations,
-                           sbs_probabilities=sbs_probabilities_file_path,
-                           id_probabilities=id_probabilities_file_path,
-                           dbs_probabilities=dbs_probabilities_file_path,
-                            # nucleosome_biosample='K562',
-                            # replication_time_biosample='NHEK',
-                           # nucleosome_file=user_provided_nucleosome_file_path,
-                           # replication_time_signal_file=user_provided_replication_time_file_path,
-                           # replication_time_valley_file=user_provided_replication_time_valley_file_path,
-                           # replication_time_peak_file=user_provided_replication_time_peak_file_path,
-                           epigenomics=True, nucleosome=False, replication_time=False, strand_bias=False, processivity=False,
-                           sample_based=False, new_simulations_enforced=False, full_mode=False, verbose=False,necessary_dictionaries_already_exists=True)
-##############################################################
+    runAnalyses(genome,
+                inputDir,
+                outputDir,
+                jobname,
+                numberofSimulations,
+                sbs_probabilities=sbs_probabilities_file_path,
+                id_probabilities=id_probabilities_file_path,
+                dbs_probabilities=dbs_probabilities_file_path,
+                epigenomics=True,
+                nucleosome=False,
+                replication_time=False,
+                strand_bias=False,
+                processivity=False,
+                sample_based=False,
+                verbose=False)
+
