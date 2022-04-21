@@ -133,9 +133,9 @@ transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
 genicVersusIntergenicStrands=[GENIC, INTERGENIC]
 replicationStrands = [LAGGING, LEADING]
 
-########################################################################
-#New way
-#For Mutation Types
+
+# New way
+# For Mutation Types
 def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using_dataframes(sample,numberofMutations,
                                                                                         type_transcribed_versus_untranscribed_df,
                                                                                         type_lagging_versus_leading_df,
@@ -198,12 +198,10 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
     #     'Lagging_real_count.1', 'Lagging_mean_sims_count.1', 'Lagging_min_sims_count', 'Lagging_max_sims_count', 'Lagging_sims_count_list',
     #     'Leading_real_count.1', 'Leading_mean_sims_count.1', 'Leading_min_sims_count', 'Leading_max_sims_count', 'Leading_sims_count_list' ]]
 
-    ########################################################################
     transcriptionRatiosDict = {}
     replicationRatiosDict = {}
     for mutationType in six_mutation_types:
 
-        ##################################################################
         transcribed_real_count=0
         untranscribed_real_count=0
 
@@ -215,9 +213,7 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
 
         if (transcribed_real_count>0 and untranscribed_real_count>0):
             transcriptionRatiosDict[mutationType] = np.log10(transcribed_real_count/untranscribed_real_count)
-        ##################################################################
 
-        ##################################################################
         lagging_real_count = 0
         leading_real_count = 0
 
@@ -229,14 +225,11 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
 
         if (lagging_real_count>0 and leading_real_count>0):
             replicationRatiosDict[mutationType] = np.log10(lagging_real_count/leading_real_count)
-        ##################################################################
 
-        ##################################################################
         if (mutationType in replicationRatiosDict) and (mutationType in transcriptionRatiosDict):
             plt.scatter(replicationRatiosDict[mutationType], transcriptionRatiosDict[mutationType], label=mutationType)
-        ##################################################################
 
-    ########################################################################
+
 
     legend = plt.legend(loc='upper left', frameon=True, fancybox =False,labels=six_mutation_types, bbox_to_anchor=(-0.0095, 1.0095))
     legend.get_frame().set_linewidth(1)
@@ -261,10 +254,9 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
     plt.cla()
     plt.close(fig)
 
-########################################################################
 
 ########################################################################
-#Old way
+# Old way
 #For Mutation Types
 def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,outputDir,jobname):
 
@@ -604,10 +596,10 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
         fig.savefig(figureFile)
         plt.cla()
         plt.close(fig)
-########################################################################
 
-########################################################################
-#MutationTypeBased SampleBased Figures
+
+
+# MutationTypeBased SampleBased Figures
 def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(
         type2Sample2TranscriptionStrand2CountDict,
         type2Sample2ReplicationStrand2CountDict,
@@ -701,12 +693,11 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
         fig.savefig(figureFile)
         plt.cla()
         plt.close(fig)
-########################################################################
 
 
-########################################################################
-#SignatureBased SampleBased Figures
-#Sig26 is very different
+
+# SignatureBased SampleBased Figures
+# Sig26 is very different
 def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio_ReplicationLog10Ratio(type2Sample2TranscriptionStrand2CountDict,type2Sample2ReplicationStrand2CountDict,signatures,outputDir,jobname,isFigureAugmentation):
     transcriptionRatiosDict = {}
     replicationRatiosDict = {}
@@ -722,10 +713,6 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
             for sample in type2Sample2TranscriptionStrand2CountDict[signature].keys():
                 if (UNTRANSCRIBED_STRAND in type2Sample2TranscriptionStrand2CountDict[signature][sample]) and (TRANSCRIBED_STRAND in type2Sample2TranscriptionStrand2CountDict[signature][sample]):
                     transcriptionRatiosDict[signature][sample] = np.log10(type2Sample2TranscriptionStrand2CountDict[signature][sample][TRANSCRIBED_STRAND] /type2Sample2TranscriptionStrand2CountDict[signature][sample][UNTRANSCRIBED_STRAND])
-                    # print(signature, sample)
-                    # print(signature2Sample2TranscriptionStrand2CountDict[signature][sample][TRANSCRIBED_STRAND])
-                    # print(signature2Sample2TranscriptionStrand2CountDict[signature][sample][UNTRANSCRIBED_STRAND])
-                    # print(signature,sample,transcriptionRatiosDict[signature][sample])
 
         if signature in type2Sample2ReplicationStrand2CountDict:
             for sample in type2Sample2ReplicationStrand2CountDict[signature].keys():
@@ -794,7 +781,7 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
             fig.savefig(figureFile)
             plt.cla()
             plt.close(fig)
-########################################################################
+
 
 
 def is_there_at_least_10perc_diff(strand1_value, strand2_value):
@@ -866,9 +853,10 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
 
         # Set title
         if key is not None:
-            ax.set_title('%s %s vs. %s %s' %(key,strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
+            ax.set_title('%s %s vs. %s %s' %(key,strand1Name,strand2Name,mutationsOrSignatures), fontsize=35,fontweight='bold') # fontsize=20
         else:
-            ax.set_title('%s vs. %s %s' %(strand1Name,strand2Name,mutationsOrSignatures), fontsize=20,fontweight='bold')
+            ax.set_title('%s vs. %s' %(strand1Name,strand2Name), fontsize=35, fontweight='bold') # fontsize=20
+
 
         # Set x tick labels
         if len(x_axis_labels) > 6:
@@ -2026,7 +2014,13 @@ def plotBarPlotsUsingDataframes(outputDir,
 
 # main function
 # Using dataframes
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations, mutation_types_contexts, strand_bias_list, plot_mode):
+def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
+                                                             jobname,
+                                                             numberofSimulations,
+                                                             mutation_types_contexts,
+                                                             strand_bias_list,
+                                                             plot_mode,
+                                                             log_file):
 
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data
@@ -2068,7 +2062,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
     #########################  signatures and samples ends  ##################################
     ##########################################################################################
 
-    #######################################################################
     # Step1 Read p_value
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         # Replication Strand Bias
@@ -2099,9 +2092,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_genic_versus_intergenic_table_file_name = 'Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
         type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, type_genic_versus_intergenic_table_file_name)
         type_genic_versus_intergenic_df = pd.read_csv(type_genic_versus_intergenic_table_filepath, header=0, sep='\t')
-    #######################################################################
 
-    #######################################################################
+
     # Step2 Compute q_value
     p_values_list = []
     element_names = []
@@ -2140,10 +2132,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
             element_names.append(element_name)
             p_values_list.append(row[GENIC_VERSUS_INTERGENIC_P_VALUE])
 
-    # print('len(p_values_list): %d' %(len(p_values_list)))
-    #######################################################################
 
-    #######################################################################
+
     if ((p_values_list is not None) and p_values_list):
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
 
@@ -2259,15 +2249,12 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
             type_filename = 'Type_%s_Q_Value_Table.txt' % (GENIC_VERSUS_INTERGENIC)
             type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_genic_versus_intergenic_df.to_csv(type_filepath, sep='\t', header=True, index=False)
-    #######################################################################
 
-    #######################################################################
     # Step3 Filter q-values, Decide significant strand and set 10,20,30,50,75, 100 percent
     # Add Significant Strand
     # Set significant strands
     # Set percentages
     # Write Filtered Q Values dataframes with percentages
-    ##################################################################################################################################
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         signature_lagging_versus_leading_filtered_q_value_df = signature_lagging_versus_leading_df[signature_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
         type_lagging_versus_leading_filtered_q_value_df= type_lagging_versus_leading_df[type_lagging_versus_leading_df[LAGGING_VERSUS_LEADING_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
@@ -2300,9 +2287,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (LAGGING_VERSUS_LEADING)
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_lagging_versus_leading_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
-    ##################################################################################################################################
 
-    ##################################################################################################################################
+
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
         signature_transcribed_versus_untranscribed_filtered_q_value_df = signature_transcribed_versus_untranscribed_df[signature_transcribed_versus_untranscribed_df[TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
         type_transcribed_versus_untranscribed_filtered_q_value_df= type_transcribed_versus_untranscribed_df[type_transcribed_versus_untranscribed_df[TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE]<= SIGNIFICANCE_LEVEL].copy()
@@ -2335,10 +2321,9 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_transcribed_versus_untranscribed_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True,index=False)
-    ##################################################################################################################################
 
 
-    ##################################################################################################################################
+
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
         signature_genic_versus_intergenic_filtered_q_value_df = signature_genic_versus_intergenic_df[signature_genic_versus_intergenic_df[GENIC_VERSUS_INTERGENIC_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
         type_genic_versus_intergenic_filtered_q_value_df= type_genic_versus_intergenic_df[type_genic_versus_intergenic_df[GENIC_VERSUS_INTERGENIC_Q_VALUE]<= SIGNIFICANCE_LEVEL].copy()
@@ -2372,9 +2357,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (GENIC_VERSUS_INTERGENIC)
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_genic_versus_intergenic_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
-    ##################################################################################################################################
 
-    #######################################################################
+
     # Write Excel Files
     sheet_list = ['corrected_p_value', 'percentages']
     for strand1_versus_strand2 in strand_bias_list:
@@ -2395,17 +2379,14 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
         types_filename="Types_%s.xlsx" %(strand1_versus_strand2)
         file_name_with_path=os.path.join(strandbias_figures_excel_files_outputDir, types_filename)
         write_excel_file(types_df_list, sheet_list, file_name_with_path)
-    #######################################################################
 
 
-    #######################################################################
+
     # Circle plots starts
-
-    #######################################################################
     # Step4 Fill this dictionary
-    signature2mutation_type2strand2percentagedict={}
+    signature2mutation_type2strand2percentagedict = {}
 
-    df_list=[]
+    df_list = []
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         df_list.append(signature_lagging_versus_leading_filtered_q_value_df)
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
@@ -2511,13 +2492,12 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                     signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                 if (percent_100 == 1):
                     signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
-    #######################################################################
 
-    #######################################################################
+
     # Step4 Fill this dictionary
-    type2strand2percentagedict={}
+    type2strand2percentagedict = {}
 
-    df_list=[]
+    df_list = []
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         df_list.append(type_lagging_versus_leading_filtered_q_value_df)
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
@@ -2595,13 +2575,12 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                     type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
                 if (percent_100 == 1):
                     type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
-    #######################################################################
 
 
-    #######################################################################
     # Step5 Plot figures
     plot_legend(strandbias_figures_outputDir)
 
+    # Circle Plots
     for strand_bias in strand_bias_list:
         if np.any(subsSignatures):
             plot_six_mutations_sbs_signatures_circle_figures(subsSignatures,
@@ -2617,7 +2596,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                                            strandbias_figures_outputDir,
                                            SIGNIFICANCE_LEVEL,
                                            type2strand2percentagedict,
-                                           percentage_strings)
+                                           percentage_strings,
+                                           log_file)
         if np.any(indelsSignatures):
             plot_dbs_and_id_signatures_circle_figures(ID,
                                            indelsSignatures,
@@ -2625,10 +2605,10 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
                                            strandbias_figures_outputDir,
                                            SIGNIFICANCE_LEVEL,
                                            type2strand2percentagedict,
-                                           percentage_strings)
+                                           percentage_strings,
+                                           log_file)
 
-    # Circle plots ends
-    #######################################################################
+
 
     ########################################################################
     ##########################  Part 2 starts ##############################
@@ -2875,7 +2855,8 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                                        strandbias_figures_outputDir,
                                        SIGNIFICANCE_LEVEL,
                                        type2strand2percentagedict,
-                                       percentage_strings):
+                                       percentage_strings,
+                                       log_file):
 
     rows_signatures=[]
 
@@ -2886,6 +2867,8 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
     elif strand_bias==GENIC_VERSUS_INTERGENIC:
         strands=genicVersusIntergenicStrands
 
+    log_out = open(log_file, 'a')
+
     # Fill rows_DBS_signatures
     # Fill rows_ID_signatures
     for signature in signatures:
@@ -2894,10 +2877,11 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                 if strand in type2strand2percentagedict[signature]:
                     for percentage_string in percentage_strings:
                         if percentage_string in type2strand2percentagedict[signature][strand]:
-                            print('signature:%s strand:%s percentage_string:%s' %(signature,strand,percentage_string))
+                            print('signature:%s strand:%s percentage_string:%s' %(signature,strand,percentage_string), file=log_out)
                             if signature not in rows_signatures:
                                 rows_signatures.append(signature)
 
+    log_out.close()
     rows_signatures=sorted(rows_signatures,key=natural_key,reverse=True)
 
     if (len(rows_signatures) > 0):

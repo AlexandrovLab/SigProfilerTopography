@@ -123,6 +123,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                                                               processivity_df,
                                                                               numberofSimulations,
                                                                               processivity_significance_level,
+                                                                              log_file,
                                                                               verbose):
     # processivity_df: columns below
     # Simulation_Number
@@ -225,7 +226,9 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                     try:
                         zstat, pvalue = calculate_pvalue_teststatistics(observed_value, expected_values, alternative = 'smaller')
                     except FloatingPointError:
-                        print(signature,' observed_value: ', observed_value, ' expected_values: ', expected_values, ' FloatingPointError: divide by zero encountered in double_scalars')
+                        log_out = open(log_file, 'a')
+                        print(signature,' observed_value: ', observed_value, ' expected_values: ', expected_values, ' FloatingPointError: divide by zero encountered in double_scalars', file=log_out)
+                        log_out.close()
 
                     # Please note
                     # If pvalue is np.nan e.g.: due to a few expected values like only one [1]
@@ -302,8 +305,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
     try:
         rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(all_p_values_array, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
     except ZeroDivisionError:
-        print('ZeroDivisionError during statsmodels.stats.multitest.multipletests')
-        print('all_p_values_array: %s' %(all_p_values_array))
+        log_out = open(log_file, 'a')
+        print('ZeroDivisionError during statsmodels.stats.multitest.multipletests', file=log_out)
+        print('all_p_values_array: %s' %(all_p_values_array), file=log_out)
+        log_out.close()
 
     if all_FDR_BH_adjusted_p_values is not None:
         minus_log10_all_FDR_BH_adjusted_p_values = [-math.log10(q_value) if (q_value > 0) else np.inf for q_value in all_FDR_BH_adjusted_p_values]
@@ -365,13 +370,15 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
             (signature_processive_group_length_properties_df['qvalue'] <= processivity_significance_level)]['signature'].unique()
         sorted_signature_list = sorted(signatures_list, reverse=True, key=natural_key)
 
-        if verbose: print('\tVerbose #############################################')
-        if verbose: print('\tVerbose len(all_p_values):%d\n all_p_values: %s' % (len(all_p_values), all_p_values))
-
-        if verbose: print('\tVerbose #############################################')
         if verbose:
-            if (all_FDR_BH_adjusted_p_values is not None): print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' % (len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values))
-        if verbose: print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' % (len(minus_log10_all_FDR_BH_adjusted_p_values), minus_log10_all_FDR_BH_adjusted_p_values))
+            log_out = open(log_file, 'a')
+            print('\tVerbose #############################################', file=log_out)
+            print('\tVerbose len(all_p_values):%d\n all_p_values: %s' % (len(all_p_values), all_p_values), file=log_out)
+            print('\tVerbose #############################################', file=log_out)
+            if (all_FDR_BH_adjusted_p_values is not None):
+                print('\tVerbose len(all_FDR_BH_adjusted_p_values):%d\n all_FDR_BH_adjusted_p_values: %s' % (len(all_FDR_BH_adjusted_p_values), all_FDR_BH_adjusted_p_values), file=log_out)
+            print('\tVerbose len(minus_log10_all_FDR_BH_adjusted_p_values):%d\n minus_log10_all_FDR_BH_adjusted_p_values:%s' % (len(minus_log10_all_FDR_BH_adjusted_p_values), minus_log10_all_FDR_BH_adjusted_p_values), file=log_out)
+            log_out.close()
 
         # Plotting starts
         # create the directory if it does not exists
@@ -386,6 +393,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                  sorted_processsive_group_length_list,
                                  max_processive_group_length,
                                  signature_processive_group_length_properties_df,
+                                 log_file,
                                  verbose)
 
     # Write dataframe
@@ -411,16 +419,18 @@ def plot_processivity_figure(outputDir,
                              sorted_processsive_group_length_list,
                              max_processive_group_length,
                              signature_processive_group_length_properties_df,
+                             log_file,
                              verbose):
 
     index = None
     if ((len(sorted_processsive_group_length_list) > 0) and (max_processive_group_length > 0)):
         # Find index of maxProcessiveGroupLength in sortedProcessiveGroupLengthList
         index = sorted_processsive_group_length_list.index(max_processive_group_length)
-        if verbose: print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' % (sorted_processsive_group_length_list[index]))
-        if verbose: print('\tVerbose ##########################################')
-
-    if verbose: print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (max_processive_group_length, len(sorted_signature_list)))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose sortedProcessiveGroupLengthList[index]:%s' % (sorted_processsive_group_length_list[index]), file=log_out)
+            print('\tVerbose maxProcessiveGroupLength:%d len(sortedSignatureList):%d ' % (max_processive_group_length, len(sorted_signature_list)), file=log_out)
+            log_out.close()
 
     if (len(sorted_signature_list)>0):
         plot1, panel1 = plt.subplots(figsize=(20+1.5*len(sorted_processsive_group_length_list), 10+1.5*len(sorted_signature_list)))
@@ -565,10 +575,13 @@ def plot_processivity_figure(outputDir,
         plt.cla()
         plt.close(plot1)
 
-def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, verbose):
+def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, log_file, verbose):
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,PROCESSIVITY)
-    if verbose: print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath)
+    if verbose:
+        log_out = open(log_file,'a')
+        print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath, file=log_out)
+        log_out.close()
 
     processivity_table_file_list = []
     processivity_df_list = []
@@ -601,4 +614,5 @@ def processivityFigures(outputDir, jobname, numberofSimulations, processivity_si
                                                                               processivity_df,
                                                                               numberofSimulations,
                                                                               processivity_significance_level,
+                                                                              log_file,
                                                                               verbose)

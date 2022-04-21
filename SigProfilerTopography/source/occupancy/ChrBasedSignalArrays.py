@@ -47,9 +47,7 @@ from matplotlib import pyplot as plt
 #To plot for bi range of x axis such as 250M
 plt.rcParams['agg.path.chunksize'] = 10000
 
-#############################################################
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
-#############################################################
 
 commonsPath = os.path.join(current_abs_path, '..','commons')
 sys.path.append(commonsPath)
@@ -72,19 +70,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import SIGNAL
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 
-######################################################################
 def updateSignalArray(row,signalArray):
     # signalArray[row[START]:row[END]] += row[SIGNAL]
     signalArray[row[1]:row[2]] += row[3]
-######################################################################
 
-######################################################################
 def updateSignalArraysForListComprehension(row,signalArray):
     #row [chrom start end signal]
     signalArray[row[1]:row[2]] += row[3]
-######################################################################
 
-######################################################################
 # This write chrBasedSignalArray is used right now.
 def writeChrBasedOccupancySignalArray(inputList):
     outputDir = inputList[0]
@@ -97,9 +90,9 @@ def writeChrBasedOccupancySignalArray(inputList):
     max_signal=inputList[7]
     min_signal = inputList[8]
 
-    if (occupancy_type==NUCLEOSOMEOCCUPANCY):
+    if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED), exist_ok=True)
-    elif (occupancy_type==EPIGENOMICSOCCUPANCY):
+    elif (occupancy_type == EPIGENOMICSOCCUPANCY):
         os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED), exist_ok=True)
     else:
         os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED), exist_ok=True)
@@ -113,9 +106,8 @@ def writeChrBasedOccupancySignalArray(inputList):
     #     print("Signal array dtype is set as np.float32")
     #     signalArray = np.zeros(chromSize,dtype=np.float32)
 
-    #To avoid overflow
-    # print("Signal array dtype is set as np.float32")
-    signalArray = np.zeros(chromSize,dtype=np.float32)
+    # To avoid overflow signal array dtype is set as np.float32
+    signalArray = np.zeros(chromSize, dtype=np.float32)
 
     # Using apply
     # chrBasedFileDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
@@ -123,26 +115,20 @@ def writeChrBasedOccupancySignalArray(inputList):
     # Use list comprehension
     [updateSignalArray(row,signalArray) for row in chrBasedFileDF.values]
 
-    #############################  Save as npy starts ################################
+    # Save as npy
     signalArrayFilename = '%s_signal_%s' %(chrLong,filenameWoExtension)
-    # signalArrayFilenameText = '%s_signal_%s.txt' %(chrLong,filenameWoExtension)
-    if occupancy_type==NUCLEOSOMEOCCUPANCY:
+    if occupancy_type == NUCLEOSOMEOCCUPANCY:
         chrBasedSignalFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
         np.save(chrBasedSignalFile, signalArray)
     else:
-        #When we submit multiple jobs then they try to write on the same location on disk and it causes error.
-        #Therefore save location is changed.
-        # chrBasedSignalFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,EPIGENOMICS,CHRBASED,signalArrayFilename)
+        # When we submit multiple jobs then they try to write on the same location on disk and it causes error.
+        # Therefore save location is changed.
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
         np.save(chrBasedSignalFile,signalArray)
-    #############################  Save as npy ends ##################################
-
-######################################################################
 
 
-######################################################################
-#Used by nuclesome occupancy read all file at once
-#Filter w.r.t. a quantileValue
+# Used by nuclesome occupancy read all file at once
+# Filter w.r.t. a quantileValue
 def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
@@ -189,13 +175,11 @@ def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
     print('Memory usage in %s MB' % memory_usage())
 
     return nucleosome_df_grouped, max_signal, min_signal
-######################################################################
 
 
-######################################################################
-#Read all data at once, filter w.r.t. a quantileValue and write chrom based signal npy files sequentially
-#This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation sequentially
-#For in house use, also has parallel write version
+# Read all data at once, filter w.r.t. a quantileValue and write chrom based signal npy files sequentially
+# This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation sequentially
+# For in house use, also has parallel write version
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 
@@ -227,33 +211,25 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(
 
         print('After all chr based files are written')
         print('Memory usage in %s MB' % memory_usage())
-######################################################################
 
 
-#######################################################
 def deleteChrBasedNpyFiles(chrBasedNpyFilesPath):
-    #############################################
     # Delete the chrBasedNpyFilesPath if exists
 
-    ################################################
     if (os.path.exists(chrBasedNpyFilesPath)):
         try:
             shutil.rmtree(chrBasedNpyFilesPath,ignore_errors=True)
         except OSError as e:
             print('Error: %s - %s.' % (e.filename, e.strerror))
-    ################################################
-#######################################################
 
 
-##################################################################
-#JAN 10, 2020
-#If file is originally a  wig file use this function
-#Read at once, write in parallel
+# If file is originally a  wig file use this function
+# Read at once, write in parallel
 #
-#If original file is bigWig and converted from bigWig to wig and has lines starts with #bedGraph it means that it is now bedGraph format
-#In fact this is bedgraph format
+# If original file is bigWig and converted from bigWig to wig and has lines starts with #bedGraph it means that it is now bedGraph format
+# In fact this is bedgraph format
 # There can be wig files prepared from bedGraph which includes many lines start with #bedGraph
-#This code is intended for bigWig nucleosome occupancy files
+# This code is intended for bigWig nucleosome occupancy files
 # bedGraph section chr1:10111-60880
 # chr1    10111   10112   4.9
 # chr1    10112   10114   5
@@ -262,16 +238,14 @@ def deleteChrBasedNpyFiles(chrBasedNpyFilesPath):
 # chrX    155161349       155161419       0
 # chrX    155161470       155161530       0
 # chrX    155161597       155161634       0
-#Please note that end is exclusive
-def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome,wig_file_path,occupancy_type,quantileValue,remove_outliers):
-    wig_file_name=os.path.splitext(os.path.basename(wig_file_path))[0]
-
+# Please note that end is exclusive
+def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, wig_file_path, occupancy_type, quantileValue, remove_outliers, log_file):
     chromSizesDict = getChromSizesDict(genome)
     numofProcesses = multiprocessing.cpu_count()
 
-    #To reduce memory footprint
+    # To reduce memory footprint
     # Delete old chr based epigenomics files
-    chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+    chrBasedNpyFilesPath = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
     deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
 
     if os.path.exists(wig_file_path):
@@ -286,22 +260,24 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
         min_signal = wigfile_interval_version_df[SIGNAL].min()
         mean_signal = wigfile_interval_version_df[SIGNAL].mean()
         std_signal = wigfile_interval_version_df[SIGNAL].std()
-        print('Max Signal: %f' % max_signal)
-        print('Min Signal: %f' % min_signal)
-        print('Mean Signal: %f' % mean_signal)
-        print('Std Signal: %f' % std_signal)
-
+        log_out = open(log_file, 'a')
+        print('Max Signal: %f' % max_signal, file=log_out)
+        print('Min Signal: %f' % min_signal, file=log_out)
+        print('Mean Signal: %f' % mean_signal, file=log_out)
+        print('Std Signal: %f' % std_signal, file=log_out)
 
         # Outlier elimination starts
         if ((remove_outliers==True) and (quantileValue < 1.0)):
             # remove the outliers
             q = wigfile_interval_version_df[SIGNAL].quantile(quantileValue)
-            print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue))
-            print('before outlier removal number of rows: %d' % (wigfile_interval_version_df.shape[0]))
+            print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue), file=log_out)
+            print('before outlier removal number of rows: %d' % (wigfile_interval_version_df.shape[0]), file=log_out)
             file_df = wigfile_interval_version_df[wigfile_interval_version_df[SIGNAL] < q]
-            print('after outlier removal number of rows: %d' % (file_df.shape[0]))
+            print('after outlier removal number of rows: %d' % (file_df.shape[0]), file=log_out)
         else:
             file_df = wigfile_interval_version_df
+
+        log_out.close()
 
         file_df_grouped = file_df.groupby(CHROM)
         pool = multiprocessing.Pool(numofProcesses)
@@ -325,14 +301,10 @@ def readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, job
 
         pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 
-        ################################
         pool.close()
         pool.join()
-        ################################
 
-##################################################################
 
-##################################################################
 def fill_signal_array_dict(chrname,chr_based_df_list,chromSizesDict,occupancy_type,verbose):
 
     if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict starts:  current_mem_usage %.2f (mb)' % (occupancy_type, str(os.getpid()), memory_usage()))
@@ -363,9 +335,8 @@ def fill_signal_array_dict(chrname,chr_based_df_list,chromSizesDict,occupancy_ty
     if verbose: print('\tVerbose %s Worker pid %s Fill Signal Array Dict ends: current_mem_usage %.2f (mb)\n' % (occupancy_type, str(os.getpid()), memory_usage()))
 
     return process_signal_array_dict
-##################################################################
 
-##################################################################
+
 def update_min_max_array(process_signal_array_dict, signal_array_dict):
     process_min_signal = process_signal_array_dict['min_signal']
     process_max_signal = process_signal_array_dict['max_signal']
@@ -383,21 +354,17 @@ def update_min_max_array(process_signal_array_dict, signal_array_dict):
             signal_array_dict[chrom_key]=process_signal_array_dict[chrom_key]
         else:
             signal_array_dict[chrom_key]+=process_signal_array_dict[chrom_key]
-##################################################################
 
 
 
-##################################################################
 def append_chr_based_df_list_dict(chrname,chrom_based_chunk_df,chr2DataframeListDict):
     if chrname in chr2DataframeListDict:
         chr2DataframeListDict[chrname].append(chrom_based_chunk_df)
     else:
         chr2DataframeListDict[chrname]=[chrom_based_chunk_df]
-##################################################################
 
 
-######################################################################
-#No pool not used anymore
+# No pool not used anymore
 def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path, occupancy_type,verbose,chunksize = 10 ** 7):
     chr2DataframeList={}
     signal_array_dict = {}
@@ -409,7 +376,7 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
 
     possible_chrom_list=list(chromSizesDict.keys())
 
-    #To reduce memory footprint
+    # To reduce memory footprint
     # Delete old chr based epigenomics files
     if occupancy_type==EPIGENOMICSOCCUPANCY:
         chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
@@ -479,18 +446,18 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
             elif (occupancy_type == NUCLEOSOMEOCCUPANCY):
                 chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME,CHRBASED, signalArrayFilename)
             np.save(chrBasedSignalFile,signalArray)
-######################################################################
 
-######################################################################
-#For bedgraph and wig derived from bedgraph files
-#Pool is used.
-#Read at once.
-#Write in parallel
-#Use quantile for outliers
-def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue):
+
+# For bedgraph and wig derived from bedgraph files
+# Pool is used.
+# Read at once.
+# Write in parallel
+# Use quantile for outliers
+def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type, remove_outliers, verbose, quantileValue, log_file):
     chromSizesDict = getChromSizesDict(genome)
     possible_chrom_list = list(chromSizesDict.keys())
-    if verbose: print('\tVerbose possible_chrom_list:%s' % (possible_chrom_list))
+    log_out = open(log_file, 'a')
+    if verbose: print('\tVerbose possible_chrom_list:%s' % (possible_chrom_list), file=log_out)
 
     # To reduce memory footprint
     # Delete old chr based epigenomics signal/library files
@@ -505,9 +472,9 @@ def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, 
         column_names = [CHROM, START, END, SIGNAL]
         data_df=pd.read_csv(library_file_with_path, sep='\t', header=None, comment='#' ,names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
 
-        if verbose: print('\tVerbose Before data_df[CHROM].unique():%s' % (data_df[CHROM].unique()))
+        if verbose: print('\tVerbose Before data_df[CHROM].unique():%s' % (data_df[CHROM].unique()), file=log_out)
         data_df = data_df[data_df[CHROM].isin(possible_chrom_list)]
-        if verbose: print('\tVerbose After data_df[CHROM].unique():%s' % (data_df[CHROM].unique()))
+        if verbose: print('\tVerbose After data_df[CHROM].unique():%s' % (data_df[CHROM].unique()), file=log_out)
 
         max_signal = data_df[SIGNAL].max()
         min_signal = data_df[SIGNAL].min()
@@ -515,24 +482,24 @@ def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, 
         mean_skipna_False_signal = data_df[SIGNAL].mean(skipna=False)
         std_signal = data_df[SIGNAL].std()
 
-        print('\nfile_df.shape:(%d,%d)' % (data_df.shape[0], data_df.shape[1]))
-        print('Max Signal: %f' % max_signal)
-        print('Min Signal: %f' % min_signal)
-        print('Mean Signal skipna=True: %f' % mean_skipna_True_signal)
-        print('Mean Signal skipna=False: %f' % mean_skipna_False_signal)
-        print('Std Signal: %f' % std_signal)
+        print('\nfile_df.shape:(%d,%d)' % (data_df.shape[0], data_df.shape[1]), file=log_out)
+        print('Max Signal: %f' % max_signal, file=log_out)
+        print('Min Signal: %f' % min_signal, file=log_out)
+        print('Mean Signal skipna=True: %f' % mean_skipna_True_signal, file=log_out)
+        print('Mean Signal skipna=False: %f' % mean_skipna_False_signal, file=log_out)
+        print('Std Signal: %f' % std_signal, file=log_out)
 
-        if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data_df)))
-        if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(data):%s' %(occupancy_type, str(os.getpid()),sys.getsizeof(data_df)))
-        if verbose: print('\tVerbose ################################')
+        if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data_df)), file=log_out)
+        if verbose: print('\tVerbose %s Worker pid %s sys.getsizeof(data):%s' %(occupancy_type, str(os.getpid()),sys.getsizeof(data_df)), file=log_out)
+        if verbose: print('\tVerbose ################################', file=log_out)
 
         if (remove_outliers and (quantileValue < 1.0)):
             # remove the outliers
             q = data_df[SIGNAL].quantile(quantileValue)
-            print('\tq:%f' % q)
-            print('\tbefore outlier elimination number of rows: %d' % (data_df.shape[0]))
+            print('\tq:%f' % q, file=log_out)
+            print('\tbefore outlier elimination number of rows: %d' % (data_df.shape[0]), file=log_out)
             data_df = data_df[data_df[SIGNAL] < q]
-            print('\tafter outlier elimination number of rows: %d' % (data_df.shape[0]))
+            print('\tafter outlier elimination number of rows: %d' % (data_df.shape[0]), file=log_out)
 
         data_df_grouped = data_df.groupby(CHROM)
 
@@ -549,19 +516,20 @@ def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, 
                 inputList.append(max_signal)
                 inputList.append(min_signal)
                 jobs.append(pool.apply_async(writeChrBasedOccupancySignalArray,args=(inputList,)))
-                if verbose: print('\tVerbose JOB chrName:%s chrBased_data_df(%d,%d)' % (chrname, chrBased_data_df.shape[0], chrBased_data_df.shape[1]))
+                if verbose: print('\tVerbose JOB chrName:%s chrBased_data_df(%d,%d)' % (chrname, chrBased_data_df.shape[0], chrBased_data_df.shape[1]), file=log_out)
 
         # wait for all jobs to finish
         for job in jobs:
-            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()))
+            if verbose: print('\tVerbose %s Worker pid %s job.get():%s ' % (occupancy_type, str(os.getpid()), job.get()), file=log_out)
 
         pool.close()
         pool.join()
-######################################################################
 
-######################################################################
-#Pool is used
-#Read in chunks, at the end have all signal arrays in memory and write sequentially
+    log_out.close()
+
+
+# Pool is used
+# Read in chunks, at the end have all signal arrays in memory and write sequentially
 def readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,chunksize = 10 ** 7,number_of_stds_for_outlier=10):
     chr2DataframeListDict={}
     signal_array_dict = {}
@@ -585,12 +553,12 @@ def readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, ge
         pool = multiprocessing.Pool(numofProcesses)
         jobs = []
 
-        #########################################################################################
+
         def accumulate_apply_async_result(process_signal_array_dict):
             if verbose: print('\tVerbose %s Worker pid %s Accumulate Apply Sync Result starts --- process_signal_array_dict.keys():%s' % (occupancy_type, str(os.getpid()), process_signal_array_dict.keys()))
             update_min_max_array(process_signal_array_dict,signal_array_dict)
             if verbose: print('\tVerbose %s Worker pid %s Accumulate Apply Sync Result ends --- process_signal_array_dict.keys():%s' % (occupancy_type, str(os.getpid()), process_signal_array_dict.keys()))
-        #########################################################################################
+
 
         data=pd.read_csv(library_file_with_path, delimiter='\t', iterator=True, chunksize=chunksize)
         if verbose: print('\tVerbose %s Worker pid %s type(data):%s' %(occupancy_type, str(os.getpid()),type(data)))
@@ -652,24 +620,22 @@ def readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, ge
                 # number_of_elements_as_outliers=np.count_nonzero(signalArray>(mean+4*std))
                 signalArray[signalArray>(mean+number_of_stds_for_outlier*std)]=0
             np.save(chrBasedSignalFile,signalArray)
-######################################################################
 
 
-##################################################################
-#SIGNAL must have type np.float32
-#No Outlier Elimination is done
-def readFileInBEDFormat(file_with_path,discard_signal):
-    file_df=None
+# SIGNAL must have type np.float32
+# No Outlier Elimination is done
+def readFileInBEDFormat(file_with_path, discard_signal, log_file):
+    file_df = None
+    log_out = open(log_file,'a')
 
-    print('############################################')
     if os.path.exists(file_with_path):
         file_df = pd.read_csv(file_with_path, header=None, nrows=1,sep='\t')  # 2.25 GB
         ncols=file_df.shape[1]
 
-        if (ncols<=3):
-            print('There is no enough columns in this bed file')
-        elif (ncols==4):
-            print('SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header')
+        if (ncols <= 3):
+            print('--- There is no enough columns in this bed file', file=log_out)
+        elif (ncols == 4):
+            print('--- SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header', file=log_out)
             file_df=pd.read_csv(file_with_path,
                                 header=None,
                                 usecols=[0, 1, 2, 3],
@@ -677,14 +643,13 @@ def readFileInBEDFormat(file_with_path,discard_signal):
                                 dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},
                                 sep='\t')
 
-        elif ((ncols==10) or (ncols==9)):
+        elif ((ncols == 10) or (ncols == 9)):
             # ENCODE narrowpeak BED6+4 ncols=10
             # ENCODE broadpeak BED6+3 ncols=9
-
-            if (ncols==10):
-                print('ENCODE narrowpeak BED6+4')
-            elif (ncols==9):
-                print('ENCODE narrowpeak BED6+3')
+            if (ncols == 10):
+                print('--- ENCODE narrowpeak BED6+4', file=log_out)
+            elif (ncols == 9):
+                print('--- ENCODE narrowpeak BED6+3', file=log_out)
 
             if discard_signal==True:
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
@@ -692,7 +657,7 @@ def readFileInBEDFormat(file_with_path,discard_signal):
                                         dtype={0: 'category', 1: np.int32, 2: np.int32},sep='\t')
 
             else:
-                print('SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header')
+                print('--- SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header', file=log_out)
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
                                         names=[CHROM, START, END, NAME, SCORE, STRAND, SIGNAL],
                                         dtype={0: 'category', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
@@ -702,17 +667,13 @@ def readFileInBEDFormat(file_with_path,discard_signal):
                 file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
 
 
-        elif (ncols>=5):
-            print('SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header')
-            file_df=pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
+        elif (ncols >= 5):
+            print('--- SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header', file=log_out)
+            file_df = pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
 
-        print("file_df.dtypes")
-        print(file_df.dtypes)
-        print('\nfile_df.columns.values')
-        print(file_df.columns.values)
-
-        print('\nfile_df.shape:(%d,%d)' %(file_df.shape[0],file_df.shape[1]))
-        # print(file_df.head())
+        print("--- file_df.dtypes:", file_df.dtypes, file=log_out)
+        print('--- file_df.columns.values:', file_df.columns.values, file=log_out)
+        print('--- file_df.shape:(%d,%d)' %(file_df.shape[0],file_df.shape[1]), file=log_out)
 
         if SIGNAL in file_df.columns.values:
             max_signal=file_df[SIGNAL].max()
@@ -721,52 +682,51 @@ def readFileInBEDFormat(file_with_path,discard_signal):
             mean_skipna_False_signal=file_df[SIGNAL].mean(skipna=False)
             std_signal=file_df[SIGNAL].std()
 
-            print('Max Signal: %f' %max_signal)
-            print('Min Signal: %f' %min_signal)
-            print('Mean Signal skipna=True: %f' %mean_skipna_True_signal)
-            print('Mean Signal skipna=False: %f' %mean_skipna_False_signal)
-            print('Std Signal: %f' %std_signal)
-            print('file_df[SIGNAL].isnull().sum():%d' %file_df[SIGNAL].isnull().sum())
-
+            print('--- Max Signal: %f' %max_signal, file=log_out)
+            print('--- Min Signal: %f' %min_signal, file=log_out)
+            print('--- Mean Signal skipna=True: %f' %mean_skipna_True_signal, file=log_out)
+            print('--- Mean Signal skipna=False: %f' %mean_skipna_False_signal, file=log_out)
+            print('--- Std Signal: %f' %std_signal, file=log_out)
+            print('--- file_df[SIGNAL].isnull().sum():%d' %file_df[SIGNAL].isnull().sum(), file=log_out)
+            log_out.close()
             return file_df, max_signal, min_signal
         else:
+            log_out.close()
             return file_df
-        print('############################################')
 
+    log_out.close()
     return file_df
-##################################################################
 
 
-
-######################################################################
-#Dec 2, 2019
-#This function is used when user provides its own bed/np/narrowpeak files for occupancy analysis
-#Read at once writes in parallel
-def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWithPath, occupancy_type, quantileValue, remove_outliers):
+# This function is used when user provides its own bed/np/narrowpeak files for occupancy analysis
+# Read at once writes in parallel
+def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWithPath, occupancy_type, quantileValue, remove_outliers, log_file):
     chromSizesDict = getChromSizesDict(genome)
     numofProcesses = multiprocessing.cpu_count()
 
-    #To reduce memory footprint
+    # To reduce memory footprint
     # Delete old chr based epigenomics files
     chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
     deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
 
     if os.path.exists(BEDFileWithPath):
-        bedfilename, bedfile_extention= os.path.splitext(os.path.basename(BEDFileWithPath))
+        bedfilename, bedfile_extention = os.path.splitext(os.path.basename(BEDFileWithPath))
 
         if (bedfile_extention.lower()=='.bed' or bedfile_extention.lower()=='.np' or bedfile_extention.lower()=='.narrowpeak'):
-            discard_signal=False
-            file_df, max_signal, min_signal=readFileInBEDFormat(BEDFileWithPath,discard_signal)
+            discard_signal = False
+            file_df, max_signal, min_signal = readFileInBEDFormat(BEDFileWithPath, discard_signal, log_file)
 
-            #Outlier elimination starts
+            # Outlier elimination starts
             if ((remove_outliers==True) and (quantileValue < 1.0)):
                 # remove the outliers
                 q = file_df[SIGNAL].quantile(quantileValue)
-                print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue))
-                print('before outlier removal number of rows: %d' % (file_df.shape[0]))
+                log_out = open(log_file, 'a')
+                print('Signal greater than %f is removed for quantile: %f' % (q,quantileValue), file=log_out)
+                print('before outlier removal number of rows: %d' % (file_df.shape[0]), file=log_out)
                 file_df = file_df[file_df[SIGNAL] < q]
-                print('after outlier removal number of rows: %d' % (file_df.shape[0]))
-            #Outlier elimination ends
+                print('after outlier removal number of rows: %d' % (file_df.shape[0]), file=log_out)
+                log_out.close()
+            # Outlier elimination ends
 
             file_df_grouped = file_df.groupby(CHROM)
             pool = multiprocessing.Pool(numofProcesses)
@@ -790,20 +750,15 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWit
 
             pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 
-            ################################
             pool.close()
             pool.join()
-            ################################
-
-######################################################################
 
 
 
-######################################################################
-#Read all data at once, filter w.r.t. a quantileValue and write chrom based in parallel
-#This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation in parallel
-#For in house use, also has sequential write version
-#quantileValue set as 0.97 For  GM12878 and K562 MNase-seq data
+# Read all data at once, filter w.r.t. a quantileValue and write chrom based in parallel
+# This function is used for GM12878 and K562 nucleosome occupancy chrom based signal npy files creation in parallel
+# For in house use, also has sequential write version
+# quantileValue set as 0.97 For  GM12878 and K562 MNase-seq data
 def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue, nucleosomeFilename):
     chromSizesDict = getChromSizesDict(genome)
 
@@ -842,12 +797,9 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
 
         pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 
-        ################################
         pool.close()
         pool.join()
-        ################################
 
         print('After pool is closed and joined')
         print('Memory usage in %s MB' % memory_usage())
 
-######################################################################

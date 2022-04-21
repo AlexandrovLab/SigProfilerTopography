@@ -96,8 +96,6 @@ THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE = 25000
 
 def checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,peakorValleyStart, peakorValleyEnd, chrBasedSmoothedWaveletReplicationTimeSignalDF):
     transitionZoneList =[]
-
-    # print('################ checkForConsecutive starts ############ fromStart: %s toEnd: %s' %(peakorValleyStart,peakorValleyEnd))
     subset_df = chrBasedSmoothedWaveletReplicationTimeSignalDF[(chrBasedSmoothedWaveletReplicationTimeSignalDF[START]>=peakorValleyStart) & (chrBasedSmoothedWaveletReplicationTimeSignalDF[END]<=peakorValleyEnd)]
 
     consecutiveLength = 0
@@ -576,15 +574,10 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             print('There is a situation!!!')
         else:
             print('There is a situation!!!')
-    #############################################################################################################
-
-########################################################################
 
 
 
-
-########################################################################
-#This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
+# This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
 def checkforValidness(chrBased_valleys_peaks_df):
     formerRowType = None
 
@@ -597,17 +590,17 @@ def checkforValidness(chrBased_valleys_peaks_df):
             formerRowType = row['type']
 
     return True
-########################################################################
 
 
-########################################################################
 def get_chr_based_replication_strand_array_for_callback(chrLong,chromSize,repliseq_signal_df,valleys_df,peaks_df):
-    chrBased_replication_array = get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df)
+    chrBased_replication_array = get_chr_based_replication_strand_array(chrLong,
+                                                                        chromSize,
+                                                                        repliseq_signal_df,
+                                                                        valleys_df,
+                                                                        peaks_df)
     return (chrLong,chrBased_replication_array)
-########################################################################
 
 
-########################################################################
 def get_chr_based_replication_strand_array(chrLong,chromSize,repliseq_signal_df,valleys_df,peaks_df):
 
     # Read chrBasedSmoothedWaveletReplicationTimeSignalDF
@@ -635,10 +628,9 @@ def get_chr_based_replication_strand_array(chrLong,chromSize,repliseq_signal_df,
         return chrBased_replication_array
     else:
         return None
-########################################################################
 
 
-########################################################################
+
 def fill_chr_based_replication_strand_array(chrLong,
                                             chromSize,
                                             chrBasedSmoothedWaveletReplicationTimeSignalDF,
@@ -670,14 +662,11 @@ def fill_chr_based_replication_strand_array(chrLong,
     chrBasedTransitionZonesDF.apply(fillReplicationStrandArray, chrBased_replication_array=chrBased_replication_array,axis=1)
 
     return chrBased_replication_array
-########################################################################
 
 
-########################################################################
-def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename):
+def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename, valleysBEDFilename, peaksBEDFilename, log_file):
 
-    ################### Read the Smoothed Wavelet Replication Time Signal starts ###########################
-    #new way, JAN 7, 2020
+    # Read the Smoothed Wavelet Replication Time Signal
     file_extension = os.path.splitext(os.path.basename(smoothedWaveletRepliseqDataFilename))[1]
     if (file_extension.lower() == '.wig'):
         isFileTypeBEDGRAPH = decideFileType(smoothedWaveletRepliseqDataFilename)
@@ -688,28 +677,24 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilen
     elif (file_extension.lower()=='.bedgraph'):
         repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',header=None, names=[CHROM, START, END, SIGNAL])
 
-    print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df[CHROM].unique()))
-    # print('repliseq_wavelet_signal_df[chr].unique')
-    # print(repliseq_wavelet_signal_df['chr'].unique())
-    ################### Read the Smoothed Wavelet Replication Time Signal ends #############################
-
-
-    ############## Read the Valleys and Peaks starts #######################################
+    # Read the Valleys
     discard_signal=True
-    valleys_df= readFileInBEDFormat(valleysBEDFilename,discard_signal)
+    valleys_df= readFileInBEDFormat(valleysBEDFilename, discard_signal, log_file)
     valleys_df[END] = valleys_df[END] - 1
-    print('Chromosome names in replication time valleys data: %s' % (valleys_df[CHROM].unique()))
 
-    peaks_df = readFileInBEDFormat(peaksBEDFilename,discard_signal)
+    # Read the Peaks
+    peaks_df = readFileInBEDFormat(peaksBEDFilename, discard_signal, log_file)
     peaks_df[END] = peaks_df[END] - 1
-    print('Chromosome names in replication time peaks data: %s' % (peaks_df[CHROM].unique()))
-    ############## Read the Valleys and Peaks ends ########################################
+
+    log_out = open(log_file, 'a')
+    print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df[CHROM].unique()), file=log_out)
+    print('Chromosome names in replication time valleys data: %s' % (valleys_df[CHROM].unique()), file=log_out)
+    print('Chromosome names in replication time peaks data: %s' % (peaks_df[CHROM].unique()), file=log_out)
+    log_out.close()
 
     return repliseq_wavelet_signal_df, valleys_df, peaks_df
-########################################################################
 
 
-########################################################################
 # For df_split
 # Using Numpy Arrays
 # Search for all mutatitions
@@ -729,13 +714,17 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
                                             subs_signature_mutation_type_lagging_np_array,
                                             sample_based,
                                             discreet_mode,
+                                            log_file,
                                             verbose):
 
-    ################################################################################
-    if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
 
-        #df_columns numpy array
+    if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
+
+        # df_columns numpy array
         df_columns = chrBased_simBased_combined_df_split.columns.values
 
         ###############################################################################
@@ -754,10 +743,9 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
         ################################ Initialization ###############################
         ###############################################################################
 
-        ##############################################################################################
-        #In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
-        #In apply, mutation_row becomes <class 'pandas.core.series.Series'>
-        #Therefore, list comprehesion is adopted.
+        # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
+        # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
+        # Therefore, list comprehesion is adopted.
         [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array_for_df_split(mutation_row,
                                                                             chrBased_replication_array,
                                                                             six_mutation_types_np_array,
@@ -779,10 +767,12 @@ def searchAllMutationsOnReplicationStrandArray_for_df_split(chrBased_simBased_co
                                                                             sample_based,
                                                                             discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df_split.values]
-        ##############################################################################################
 
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ################################################################################
+
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
     return(sim_num,
            all_types_leading_np_array,
@@ -820,6 +810,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             all_samples_np_array,
                                             discreet_mode,
                                             default_cutoff,
+                                            log_file,
                                             verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
@@ -842,7 +833,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
 
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_subs_df.columns.values
@@ -883,7 +877,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
 
     # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_dinucs_df.columns.values
@@ -924,7 +921,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
 
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_indels_df.columns.values
@@ -963,7 +963,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               default_cutoff,
                                                                                               df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
-        if verbose: print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
     return(sim_num,
            all_types_leading_np_array,
@@ -993,6 +996,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                                               all_types_np_array_size,
                                                                               sample_based,
                                                                               discreet_mode,
+                                                                              log_file,
                                                                               verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
@@ -1028,6 +1032,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                                                           subs_signature_mutation_type_lagging_np_array,
                                                           sample_based,
                                                           discreet_mode,
+                                                          log_file,
                                                           verbose)
     else:
         return (simNum,
@@ -1037,7 +1042,6 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(ou
                 subs_signature_mutation_type_lagging_np_array)
 
 
-# April 30, 2020
 # Read chromBased and simBased combined (SBS, DBS and ID) dataframe in the process
 def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    jobname,
@@ -1056,6 +1060,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    all_samples_np_array,
                                                                    discreet_mode,
                                                                    default_cutoff,
+                                                                   log_file,
                                                                    verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
@@ -1112,6 +1117,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           all_samples_np_array,
                                                           discreet_mode,
                                                           default_cutoff,
+                                                          log_file,
                                                           verbose)
     else:
         return (simNum,
@@ -1125,34 +1131,38 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                 all_samples_all_types_lagging_np_array,
                 all_samples_subs_signature_mutation_type_leading_np_array,
                 all_samples_subs_signature_mutation_type_lagging_np_array)
-########################################################################
 
 
-########################################################################
-def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chromNamesList,chromSizesDict,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,verbose):
+def read_create_write_replication_time_array_in_parallel(outputDir,
+                                                         jobname,
+                                                         chromNamesList,
+                                                         chromSizesDict,
+                                                         smoothedWaveletRepliseqDataFilename,
+                                                         valleysBEDFilename,
+                                                         peaksBEDFilename,
+                                                         verbose,
+                                                         log_file):
 
-    repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename)
+    repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
+                                                                        valleysBEDFilename,
+                                                                        peaksBEDFilename,
+                                                                        log_file)
 
-    ################################
     def write_chrom_based_replication_array(result_tuple):
         chrLong=result_tuple[0]
         chrBased_replication_array=result_tuple[1]
         if (chrBased_replication_array is not None):
             os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED), exist_ok=True)
-            #File name without extension
+            # File name without extension
             chr_based_replication_time_file_name='%s_replication_time' %(chrLong)
             chr_based_replication_time_file_path = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,LIB,CHRBASED,chr_based_replication_time_file_name)
             np.save(chr_based_replication_time_file_path, chrBased_replication_array)
-    ################################
 
-    ################################
+
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=numofProcesses)
-    ################################
 
-    ################################
     jobs = []
-    ################################
 
     for chrLong in chromNamesList:
         chromSize = chromSizesDict[chrLong]
@@ -1160,18 +1170,16 @@ def read_create_write_replication_time_array_in_parallel(outputDir,jobname,chrom
                                  args=(chrLong, chromSize, repliseq_signal_df,valleys_df, peaks_df,),
                                  callback=write_chrom_based_replication_array))
 
-    ##############################################################################
+    log_out = open(log_file, 'a')
+
     # wait for all jobs to finish
     for job in jobs:
-        if verbose: print('\tVerbose Write Chrom Based Replication Time Array for Replicatio Strand Bias Analysis Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()))
-    ##############################################################################
+        if verbose: print('\tVerbose Write Chrom Based Replication Time Array for Replicatio Strand Bias Analysis Worker pid %s job.get():%s ' % (str(os.getpid()), job.get()), file=log_out)
 
-    ################################
+    log_out.close()
+
     pool.close()
     pool.join()
-    ################################
-
-########################################################################
 
 
 ########################################################################
@@ -1211,12 +1219,24 @@ def replicationStrandBiasAnalysis(outputDir,
                                   ordered_id_signatures_cutoffs,
                                   discreet_mode,
                                   default_cutoff,
+                                  parallel_mode,
+                                  log_file,
                                   verbose):
 
-    print('\n#################################################################################')
-    print('--- ReplicationStrandBias Analysis starts')
+    log_out = open(log_file, 'a')
+    print('\n#################################################################################', file=log_out)
+    print('--- Replication Strand Asymmetry starts', file=log_out)
+    log_out.close()
 
-    read_create_write_replication_time_array_in_parallel(outputDir,jobname,chromNamesList,chromSizesDict,smoothedWaveletRepliseqDataFilename,valleysBEDFilename,peaksBEDFilename,verbose)
+    read_create_write_replication_time_array_in_parallel(outputDir,
+                                                         jobname,
+                                                         chromNamesList,
+                                                         chromSizesDict,
+                                                         smoothedWaveletRepliseqDataFilename,
+                                                         valleysBEDFilename,
+                                                         peaksBEDFilename,
+                                                         verbose,
+                                                         log_file)
 
     SBS6_mutation_types_np_array = np.array([C2A, C2G, C2T, T2A, T2C, T2G])
 
@@ -1246,7 +1266,6 @@ def replicationStrandBiasAnalysis(outputDir,
     all_sims_subs_signature_SBS96_mutation_type_leading_np_array = np.zeros((numofSimulations+1, number_of_sbs_signatures, SBS96_mutation_types_np_array.size)) # dtype=int
     all_sims_subs_signature_SBS96_mutation_type_lagging_np_array= np.zeros((numofSimulations+1, number_of_sbs_signatures, SBS96_mutation_types_np_array.size)) # dtype=int
 
-
     if sample_based:
         # Initialization for accumulated arrays
         all_samples_np_array_size = all_samples_np_array.size
@@ -1255,9 +1274,7 @@ def replicationStrandBiasAnalysis(outputDir,
         all_sims_all_samples_subs_signature_mutation_type_leading_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, number_of_sbs_signatures, SBS6_mutation_types_np_array.size)) # dtype=int
         all_sims_all_samples_subs_signature_mutation_type_lagging_np_array = np.zeros((numofSimulations + 1, all_samples_np_array_size, number_of_sbs_signatures, SBS6_mutation_types_np_array.size)) # dtype=int
 
-
     # Accumulate Numpy Arrays
-    # July 27, 2020
     def accumulate_np_arrays(result_tuple):
         sim_num = result_tuple[0]
         all_types_leading_np_array = result_tuple[1]
@@ -1276,7 +1293,6 @@ def replicationStrandBiasAnalysis(outputDir,
         # print('MONITOR ACCUMULATE', flush=True)
 
         if sample_based:
-            #Jan 21, 2021
             all_samples_all_types_leading_np_array = result_tuple[5]
             all_samples_all_types_lagging_np_array = result_tuple[6]
             all_samples_subs_signature_mutation_type_leading_np_array = result_tuple[7]
@@ -1287,68 +1303,96 @@ def replicationStrandBiasAnalysis(outputDir,
             all_sims_all_samples_subs_signature_mutation_type_leading_np_array[sim_num] += all_samples_subs_signature_mutation_type_leading_np_array
             all_sims_all_samples_subs_signature_mutation_type_lagging_np_array[sim_num] += all_samples_subs_signature_mutation_type_lagging_np_array
 
-    jobs = []
 
-    # April 30, 2020
-    # read chrom based sim based mutations data and chrom based replication time data in each worker process
-    if (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
-        sim_nums = range(0, numofSimulations + 1)
-        sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+    sim_nums = range(0, numofSimulations + 1)
+    sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+    if parallel_mode:
+        jobs = []
 
+        # April 30, 2020
+        # read chrom based sim based mutations data and chrom based replication time data in each worker process
+        if (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
+
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for simNum, chrLong in sim_num_chr_tuples:
+                jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased,
+                                        args=(outputDir,
+                                              jobname,
+                                              chrLong,
+                                              simNum,
+                                              SBS6_mutation_types_np_array,
+                                              SBS96_mutation_types_np_array,
+                                              ordered_sbs_signatures,
+                                              ordered_dbs_signatures,
+                                              ordered_id_signatures,
+                                              ordered_sbs_signatures_cutoffs,
+                                              ordered_dbs_signatures_cutoffs,
+                                              ordered_id_signatures_cutoffs,
+                                              all_types_np_array_size,
+                                              sample_based,
+                                              all_samples_np_array,
+                                              discreet_mode,
+                                              default_cutoff,
+                                              log_file,
+                                              verbose,),
+                                        callback=accumulate_np_arrays))
+            pool.close()
+            pool.join()
+
+        elif (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for chrLong, simNum, splitIndex in job_tuples:
+                jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased,
+                                        args=(outputDir,
+                                              jobname,
+                                              chrLong,
+                                              simNum,
+                                              splitIndex,
+                                              SBS6_mutation_types_np_array,
+                                              ordered_sbs_signatures,
+                                              ordered_dbs_signatures,
+                                              ordered_id_signatures,
+                                              ordered_sbs_signatures_cutoffs,
+                                              ordered_dbs_signatures_cutoffs,
+                                              ordered_id_signatures_cutoffs,
+                                              all_types_np_array_size,
+                                              sample_based,
+                                              discreet_mode,
+                                              log_file,
+                                              verbose,),
+                                        callback=accumulate_np_arrays))
+
+            pool.close()
+            pool.join()
+
+    else:
+        # Sequential_mode for testing, debugging and profiling purposes
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased,
-                                    args=(outputDir,
-                                          jobname,
-                                          chrLong,
-                                          simNum,
-                                          SBS6_mutation_types_np_array,
-                                          SBS96_mutation_types_np_array,
-                                          ordered_sbs_signatures,
-                                          ordered_dbs_signatures,
-                                          ordered_id_signatures,
-                                          ordered_sbs_signatures_cutoffs,
-                                          ordered_dbs_signatures_cutoffs,
-                                          ordered_id_signatures_cutoffs,
-                                          all_types_np_array_size,
-                                          sample_based,
-                                          all_samples_np_array,
-                                          discreet_mode,
-                                          default_cutoff,
-                                          verbose,),
-                                    callback=accumulate_np_arrays))
-        pool.close()
-        pool.join()
-
-    # July 23, 2020 starts
-    elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
-
-        for chrLong, simNum, splitIndex in job_tuples:
-            jobs.append(pool.apply_async(searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased,
-                                    args=(outputDir,
-                                          jobname,
-                                          chrLong,
-                                          simNum,
-                                          splitIndex,
-                                          SBS6_mutation_types_np_array,
-                                          ordered_sbs_signatures,
-                                          ordered_dbs_signatures,
-                                          ordered_id_signatures,
-                                          ordered_sbs_signatures_cutoffs,
-                                          ordered_dbs_signatures_cutoffs,
-                                          ordered_id_signatures_cutoffs,
-                                          all_types_np_array_size,
-                                          sample_based,
-                                          discreet_mode,
-                                          verbose,),
-                                    callback=accumulate_np_arrays))
-
-        pool.close()
-        pool.join()
+            result_tuple = searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
+                                               jobname,
+                                               chrLong,
+                                               simNum,
+                                               SBS6_mutation_types_np_array,
+                                               SBS96_mutation_types_np_array,
+                                               ordered_sbs_signatures,
+                                               ordered_dbs_signatures,
+                                               ordered_id_signatures,
+                                               ordered_sbs_signatures_cutoffs,
+                                               ordered_dbs_signatures_cutoffs,
+                                               ordered_id_signatures_cutoffs,
+                                               all_types_np_array_size,
+                                               sample_based,
+                                               all_samples_np_array,
+                                               discreet_mode,
+                                               default_cutoff,
+                                               log_file,
+                                               verbose)
+            accumulate_np_arrays(result_tuple)
 
     ############################################################################################################
     #####################################       Output starts      #############################################
@@ -1404,9 +1448,11 @@ def replicationStrandBiasAnalysis(outputDir,
     #####################################       Output ends      ###############################################
     ############################################################################################################
 
-    print('--- ReplicationStrandBias Analysis ends')
-    print('#################################################################################\n')
-########################################################################
+    log_out = open(log_file, 'a')
+    print('--- Replication Strand Asymmetry Analysis ends', file=log_out)
+    print('#################################################################################\n', file=log_out)
+    log_out.close()
+
 
 
 

@@ -124,10 +124,10 @@ tsb_ref = {0: ['N', 'A'], 1: ['N', 'C'], 2: ['N', 'G'], 3: ['N', 'T'],
 ##################################################################
 
 
-##################################################################
-#Higher the replication time signal earlier the replication is
-#Regions with high values indicate domains of early replication where initiaion occurs earlier in S-phase or early in a higher proportion of cells.
-def readRepliSeqTimeData(genome,chromNamesList,repliseqDataFilename,matrix_generator_path,verbose):
+
+# Higher the replication time signal earlier the replication is
+# Regions with high values indicate domains of early replication where initiaion occurs earlier in S-phase or early in a higher proportion of cells.
+def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_generator_path, verbose, log_file):
 
     ###################################################################
     ############### Read RepliSeq Time data starts ####################
@@ -139,33 +139,29 @@ def readRepliSeqTimeData(genome,chromNamesList,repliseqDataFilename,matrix_gener
         column_names = [CHROM, START, END, SIGNAL]
         replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
     else:
-        #JAN 7, 2020
         replication_time_interval_version_df = readWig_with_fixedStep_variableStep(repliseqDataFilename)
 
     chrNamesInReplicationTimeDataArray = replication_time_interval_version_df[CHROM].unique()
-    print('Before --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]))
+    log_out = open(log_file, 'a')
+    print('Before --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]), file=log_out)
 
-    #Remove rows with chromosomes that are not in chromNamesList
+    # Remove rows with chromosomes that are not in chromNamesList
     replication_time_interval_version_df=replication_time_interval_version_df[replication_time_interval_version_df[CHROM].isin(chromNamesList)]
 
     chrNamesInReplicationTimeDataArray = replication_time_interval_version_df[CHROM].unique()
-    print('After considering only chromosomes in chromNamesList --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]))
+    print('After considering only chromosomes in chromNamesList --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]), file=log_out)
+    log_out.close()
 
-    #Augment wavelet_processed_df with numberofAttributableBases
-    wavelet_processed_augmented_df = augment(genome,replication_time_interval_version_df,matrix_generator_path,verbose)
+    # Augment wavelet_processed_df with numberofAttributableBases
+    wavelet_processed_augmented_df = augment(genome, replication_time_interval_version_df, matrix_generator_path, log_file, verbose)
 
-    #Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
+    # Return 10 deciles: the first decile is the earliest one and the tenth decile is the latest one
 
-    #Sort in descending order
-    #Higher the replication time signal earlier the replication is
+    # Sort in descending order
+    # Higher the replication time signal earlier the replication is
     wavelet_processed_augmented_df.sort_values(SIGNAL, ascending=False, inplace=True)
 
-
-    # print('############ after sort wavelet_processed_augmented_df ###################')
-    # print(wavelet_processed_augmented_df.head())
-    # print('############ after sort wavelet_processed_augmented_df ###################')
-
-    #Split wavelet_processed_augmented_df into 10 deciles
+    # Split wavelet_processed_augmented_df into 10 deciles
     deciles_df_list = np.array_split(wavelet_processed_augmented_df,10)
     # print('Number of decile:%d' %len(deciles))
     #deciles is a list and each decile is a dataframe <class 'pandas.core.frame.DataFrame'>
@@ -191,10 +187,8 @@ def readRepliSeqTimeData(genome,chromNamesList,repliseqDataFilename,matrix_gener
     ############### Read RepliSeq Time data ends ######################
     ###################################################################
 
-##################################################################
 
-##################################################################
-#Jan 13, 2020
+
 def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_string):
     start =wavelet_row[1]
     end = wavelet_row[2]
@@ -215,12 +209,13 @@ def getNumberofAttributableBasesUsingMatrixGeneratorGenome(wavelet_row,chrom_str
     # print('numofAttributableBases:%d' %numofAttributableBases)
     # print('##########  debug ends #############')
     return numofAttributableBases
-##################################################################
 
 
-##################################################################
-def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose):
-    if verbose: print('\tVerbose Worker pid %s %s Before Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()))
+def addNumofAttributableBasesColumnForApplyAsync(chrLong, chrBased_wavelet_processed_df_group, chrbased_file_path, log_file, verbose):
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose Worker pid %s %s Before Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()), chrLong, memory_usage()), file=log_out)
+        log_out.close()
 
     # 1st way Slower. Not tested in terms fo final outcome/ results.
     # chrom_string = np.memmap(chrbased_file_path, dtype=np.byte, mode='r')
@@ -232,11 +227,17 @@ def addNumofAttributableBasesColumnForApplyAsync(chrLong,chrBased_wavelet_proces
     resulting_df = chrBased_wavelet_processed_df_group.apply(getNumberofAttributableBasesUsingMatrixGeneratorGenome,chrom_string=chrom_string, axis= 1)
 
     if (len(chrBased_wavelet_processed_df_group)!=len(resulting_df)):
-        print('There is a situation: len(chrBased_wavelet_processed_df_group) is not equal  to len(resulting_df)')
+        log_out = open(log_file, 'a')
+        print('There is a situation: len(chrBased_wavelet_processed_df_group) is not equal  to len(resulting_df)', file=log_out)
+        log_out.close()
+
 
     chrBased_wavelet_processed_df_group[NUMOFBASES] = resulting_df
 
-    if verbose: print('\tVerbose Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()))
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose Worker pid %s %s After Augment with number of attributable bases memory_usage %.2f MB' % (str(os.getpid()),chrLong, memory_usage()), file=log_out)
+        log_out.close()
 
     return (chrLong,chrBased_wavelet_processed_df_group)
 
@@ -393,7 +394,6 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array_for_df_s
                                                                         indels_signature_decile_index_accumulated_np_array,
                                                                         sample_based,
                                                                         discreet_mode,
-                                                                        verbose,
                                                                         df_columns):
 
     # df_columns: numpy array
@@ -515,8 +515,7 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
                                             discreet_mode,
-                                            default_cutoff,
-                                            verbose):
+                                            default_cutoff):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
@@ -596,8 +595,7 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                             ordered_dbs_signatures_cutoffs,
                                             ordered_id_signatures_cutoffs,
                                             sample_based,
-                                            discreet_mode,
-                                            verbose):
+                                            discreet_mode):
 
     df_columns = chrBased_simBased_combined_df.columns.values
 
@@ -633,7 +631,6 @@ def searchforAllMutations_using_numpy_array_for_df_split(sim_num,
                                                                             indels_signature_decile_index_accumulated_np_array,
                                                                             sample_based,
                                                                             discreet_mode,
-                                                                            verbose,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df.values]
 
     return sim_num, subs_signature_decile_index_accumulated_np_array, dinucs_signature_decile_index_accumulated_np_array, indels_signature_decile_index_accumulated_np_array
@@ -703,8 +700,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                        ordered_dbs_signatures_cutoffs,
                                        ordered_id_signatures_cutoffs,
                                        sample_based,
-                                       discreet_mode,
-                                       verbose):
+                                       discreet_mode):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
 
@@ -720,8 +716,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
                                                                                                 sample_based,
-                                                                                                discreet_mode,
-                                                                                                verbose)
+                                                                                                discreet_mode)
 
 
 # using numpy arrays
@@ -738,8 +733,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            ordered_dbs_signatures_cutoffs,
                                                                                                            ordered_id_signatures_cutoffs,
                                                                                                            discreet_mode,
-                                                                                                           default_cutoff,
-                                                                                                           verbose):
+                                                                                                           default_cutoff):
 
     # To reduce memory usage
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
@@ -758,8 +752,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                 ordered_dbs_signatures_cutoffs,
                                                                                                 ordered_id_signatures_cutoffs,
                                                                                                 discreet_mode,
-                                                                                                default_cutoff,
-                                                                                                verbose)
+                                                                                                default_cutoff)
 
 
 
@@ -778,8 +771,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
                                                                                         discreet_mode,
-                                                                                        default_cutoff,
-                                                                                        verbose):
+                                                                                        default_cutoff):
 
     # Fill replication time numpy array
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize, chrBased_grouped_decile_df_list)
@@ -796,8 +788,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
                                                    discreet_mode,
-                                                   default_cutoff,
-                                                   verbose)
+                                                   default_cutoff)
 
 
 # For df_split
@@ -815,8 +806,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                                                         ordered_dbs_signatures_cutoffs,
                                                                                         ordered_id_signatures_cutoffs,
                                                                                         sample_based,
-                                                                                        discreet_mode,
-                                                                                        verbose):
+                                                                                        discreet_mode):
 
     # Fill replication time numpy array
     chrBasedReplicationTimeDataArrayWithDecileIndex = fillChrBasedReplicationTimeNPArray(chrLong, chromSize, chrBased_grouped_decile_df_list)
@@ -831,8 +821,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_num
                                                    ordered_dbs_signatures_cutoffs,
                                                    ordered_id_signatures_cutoffs,
                                                    sample_based,
-                                                   discreet_mode,
-                                                   verbose)
+                                                   discreet_mode)
 
 
 def getNormalizedMutationDensityList(mutationDensityDict):
@@ -949,7 +938,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         sample_based,
         discreet_mode,
         default_cutoff,
-        verbose):
+        parallel_mode):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
@@ -973,69 +962,89 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         all_sims_dinucs_signature_decile_index_accumulated_np_array[sim_num] += dinucs_signature_decile_index_accumulated_np_array
         all_sims_indels_signature_decile_index_accumulated_np_array[sim_num] += indels_signature_decile_index_accumulated_np_array
 
-    jobs = []
+    sim_nums = range(0, numofSimulations + 1)
+    sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-    # Using numpy array
-    if (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
-        sim_nums = range(0, numofSimulations + 1)
-        sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+    if parallel_mode:
+        jobs = []
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+        # Using numpy array
+        if (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
 
+            for simNum, chrLong in sim_num_chr_tuples:
+                chromSize = chromSizesDict[chrLong]
+
+                jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_using_numpy_array,
+                                     args=(outputDir,
+                                           jobname,
+                                           chrLong,
+                                           chromSize,
+                                           simNum,
+                                           chrBased_grouped_decile_df_list,
+                                           ordered_sbs_signatures,
+                                           ordered_dbs_signatures,
+                                           ordered_id_signatures,
+                                           ordered_sbs_signatures_cutoffs,
+                                           ordered_dbs_signatures_cutoffs,
+                                           ordered_id_signatures_cutoffs,
+                                           discreet_mode,
+                                           default_cutoff,),
+                                     callback=accumulate_np_arrays))
+
+            pool.close()
+            pool.join()
+
+        elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for chrLong, simNum, splitIndex in job_tuples:
+                chromSize = chromSizesDict[chrLong]
+
+                jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_splitbased_using_numpy_array,
+                                     args=(outputDir,
+                                           jobname,
+                                           chrLong,
+                                           chromSize,
+                                           simNum,
+                                           splitIndex,
+                                           chrBased_grouped_decile_df_list,
+                                           ordered_sbs_signatures,
+                                           ordered_dbs_signatures,
+                                           ordered_id_signatures,
+                                           ordered_sbs_signatures_cutoffs,
+                                           ordered_dbs_signatures_cutoffs,
+                                           ordered_id_signatures_cutoffs,
+                                           sample_based,
+                                           discreet_mode,),
+                                     callback=accumulate_np_arrays))
+
+            pool.close()
+            pool.join()
+
+    else:
+        # Sequential mode for testing, debugging and profiling purposes
         for simNum, chrLong in sim_num_chr_tuples:
             chromSize = chromSizesDict[chrLong]
+            result_tuple = combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_using_numpy_array(outputDir,
+                      jobname,
+                      chrLong,
+                      chromSize,
+                      simNum,
+                      chrBased_grouped_decile_df_list,
+                      ordered_sbs_signatures,
+                      ordered_dbs_signatures,
+                      ordered_id_signatures,
+                      ordered_sbs_signatures_cutoffs,
+                      ordered_dbs_signatures_cutoffs,
+                      ordered_id_signatures_cutoffs,
+                      discreet_mode,
+                      default_cutoff)
 
-            jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_using_numpy_array,
-                                 args=(outputDir,
-                                       jobname,
-                                       chrLong,
-                                       chromSize,
-                                       simNum,
-                                       chrBased_grouped_decile_df_list,
-                                       ordered_sbs_signatures,
-                                       ordered_dbs_signatures,
-                                       ordered_id_signatures,
-                                       ordered_sbs_signatures_cutoffs,
-                                       ordered_dbs_signatures_cutoffs,
-                                       ordered_id_signatures_cutoffs,
-                                       discreet_mode,
-                                       default_cutoff,
-                                       verbose,),
-                                 callback=accumulate_np_arrays))
-
-        pool.close()
-        pool.join()
-
-    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
-
-        for chrLong, simNum, splitIndex in job_tuples:
-            chromSize = chromSizesDict[chrLong]
-
-            jobs.append(pool.apply_async(combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_chrbased_splitbased_using_numpy_array,
-                                 args=(outputDir,
-                                       jobname,
-                                       chrLong,
-                                       chromSize,
-                                       simNum,
-                                       splitIndex,
-                                       chrBased_grouped_decile_df_list,
-                                       ordered_sbs_signatures,
-                                       ordered_dbs_signatures,
-                                       ordered_id_signatures,
-                                       ordered_sbs_signatures_cutoffs,
-                                       ordered_dbs_signatures_cutoffs,
-                                       ordered_id_signatures_cutoffs,
-                                       sample_based,
-                                       discreet_mode,
-                                       verbose,),
-                                 callback=accumulate_np_arrays))
-
-        pool.close()
-        pool.join()
+            accumulate_np_arrays(result_tuple)
 
     return all_sims_subs_signature_decile_index_accumulated_np_array, \
            all_sims_dinucs_signature_decile_index_accumulated_np_array, \
@@ -1043,7 +1052,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
 
 
 # Augment wavelet_processed_df with numberofAttributableBases
-def augment(genome,wavelet_processed_df,matrix_generator_path,verbose):
+def augment(genome, wavelet_processed_df, matrix_generator_path, log_file, verbose):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
@@ -1063,7 +1072,12 @@ def augment(genome,wavelet_processed_df,matrix_generator_path,verbose):
         chrbased_filename = chrShort + ".txt"
         chrbased_file_path = os.path.join(matrix_generator_path, 'references', 'chromosomes', 'tsb', genome, chrbased_filename)
         if os.path.exists(chrbased_file_path):
-            pool.apply_async(addNumofAttributableBasesColumnForApplyAsync, (chrLong,chrBased_wavelet_processed_df_group,chrbased_file_path,verbose), callback=accumulate_apply_async_result)
+            pool.apply_async(addNumofAttributableBasesColumnForApplyAsync, (chrLong,
+                                                                            chrBased_wavelet_processed_df_group,
+                                                                            chrbased_file_path,
+                                                                            log_file,
+                                                                            verbose),
+                             callback=accumulate_apply_async_result)
 
     pool.close()
     pool.join()
@@ -1149,13 +1163,13 @@ def writeReplicationTimeDataUsingNumpyArray(outputDir,
                     numberofMutations, mutationDensityDict, numberofMutationsList = getMutationDensityDictUsingNumpyArray(decile_df_list, decile_counts_np_array)
                     normalizedMutationDensityList = getNormalizedMutationDensityList(mutationDensityDict)
 
-                    #Normalized Mutation Density
+                    # Normalized Mutation Density
                     with open(normalizedMutationDensityFilePath, 'w') as file:
                         for normalizedMutationDensity in normalizedMutationDensityList:
                             file.write(str(normalizedMutationDensity) + ' ')
                         file.write('\n')
 
-                    #Number of Mutations
+                    # Number of Mutations
                     with open(numberofMutationsFilePath, 'w') as file:
                         for numberofMutations in numberofMutationsList:
                             file.write(str(numberofMutations) + ' ')
@@ -1278,6 +1292,8 @@ def replicationTimeAnalysis(computationType,
                             ordered_id_signatures_cutoffs,
                             discreet_mode,
                             default_cutoff,
+                            parallel_mode,
+                            log_file,
                             verbose,
                             matrix_generator_path):
 
@@ -1285,9 +1301,11 @@ def replicationTimeAnalysis(computationType,
     dbs_signatures = ordered_dbs_signatures_with_cutoffs
     id_signatures = ordered_id_signatures_with_cutoffs
 
-    print('\n#################################################################################')
-    print('--- ReplicationTimeAnalysis starts')
-    print('--- Replication Time Analyis Computation Type:%s' % (computationType))
+    log_out = open(log_file, 'a')
+    print('\n#################################################################################', file=log_out)
+    print('--- Replication Timing Analysis starts', file=log_out)
+    print('--- Replication Timing Analyis Computation Type:%s' % (computationType), file=log_out)
+    log_out.close()
 
     #########################################################################
     # Analysis Type can be
@@ -1312,19 +1330,24 @@ def replicationTimeAnalysis(computationType,
     # Please note that each decile_df contains intervals from all chroms (mixed chroms)
     # What is the type of deciles? Deciles is a list of dataframes.
     # if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA STARTS  %s MB' % (str(os.getpid()), memory_usage()))
-    if verbose: print('\tVerbose READ Repliseq DATA STARTS')
+    # if verbose: print('\tVerbose READ Repliseq DATA STARTS')
 
     # formerly downloaded matrix generator reference genome is being used.
-    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,chromNamesList,repliseqDataFilename,matrix_generator_path,verbose)
+    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,
+                                                                              chromNamesList,
+                                                                              repliseqDataFilename,
+                                                                              matrix_generator_path,
+                                                                              verbose,
+                                                                              log_file)
     # if verbose: print('\tVerbose Worker pid %s READ Repliseq DATA ENDS  %s MB' % (str(os.getpid()), memory_usage()))
-    if verbose: print('\tVerbose READ Repliseq DATA ENDS')
+    # if verbose: print('\tVerbose READ Repliseq DATA ENDS')
 
-    #Get chrBased grouped deciles
+    # Get chrBased grouped deciles
     chrBased_grouped_decile_df_list = []
-    #Get this chrLong of each decile
-    #The first decile is the earliest one with index 1
-    #The last decile is the latest one with index 10
-    #We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
+    # Get this chrLong of each decile
+    # The first decile is the earliest one with index 1
+    # The last decile is the latest one with index 10
+    # We provide these indexes later in the fillChrBasedDecileIndexArray function by enumerate
     for decile_df in decile_df_list:
         chrBased_grouped_decile_df = decile_df.groupby(CHROM)
         chrBased_grouped_decile_df_list.append(chrBased_grouped_decile_df)
@@ -1336,7 +1359,7 @@ def replicationTimeAnalysis(computationType,
     ################################### Replication Time Data Analysis starts #############################
     #######################################################################################################
 
-    # #old method keep it for further guidance for sample based
+    # old method keep it for further guidance for sample based
     # writeReplicationTimeData(outputDir,jobname,sample_based,decile_df_list,None,simNum2Type2DecileBasedAllChrAccumulatedCountDict,simNum2Sample2Type2DecileBasedAllChrAccumulatedCountDict)
 
     # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns
@@ -1360,7 +1383,7 @@ def replicationTimeAnalysis(computationType,
         sample_based,
         discreet_mode,
         default_cutoff,
-        verbose)
+        parallel_mode)
 
     writeReplicationTimeDataUsingNumpyArray(outputDir,
                                             jobname,
@@ -1376,5 +1399,7 @@ def replicationTimeAnalysis(computationType,
     ################################### Replication Time Data Analysis ends ###############################
     #######################################################################################################
 
-    print('--- ReplicationTimeAnalysis ends')
-    print('#################################################################################\n')
+    log_out = open(log_file, 'a')
+    print('--- Replication Timing Analysis ends', file=log_out)
+    print('#################################################################################\n', file=log_out)
+    log_out.close()

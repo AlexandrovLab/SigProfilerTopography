@@ -49,8 +49,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_COUN
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE
 from SigProfilerTopography.source.commons.TopographyCommons import CONSIDER_DISTANCE_ALL_SAMPLES_TOGETHER
 
-####################################################################################
-# DEC 22, 2019
+
 def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_distance,
                                                  simNum,
                                                  chrLong,
@@ -58,6 +57,7 @@ def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_d
                                                  sampleBased_chrBased_subs_df,
                                                  considerProbabilityInProcessivityAnalysis,
                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                 log_file,
                                                  verbose):
 
     # These are done before this function call
@@ -83,26 +83,27 @@ def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_d
                                             chrLong,
                                             sample,
                                             sampleBased_chrBased_subs_df,
-                                            considerProbabilityInProcessivityAnalysis,
-                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                            log_file,
                                             verbose)
-####################################################################################
 
 
-####################################################################################
+
 def findProcessiveGroupsWithDistance(processivity_inter_mutational_distance,
                                      simNum,
                                      chrLong,
                                      sample,
                                      sorted_sampleBased_chrBased_subs_df,
-                                     considerProbabilityInProcessivityAnalysis,
-                                     signature_cutoff_numberofmutations_averageprobability_df,
+                                     log_file,
                                      verbose):
 
     my_dict = {}
     mutations_loci_df = None
 
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
+    if verbose:
+        log_out = open(log_file,'a')
+        print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups starts' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample), file=log_out)
+        log_out.close()
+
     # They must be coming from the same sample
     # They must be same type of mutation e.g.: T>A
     # They must be resulted from same signature
@@ -170,13 +171,15 @@ def findProcessiveGroupsWithDistance(processivity_inter_mutational_distance,
 
         my_dict = {k: np.hstack(v) for k, v in df.groupby(['Signature', 'ProcessiveGroupLength'])['Distance']}
 
-    if verbose: print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample))
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose Worker pid %s memory_usage %.2f MB simNum:%d chrLong:%s sample:%s findProcessiveGroups ends' %(str(os.getpid()), memory_usage(),simNum,chrLong,sample), file=log_out)
+        log_out.close()
 
     return (my_dict, mutations_loci_df)
     # return (my_dict,)
-####################################################################################
 
-####################################################################################
+
 def findMedians(signature2ProcessiveGroupLength2GroupSizeListDict):
     signature2ProcessiveGroupLength2PropertiesDict = {}
 
@@ -206,19 +209,17 @@ def findMedians(signature2ProcessiveGroupLength2GroupSizeListDict):
                 signature2ProcessiveGroupLength2PropertiesDict[signature][processiveGroupLength] = processiveGroupDict
 
     return signature2ProcessiveGroupLength2PropertiesDict
-####################################################################################
 
 
-####################################################################################
+
 def accumulateListofDicts(allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list):
     allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict = {}
     for sample_chrBased_signature2ProcessiveGroupLength2DistanceListDict in allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict_list:
         accumulateDict(sample_chrBased_signature2ProcessiveGroupLength2DistanceListDict,allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict)
     return  allSamples_chrBased_signature2ProcessiveGroupLength2DistanceListDict
-####################################################################################
 
 
-####################################################################################
+
 def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_signature2ProcessiveGroupLength2DistanceListDict):
     for signature in small_signature2ProcessiveGroupLength2DistanceListDict:
         for processiveGroupLength in small_signature2ProcessiveGroupLength2DistanceListDict[signature]:
@@ -230,10 +231,10 @@ def accumulateDict(small_signature2ProcessiveGroupLength2DistanceListDict,big_si
             else:
                 big_signature2ProcessiveGroupLength2DistanceListDict[signature]={}
                 big_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength] = small_signature2ProcessiveGroupLength2DistanceListDict[signature][processiveGroupLength]
-####################################################################################
 
-####################################################################################
-#This method can be customized for other dictionaries
+
+
+# This method can be customized for other dictionaries
 def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath):
     L = sorted([(signature,
                  processiveGroupLength,
@@ -251,12 +252,11 @@ def writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,f
                                  'Median_Distance_Between_Consecutive_Mutations',
                                  'Median_Number_of_Mutations_Within_1MB'])
 
-    #write this dataframe
+    # write this dataframe
     df.to_csv(filePath, sep='\t', header=True, index=False)
-####################################################################################
 
 
-####################################################################################
+
 def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
                                                                       processivity_inter_mutational_distance,
@@ -265,6 +265,8 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       numofSimulations,
                                                                       considerProbabilityInProcessivityAnalysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                      parallel_mode,
+                                                                      log_file,
                                                                       verbose):
 
     if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
@@ -320,30 +322,36 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
                     # With Distance
                     for sample, sampleBased_chrBased_subs_df in sampleBased_chrBased_subs_df_grouped:
-                        # Parallel version for real run
-                        jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistance,
-                                                     args=(processivity_inter_mutational_distance,
-                                                           simNum,
-                                                           chrLong,
-                                                           sample,
-                                                           sampleBased_chrBased_subs_df,
-                                                           considerProbabilityInProcessivityAnalysis,
-                                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                           verbose,),
-                                                     callback=accumulate_apply_async_result_with_distance))
+                        if parallel_mode:
+                            # Parallel version for real run
+                            jobs.append(pool.apply_async(findProcessiveGroupsForApplySyncWithDistance,
+                                                         args=(processivity_inter_mutational_distance,
+                                                               simNum,
+                                                               chrLong,
+                                                               sample,
+                                                               sampleBased_chrBased_subs_df,
+                                                               considerProbabilityInProcessivityAnalysis,
+                                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                               log_file,
+                                                               verbose,),
+                                                         callback=accumulate_apply_async_result_with_distance))
+                        else:
+                            # Sequential version for testing/debugging/profiling purposes
+                            result_tuple = findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_distance,
+                                                               simNum,
+                                                               chrLong,
+                                                               sample,
+                                                               sampleBased_chrBased_subs_df,
+                                                               considerProbabilityInProcessivityAnalysis,
+                                                               subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                               log_file,
+                                                               verbose)
+                            accumulate_apply_async_result_with_distance(result_tuple)
 
-                        # # Sequential version for testing/debugging
-                        # result_tuple = findProcessiveGroupsForApplySyncWithDistance(inter_mutational_distance_for_processivity,
-                        #                            simNum,
-                        #                            chrLong,
-                        #                            sample,
-                        #                            sampleBased_chrBased_subs_df,
-                        #                            considerProbabilityInProcessivityAnalysis,
-                        #                            subsSignature_cutoff_numberofmutations_averageprobability_df,
-                        #                            verbose)
-                        # accumulate_apply_async_result_with_distance(result_tuple)
-
-            if verbose: print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)))
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose Processivity len(jobs):%d\n' % (len(jobs)), file=log_out)
+                log_out.close()
 
             pool.close()
             pool.join()
@@ -356,10 +364,8 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, filename)
             signature2ProcessiveGroupLength2PropertiesDict = findMedians(signature2ProcessiveGroupLength2DistanceListDict)
             writeDictionaryAsADataframe(signature2ProcessiveGroupLength2PropertiesDict,filePath)
-####################################################################################
 
 
-##################################################################################
 # Default value for processivity_calculation_type=CONSIDER_DISTANCE
 def processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
@@ -370,12 +376,16 @@ def processivityAnalysis(mutation_types_contexts,
                          numofSimulations,
                          considerProbabilityInProcessivityAnalysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
+                         parallel_mode,
+                         log_file,
                          verbose):
 
-    print('\n#################################################################################')
-    print('--- ProcessivityAnalysis starts')
-    print('processivity_calculation_type:%s' % processivity_calculation_type)
-    print('inter_mutational_distance_for_processivity:%s' % processivity_inter_mutational_distance)
+    log_out = open(log_file, 'a')
+    print('\n#################################################################################', file=log_out)
+    print('--- Strand-coordinated Mutagenesis Analysis starts', file=log_out)
+    print('--- processivity_calculation_type:%s' % processivity_calculation_type, file=log_out)
+    print('--- inter_mutational_distance_for_processivity:%s' % processivity_inter_mutational_distance, file=log_out)
+    log_out.close()
 
     readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_types_contexts,
                                                                       chromNamesList,
@@ -385,7 +395,10 @@ def processivityAnalysis(mutation_types_contexts,
                                                                       numofSimulations,
                                                                       considerProbabilityInProcessivityAnalysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                                      parallel_mode,
+                                                                      log_file,
                                                                       verbose)
-    print('--- ProcessivityAnalysis ends')
-    print('#################################################################################\n')
-##################################################################################
+    log_out = open(log_file, 'a')
+    print('--- Strand-coordinated Mutagenesis Analysis ends', file=log_out)
+    print('#################################################################################\n', file=log_out)
+    log_out.close()

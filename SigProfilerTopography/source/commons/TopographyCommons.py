@@ -180,7 +180,7 @@ MM10_MEF_NUCLEOSOME_FILE = 'Mus_musculus.mmNuc0030101.nucleosome.shift.bw'
 GM12878_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeGm12878Sig.bigWig'
 K562_NUCLEOSOME_OCCUPANCY_FILE = 'wgEncodeSydhNsomeK562Sig.bigWig'
 
-SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE,K562_NUCLEOSOME_OCCUPANCY_FILE,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
+SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE, K562_NUCLEOSOME_OCCUPANCY_FILE, DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
 
 #REPLICATION  TIME FILES
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
@@ -545,8 +545,6 @@ def write_excel_file(df_list, sheet_list, file_name):
     writer.save()
 
 
-
-# ############################################################
 def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):
     if (mutation_type==SUBS) and (SBS96 in mutation_types_contexts_for_signature_probabilities):
         return SBS96
@@ -566,10 +564,8 @@ def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for
         return DBS
     else:
         return None
-# ############################################################
 
-##################################################################
-# Dec 17, 2020
+
 def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
     # Simulation number is added as the last column
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
@@ -603,10 +599,8 @@ def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
             chrBased_simBased_indels_df[column] = chrBased_simBased_indels_df[column].fillna(0)
 
     return chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df
-##################################################################
 
-##################################################################
-# April 27, 2020
+
 def get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum):
 
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
@@ -660,9 +654,6 @@ def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
 
         chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
         indices=index_marks(chrBased_simBased_number_of_mutations,NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
-        # print(type(indices),flush=True)
-        # print(indices,flush=True)
-        #np.split returns a list of dataframes
         split_df_list=np.split(chrBased_simBased_combined_df, indices)
         return split_df_list
     else:
@@ -689,11 +680,9 @@ def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,spl
     if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
         chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
 
-        ###########################################################
         chrBased_simBased_number_of_mutations = chrBased_simBased_combined_df.shape[0]
         number_of_splits = math.ceil(chrBased_simBased_number_of_mutations / NUMBER_OF_MUTATIONS_IN_EACH_SPLIT)
 
-        #################################
         split_start_end_tuples = []
         start = 0
         for split in range(1, number_of_splits + 1):
@@ -702,24 +691,17 @@ def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,spl
                 end = chrBased_simBased_combined_df.shape[0]
             split_start_end_tuples.append((start, end))
             start = end
-        #################################
 
-        #################################
         if (splitIndex<len(split_start_end_tuples)):
             split_start, split_end = split_start_end_tuples[splitIndex]
-            # print('MONITOR %s simNum:%d splitIndex:%d split_start:%d split_end:%d len(split_start_end_tuples):%d split_start_end_tuples:%s' % (chrLong, simNum, splitIndex, split_start, split_end, len(split_start_end_tuples),split_start_end_tuples), flush=True)
             chrBased_simBased_combined_df_split = chrBased_simBased_combined_df.iloc[split_start:split_end, :]
             return chrBased_simBased_combined_df_split
         else:
-            # print('MONITOR %s simNum:%d splitIndex:%d Does not exists ' % (chrLong, simNum, splitIndex), flush=True)
             return None
-        #################################
     else:
         return None
-##################################################################
 
 
-########################################################
 def get_splits(outputDir, jobname, simNum,chrLong):
     #################################################################################################################
     # If library file does not exists there is no library file to use and fill the signal and count arrays
@@ -742,7 +724,7 @@ def get_splits(outputDir, jobname, simNum,chrLong):
     number_of_mutations_list = []
     order_in_number_of_mutations_list = []
 
-    #There is an order in the way we put the elements in the list
+    # There is an order in the way we put the elements in the list
     if (chrBased_subs_df is not None):
         number_of_subs_mutations = chrBased_subs_df.shape[0]
         number_of_mutations_list.append(number_of_subs_mutations)
@@ -948,8 +930,6 @@ def getReplicationTimeFiles(replication_time_biosample):
 #######################################################
 
 
-#############################################################################
-#Modified DEC 9, 2019
 def takeAverage(listofSimulationsAggregatedMutations):
     simulationsAggregatedMutationsLows = None
     simulationsAggregatedMutationsHighs = None
@@ -1002,9 +982,8 @@ def takeAverage(listofSimulationsAggregatedMutations):
 
 
     return  simulationsAggregatedMutationsLows,simulationsAggregatedMutationsMeans,simulationsAggregatedMutationsHighs
-#############################################################################
 
-###################################################################
+
 def calc_chunksize(n_workers, len_iterable, factor=4):
     """Calculate chunksize argument for Pool-methods.
 
@@ -1014,9 +993,8 @@ def calc_chunksize(n_workers, len_iterable, factor=4):
     if extra:
         chunksize += 1
     return chunksize
-###################################################################
 
-###########################################################
+
 def memory_usage():
     pid = os.getpid()
     process = psutil.Process(pid)
@@ -1024,16 +1002,12 @@ def memory_usage():
     memoryUseInMB = process.memory_info()[0]/2.**20  # memory use in MB
     return memoryUseInMB
     # print('************** Current Memory Use: '+ str(round(memoryUse1,2))+" GB *****************\n")
-###########################################################
 
 
-########################################################################################
 def getShortNames(chromNamesList):
     return [chrName[3:] for chrName in chromNamesList]
-########################################################################################
 
-########################################################################################
-#Uses readDictionary
+# Uses readDictionary
 def getDictionary(outputDir,jobname, DictFilename):
     dictionary = {}
     DictFilePath = os.path.join(outputDir,jobname,DATA,DictFilename)
@@ -1311,7 +1285,8 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                   num_of_id_required,
                                                   num_of_dbs_required,
                                                   mutationType2PropertiesDict,
-                                                  chrLong2NumberofMutationsDict):
+                                                  chrLong2NumberofMutationsDict,
+                                                  log_file):
 
     # Filled in the first part
     # PropertiesList consists of [sum_of_number_of_mutations, sum_of_probabilities, samples_list]
@@ -1407,7 +1382,9 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
                 else:
-                    print('There is a situation/problem in fillCutoff2Signature2PropertiesListDictionary method.')
+                    log_out = open(log_file, 'a')
+                    print('There is a situation/problem in fillCutoff2Signature2PropertiesListDictionary method.', file=log_out)
+                    log_out.close()
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.int64(cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(np.float64(cutoff2Signature2PropertiesListDict[cutoff][signature][1]/cutoff2Signature2PropertiesListDict[cutoff][signature][0]))
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature].append(cutoff2Signature2PropertiesListDict[cutoff][signature][2])
@@ -1525,7 +1502,6 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
         Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = num_of_dbs_required
 
-    #######################################################################
     for chrLong in chromNamesList:
         chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,type,0)
 
@@ -1541,7 +1517,7 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
                 else:
                     sample2NumberofMutationsDict[sample] = number_of_mutations
 
-                #new way
+                # new way
                 for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
                     cutoff=float(signature_cutoff_numberofmutations_averageprobability_df[signature_cutoff_numberofmutations_averageprobability_df['signature']==signature]['cutoff'].values[0])
                     number_of_mutations= len(chrBased_mutation_df_sample_group_df[chrBased_mutation_df_sample_group_df[signature]>=cutoff])
@@ -1558,7 +1534,6 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
                         sample2Signature2NumberofMutationsDict[sample] = {}
                         sample2Signature2NumberofMutationsDict[sample][signature] = number_of_mutations
 
-    #######################################################################
 
     new_sample2NumberofMutatiosDict = {k: v for k, v in sample2NumberofMutationsDict.items() if sample2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
     new_signature2NumberofMutationsDict = {k: v for k, v in signature2NumberofMutationsDict.items() if signature2NumberofMutationsDict[k] >= minimum_number_of_mutations_required}
@@ -1573,7 +1548,7 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
                     new_sample2Signature2NumberofMutationsDict[k1] = {}
                     new_sample2Signature2NumberofMutationsDict[k1][k2] = v2
 
-    #Write Conditions satisfied Dictionaries
+    # write conditions satisfied dictionaries
     writeDictionaryUnderDataDirectory(new_sample2NumberofMutatiosDict,outputDir,jobname,Sample2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_signature2NumberofMutationsDict,outputDir,jobname,Signature2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_sample2Signature2NumberofMutationsDict,outputDir,jobname,Sample2Signature2NumberofMutationsDictFilename)
@@ -1671,18 +1646,14 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
 ##########################################################################################
 
 
-########################################################################################
-#window_array is of size 2*plusOrMinus
+# window_array is of size 2*plusOrMinus
 # mutation_row_start will be at position=plusOrMinus of the window_array
 def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_row_start,plusOrMinus):
     max_start=max(entry_start,mutation_row_start-plusOrMinus)
     min_end=min(entry_end,mutation_row_start+plusOrMinus)
     window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1]+=entry_signal
-    # print('window_array[%d:%d]+=%f' %(max_start-(mutation_row_start-plusOrMinus),min_end-(mutation_row_start-plusOrMinus),entry_signal))
-########################################################################################
 
 
-########################################################################################
 def computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray):
     windowSize=plusorMinus*2+1
     averageArray =  np.zeros(windowSize)
@@ -1702,11 +1673,8 @@ def computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray):
     # averageArray[np.isnan(averageArray)] = 0
 
     return averageArray
-########################################################################################
 
 
-########################################################################################
-#July 26, 2020 Using Numpy Arrays
 def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
                                                    sample_based,
                                                    plusorMinus,
@@ -1726,7 +1694,6 @@ def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type),exist_ok=True)
 
-    ####################################################################################
     for simNum in range(0, numofSimulations + 1):
 
         subsSignature_accumulated_signal_np_array = allSims_subsSignature_accumulated_signal_np_array[simNum]
@@ -1746,7 +1713,7 @@ def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type
         # Last row contains AGGREGATEDINDELS
         writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,indelsSignature_accumulated_signal_np_array[-1],indelsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
 
-        #Signatures
+        # Signatures
         writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
                                                            plusorMinus,
                                                            subsSignatures,
@@ -1762,21 +1729,15 @@ def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type
                                                            jobname,
                                                            library_file_memo,
                                                            simNum)
-    ####################################################################################
-
-########################################################################################
 
 
-
-########################################################################################
-#Both "all single point mutations" and "all indels" use this function
-#simulationNumber == 0 means original data
-#simulationNumber > 0 means simulation data
+# Both "all single point mutations" and "all indels" use this function
+# simulationNumber == 0 means original data
+# simulationNumber > 0 means simulation data
 def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,outputDir,jobname,library_file_memo,nucleosomeOccupancyAnalysisType,simulationNumber):
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, nucleosomeOccupancyAnalysisType),exist_ok=True)
     averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,allMutationsAccumulatedAllChromsSignalArray, allMutationsAccumulatedAllChromsCountArray)
-
 
     if (simulationNumber==0):
         if library_file_memo is not None:
@@ -1805,11 +1766,8 @@ def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutations
     allMutationsAccumulatedAllChromsSignalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
     allMutationsAccumulatedAllChromsCountArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
     averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
-########################################################################################
 
 
-########################################################################################
-#July 26, 2020 Using Numpy Array
 def writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
                                                            plusorMinus,
                                                            subsSignatures,
@@ -1837,15 +1795,15 @@ def writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_
         signal_arrays=all_signal_arrays[signatures_index]
         count_arrays=all_count_arrays[signatures_index]
 
-        #Why -1, because last one is aggregated mutations and it is not written here.
+        # Why -1, because last one is aggregated mutations and it is not written here.
         for signature_index in range(0,number_of_signatures-1):
             signature = signatures[signature_index]
             signalArray = signal_arrays[signature_index]
             countArray = count_arrays[signature_index]
             averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray)
 
-            #To provide filename with no space in signature name
-            #signatureWithNoSpace = signature.replace(' ','')
+            # To provide filename with no space in signature name
+            # signatureWithNoSpace = signature.replace(' ','')
 
             if (simNum==0):
                 if library_file_memo is not None:
@@ -1873,12 +1831,10 @@ def writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_
             signalArray.tofile(file=accumulatedSignalFilePath, sep="\t",format="%s")
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
             averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
-########################################################################################
 
 
 
 
-########################################################################################
 def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,sample2Type2AccumulatedAllChromsSignalArrayDict,
                                                                 sample2Type2AccumulatedAllChromsCountArrayDict,outputDir,jobname,library_file_memo,simulationNumber):
 
@@ -1919,11 +1875,10 @@ def writeSampleBasedSignatureBasedAverageNucleosomeOccupancyFiles(occupancy_type
                 signalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
                 countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
                 averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
-########################################################################################
 
 
-########################################################################################
-#All Mutations can be single point mutations or indels
+
+# All Mutations can be single point mutations or indels
 def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
                                                     plusorMinus,
                                                     sample2Type2SignalArrayDict,
@@ -1973,7 +1928,6 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
             signalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
             countArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
             averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
-########################################################################################
 
 
 ##########################################################################################
@@ -1981,14 +1935,13 @@ def writeSampleBasedAverageNucleosomeOccupancyFiles(occupancy_type,
 ##########################################################################################
 
 ############################################################
-#Used by DataPreparationCommons.py
-#Kept here for further possible usage
+# Used by DataPreparationCommons.py
+# Kept here for further possible usage
 # Notice that [::-1] provides visiting x from the last base to the first base
 revcompl = lambda x: ''.join([{'A':'T','C':'G','G':'C','T':'A','N':'N'}[B] for B in x][::-1])
 ############################################################
 
-############################################################
-#Tested works correctly.
+
 def getNucleotides(chromosomeShort,start,end,humanGenome):
     if chromosomeShort == 'MT':
         chromosomeShort = 'M'
@@ -2002,24 +1955,20 @@ def getNucleotides(chromosomeShort,start,end,humanGenome):
     seq = chrBased_humanGenome.get_slice(start,end)
     seq = seq.upper()
     return seq
-############################################################
 
 
-######################################################################
-#BED files: end is not inclusive
-#BED files: score - A score between 0 and 1000. See track lines, below, for ways to configure the display style of scored data.
+
+
+# BED files: end is not inclusive
+# BED files: score - A score between 0 and 1000. See track lines, below, for ways to configure the display style of scored data.
 def updateChrBasedSignalArray(data_row,chrBasedSignalArray):
     chrBasedSignalArray[data_row[START]:data_row[END]] += data_row[SIGNAL]
-######################################################################
 
 
-######################################################################
 def fillNumpyArray(start,end,signal,chrBasedSignalArray):
     chrBasedSignalArray[start:end]+=signal
-######################################################################
 
 
-######################################################################
 def decideFileType(library_file_with_path):
     with open(library_file_with_path, "r") as f:
         for line in f:
@@ -2029,15 +1978,11 @@ def decideFileType(library_file_with_path):
                 return False
             else:
                 return True
-######################################################################
 
 
-
-##################################################################
-#JAN 7, 2020
 def generateIntervalVersion(wig_unprocessed_df):
-    #Read the wig file and generate chr start end signal
-    #default initialization
+    # Read the wig file and generate chr start end signal
+    # default initialization
     step = 1
     span=1
 
@@ -2087,7 +2032,7 @@ def generateIntervalVersion(wig_unprocessed_df):
                 elif key=='span':
                     span=int(value)
 
-        #Please notice that we do  not expect step in variableStep
+        # Please notice that we do  not expect step in variableStep
         elif (row[1].startswith('variableStep')):
             step_type=VARIABLE_STEP
             for i in range(1,len(row[1].split())):
@@ -2104,7 +2049,7 @@ def generateIntervalVersion(wig_unprocessed_df):
                     span=int(value)
         elif not (row[1].startswith('track') or row[1].startswith('browser')):
             if step_type==FIXED_STEP:
-                #We read only signal
+                # We read only signal
                 signal = float(row[1])
                 ##################
                 end = start + span-1
@@ -2112,8 +2057,8 @@ def generateIntervalVersion(wig_unprocessed_df):
                 rows_list.append(list)
                 start += step
             elif step_type==VARIABLE_STEP:
-                #We read start and signal
-                #49304701 10.0
+                # We read start and signal
+                # 49304701 10.0
                 start = int(row[1].split()[0])
                 signal = float(row[1].split()[1])
                 ##################
@@ -2121,53 +2066,40 @@ def generateIntervalVersion(wig_unprocessed_df):
                 list = [chrom, start, end, signal]
                 rows_list.append(list)
 
-    # print('Number of intervals to be inserted in wavelet_processed_df: %d' %len(rows_list))
-    #rows_list contain the list of row where each row is a dictionary
 
+    # rows_list contain the list of row where each row is a dictionary
     wig_chrom_start_end_signal_version_df = pd.DataFrame(rows_list, columns=[CHROM,START,END,SIGNAL])
-    # print('wig_chrom_start_end_signal_version_df.dtypes')
-    # print(wig_chrom_start_end_signal_version_df.dtypes)
 
     wig_chrom_start_end_signal_version_df[CHROM] = wig_chrom_start_end_signal_version_df[CHROM].astype('category')
     wig_chrom_start_end_signal_version_df[START] = wig_chrom_start_end_signal_version_df[START].astype(np.int32)
     wig_chrom_start_end_signal_version_df[END] = wig_chrom_start_end_signal_version_df[END].astype(np.int32)
     wig_chrom_start_end_signal_version_df[SIGNAL] = wig_chrom_start_end_signal_version_df[SIGNAL].astype(np.float32)
 
-    # print('wig_chrom_start_end_signal_version_df.dtypes')
-    # print(wig_chrom_start_end_signal_version_df.dtypes)
-
     return wig_chrom_start_end_signal_version_df
-##################################################################
 
-
-##################################################################
-#JAN 7, 2020
-#If file is originally a  wig file use this function
-#No Outlier Elimination is done
-#Used by Replication Time and Replication Strand Bias
+# If file is originally a  wig file use this function
+# No Outlier Elimination is done
+# Used by Replication Time and Replication Strand Bias
 def readWig_with_fixedStep_variableStep(wig_file_path):
 
-    #Read the wavelet signal
+    # Read the wavelet signal
     wig_unprocessed_df = pd.read_csv(wig_file_path, sep='\t', comment='#', header=None)
 
-    #Process the wavelet signal, convert into interval version
-    #Add column names
+    # Process the wavelet signal, convert into interval version
+    # Add column names
     wigfile_interval_version_df = generateIntervalVersion(wig_unprocessed_df)
 
     return wigfile_interval_version_df
-##################################################################
 
 
-######################################################################
 def updateSignalArraysForListComprehension(row,signalArrayDict):
-    #row [CHROM START END SIGNAL]
+    # row [CHROM START END SIGNAL]
     signalArray=signalArrayDict[row[0]]
     signalArray[row[1]:row[2]] += row[3]
-######################################################################
 
 
-########################################################################
-#To write samples with signatures with at least 10K eligible mutations
+
+# To write samples with signatures with at least 10K eligible mutations
 def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA), exist_ok=True)
@@ -2175,10 +2107,8 @@ def writeDictionaryUnderDataDirectory(dictionary,outputDir,jobname,filename):
 
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary))
-########################################################################
 
 
-########################################################################
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -2189,38 +2119,37 @@ class MyEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(MyEncoder, self).default(obj)
-########################################################################
 
-########################################################################
+
+
 def writeDictionaryUsingPickle(dictionary,filepath):
     fileDir = os.path.dirname(filepath)
     os.makedirs(fileDir, exist_ok=True)
 
     with open(filepath, "wb") as file:
         pickle.dump(dictionary, file)
-########################################################################
 
-########################################################################
+
+
 def writeDictionarySimple(dictionary,path,filename,customJSONEncoder):
     os.makedirs(os.path.join(path), exist_ok=True)
 
     filePath = os.path.join(path,filename)
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
-########################################################################
 
 
-########################################################################
+
 def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSONEncoder):
     os.makedirs(os.path.join(outputDir,jobname,DATA,subDirectory), exist_ok=True)
 
     filePath = os.path.join(outputDir,jobname,DATA,subDirectory,filename)
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
-########################################################################
 
 
-########################################################################
+
+
 # Lagging_Count Leading_Count
 # Transcribed_Count UnTranscribed_Count
 def write_sample_based_strand1_strand2_as_dataframe(output_dir,
@@ -2256,9 +2185,9 @@ def write_sample_based_strand1_strand2_as_dataframe(output_dir,
                                                      all_types_np_array[type_index],
                                                      all_sims_all_samples_all_types_strand1_np_array[sim_index][sample_index][type_index],
                                                      all_sims_all_samples_all_types_strand2_np_array[sim_index][sample_index][type_index]))
-########################################################################
 
-########################################################################
+
+
 # Main function for type
 # Fills a dictionary and writes it as a dataframe
 def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_arrays_list,
@@ -2268,10 +2197,10 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
                                                 outputDir,
                                                 jobname):
 
-    #Fill type2Strand2ListDict using all_sims_all_types_strand_np_arrays_list
+    # Fill type2Strand2ListDict using all_sims_all_types_strand_np_arrays_list
     type2Strand2ListDict = {}
 
-    ##################################################################################################
+
     for strand_index, strand in enumerate(strands,0):
         all_sims_all_types_strand_np_array = all_sims_all_types_strand_np_arrays_list[strand_index]
         num_of_sims, num_of_types = all_sims_all_types_strand_np_array.shape
@@ -2302,9 +2231,9 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
                         type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
                     else:
                         type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
-    ##################################################################################################
 
-    ##################################################################################################
+
+
     # In strand_list we have
     # real_data
     # sims_data_list
@@ -2322,10 +2251,8 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             type2Strand2ListDict[my_type][strand].append(mean_sims)
             type2Strand2ListDict[my_type][strand].append(min_sims)
             type2Strand2ListDict[my_type][strand].append(max_sims)
-    ##################################################################################################
 
 
-    ##################################################################################################
     # Calculate p-value only
     for my_type in type2Strand2ListDict:
         if strand_bias == REPLICATIONSTRANDBIAS:
@@ -2340,14 +2267,14 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             # leading_sims_list=type2Strand2ListDict[my_type][leading_strand][1]
             leading_sims_mean_count = type2Strand2ListDict[my_type][leading_strand][2]
 
-            #Calculate p value
+            # Calculate p value
             contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
             if not np.isnan(contingency_table_array).any():
                 oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
             else:
                 lagging_versus_leading_p_value = np.nan
 
-            #Set p_value
+            # Set p_value
             type2Strand2ListDict[my_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
 
         elif strand_bias == TRANSCRIPTIONSTRANDBIAS:
@@ -2390,9 +2317,7 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             type2Strand2ListDict[my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
     # Calculate q-value and significant_strand will be done during plotting figures
-    ##################################################################################################
 
-    ##################################################################################################
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
@@ -2406,9 +2331,7 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
         write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
-    ##################################################################################################
 
-########################################################################
 
 # subfunction for type
 def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type, filepath):
@@ -2547,7 +2470,6 @@ def write_sbs_signature_sbs96_mutation_type_replication_strand_bias(subs_signatu
 
 
 
-########################################################################
 # Main function for signature -- mutation type
 # Fills a dictionary and writes it as a dataframe
 def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_subs_signature_mutation_type_strand_np_arrays_list,
@@ -2561,7 +2483,6 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
     # Fill signature2MutationType2Strand2ListDict using np_arrays_list
     signature2MutationType2Strand2ListDict = {}
 
-    ##################################################################################################
     for strand_index, strand in enumerate(strands,0):
         all_sims_subs_signature_mutation_type_strand_np_array = all_sims_subs_signature_mutation_type_strand_np_arrays_list[strand_index]
         num_of_sims, num_of_subs_signatures, num_of_mutation_types = all_sims_subs_signature_mutation_type_strand_np_array.shape
@@ -2602,9 +2523,8 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
                         else:
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
-    ##################################################################################################
 
-    ##################################################################################################
+
     # In strand_list we have
     # real_data
     # sims_data_list
@@ -2612,7 +2532,7 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
     # mean_sims_data
     # min_sims_data
     # max_sims_data
-    #strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
+    # strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
     for signature in signature2MutationType2Strand2ListDict:
         for mutation_type in signature2MutationType2Strand2ListDict[signature]:
             for strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
@@ -2623,9 +2543,8 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(mean_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(min_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(max_sims)
-    ##################################################################################################
 
-    ##################################################################################################
+
     # Calculate p-value only
     for signature in signature2MutationType2Strand2ListDict:
         for mutation_type in signature2MutationType2Strand2ListDict[signature]:
@@ -2689,9 +2608,8 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                 #Set p_values
                 signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
                 signature2MutationType2Strand2ListDict[signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
-    ##################################################################################################
 
-    ##################################################################################################
+
     if (strand_bias==REPLICATIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
@@ -2705,14 +2623,10 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
-    ##################################################################################################
-
-########################################################################
 
 
 
-########################################################################
-#sub function for signature -- mutation type
+# sub function for signature -- mutation type
 def write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,cancer_type,strand_bias_subtype, filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
 
@@ -2800,11 +2714,10 @@ def write_signature_mutation_type_transcription_dataframe(strands,signature2Muta
                                       strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
                                       strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
         df.to_csv(filepath, sep='\t', header=True, index=False)
-########################################################################
 
 
-########################################################################
-#July 24, 2020 written using write_signature_mutation_type_replication_dataframe
+
+
 def get_replication_signature_df(strands, signature_of_interest, signature2MutationType2Strand2ListDict,cancer_type):
     strand1 = strands[0]
     strand2 = strands[1]
@@ -2842,13 +2755,9 @@ def get_replication_signature_df(strands, signature_of_interest, signature2Mutat
     df = pd.DataFrame(L, columns=column_names)
 
     return df,column_names
-########################################################################
 
 
-
-
-########################################################################
-#sub function for signature -- mutation type
+# sub function for signature -- mutation type
 def write_signature_mutation_type_replication_dataframe(strands,signature2MutationType2Strand2ListDict,cancer_type,filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
 
@@ -2889,18 +2798,15 @@ def write_signature_mutation_type_replication_dataframe(strands,signature2Mutati
                                   strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
                                   strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list ])
     df.to_csv(filepath, sep='\t', header=True, index=False)
-########################################################################
 
 
 
-########################################################################
 def readDictionaryUsingPickle(filePath):
     with open(filePath, "rb") as file:
         dictionary  = pickle.load(file)
     return  dictionary
-########################################################################
 
-########################################################################
+
 def readDictionary(filePath):
     if (os.path.exists(filePath) and (os.path.getsize(filePath) > 0)):
         with open(filePath,'r') as json_data:
@@ -2910,10 +2816,9 @@ def readDictionary(filePath):
         # return None
         # Provide empty dictionary for not to fail for loops on None type dictionary
         return {}
-########################################################################
 
 
-#########################################################################
+
 # copy file 1.maf from inputDir/output/simulations/jobname_simulations_genome_96/1.maf to inputDir/output/simulations/sim1/96/1.maf
 # copy file 2.maf from inputDir/output/simulations/jobname_simulations_genome_96/2.maf to inputDir/output/simulations/sim2/96/2.maf
 # copy file N.maf from inputDir/output/simulations/jobname_simulations_genome_96/N.maf to inputDir/output/simulations/simN/96/N.maf
@@ -2938,20 +2843,15 @@ def copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numberofSimulat
         fileDir=os.path.join(copyFromDir,fname)
         copyToDir = os.path.join(copyToMainDir, simDir, mutation_type_context)
         shutil.copy(fileDir, copyToDir)
-#########################################################################
 
 
-############################################################
-#JAN 20, 2020
-# From DataPreparationCommons.py
-############################################################
 
-############################################################
-#Same for Release and old_PCAWG Matlab Probabilities
+
+# Same for Release and old_PCAWG Matlab Probabilities
 # example line for original data
-#UCEC-US_SP89389 10      2017540 N:AT[T>A]CA     1
+# UCEC-US_SP89389 10      2017540 N:AT[T>A]CA     1
 # example line for simulated data
-#UCEC-US_SP89389_1       10      1575080 T:AT[C>T]TG     1
+# UCEC-US_SP89389_1       10      1575080 T:AT[C>T]TG     1
 def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,mutation_type_context_for_probabilities):
 
     if (os.path.exists(chr_based_mutation_filepath)):
@@ -3011,58 +2911,54 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
                 mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
-                #Add new column
+                # Add new column
                 # Add Context Column from T:TG[C>T]GC to  G[C>T]G
                 # MatrixGenerator generates T:TG[C>T]GC
                 # Extractor and PCAWG_Matlab sbs probabilities has G[C>T]G
                 # SBS288 has T:A[C>G]A
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
-                #TODO Make conversion for each possible mutation context that can be in probabilities file.
+                # TODO Make conversion for each possible mutation context that can be in probabilities file.
                 if (mutation_type_context_for_probabilities==SBS288):
                     # Since SBS288 probabilities mutation context does not contain B we are assigning B to N
-                    # TODO More correct way is to assign half of B as T and other half of B as U
+                    # TODO Maybe more correct way is to assign half of B as T and other half of B as U
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] == 'B', MUTATION] = 'N:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                 elif (mutation_type_context_for_probabilities==SBS96):
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                 else:
-                    #TODO to be updated as needed
+                    # TODO to be updated as needed
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
 
-            #Set dtype as 'category'
+            # Set dtype as 'category'
             mutations_with_genomic_positions_df[MUTATION]=mutations_with_genomic_positions_df[MUTATION].astype('category')
             mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND]=mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND].astype('category')
 
             return mutations_with_genomic_positions_df
 
     return None
-############################################################
 
-############################################################
+
 def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     chrShort = inputList[0]
     outputDir = inputList[1]
     jobname = inputList[2]
     chr_based_mutation_filepath = inputList[3]
     mutations_probabilities_df = inputList[4]
-    mutation_type_context_for_probabilities=inputList[5]
+    mutation_type_context_for_probabilities = inputList[5]
     mutation_type_context = inputList[6]
     simNum = inputList[7]
-    PCAWG=inputList[8]
+    PCAWG = inputList[8]
+    log_file = inputList[9]
 
-    ###############################################################################################
     chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,mutation_type_context_for_probabilities)
-    ###############################################################################################
 
-    #######################################################################################
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
 
-        ############################################################################
-        #Step2 SigProfilerTopography Python Package
+        # Step2 SigProfilerTopography Python Package
 
-        #For PCAWG_Matlab
-        #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
-        #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
+        # For PCAWG_Matlab
+        # Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
+        # Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
         if PCAWG:
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
             chr_based_mutation_df[SAMPLE]= chr_based_mutation_df[SAMPLE].astype('category')
@@ -3078,34 +2974,33 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
             chr_based_mutation_df[SAMPLE]= chr_based_mutation_df[SAMPLE].astype('category')
-        ############################################################################
 
 
-        ############################################################################
         if SAMPLE not in mutations_probabilities_df.columns.values:
             merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[MUTATION],right_on=[MUTATION])
         else:
             merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION])
-        ############################################################################
 
         if ((merged_df is not None) and (chr_based_mutation_df.shape[0]!=merged_df.shape[0])):
-            print('##############################')
-            print('There is a situation/problem. For simNum:%s chr:%s All mutation context type: %s mutations are not merged with signature probabilities'  %(simNum,chrShort,mutation_type_context))
-            print('For simNum:%s chr:%s mutation context type:%s chr_based_mutation_df.shape(%d,%d)-- merged_df.shape(%d,%d) ' % (simNum, chrShort, mutation_type_context,chr_based_mutation_df.shape[0],chr_based_mutation_df.shape[1],merged_df.shape[0],merged_df.shape[1]))
+            log_out = open(log_file,'a')
+            print('##############################', file=log_out)
+            print('There is a situation/problem. For simNum:%s chr:%s All mutation context type: %s mutations are not merged with signature probabilities'  %(simNum,chrShort,mutation_type_context), file=log_out)
+            print('For simNum:%s chr:%s mutation context type:%s chr_based_mutation_df.shape(%d,%d)-- merged_df.shape(%d,%d) ' % (simNum, chrShort, mutation_type_context,chr_based_mutation_df.shape[0],chr_based_mutation_df.shape[1],merged_df.shape[0],merged_df.shape[1]), file=log_out)
             samples_not_merged = set(chr_based_mutation_df[SAMPLE].unique()).difference(set(merged_df[SAMPLE].unique()))
-            print('Which samples are not merged?: %s' %(samples_not_merged))
-            print('Number of samples not merged: %d' %(len(samples_not_merged)))
+            print('Which samples are not merged?: %s' %(samples_not_merged), file=log_out)
+            print('Number of samples not merged: %d' %(len(samples_not_merged)), file=log_out)
             temp_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='outer',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION], indicator=True)
-            print('which rows of chr_based_mutation_df are not merged?')
-            print(temp_df[temp_df['_merge']=='left_only'])
-            print("chr_based_mutation_df[MUTATION].unique()")
-            print(chr_based_mutation_df[MUTATION].unique())
-            print("chr_based_mutation_df[SAMPLE].unique()")
-            print(chr_based_mutation_df[SAMPLE].unique())
-            print("mutations_probabilities_df[MUTATION].unique()")
-            print(mutations_probabilities_df[MUTATION].unique())
-            print("mutations_probabilities_df[SAMPLE].unique()")
-            print(mutations_probabilities_df[SAMPLE].unique())
+            print('which rows of chr_based_mutation_df are not merged?', file=log_out)
+            print(temp_df[temp_df['_merge']=='left_only'], file=log_out)
+            print("chr_based_mutation_df[MUTATION].unique()", file=log_out)
+            print(chr_based_mutation_df[MUTATION].unique(), file=log_out)
+            print("chr_based_mutation_df[SAMPLE].unique()", file=log_out)
+            print(chr_based_mutation_df[SAMPLE].unique(), file=log_out)
+            print("mutations_probabilities_df[MUTATION].unique()", file=log_out)
+            print(mutations_probabilities_df[MUTATION].unique(), file=log_out)
+            print("mutations_probabilities_df[SAMPLE].unique()", file=log_out)
+            print(mutations_probabilities_df[SAMPLE].unique(), file=log_out)
+            log_out.close()
 
         if ((merged_df is not None) and (not merged_df.empty)):
             if (mutation_type_context in SBS_CONTEXTS):
@@ -3125,39 +3020,35 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             # if ('MutationLong' in merged_df.columns.values):
             #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
-            #After merge
+            # After merge
             # Make MUTATION column one of six mutation types
             # TODO Make conversion for every possible probabilities mutation type context
             if (mutation_type_context_for_probabilities == SBS288):
                 # SBS288 has T:A[C>G]A
                 merged_df[MUTATION] = merged_df[MUTATION].str[4:7]
             else:
-                #SBS96 has A[C>G]A
+                # SBS96 has A[C>G]A
                 merged_df[MUTATION] = merged_df[MUTATION].str[2:5]
 
             merged_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
         else:
-            print('-------------No merge file for sim%d mutation_type_context:%s for chr%s' %(simNum,mutation_type_context,chrShort))
-    #######################################################################################
+            log_out = open(log_file, 'a')
+            print('-------------No merge file for sim%d mutation_type_context:%s for chr%s' %(simNum,mutation_type_context,chrShort), file=log_out)
+            log_out.close()
 
-
-    #######################################################################################
     elif ((chr_based_mutation_df is not None) and (mutations_probabilities_df is None)):
 
-        ############################################################################
-        #Step2 SigProfilerTopography Python Package
+        # Step2 SigProfilerTopography Python Package
 
-        #For PCAWG_Matlab
-        #Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
-        #Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
+        # For PCAWG_Matlab
+        # Convert CMDI-UK_SP116871_1 --> SP116871 # if(simNum>0): simNum=1 Simulation1
+        # Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
         if PCAWG:
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
 
         if simNum>=1:
             # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
-        ############################################################################
-
 
         if (mutation_type_context in SBS_CONTEXTS):
             chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,SUBS)
@@ -3166,7 +3057,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         elif (mutation_type_context==ID):
             chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,INDELS)
 
-        if (simNum==0):
+        if (simNum == 0):
             chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED,chrBasedMergedMutationsFileName)
         else:
             simDir = 'sim%d' %(simNum)
@@ -3176,29 +3067,25 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         # if ('MutationLong' in merged_df.columns.values):
         #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
-        #After merge
+        # After merge
         # Make MUTATION column one of six mutation types
         # TODO Make conversion for every possible probabilities mutation type context
         if (mutation_type_context_for_probabilities == SBS288):
             # SBS288 has T:A[C>G]A
             chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[4:7]
         else:
-            #SBS96 has A[C>G]A
+            # SBS96 has A[C>G]A
             chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[2:5]
 
-        #write
+        # write
         chr_based_mutation_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
-    #######################################################################################
-
-############################################################
 
 
-def readProbabilities(probabilitiesFile,verbose):
-
-    #For Release and PCAWG_Matlab
-    #This is same for Release and PCAWG_Matlab
+def readProbabilities(probabilitiesFile, log_file, verbose):
+    # For Release and PCAWG_Matlab
+    # This is same for Release and PCAWG_Matlab
     # There is header in the first column
-    #Sample names can be composed of numbers
+    # Sample names can be composed of numbers
 
     probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,nrows=1)
 
@@ -3228,25 +3115,27 @@ def readProbabilities(probabilitiesFile,verbose):
     # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
 
     if verbose:
-        print('\tVerbose Probabilities information starts')
-        print('\tVerbose probabilities_df.shape')
-        print(probabilities_df.shape)
-        print('\tVerbose probabilities_df.head()')
-        print(probabilities_df.head())
-        print('\tVerbose probabilities_df.dtypes')
-        print(probabilities_df.dtypes)
+        log_out = open(log_file, 'a')
+        print('\tVerbose Probabilities information starts', file=log_out)
+        print('\tVerbose probabilities_df.shape', file=log_out)
+        print(probabilities_df.shape, file=log_out)
+        print('\tVerbose probabilities_df.head()', file=log_out)
+        print(probabilities_df.head(), file=log_out)
+        print('\tVerbose probabilities_df.dtypes', file=log_out)
+        print(probabilities_df.dtypes, file=log_out)
 
         if (SAMPLE in probabilities_df.columns.values):
-            print('\tVerbose Unique samples in probabilities_df')
-            print(probabilities_df[SAMPLE].unique())
-            print('\tVerbose # of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())))
+            print('\tVerbose Unique samples in probabilities_df', file=log_out)
+            print(probabilities_df[SAMPLE].unique(), file=log_out)
+            print('\tVerbose # of unique samples in probabilities_df: %d\n' %(len(probabilities_df[SAMPLE].unique())), file=log_out)
 
         if (MUTATION in probabilities_df.columns.values):
-            print('\tVerbose Unique MutationTypes in probabilities_df')
-            print(probabilities_df[MUTATION].unique())
-            print('\tVerbose # of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())))
-        print('\tVerbose Probabilities information ends')
-        print('\tVerbose ##############################')
+            print('\tVerbose Unique MutationTypes in probabilities_df', file=log_out)
+            print(probabilities_df[MUTATION].unique(), file=log_out)
+            print('\tVerbose # of unique mutation types in probabilities_df: %d' %(len(probabilities_df[MUTATION].unique())), file=log_out)
+        print('\tVerbose Probabilities information ends', file=log_out)
+        print('\tVerbose ##############################', file=log_out)
+        log_out.close()
 
     return probabilities_df
 

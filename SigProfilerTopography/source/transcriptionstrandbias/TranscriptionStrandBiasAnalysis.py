@@ -342,7 +342,6 @@ def search_all_mutations_on_transcription_strand_array_using_list_comprehension_
 
 
 # For df_split
-# April 30, 2020
 def searchAllMutations_for_df_split(chrBased_simBased_combined_df,
             sim_num,
             six_mutation_types_np_array,
@@ -359,11 +358,14 @@ def searchAllMutations_for_df_split(chrBased_simBased_combined_df,
             subs_signature_mutation_type_untranscribed_np_array,
             subs_signature_mutation_type_nontranscribed_np_array,
             discreet_mode,
+            log_file,
             verbose):
 
-    ################################################################################
     if ((chrBased_simBased_combined_df is not None) and (not chrBased_simBased_combined_df.empty)):
-        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_combined_df.columns.values
@@ -384,9 +386,8 @@ def searchAllMutations_for_df_split(chrBased_simBased_combined_df,
         ################################ Initialization ###############################
         ###############################################################################
 
-        #####################################################################################
-        #July 28, 2020
-        #Search for each row using Numpy Array
+
+        # Search for each row using Numpy Array
         [search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array_for_df_split(mutation_row,
                                                                             six_mutation_types_np_array,
                                                                             ordered_sbs_signatures_cutoffs,
@@ -408,11 +409,12 @@ def searchAllMutations_for_df_split(chrBased_simBased_combined_df,
                                                                             subs_signature_mutation_type_nontranscribed_np_array,
                                                                             discreet_mode,
                                                                             df_columns) for mutation_row in chrBased_simBased_combined_df.values]
-        #####################################################################################
 
 
-        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()))
-    ################################################################################
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
     return (sim_num,
             all_types_transcribed_np_array,
@@ -451,28 +453,26 @@ def searchAllMutations(chrBased_simBased_subs_df,
             all_samples_subs_signature_mutation_type_nontranscribed_np_array,
             discreet_mode,
             default_cutoff,
+            log_file,
             verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
 
-
-    ###############################################################################
-    ################################ Initialization ###############################
-    ###############################################################################
+    # Initialization
     six_mutation_types_default_zeros_array = np.zeros(six_mutation_types_np_array.size) # dtype=int
-    subs_signatures_default_zeros_array = np.zeros(number_of_sbs_signatures) #  dtype=int
-    dinucs_signatures_default_zeros_array = np.zeros(number_of_dbs_signatures) #  dtype=int
-    indels_signatures_default_zeros_array = np.zeros(number_of_id_signatures) #  dtype=int
-    subs_signatures_mutation_types_default_zeros_array = np.zeros((number_of_sbs_signatures, six_mutation_types_np_array.size)) #  dtype=int
-    ###############################################################################
-    ################################ Initialization ###############################
-    ###############################################################################
+    subs_signatures_default_zeros_array = np.zeros(number_of_sbs_signatures) # dtype=int
+    dinucs_signatures_default_zeros_array = np.zeros(number_of_dbs_signatures) # dtype=int
+    indels_signatures_default_zeros_array = np.zeros(number_of_id_signatures) # dtype=int
+    subs_signatures_mutation_types_default_zeros_array = np.zeros((number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
 
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_subs_df.columns.values
@@ -511,7 +511,10 @@ def searchAllMutations(chrBased_simBased_subs_df,
 
     # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
-        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_dinucs_df.columns.values
@@ -549,7 +552,10 @@ def searchAllMutations(chrBased_simBased_subs_df,
 
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
-        if verbose: print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('Worker pid %s searchMutationUsingTranscriptionStrandColumn_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
+            log_out.close()
 
         # df_columns numpy array
         df_columns = chrBased_simBased_indels_df.columns.values
@@ -618,6 +624,7 @@ def searchAllMutations_simbased_chrombased_splitbased(outputDir,
                                           ordered_id_signatures_cutoffs,
                                           all_types_np_array_size,
                                           discreet_mode,
+                                          log_file,
                                           verbose):
 
     # Initialization
@@ -646,6 +653,7 @@ def searchAllMutations_simbased_chrombased_splitbased(outputDir,
                               subs_signature_mutation_type_untranscribed_np_array,
                               subs_signature_mutation_type_nontranscribed_np_array,
                               discreet_mode,
+                              log_file,
                               verbose)
 
 
@@ -666,6 +674,7 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                         all_types_np_array_size,
                                         discreet_mode,
                                         default_cutoff,
+                                        log_file,
                                         verbose):
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
@@ -723,8 +732,8 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                all_samples_subs_signature_mutation_type_nontranscribed_np_array,
                                discreet_mode,
                                default_cutoff,
+                               log_file,
                                verbose)
-########################################################################
 
 
 # main function
@@ -736,9 +745,6 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                     all_samples_np_array,
                                     computationType,
                                     chromNamesList,
-                                    # ordered_all_sbs_signatures_array,
-                                    # ordered_all_dbs_signatures_array,
-                                    # ordered_all_id_signatures_array,
                                     ordered_sbs_signatures,
                                     ordered_dbs_signatures,
                                     ordered_id_signatures,
@@ -747,10 +753,14 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                     ordered_id_signatures_cutoffs,
                                     discreet_mode,
                                     default_cutoff,
+                                    parallel_mode,
+                                    log_file,
                                     verbose):
 
-    print('\n#################################################################################')
-    print('--- TranscriptionStrandBias Analysis starts')
+    log_out = open(log_file, 'a')
+    print('\n#################################################################################', file=log_out)
+    print('--- Transcription Strand Asymmetry Analysis starts', file=log_out)
+    log_out.close()
 
     six_mutation_types_np_array = np.array([C2A, C2G, C2T, T2A, T2C, T2G])
 
@@ -816,67 +826,91 @@ def transcriptionStrandBiasAnalysis(outputDir,
             all_sims_all_samples_subs_signature_mutation_type_nontranscribed_np_array[sim_num] += all_samples_subs_signature_mutation_type_nontranscribed_np_array
 
 
-    jobs = []
+    sim_nums = range(0, numofSimulations + 1)
+    sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-    # Read the chrom based sim based mutations data in the worker process
-    if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
-        sim_nums = range(0, numofSimulations + 1)
-        sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+    if parallel_mode:
+        jobs = []
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+        # Read the chrom based sim based mutations data in the worker process
+        if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
 
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for simNum, chrLong in sim_num_chr_tuples:
+                jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased,
+                                        args=(outputDir,
+                                              jobname,
+                                              chrLong,
+                                              simNum,
+                                              sample_based,
+                                              all_samples_np_array,
+                                              six_mutation_types_np_array,
+                                              ordered_sbs_signatures,
+                                              ordered_dbs_signatures,
+                                              ordered_id_signatures,
+                                              ordered_sbs_signatures_cutoffs,
+                                              ordered_dbs_signatures_cutoffs,
+                                              ordered_id_signatures_cutoffs,
+                                              all_types_np_array_size,
+                                              discreet_mode,
+                                              default_cutoff,
+                                              log_file,
+                                              verbose,),
+                                        callback=accumulate_np_arrays))
+
+            pool.close()
+            pool.join()
+
+        elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for chrLong, simNum, splitIndex in job_tuples:
+                jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased_splitbased,
+                                        args=(outputDir,
+                                              jobname,
+                                              chrLong,
+                                              simNum,
+                                              splitIndex,
+                                              six_mutation_types_np_array,
+                                              ordered_sbs_signatures,
+                                              ordered_dbs_signatures,
+                                              ordered_id_signatures,
+                                              ordered_sbs_signatures_cutoffs,
+                                              ordered_dbs_signatures_cutoffs,
+                                              ordered_id_signatures_cutoffs,
+                                              all_types_np_array_size,
+                                              discreet_mode,
+                                              log_file,
+                                              verbose,),
+                                        callback=accumulate_np_arrays))
+            pool.close()
+            pool.join()
+
+    else:
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased,
-                                    args=(outputDir,
-                                          jobname,
-                                          chrLong,
-                                          simNum,
-                                          sample_based,
-                                          all_samples_np_array,
-                                          six_mutation_types_np_array,
-                                          # ordered_all_sbs_signatures_array,
-                                          # ordered_all_dbs_signatures_array,
-                                          # ordered_all_id_signatures_array,
-                                          ordered_sbs_signatures,
-                                          ordered_dbs_signatures,
-                                          ordered_id_signatures,
-                                          ordered_sbs_signatures_cutoffs,
-                                          ordered_dbs_signatures_cutoffs,
-                                          ordered_id_signatures_cutoffs,
-                                          all_types_np_array_size,
-                                          discreet_mode,
-                                          default_cutoff,
-                                          verbose,),
-                                    callback=accumulate_np_arrays))
+            result_tuple = searchAllMutations_simbased_chrombased(outputDir,
+                                               jobname,
+                                               chrLong,
+                                               simNum,
+                                               sample_based,
+                                               all_samples_np_array,
+                                               six_mutation_types_np_array,
+                                               ordered_sbs_signatures,
+                                               ordered_dbs_signatures,
+                                               ordered_id_signatures,
+                                               ordered_sbs_signatures_cutoffs,
+                                               ordered_dbs_signatures_cutoffs,
+                                               ordered_id_signatures_cutoffs,
+                                               all_types_np_array_size,
+                                               discreet_mode,
+                                               default_cutoff,
+                                               log_file,
+                                               verbose)
 
-        pool.close()
-        pool.join()
-
-    elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
-
-        for chrLong, simNum, splitIndex in job_tuples:
-            jobs.append(pool.apply_async(searchAllMutations_simbased_chrombased_splitbased,
-                                    args=(outputDir,
-                                          jobname,
-                                          chrLong,
-                                          simNum,
-                                          splitIndex,
-                                          six_mutation_types_np_array,
-                                          ordered_sbs_signatures,
-                                          ordered_dbs_signatures,
-                                          ordered_id_signatures,
-                                          ordered_sbs_signatures_cutoffs,
-                                          ordered_dbs_signatures_cutoffs,
-                                          ordered_id_signatures_cutoffs,
-                                          all_types_np_array_size,
-                                          discreet_mode,
-                                          verbose,),
-                                    callback=accumulate_np_arrays))
-        pool.close()
-        pool.join()
+            accumulate_np_arrays(result_tuple)
 
     #################################################################################################################
     ##########################################      Output starts      ##############################################
@@ -926,6 +960,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
     ##########################################      Output ends      ################################################
     #################################################################################################################
 
-    print('--- TranscriptionStrandBias Analysis ends')
-    print('#################################################################################\n')
-
+    log_out = open(log_file, 'a')
+    print('--- Transcription Strand Asymmetry Analysis ends', file=log_out)
+    print('#################################################################################\n', file=log_out)
+    log_out.close()

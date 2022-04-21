@@ -359,19 +359,38 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
 
 
 # Called by plotSignatureBasedFigures
-def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,numberofMutations,xlabel,ylabel,label,text,outputDir,jobname,numberofSimulations,color,linestyle,fillcolor,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,verbose,plot_mode):
+def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
+                                                            signature,
+                                                            numberofMutations,
+                                                            xlabel,
+                                                            ylabel,
+                                                            label,
+                                                            text,
+                                                            outputDir,
+                                                            jobname,
+                                                            numberofSimulations,
+                                                            color,
+                                                            linestyle,
+                                                            fillcolor,
+                                                            libraryFilename,
+                                                            libraryFilenameMemo,
+                                                            occupancy_type,
+                                                            plusOrMinus,
+                                                            log_file,
+                                                            verbose,
+                                                            plot_mode):
 
-    if (occupancy_type==NUCLEOSOMEOCCUPANCY):
-        figurenameEnd='_NucleosomeOccupancy.png'
-    elif (occupancy_type==EPIGENOMICSOCCUPANCY):
-        figurenameEnd='_EpigenomicsOccupancy.png'
+    if (occupancy_type == NUCLEOSOMEOCCUPANCY):
+        figurenameEnd = '_NucleosomeOccupancy.png'
+    elif (occupancy_type == EPIGENOMICSOCCUPANCY):
+        figurenameEnd = '_EpigenomicsOccupancy.png'
     else:
-        figurenameEnd='_EpigenomicsOccupancy.png'
+        figurenameEnd = '_EpigenomicsOccupancy.png'
 
-    if plot_mode== PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
-        real_label='Real %s' %(label)
+    if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
+        real_label = 'Real %s' %(label)
         simulated_label = 'Simulated %s' % (label)
-    elif (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT) or (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE):
+    elif (plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT) or (plot_mode==PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE):
         real_label='Real'
         simulated_label = 'Simulated'
 
@@ -410,8 +429,11 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,num
     if (realAverage is not None):
         # if (np.argwhere(np.isnan(realAverage))).size>0:
         if (np.argwhere(pd.isnull(realAverage))).size > 0:
-            print('Attention: There are %d nans in realAverage in %s for %s' %(len(np.argwhere(np.isnan(realAverage))),libraryFilenameMemo,signature))
-            if verbose: print('\tVerbose %s' %(np.argwhere(pd.isnull(realAverage))))
+            log_out = open(log_file, 'a')
+            print('--- Attention: There are %d nans in realAverage in %s for %s' %(len(np.argwhere(np.isnan(realAverage))),libraryFilenameMemo,signature), file=log_out)
+            if verbose:
+                print('\tVerbose %s' %(np.argwhere(pd.isnull(realAverage))), file=log_out)
+            log_out.close()
 
     if ((realAverage is not None) and (pd.notna(realAverage).any(axis=0)) and (np.any(realAverage))):
         min_list.append(np.amin(realAverage))
@@ -539,7 +561,7 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,signature,num
         fig.savefig(figureFile, dpi=100, bbox_inches="tight")
         plt.clf()
 
-        #Clears the axis without removing the axis itself
+        # Clears the axis without removing the axis itself
         plt.cla()
         plt.close()
 
@@ -779,6 +801,7 @@ def plotSignatureBasedFigures(mutationType,
                               libraryFilenameMemo,
                               occupancy_type,
                               plusOrMinus,
+                              log_file,
                               verbose,
                               plot_mode):
 
@@ -840,6 +863,7 @@ def plotSignatureBasedFigures(mutationType,
                                                                 libraryFilenameMemo,
                                                                 occupancy_type,
                                                                 plusOrMinus,
+                                                                log_file,
                                                                 verbose,
                                                                 plot_mode)
 
@@ -864,6 +888,7 @@ def plotSignatureBasedFigures(mutationType,
                                                                     libraryFilenameMemo,
                                                                     occupancy_type,
                                                                     plusOrMinus,
+                                                                    log_file,
                                                                     verbose,
                                                                     plot_mode)
 
@@ -1117,6 +1142,7 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
                                                              epigenomics_dna_elements,
                                                              cancer_type,
                                                              heatmaps_output_dir,
+                                                             log_file,
                                                              verbose):
 
 
@@ -1128,20 +1154,28 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
         dna_elements = ['Chromatin' if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
 
         if verbose:
-            print('biosamples: %s' %(biosamples))
-            print('dna_elements: %s' %(dna_elements))
-            print('average_fold_change_array: %s' %(average_fold_change_array))
+            log_out = open(log_file, 'a')
+            print('biosamples: %s' %(biosamples), file=log_out)
+            print('dna_elements: %s' %(dna_elements), file=log_out)
+            print('average_fold_change_array: %s' %(average_fold_change_array), file=log_out)
+            log_out.close()
 
         fig, ax = plt.subplots(figsize=(len(dna_elements),len(biosamples)))
 
         try:
-            if verbose: print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)), file=log_out)
+                log_out.close()
         except ValueError:
-            if verbose: print('\tVerbose average_fold_change_array:%s' %(average_fold_change_array))
-            if verbose: print('\tVerbose average_fold_change_array.size')
-            if verbose: print(average_fold_change_array.size)
-            if verbose: print('\tVerbose average_fold_change_array.shape')
-            if verbose: print(average_fold_change_array.shape)
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose average_fold_change_array:%s' %(average_fold_change_array), file=log_out)
+                print('\tVerbose average_fold_change_array.size', file=log_out)
+                print(average_fold_change_array.size, file=log_out)
+                print('\tVerbose average_fold_change_array.shape', file=log_out)
+                print(average_fold_change_array.shape, file=log_out)
+                log_out.close()
 
         # Blue White Red
         im = heatmap(average_fold_change_array, biosamples, dna_elements, ax=ax, cmap='seismic',cbarlabel="Fold Change [Real mutations/Simulated Mutations]", vmin=0.25, vmax=1.75)
@@ -1166,11 +1200,12 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                                                              signatureType,
                                                              heatmaps_output_dir,
                                                              filename_text,
+                                                             log_file,
                                                              verbose):
 
     signatures, dna_elements, average_fold_change_array = fill_average_fold_change_array_rows_signatures_columns_dna_elements(signature2BiosamplePooledDNAElementPooled2AverageFoldChangeDict,epigenomics_dna_elements)
 
-    #Update ATAC-Seq to Chromatin
+    # Update ATAC-Seq to Chromatin
     dna_elements = [OPEN_CHROMATIN if ATAC_DNA_ELEMENT in dna_element else dna_element for dna_element in dna_elements]
 
     if signatureType==SBS:
@@ -1181,22 +1216,28 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
         signatures = ['ALL INDELS' if AGGREGATEDINDELS in signature else signature for signature in signatures]
 
     if verbose:
-        print('signatures: %s' %(signatures))
-        print('dna_elements: %s' %(dna_elements))
-        print('average_fold_change_array: %s' %(average_fold_change_array))
+        log_out = open(log_file, 'a')
+        print('signatures: %s' %(signatures), file=log_out)
+        print('dna_elements: %s' %(dna_elements), file=log_out)
+        print('average_fold_change_array: %s' %(average_fold_change_array), file=log_out)
+        log_out.close()
 
     fig, ax = plt.subplots(figsize=(len(dna_elements),len(signatures)))
 
     try:
-        if verbose: print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose min:%f max:%f' % (np.min(average_fold_change_array), np.max(average_fold_change_array)), file=log_out)
+            log_out.close()
     except ValueError:
-        if verbose: print('\tVerbose average_fold_change_array:%s' %(average_fold_change_array))
-        if verbose: print('\tVerbose average_fold_change_array.size')
-        if verbose: print(average_fold_change_array.size)
-        if verbose: print('\tVerbose average_fold_change_array.shape')
-        if verbose: print(average_fold_change_array.shape)
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('average_fold_change_array:%s' %(average_fold_change_array), file=log_out)
+            print('average_fold_change_array.size', average_fold_change_array.size, file=log_out)
+            print('average_fold_change_array.shape', average_fold_change_array.shape, file=log_out)
+            log_out.close()
 
-    # If dna_element is not statistically significant makes ir cell color white starts
+    # If dna_element is not statistically significant makes it cell color white starts
     # backup_average_fold_change_array=average_fold_change_array.copy()
     #
     # for signature_index, signature in enumerate(signatures,0):
@@ -1273,24 +1314,36 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
 
 # Detailed heatmap before filtering: row biosample, column DNA elements (unpooled and uncombined)
 # Under heatmaps/detailed
-def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosample2DNAElement2FoldChangeDict,cancer_type,heatmap_output_path,verbose):
-    if verbose: print('\n\tVerbose Plotting starts for Step2 using signature2Biosample2DNAElement2FoldChangeDict')
+def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosample2DNAElement2FoldChangeDict,
+                                                                 cancer_type,
+                                                                 heatmap_output_path,
+                                                                 log_file,
+                                                                 verbose):
+
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\n\tPlotting starts for Step2 using signature2Biosample2DNAElement2FoldChangeDict', file=log_out)
+        log_out.close()
+
     for signature in signature2Biosample2DNAElement2FoldChangeDict:
         for biosample in signature2Biosample2DNAElement2FoldChangeDict[signature]:
             encode_hms, average_fold_change_array = fill_average_fold_change_array_row_each_biosample(signature2Biosample2DNAElement2FoldChangeDict[signature][biosample])
 
-            if verbose: print('\tVerbose %s %s len(encode_hms):%d %s' %(signature, biosample,len(encode_hms),encode_hms))
             cancer_type_encode_biosamples_list=[]
             cancer_type_encode_biosamples_list.append('%s, %s' %(cancer_type,biosample))
 
             fig, ax = plt.subplots(figsize=(len(encode_hms), len(cancer_type_encode_biosamples_list)))
 
-            if verbose: print('\tVerbose min:%f max:%f' %(np.min(average_fold_change_array),np.max(average_fold_change_array)))
-
-            #Blue White Red
+            # Blue White Red
             im = heatmap(average_fold_change_array, cancer_type_encode_biosamples_list, encode_hms, ax=ax, cmap='seismic', cbarlabel="Fold Change [Real mutations/Simulated Mutations]",vmin=0, vmax=2)
             texts = annotate_heatmap(im, valfmt="{x:.2f} ")
-            if verbose: print('\tVerbose texts:%s' %texts)
+
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\t%s %s len(encode_hms):%d %s' %(signature, biosample, len(encode_hms), encode_hms), file=log_out)
+                print('\tmin:%f max:%f' %(np.min(average_fold_change_array), np.max(average_fold_change_array)), file=log_out)
+                print('\ttexts:%s' %texts, file=log_out)
+                log_out.close()
 
             plt.title('%s' % (signature), y=1.01)
             filename = 'Step1_%s_%s_rows_%s_columns_dna_elements_heatmap.png' % (cancer_type,signature,biosample)
@@ -1302,7 +1355,10 @@ def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosa
             plt.cla()
             plt.close(fig)
 
-    if verbose: print('\tVerbose Plotting ends for Step2 using signature2Biosample2DNAElement2FoldChangeDict')
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tPlotting ends for Step2 using signature2Biosample2DNAElement2FoldChangeDict', file = log_out)
+        log_out.close()
 
 
 
@@ -1352,18 +1408,22 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           plusOrMinus_epigenomics,
                                           plusOrMinus_nucleosome,
                                           epigenomics_heatmap_significance_level,
+                                          log_file,
                                           verbose):
 
-    if verbose: print('\tVerbose epigenomics_files_memos:%s' % (epigenomics_files_memos))
-    if verbose: print('\tVerbose epigenomics_biosamples:%s' %(epigenomics_biosamples))
-    if verbose: print('\tVerbose epigenomics_dna_elements:%s' %(epigenomics_dna_elements))
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose epigenomics_files_memos:%s' % (epigenomics_files_memos), file=log_out)
+        print('\tVerbose epigenomics_biosamples:%s' %(epigenomics_biosamples), file=log_out)
+        print('\tVerbose epigenomics_dna_elements:%s' %(epigenomics_dna_elements), file=log_out)
+        log_out.close()
 
-    #Initialize
+    # Initialize
     sbs_signatures = []
     dbs_signatures = []
     id_signatures = []
 
-    #We can plot heatmaps if there is at least one simulation
+    # We can plot heatmaps if there is at least one simulation
     if (numberofSimulations>=1):
         for mutation_type_context in mutation_types_contexts:
             if (mutation_type_context in SBS_CONTEXTS):
@@ -1419,6 +1479,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                                     sbs_signatures,
                                                     dbs_signatures,
                                                     id_signatures,
+                                                    log_file,
                                                     verbose)
 
 
@@ -1441,10 +1502,11 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                     sbs_signatures,
                                                     dbs_signatures,
                                                     id_signatures,
+                                                    log_file,
                                                     verbose):
 
 
-    signatures= []
+    signatures = []
     signatures.extend(sbs_signatures)
     signatures.extend(dbs_signatures)
     signatures.extend(id_signatures)
@@ -1465,7 +1527,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     #[jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
     #  max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count,
     #  list(simulationsHorizontalMeans)]
-    step1_p_value_df, step1_signature2Biosample2DNAElement2PValueDict= step1_calculate_p_value(fold_change_window_size,
+    step1_p_value_df, step1_signature2Biosample2DNAElement2PValueDict = step1_calculate_p_value(fold_change_window_size,
                         epigenomics_center,
                         nucleosome_center,
                         outputDir,
@@ -1478,9 +1540,13 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                         signatures,
                         heatmaps_output_dir)
 
-    #Plot heatmaps using step1 under epigenomics_occupancy/heatmaps/detailed/
-    #Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined) under detailed/
-    plot_heatmap_one_row_only_for_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict, jobname, heatmaps_detailed_output_dir, verbose)
+    # Plot heatmaps using step1 under epigenomics_occupancy/heatmaps/detailed/
+    # Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined) under detailed/
+    plot_heatmap_one_row_only_for_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict,
+                                                                 jobname,
+                                                                 heatmaps_detailed_output_dir,
+                                                                 log_file,
+                                                                 verbose)
 
     # Step2 uses Step1
     # Combine p values using Fisher's method
@@ -1493,13 +1559,14 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                                                                                                          nucleosome_file,
                                                                                                                                                          epigenomics_dna_elements)
 
-    #Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
-    #Rows biosamples
-    #Columns dna_elements
+    # Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
+    # Rows biosamples
+    # Columns dna_elements
     plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
                                                              epigenomics_dna_elements,
                                                              jobname,
                                                              heatmaps_detailed_output_dir,
+                                                             log_file,
                                                              verbose)
 
     # Step3 uses Step1
@@ -1526,6 +1593,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  SBS,
                                                                  heatmaps_detailed_output_dir,
                                                                  "Step3",
+                                                                 log_file,
                                                                  verbose)
 
     if any(step3_dbs_signature2dna_element2avg_fold_change_dict):
@@ -1536,6 +1604,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  DBS,
                                                                  heatmaps_detailed_output_dir,
                                                                  "Step3",
+                                                                 log_file,
                                                                  verbose)
 
     if any(step3_id_signature2dna_element2avg_fold_change_dict):
@@ -1546,6 +1615,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  ID,
                                                                  heatmaps_detailed_output_dir,
                                                                  "Step3",
+                                                                 log_file,
                                                                  verbose)
 
     # Step4 Correct combined p values
@@ -1553,10 +1623,10 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # [fold_change_list,avg_fold_change,p_value_list,combined_p_value]
     step4_q_value_df,step4_signature2dna_element2q_value_list_dict = step4_apply_multiple_tests_correction(step3_signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir)
 
-    #Step5
-    #Filter using q values (combined_q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change))
+    # Step5
+    # Filter using q values (combined_q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change))
     # (signature, cancer_type, dna_element) with combined q_value <= 0.01 and (avg_fold_change >= 1.1 or <=0.9)
-    #[fold_change_list, avg_fold_change, q_value_list, combined_q_value]
+    # [fold_change_list, avg_fold_change, q_value_list, combined_q_value]
     step5_filtered_q_value_df,step5_signature2dna_element2average_fold_changedict,signature2dna_element2significancedict = step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,
                                                                                                                                                             heatmaps_output_dir,
                                                                                                                                                             epigenomics_heatmap_significance_level)
@@ -1574,6 +1644,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  SBS,
                                                                  heatmaps_output_dir,
                                                                  'Final',
+                                                                 log_file,
                                                                  verbose)
 
     if any(step5_dbs_signature2dna_element2avg_fold_change_dict):
@@ -1584,6 +1655,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  DBS,
                                                                  heatmaps_output_dir,
                                                                  'Final',
+                                                                 log_file,
                                                                  verbose)
 
     if any(step5_id_signature2dna_element2avg_fold_change_dict):
@@ -1594,9 +1666,10 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  ID,
                                                                  heatmaps_output_dir,
                                                                  'Final',
+                                                                 log_file,
                                                                  verbose)
 
-    #write excel files
+    # write excel files
     excel_file_path = os.path.join(heatmaps_output_dir,EXCEL_FILES,'Epigenomics_Occupancy.xlsx')
     df_list = [step1_p_value_df,step2_combined_p_value_df, step3_combined_p_value_df, step4_q_value_df, step5_filtered_q_value_df]
     sheet_list = ['step1_p_value', 'step2_combined_p_value', 'step3_combined_p_value', 'step4_q_value', 'step5_filtered_q_value']
@@ -2316,14 +2389,15 @@ def occupancyAverageSignalFigures(outputDir,
                                   libraryFilenameMemo,
                                   occupancy_type,
                                   plusOrMinus,
+                                  log_file,
                                   verbose,
                                   plot_mode):
 
     if (occupancy_type == NUCLEOSOMEOCCUPANCY):
-        ylabel='Average nucleosome signal'
+        ylabel = 'Average nucleosome signal'
     else:
-        #For epigenomics, epigenomics_dir_name can be different than EPIGENOMICSOCCUPANCY
-        ylabel='Average epigenomics signal'
+        # For epigenomics, epigenomics_dir_name can be different than EPIGENOMICSOCCUPANCY
+        ylabel = 'Average epigenomics signal'
 
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data
@@ -2377,7 +2451,11 @@ def occupancyAverageSignalFigures(outputDir,
 
     # Tissue based
     for mutationType in mutation_types_contexts:
-        if verbose: print('\tVerbose Worker pid %s Plot all mutations pooled %s\t%s' %(str(os.getpid()),str(mutationType),libraryFilenameMemo))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose Worker pid %s Plot all mutations pooled %s\t%s' %(str(os.getpid()),str(mutationType),libraryFilenameMemo), file=log_out)
+            log_out.close()
+
         plotAllMutationsPooledWithSimulations('Interval around variant (bp)',
                                               ylabel,
                                               None,
@@ -2399,7 +2477,11 @@ def occupancyAverageSignalFigures(outputDir,
     if checkValidness(SIGNATUREBASED, outputDir, jobname, occupancy_type):
         if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Subs Signatures
-            if verbose: print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo))
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
+                log_out.close()
+
             plotSignatureBasedFigures(SBS96,
                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2SubsSignature2NumberofMutationsDict,
@@ -2410,12 +2492,17 @@ def occupancyAverageSignalFigures(outputDir,
                                       libraryFilenameMemo,
                                       occupancy_type,
                                       plusOrMinus,
+                                      log_file,
                                       verbose,
                                       plot_mode)
 
         if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Dinucs Signatures
-            if verbose: print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo))
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
+                log_out.close()
+
             plotSignatureBasedFigures(DBS,
                                       dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2DinucsSignature2NumberofMutationsDict,
@@ -2426,12 +2513,17 @@ def occupancyAverageSignalFigures(outputDir,
                                       libraryFilenameMemo,
                                       occupancy_type,
                                       plusOrMinus,
+                                      log_file,
                                       verbose,
                                       plot_mode)
 
         if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # Indels Signatures
-            if verbose: print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()), libraryFilenameMemo))
+            if verbose:
+                log_out = open(log_file, 'a')
+                print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()), libraryFilenameMemo), file=log_out)
+                log_out.close()
+
             plotSignatureBasedFigures(ID,
                                       indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2IndelsSignature2NumberofMutationsDict,
@@ -2442,6 +2534,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       libraryFilenameMemo,
                                       occupancy_type,
                                       plusOrMinus,
+                                      log_file,
                                       verbose,
                                       plot_mode)
 

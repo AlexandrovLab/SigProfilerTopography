@@ -130,9 +130,15 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                              plusorMinus,
                                                              discreet_mode,
                                                              default_cutoff,
+                                                             log_file,
                                                              verbose):
 
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        log_out.close()
+
     # 1st part  Prepare chr based mutations dataframes
     maximum_chrom_size = chromSizesDict[chrLong]
     start_time = time.time()
@@ -142,25 +148,22 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     my_upperBound = None
     signal_index = None
 
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    # if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_simBased_combined_df_split: %f in MB -- chrLong:%s simNum:%d' % (
-    #         occupancy_type,
-    #         str(os.getpid()),
-    #         sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
-    #         sys.getsizeof(chrBased_simBased_combined_df_split) / MEGABYTE_IN_BYTES,
-    #         chrLong, simNum))
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        log_out.close()
 
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
-    if (occupancy_type==NUCLEOSOMEOCCUPANCY):
+    if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, signalArrayFilename)
-    elif (occupancy_type== EPIGENOMICSOCCUPANCY):
+    elif (occupancy_type == EPIGENOMICSOCCUPANCY):
         if os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
             chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, EPIGENOMICS, CHRBASED, signalArrayFilename)
         else:
             chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
     else:
-        #It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
+        # It can be EPIGENOMICSOCCUPANCY or user provided name e.g.: Epigenomics_ATAC_ENCFF317TWD
         chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
 
     # Downloaded or created runtime
@@ -192,7 +195,9 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                     # Undefined
                     my_upperBound = np.iinfo(np.int16).max
             except:
-                print('Exception %s' %library_file_with_path)
+                log_out = open(log_file, 'a')
+                print('Exception %s' %library_file_with_path, file=log_out)
+                log_out.close()
 
         elif (library_file_type == BIGBED):
             try:
@@ -213,7 +218,9 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                     # Undefined
                     my_upperBound = np.iinfo(np.int16).max
             except:
-                print('Exception %s' %library_file_with_path)
+                log_out = open(log_file, 'a')
+                print('Exception %s' %library_file_with_path, file=log_out)
+                log_out.close()
 
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
@@ -239,7 +246,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+            log_out.close()
 
         # For subs
         if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
@@ -298,7 +308,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
         # For Indels
         if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
 
-            #df_columns is a numpy array
+            # df_columns is a numpy array
             df_columns = chrBased_simBased_indels_df.columns.values
 
             indelsSignatures_mask_array = np.isin(df_columns, ordered_id_signatures)
@@ -322,7 +332,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_indels_df[df_columns].values]
 
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+            log_out.close()
         ###############################################################################
         ################### Fill signal and count array ends ##########################
         ###############################################################################
@@ -330,11 +343,11 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     if (library_file_opened_by_pyBigWig is not None):
         library_file_opened_by_pyBigWig.close()
 
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s took %f seconds chrLong:%s simNum:%d\n' % (occupancy_type,str(os.getpid()), (time.time() - start_time), chrLong, simNum))
-    ###############################################################################
-    ################### Return  starts ############################################
-    ###############################################################################
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        print('\tVerbose %s Worker pid %s took %f seconds chrLong:%s simNum:%d\n' % (occupancy_type,str(os.getpid()), (time.time() - start_time), chrLong, simNum), file=log_out)
+        log_out.close()
 
     # Initialzie the list, you will return this list
     SignalArrayAndCountArrayList = []
@@ -355,7 +368,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 # For apply_async
 # Read chromBased simBased combined mutations df in the process
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
-        # input_list):
         occupancy_type,
         occupancy_calculation_type,
         outputDir,
@@ -374,28 +386,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         plusorMinus,
         discreet_mode,
         default_cutoff,
+        log_file,
         verbose):
 
-    # occupancy_type=input_list[0]
-    # occupancy_calculation_type=input_list[1]
-    # outputDir=input_list[2]
-    # jobname=input_list[3]
-    # chrLong=input_list[4]
-    # simNum=input_list[5]
-    # chromSizesDict=input_list[6]
-    # library_file_with_path=input_list[7]
-    # library_file_type=input_list[8]
-    # ordered_sbs_signatures=input_list[9]
-    # ordered_dbs_signatures=input_list[10]
-    # ordered_id_signatures=input_list[11]
-    # ordered_sbs_signatures_cutoffs=input_list[12]
-    # ordered_dbs_signatures_cutoffs=input_list[13]
-    # ordered_id_signatures_cutoffs=input_list[14]
-    # plusorMinus=input_list[15]
-    # verbose=input_list[16]
-
     try:
-        # chrBased_simBased_mutations_df = get_chrBased_simBased_combined_df(outputDir, jobname, chrLong, simNum)
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
 
         return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
@@ -419,12 +413,13 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
                                                                         plusorMinus,
                                                                         discreet_mode,
                                                                         default_cutoff,
+                                                                        log_file,
                                                                         verbose)
     except Exception as e:
-        print("Exception: %s" % (e))
-        # print(e)
-        # traceback.print_exc()
-        # raise e
+        log_out = open(log_file, 'a')
+        print("Exception: %s" % (e), file=log_out)
+        log_out.close()
+
 
 
 # For apply_async split using poolInputList
@@ -448,6 +443,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                                   plusorMinus,
                                                                                   discreet_mode,
                                                                                   default_cutoff,
+                                                                                  log_file,
                                                                                   verbose):
 
     chrBased_simBased_combined_df_split = get_chrBased_simBased_combined_df_split(outputDir, jobname, chrLong, simNum, splitIndex)
@@ -471,6 +467,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_spli
                                                                     plusorMinus,
                                                                     discreet_mode,
                                                                     default_cutoff,
+                                                                    log_file,
                                                                     verbose)
 
 
@@ -496,9 +493,15 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                                                              plusorMinus,
                                                              discreet_mode,
                                                              default_cutoff,
+                                                             log_file,
                                                              verbose):
 
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB START chrLong:%s simNum:%d' %(occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        log_out.close()
+
     # 1st part  Prepare chr based mutations dataframes
     maximum_chrom_size = chromSizesDict[chrLong]
     start_time = time.time()
@@ -509,16 +512,16 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
     signal_index = None
 
     if (chrBased_simBased_combined_df_split is not None) and verbose:
-        print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_simBased_combined_df_split.shape[0],chrBased_simBased_combined_df_split.shape[1]))
-
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_simBased_combined_df_split: %f in MB -- chrLong:%s simNum:%d' % (
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s chrBased_mutations_df(%d,%d) ' %(occupancy_type,str(os.getpid()),chrBased_simBased_combined_df_split.shape[0],chrBased_simBased_combined_df_split.shape[1]), file=log_out)
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check1 Read Signal Array and Dataframes chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        print('\tVerbose %s Worker pid %s -- signal_array_npy: %f in MB -- chrBased_simBased_combined_df_split: %f in MB -- chrLong:%s simNum:%d' % (
             occupancy_type,
             str(os.getpid()),
             sys.getsizeof(chrBasedSignalArray) / MEGABYTE_IN_BYTES,
             sys.getsizeof(chrBased_simBased_combined_df_split) / MEGABYTE_IN_BYTES,
-            chrLong, simNum))
-
+            chrLong, simNum), file=log_out)
+        log_out.close()
 
     libraryFilenameWoExtension = os.path.splitext(os.path.basename(library_file_with_path))[0]
     signalArrayFilename = '%s_signal_%s.npy' % (chrLong, libraryFilenameWoExtension)
@@ -559,7 +562,9 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                     # Undefined
                     my_upperBound = np.iinfo(np.int16).max
             except:
-                print('Exception %s' %library_file_with_path)
+                log_out = open(log_file, 'a')
+                print('Exception %s' %library_file_with_path, file=log_out)
+                log_out.close()
 
         elif (library_file_type == BIGBED):
             try:
@@ -580,14 +585,20 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                     # Undefined
                     my_upperBound = np.iinfo(np.int16).max
             except:
-                print('Exception %s' %library_file_with_path)
+                log_out = open(log_file, 'a')
+                print('Exception %s' %library_file_with_path, file=log_out)
+                log_out.close()
 
 
     if ((chrBasedSignalArray is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
         ######################################################## #######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+            log_out.close()
+
         if ((chrBased_simBased_combined_df_split is not None) and (not chrBased_simBased_combined_df_split.empty)):
 
             # df_columns is a numpy array
@@ -640,7 +651,10 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_combined_df_split[df_columns].values]
 
-        if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
+        if verbose:
+            log_out = open(log_file, 'a')
+            print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_2 End chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+            log_out.close()
         ###############################################################################
         ################### Fill signal and count array ends ##########################
         ###############################################################################
@@ -648,8 +662,12 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
     if (library_file_opened_by_pyBigWig is not None):
         library_file_opened_by_pyBigWig.close()
 
-    if verbose: print('\tVerbose %s Worker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum))
-    if verbose: print('\tVerbose %s Worker pid %s took %f seconds chrLong:%s simNum:%d\n' % (occupancy_type,str(os.getpid()), (time.time() - start_time), chrLong, simNum))
+    if verbose:
+        log_out = open(log_file, 'a')
+        print('\tVerbose %s Worker pid %s memory_usage in %.2f MB END  chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
+        print('\tVerbose %s Worker pid %s took %f seconds chrLong:%s simNum:%d\n' % (occupancy_type,str(os.getpid()), (time.time() - start_time), chrLong, simNum), file=log_out)
+        log_out.close()
+
     ###############################################################################
     ################### Return  starts ############################################
     ###############################################################################
@@ -1134,18 +1152,26 @@ def occupancyAnalysis(genome,
                         quantileValue,
                         discreet_mode,
                         default_cutoff,
+                        parallel_mode,
+                        log_file,
                         verbose):
 
-    print('\n#################################################################################')
-    print('--- %s Analysis starts' %(occupancy_type))
-    print('--- Computation Type:%s' % (computation_type))
-    print('--- Occupancy Type:%s' % (occupancy_type))
-    print('--- Library file with path: %s\n' %library_file_with_path)
 
-    #Using pyBigWig for BigWig and BigBed files if you can import pyBigWig (linux only) otherwise no
-    #By the way pyBigWig can be imported in unix, linux like os not available in windows
-    #Using HM and CTCF bed files preparing chr based signal array runtime
-    #Using ATAC-seq wig files preparing chr based signal array runtime
+    log_out = open(log_file, 'a')
+    if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES) and (not os.path.exists(library_file_with_path)):
+        print('There is no such file under %s' %(library_file_with_path), file=log_out)
+
+    print('\n#################################################################################', file=log_out)
+    print('--- %s Analysis starts' %(occupancy_type), file=log_out)
+    print('--- Computation Type:%s' % (computation_type), file=log_out)
+    print('--- Occupancy Type:%s' % (occupancy_type), file=log_out)
+    print('--- Library file with path: %s\n' %library_file_with_path, file=log_out)
+    log_out.close()
+
+    # Using pyBigWig for BigWig and BigBed files if you can import pyBigWig (linux only) otherwise no
+    # By the way pyBigWig can be imported in unix, linux like os not available in windows
+    # Using HM and CTCF bed files preparing chr based signal array runtime
+    # Using ATAC-seq wig files preparing chr based signal array runtime
 
     ##########################################################################
     # If chunksize is 1, maxtasksperchild=x will call the function x times in each process,
@@ -1173,11 +1199,10 @@ def occupancyAnalysis(genome,
     allSims_dinucsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_dbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_indelsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_id_signatures+1, plusorMinus * 2 + 1))
 
-
     # This code reads the file abd preaore chrbased signal files
     # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
     # No need for preparing here
-    library_file_type=None
+    library_file_type = None
 
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES):
         # What is the type of the signal_file_with_path?
@@ -1185,46 +1210,45 @@ def occupancyAnalysis(genome,
         file_extension = os.path.splitext(os.path.basename(library_file_with_path))[1]
 
         if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bw')):
-            library_file_type=BIGWIG
+            library_file_type = BIGWIG
             #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
         elif ((file_extension.lower() == '.bigbed') or (file_extension.lower() == '.bb')):
-            library_file_type=BIGBED
+            library_file_type = BIGBED
             #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
-        elif (file_extension.lower()=='.bed'):
-            library_file_type=BED
-            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
-        elif ((file_extension.lower()=='.narrowpeak') or (file_extension.lower()=='.np')):
-            library_file_type=NARROWPEAK
-            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type,quantileValue,remove_outliers)
-        elif (file_extension.lower()=='.wig'):
-            library_file_type=WIG
+        elif (file_extension.lower() == '.bed'):
+            library_file_type = BED
+            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type, quantileValue, remove_outliers, log_file)
+        elif ((file_extension.lower() == '.narrowpeak') or (file_extension.lower() == '.np')):
+            library_file_type = NARROWPEAK
+            readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type, quantileValue, remove_outliers, log_file)
+        elif (file_extension.lower() == '.wig'):
+            library_file_type = WIG
             # For inhouse preparation
             # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
             # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
-            isFileTypeBEDGRAPH=decideFileType(library_file_with_path)
+            isFileTypeBEDGRAPH = decideFileType(library_file_with_path)
             if isFileTypeBEDGRAPH:
                 if verbose: start_time = time.time()
                 # Read by chunks
                 # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
                 # Read at once
-                readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue)
-                if verbose: print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)))
+                readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path, occupancy_type,remove_outliers,verbose,quantileValue, log_file)
+                if verbose:
+                    log_out = open(log_file, 'a')
+                    print('\tVerbose Read wig file and write chrbased arrays took %f seconds' %((time.time() - start_time)), file=log_out)
+                    log_out.close()
 
-                # For 6 GB ATAC-seq file using pool took 8 min whereas without pool took 16 min.
+                # For 6 GB ATAC-seq file using pool took 8 min whereas without pool it took 16 min.
                 # start_time = time.time()
                 # readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file_with_path,occupancy_type,verbose)
                 # print('Without pool Took %f seconds' %((time.time() - start_time)))
             else:
-                readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, library_file_with_path,occupancy_type,quantileValue,remove_outliers)
-        elif (file_extension.lower()=='.bedgraph'):
+                readWig_with_fixedStep_variableStep_writeChrBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type, quantileValue, remove_outliers, log_file)
+        elif (file_extension.lower() == '.bedgraph'):
             library_file_type = BEDGRAPH
-            readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path,occupancy_type, remove_outliers, verbose, quantileValue)
+            readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path,occupancy_type, remove_outliers, verbose, quantileValue, log_file)
         else:
             library_file_type=LIBRARY_FILE_TYPE_OTHER
-
-    # elif os.path.basename(library_file_with_path)==DEFAULT_ATAC_SEQ_OCCUPANCY_FILE:
-    #     check_download_chrbased_npy_atac_seq_files(outputDir, jobname, occupancy_type,DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,chromNamesList)
-    ##############################################################
 
 
     def accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList):
@@ -1251,21 +1275,79 @@ def occupancyAnalysis(genome,
         except Exception as e:
             print("Exception in accumulate_apply_async_result_vectorization function: %s" % (e))
 
-    jobs=[]
+    sim_nums = range(0, numofSimulations + 1)
+    sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
 
-    ##################################################################################
-    if (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
-        print(USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM,flush=True)
+    if parallel_mode:
+        jobs = []
 
-        sim_nums = range(0, numofSimulations + 1)
-        sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
+        if (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+            for simNum, chrLong in sim_num_chr_tuples:
+                jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations,
+                                             args=(occupancy_type,
+                                                   occupancy_calculation_type,
+                                                   outputDir,
+                                                   jobname,
+                                                   chrLong,
+                                                   simNum,
+                                                   chromSizesDict,
+                                                   library_file_with_path,
+                                                   library_file_type,
+                                                   ordered_sbs_signatures,
+                                                   ordered_dbs_signatures,
+                                                   ordered_id_signatures,
+                                                   ordered_sbs_signatures_cutoffs,
+                                                   ordered_dbs_signatures_cutoffs,
+                                                   ordered_id_signatures_cutoffs,
+                                                   plusorMinus,
+                                                   discreet_mode,
+                                                   default_cutoff,
+                                                   log_file,
+                                                   verbose,),
+                                             callback=accumulate_apply_async_result_vectorization))
 
+            pool.close()
+            pool.join()
+
+        elif (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+            numofProcesses = multiprocessing.cpu_count()
+            pool = multiprocessing.Pool(processes=numofProcesses)
+
+            for chrLong, simNum, splitIndex in job_tuples:
+                jobs.append(
+                    pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
+                                     args=(occupancy_type,
+                                           occupancy_calculation_type,
+                                           outputDir,
+                                           jobname,
+                                           chrLong,
+                                           simNum,
+                                           splitIndex,
+                                           chromSizesDict,
+                                           library_file_with_path,
+                                           library_file_type,
+                                           ordered_sbs_signatures,
+                                           ordered_dbs_signatures,
+                                           ordered_id_signatures,
+                                           ordered_sbs_signatures_cutoffs,
+                                           ordered_dbs_signatures_cutoffs,
+                                           ordered_id_signatures_cutoffs,
+                                           plusorMinus,
+                                           discreet_mode,
+                                           default_cutoff,
+                                           log_file,
+                                           verbose,),
+                                     callback=accumulate_apply_async_result_vectorization))
+            pool.close()
+            pool.join()
+
+    else:
+        # Sequential mode for profiling, debugging and testing purposes
         for simNum, chrLong in sim_num_chr_tuples:
-            jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations,
-                             args=(occupancy_type,
+            simulatonBased_SignalArrayAndCountArrayList = chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(occupancy_type,
                                    occupancy_calculation_type,
                                    outputDir,
                                    jobname,
@@ -1283,49 +1365,13 @@ def occupancyAnalysis(genome,
                                    plusorMinus,
                                    discreet_mode,
                                    default_cutoff,
-                                   verbose,),
-                             callback=accumulate_apply_async_result_vectorization))
+                                   log_file,
+                                   verbose)
 
-        pool.close()
-        pool.join()
-
+            accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList)
 
 
-    elif (computation_type==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-        print(USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT, flush=True)
-
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
-
-        for chrLong, simNum, splitIndex in job_tuples:
-            jobs.append(pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
-                                         args=(occupancy_type,
-                                               occupancy_calculation_type,
-                                               outputDir,
-                                               jobname,
-                                               chrLong,
-                                               simNum,
-                                               splitIndex,
-                                               chromSizesDict,
-                                               library_file_with_path,
-                                               library_file_type,
-                                               ordered_sbs_signatures,
-                                               ordered_dbs_signatures,
-                                               ordered_id_signatures,
-                                               ordered_sbs_signatures_cutoffs,
-                                               ordered_dbs_signatures_cutoffs,
-                                               ordered_id_signatures_cutoffs,
-                                               plusorMinus,
-                                               discreet_mode,
-                                               default_cutoff,
-                                               verbose,),
-                                         callback=accumulate_apply_async_result_vectorization))
-        pool.close()
-        pool.join()
-
-
-
-    # For Vectorization
+    # Same for parallel_mode or sequential run
     writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
                                                    sample_based,
                                                    plusorMinus,
@@ -1343,8 +1389,7 @@ def occupancyAnalysis(genome,
                                                    numofSimulations,
                                                    library_file_memo)
 
-
-    print('--- %s Analysis ends' %(occupancy_type))
-    print('#################################################################################\n')
-
-
+    log_out = open(log_file, 'a')
+    print('--- %s Analysis ends' %(occupancy_type), file=log_out)
+    print('#################################################################################\n', file=log_out)
+    log_out.close()
