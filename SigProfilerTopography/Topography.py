@@ -2463,7 +2463,7 @@ def plotFigures(outputDir,
                                                         mutation_types_contexts,
                                                         plot_mode)
         log_out = open(log_file, 'a')
-        print("--- Plot replication time starts", file=log_out)
+        print("--- Plot replication time ends", file=log_out)
         log_out.close()
 
     if ((replication_strand_bias and transcription_strand_bias) or (plot_replication_strand_bias and plot_transcription_strand_bias)):

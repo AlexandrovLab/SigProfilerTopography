@@ -18,6 +18,7 @@
     <orderEntry type="module" module-name="SigProfilerTopographyAuxiliary" />
     <orderEntry type="module" module-name="Test" />
     <orderEntry type="module" module-name="Collaborations" />
+    <orderEntry type="module" module-name="MachineLearning" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
