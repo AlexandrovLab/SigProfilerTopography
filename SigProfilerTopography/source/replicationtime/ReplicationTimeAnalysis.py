@@ -253,6 +253,16 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
                                                                         signature_decile_index_accumulated_np_array,
                                                                         discreet_mode,
                                                                         default_cutoff,
+                                                                        list_of_rep_timing_decile1_dict,
+                                                                        list_of_rep_timing_decile2_dict,
+                                                                        list_of_rep_timing_decile3_dict,
+                                                                        list_of_rep_timing_decile4_dict,
+                                                                        list_of_rep_timing_decile5_dict,
+                                                                        list_of_rep_timing_decile6_dict,
+                                                                        list_of_rep_timing_decile7_dict,
+                                                                        list_of_rep_timing_decile8_dict,
+                                                                        list_of_rep_timing_decile9_dict,
+                                                                        list_of_rep_timing_decile10_dict,
                                                                         df_columns):
     # df_columns: numpy array
     indexofStart = np.where(df_columns == START) [0][0]
@@ -290,6 +300,37 @@ def search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation
     if (uniqueIndexesArray.size > 0):
         uniqueIndexesArray -= 1
         decile_index_array[uniqueIndexesArray] = 1
+
+        if (sim_num == 0) and (decile_index_array[0]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile1_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[1]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile2_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[2]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile3_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[3]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile4_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[4]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile5_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[5]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile6_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[6]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile7_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[7]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile8_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[8]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile9_dict.append(my_dict)
+        if (sim_num == 0) and (decile_index_array[9]):
+            my_dict = {a: b for a, b in zip(df_columns, mutation_row)}
+            list_of_rep_timing_decile10_dict.append(my_dict)
 
         probabilities = mutation_row[signatures_mask_array]
 
@@ -545,13 +586,23 @@ def searchforAllMutations_using_numpy_array(sim_num,
         df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
-                                                                             SUBS,
+                                                                            SUBS,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                             ordered_sbs_signatures_cutoffs,
                                                                             df_columns_subs_signatures_mask_array,
                                                                             subs_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
                                                                             default_cutoff,
+                                                                            list_of_rep_timing_decile1_dict,
+                                                                            list_of_rep_timing_decile2_dict,
+                                                                            list_of_rep_timing_decile3_dict,
+                                                                            list_of_rep_timing_decile4_dict,
+                                                                            list_of_rep_timing_decile5_dict,
+                                                                            list_of_rep_timing_decile6_dict,
+                                                                            list_of_rep_timing_decile7_dict,
+                                                                            list_of_rep_timing_decile8_dict,
+                                                                            list_of_rep_timing_decile9_dict,
+                                                                            list_of_rep_timing_decile10_dict,
                                                                             df_columns) for mutation_row in chrBased_simBased_subs_df.values]
 
     # DINUCS
@@ -561,13 +612,23 @@ def searchforAllMutations_using_numpy_array(sim_num,
         df_columns_dinucs_signatures_mask_array = np.isin(df_columns, ordered_dbs_signatures)
 
         [search_for_each_mutation_using_list_comprehension_using_numpy_array(mutation_row,
-                                                                             DINUCS,
+                                                                            DINUCS,
                                                                             chrBasedReplicationTimeDataArrayWithDecileIndex,
                                                                             ordered_dbs_signatures_cutoffs,
                                                                             df_columns_dinucs_signatures_mask_array,
                                                                             dinucs_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
                                                                             default_cutoff,
+                                                                            list_of_rep_timing_decile1_dict,
+                                                                            list_of_rep_timing_decile2_dict,
+                                                                            list_of_rep_timing_decile3_dict,
+                                                                            list_of_rep_timing_decile4_dict,
+                                                                            list_of_rep_timing_decile5_dict,
+                                                                            list_of_rep_timing_decile6_dict,
+                                                                            list_of_rep_timing_decile7_dict,
+                                                                            list_of_rep_timing_decile8_dict,
+                                                                            list_of_rep_timing_decile9_dict,
+                                                                            list_of_rep_timing_decile10_dict,
                                                                             df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     # INDELS
@@ -584,12 +645,32 @@ def searchforAllMutations_using_numpy_array(sim_num,
                                                                             indels_signature_decile_index_accumulated_np_array,
                                                                             discreet_mode,
                                                                             default_cutoff,
-                                                                            df_columns) for mutation_row in chrBased_simBased_indels_df.values]
+                                                                             list_of_rep_timing_decile1_dict,
+                                                                             list_of_rep_timing_decile2_dict,
+                                                                             list_of_rep_timing_decile3_dict,
+                                                                             list_of_rep_timing_decile4_dict,
+                                                                             list_of_rep_timing_decile5_dict,
+                                                                             list_of_rep_timing_decile6_dict,
+                                                                             list_of_rep_timing_decile7_dict,
+                                                                             list_of_rep_timing_decile8_dict,
+                                                                             list_of_rep_timing_decile9_dict,
+                                                                             list_of_rep_timing_decile10_dict,
+                                                                             df_columns) for mutation_row in chrBased_simBased_indels_df.values]
 
     return sim_num, \
            subs_signature_decile_index_accumulated_np_array, \
            dinucs_signature_decile_index_accumulated_np_array, \
-           indels_signature_decile_index_accumulated_np_array
+           indels_signature_decile_index_accumulated_np_array,\
+           list_of_rep_timing_decile1_dict,\
+           list_of_rep_timing_decile2_dict,\
+           list_of_rep_timing_decile3_dict,\
+           list_of_rep_timing_decile4_dict,\
+           list_of_rep_timing_decile5_dict,\
+           list_of_rep_timing_decile6_dict,\
+           list_of_rep_timing_decile7_dict,\
+           list_of_rep_timing_decile8_dict,\
+           list_of_rep_timing_decile9_dict,\
+           list_of_rep_timing_decile10_dict
 
 
 
@@ -961,6 +1042,17 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
     # +3 for Microhomology, Repeat, Aggregated
     all_sims_indels_signature_decile_index_accumulated_np_array=np.zeros((numofSimulations+1, number_of_id_signatures+3, 10), dtype=float) # int
 
+    list_of_all_decile1_dicts = []
+    list_of_all_decile2_dicts = []
+    list_of_all_decile3_dicts = []
+    list_of_all_decile4_dicts = []
+    list_of_all_decile5_dicts = []
+    list_of_all_decile6_dicts = []
+    list_of_all_decile7_dicts = []
+    list_of_all_decile8_dicts = []
+    list_of_all_decile9_dicts = []
+    list_of_all_decile10_dicts = []
+
     def accumulate_np_arrays(result_tuple):
         sim_num = result_tuple[0]
         subs_signature_decile_index_accumulated_np_array = result_tuple[1]
@@ -968,10 +1060,32 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         indels_signature_decile_index_accumulated_np_array = result_tuple[3]
 
         # print('MONITOR ACCUMULATE', flush=True)
+        list_of_rep_timing_decile1_dict = result_tuple[4]
+        list_of_rep_timing_decile2_dict = result_tuple[5]
+        list_of_rep_timing_decile3_dict = result_tuple[6]
+        list_of_rep_timing_decile4_dict = result_tuple[7]
+        list_of_rep_timing_decile5_dict = result_tuple[8]
+        list_of_rep_timing_decile6_dict = result_tuple[9]
+        list_of_rep_timing_decile7_dict  = result_tuple[10]
+        list_of_rep_timing_decile8_dict = result_tuple[11]
+        list_of_rep_timing_decile9_dict = result_tuple[12]
+        list_of_rep_timing_decile10_dict = result_tuple[13]
 
+        # accumulate
         all_sims_subs_signature_decile_index_accumulated_np_array[sim_num] += subs_signature_decile_index_accumulated_np_array
         all_sims_dinucs_signature_decile_index_accumulated_np_array[sim_num] += dinucs_signature_decile_index_accumulated_np_array
         all_sims_indels_signature_decile_index_accumulated_np_array[sim_num] += indels_signature_decile_index_accumulated_np_array
+
+        list_of_all_decile1_dicts.extend(list_of_rep_timing_decile1_dict)
+        list_of_all_decile2_dicts.extend(list_of_rep_timing_decile2_dict)
+        list_of_all_decile3_dicts.extend(list_of_rep_timing_decile3_dict)
+        list_of_all_decile4_dicts.extend(list_of_rep_timing_decile4_dict)
+        list_of_all_decile5_dicts.extend(list_of_rep_timing_decile5_dict)
+        list_of_all_decile6_dicts.extend(list_of_rep_timing_decile6_dict)
+        list_of_all_decile7_dicts.extend(list_of_rep_timing_decile7_dict)
+        list_of_all_decile8_dicts.extend(list_of_rep_timing_decile8_dict)
+        list_of_all_decile9_dicts.extend(list_of_rep_timing_decile9_dict)
+        list_of_all_decile10_dicts.extend(list_of_rep_timing_decile10_dict)
 
     sim_nums = range(0, numofSimulations + 1)
     sim_num_chr_tuples = ((sim_num, chrLong) for sim_num in sim_nums for chrLong in chromNamesList)
@@ -1059,7 +1173,18 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
 
     return all_sims_subs_signature_decile_index_accumulated_np_array, \
            all_sims_dinucs_signature_decile_index_accumulated_np_array, \
-           all_sims_indels_signature_decile_index_accumulated_np_array
+           all_sims_indels_signature_decile_index_accumulated_np_array,\
+           list_of_all_decile1_dicts,\
+           list_of_all_decile2_dicts,\
+           list_of_all_decile3_dicts,\
+           list_of_all_decile4_dicts,\
+           list_of_all_decile5_dicts,\
+           list_of_all_decile6_dicts,\
+           list_of_all_decile7_dicts,\
+           list_of_all_decile8_dicts,\
+           list_of_all_decile9_dicts,\
+           list_of_all_decile10_dicts
+
 
 
 # Augment wavelet_processed_df with numberofAttributableBases
@@ -1376,7 +1501,17 @@ def replicationTimeAnalysis(computationType,
     # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns
     all_sims_subs_signature_decile_index_accumulated_np_array, \
     all_sims_dinucs_signature_decile_index_accumulated_np_array, \
-    all_sims_indels_signature_decile_index_accumulated_np_array = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(
+    all_sims_indels_signature_decile_index_accumulated_np_array, \
+    list_of_all_decile1_dicts, \
+    list_of_all_decile2_dicts, \
+    list_of_all_decile3_dicts, \
+    list_of_all_decile4_dicts, \
+    list_of_all_decile5_dicts, \
+    list_of_all_decile6_dicts, \
+    list_of_all_decile7_dicts, \
+    list_of_all_decile8_dicts, \
+    list_of_all_decile9_dicts, \
+    list_of_all_decile10_dicts = calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_array(
         computationType,
         outputDir,
         jobname,
@@ -1405,6 +1540,47 @@ def replicationTimeAnalysis(computationType,
                                             all_sims_subs_signature_decile_index_accumulated_np_array,
                                             all_sims_dinucs_signature_decile_index_accumulated_np_array,
                                             all_sims_indels_signature_decile_index_accumulated_np_array)
+
+
+    filename = 'Mutations_decile1_replicating_timing.txt'
+    mutations_decile1_replicating_timing_df = pd.DataFrame(list_of_all_decile1_dicts)
+    mutations_decile1_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile2_replicating_timing.txt'
+    mutations_decile2_replicating_timing_df = pd.DataFrame(list_of_all_decile2_dicts)
+    mutations_decile2_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile3_replicating_timing.txt'
+    mutations_decile3_replicating_timing_df = pd.DataFrame(list_of_all_decile3_dicts)
+    mutations_decile3_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile4_replicating_timing.txt'
+    mutations_decile4_replicating_timing_df = pd.DataFrame(list_of_all_decile4_dicts)
+    mutations_decile4_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile5_replicating_timing.txt'
+    mutations_decile5_replicating_timing_df = pd.DataFrame(list_of_all_decile5_dicts)
+    mutations_decile5_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile6_replicating_timing.txt'
+    mutations_decile6_replicating_timing_df = pd.DataFrame(list_of_all_decile6_dicts)
+    mutations_decile6_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile7_replicating_timing.txt'
+    mutations_decile7_replicating_timing_df = pd.DataFrame(list_of_all_decile7_dicts)
+    mutations_decile7_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile8_replicating_timing.txt'
+    mutations_decile8_replicating_timing_df = pd.DataFrame(list_of_all_decile8_dicts)
+    mutations_decile8_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile9_replicating_timing.txt'
+    mutations_decile9_replicating_timing_df = pd.DataFrame(list_of_all_decile9_dicts)
+    mutations_decile9_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+
+    filename = 'Mutations_decile10_replicating_timing.txt'
+    mutations_decile10_replicating_timing_df = pd.DataFrame(list_of_all_decile10_dicts)
+    mutations_decile10_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
 
     #######################################################################################################
     ################################### Replication Time Data Analysis ends ###############################
