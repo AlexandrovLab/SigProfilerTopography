@@ -527,6 +527,17 @@ def searchforAllMutations_using_numpy_array(sim_num,
     dinucs_signature_decile_index_accumulated_np_array = np.zeros((number_of_dbs_signatures + 1, 10), dtype=float) # legacy int
     indels_signature_decile_index_accumulated_np_array = np.zeros((number_of_id_signatures + 3, 10), dtype=float) # # legacy int
 
+    list_of_rep_timing_decile1_dict = []
+    list_of_rep_timing_decile2_dict = []
+    list_of_rep_timing_decile3_dict = []
+    list_of_rep_timing_decile4_dict = []
+    list_of_rep_timing_decile5_dict = []
+    list_of_rep_timing_decile6_dict = []
+    list_of_rep_timing_decile7_dict = []
+    list_of_rep_timing_decile8_dict = []
+    list_of_rep_timing_decile9_dict = []
+    list_of_rep_timing_decile10_dict = []
+
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         df_columns = chrBased_simBased_subs_df.columns.values
