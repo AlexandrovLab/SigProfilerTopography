@@ -30,6 +30,7 @@ from matplotlib import gridspec
 
 import pandas as pd
 
+from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_STRAND
 from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
@@ -250,14 +251,13 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
-    fig.savefig(figureFile)
-    plt.cla()
+    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    fig.clear()
     plt.close(fig)
 
 
-########################################################################
 # Old way
-#For Mutation Types
+# For Mutation Types
 def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_ReplicationLog10Ratio(sample,numberofMutations,type2TranscriptionStrand2CountDict,type2ReplicationStrand2CountDict,outputDir,jobname):
 
     fig = plt.figure(figsize=(8,8), facecolor=None)
@@ -347,13 +347,11 @@ def plot_ncomms11383_Supp_FigG_AllMutationTypes_TranscriptionLog10Ratio_Replicat
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
-    fig.savefig(figureFile)
-    plt.cla()
+    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    fig.clear()
     plt.close(fig)
-########################################################################
 
-########################################################################
-#July 7, 2020
+
 def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes(signatureType,
         sample,
         numberofMutations,
@@ -413,8 +411,7 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
     replicationRatiosDict = {}
 
     for signature in signature_cutoff_numberofmutations_averageprobability_df['signature'].unique():
-        #################################################################################################
-        #First check whether we have this signature or not
+        # First check whether we have this signature or not
         # type_transcribed_versus_untranscribed_df=type_transcribed_versus_untranscribed_df[['cancer_type', 'type',
         #     'Transcribed_real_count', 'UnTranscribed_real_count', 'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'transcribed_versus_untranscribed_p_value','transcribed_versus_untranscribed_q_value',
         #     'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
@@ -430,9 +427,8 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
 
         if (transcribed_real_count+untranscribed_real_count>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
             transcriptionRatiosDict[signature] = np.log10(transcribed_real_count/untranscribed_real_count)
-        #################################################################################################
 
-        #################################################################################################
+
         # First check whether we have this signature or not
         # type_lagging_versus_leading_df=type_lagging_versus_leading_df[['cancer_type', 'type',
         #     'Lagging_real_count', 'Leading_real_count', 'Lagging_mean_sims_count', 'Leading_mean_sims_count', 'lagging_versus_leading_p_value', 'lagging_versus_leading_q_value',
@@ -450,7 +446,6 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
 
         if (lagging_real_count+leading_real_count>=SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD):
             replicationRatiosDict[signature] = np.log10(lagging_real_count/leading_real_count)
-        #################################################################################################
 
     if (transcriptionRatiosDict and replicationRatiosDict):
         signaturesShownInLegend = []
@@ -479,14 +474,13 @@ def plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframe
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
-        fig.savefig(figureFile)
-        plt.cla()
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
-########################################################################
 
-########################################################################
-#May 9, 2018 starts
-#For Signatures
+
+# May 9, 2018 starts
+# For Signatures
 def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_ReplicationLog10Ratio(
         signatureType,
         sample,
@@ -593,10 +587,9 @@ def plot_ncomms11383_Supp_FigH_AllSignatures_TranscriptionLog10Ratio_Replication
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS,SCATTER_PLOTS), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, STRANDBIAS, SCATTER_PLOTS, figureName)
 
-        fig.savefig(figureFile)
-        plt.cla()
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
-
 
 
 # MutationTypeBased SampleBased Figures
@@ -690,8 +683,9 @@ def plot_ncomms11383_Supp_FigE_MutationTypeBased_AllSamples_TranscriptionLog10Ra
 
         figureName = newMutationType + '_MutationType_' + STRANDBIAS + '.png'
         figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTER_PLOTS,figureName)
-        fig.savefig(figureFile)
-        plt.cla()
+
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
 
 
@@ -778,8 +772,9 @@ def plot_ncomms11383_Supp_FigF_SignatureBased_AllSamples_TranscriptionLog10Ratio
 
             figureName = signature.replace(' ','') + '_Signature_' + STRANDBIAS + '.png'
             figureFile = os.path.join(outputDir,jobname,FIGURE,STRANDBIAS,SCATTER_PLOTS,figureName)
-            fig.savefig(figureFile)
-            plt.cla()
+
+            fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+            fig.clear()
             plt.close(fig)
 
 
@@ -989,8 +984,8 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, BAR_PLOTS), exist_ok=True)
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, key, STRANDBIAS, BAR_PLOTS, figureName)
 
-    fig.savefig(figureFile)
-    plt.cla()
+    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    fig.clear()
     plt.close(fig)
 
 
@@ -1448,9 +1443,9 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
     if axis_given == None:
         filename = '%s_%s_with_bars.png' %(signature,strand_bias)
         figFile = os.path.join(strandbias_figures_outputDir, filename)
-        fig.savefig(figFile, dpi=100, bbox_inches="tight")
 
-        plt.cla()
+        fig.savefig(figFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
 
 
@@ -1712,10 +1707,11 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
     if axis_given==None:
         filename = '%s_%s_with_bars.png' %(signature,strand_bias)
         figFile = os.path.join(strandbias_figures_outputDir, filename)
-        fig.savefig(figFile, dpi=100, bbox_inches="tight")
 
-        plt.cla()
+        fig.savefig(figFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
+
 
 
 # June 2, 2021
@@ -1895,9 +1891,9 @@ def plot_circle_bar_plots_together(outputDir,
 
     filename = '%s_circle_bar_plots.png' % (sbs_signature)
     figurepath = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, CIRCLE_BAR_PLOTS, filename)
-    fig.savefig(figurepath, dpi=100, bbox_inches="tight")
 
-    plt.cla()
+    fig.savefig(figurepath, dpi=100, bbox_inches="tight")
+    fig.clear()
     plt.close(fig)
 
 
@@ -3068,10 +3064,9 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
         # create the directory if it does not exists
         filename = '%s_Signatures_%s_with_circles_%s.png' % (signature_type,strand_bias,str(SIGNIFICANCE_LEVEL).replace('.','_'))
         figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
-        fig.savefig(figFile)
-        fig.tight_layout()
 
-        plt.cla()
+        fig.savefig(figFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
 
 
@@ -3103,10 +3098,9 @@ def plot_legend(strandbias_figures_outputDir):
         # create the directory if it does not exists
         filename = 'Legend_%s.png' % (strandbias)
         figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
-        fig.savefig(figFile)
-        fig.tight_layout()
 
-        plt.cla()
+        fig.savefig(figFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
 
 
@@ -3359,9 +3353,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
         # create the directory if it does not exists
         filename = 'SBS_Signatures_%s_with_circle_plot_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
         figFile = os.path.join(strandbias_figures_outputDir,CIRCLE_PLOTS, filename)
-        plot1.savefig(figFile,bbox_inches='tight')
-        plot1.tight_layout()
 
-        plt.cla()
+        plot1.savefig(figFile, dpi=100, bbox_inches="tight")
+        plot1.clear()
         plt.close(plot1)
-

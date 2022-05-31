@@ -106,11 +106,10 @@ def plot_color_bar(outputDir,jobname,norm):
     filename = '%s_Processivity_ColorBar.png' %(jobname)
 
     figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
-    fig.savefig(figFile)
-    plt.cla()
+
+    fig.savefig(figFile, dpi=100, bbox_inches="tight")
+    fig.clear()
     plt.close(fig)
-
-
 
 
 def set_radius(df):
@@ -570,9 +569,9 @@ def plot_processivity_figure(outputDir,
 
         filename = '%s_Processivity.png' %(jobname)
         figFile = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, filename)
-        plot1.savefig(figFile,dpi=100, bbox_inches="tight")
 
-        plt.cla()
+        plot1.savefig(figFile, dpi=100, bbox_inches="tight")
+        plot1.clear()
         plt.close(plot1)
 
 def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, log_file, verbose):

@@ -1059,7 +1059,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         dinucs_signature_decile_index_accumulated_np_array = result_tuple[2]
         indels_signature_decile_index_accumulated_np_array = result_tuple[3]
 
-        # print('MONITOR ACCUMULATE', flush=True)
+        # for mutation annotation
         list_of_rep_timing_decile1_dict = result_tuple[4]
         list_of_rep_timing_decile2_dict = result_tuple[5]
         list_of_rep_timing_decile3_dict = result_tuple[6]
@@ -1070,6 +1070,8 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         list_of_rep_timing_decile8_dict = result_tuple[11]
         list_of_rep_timing_decile9_dict = result_tuple[12]
         list_of_rep_timing_decile10_dict = result_tuple[13]
+
+        # print('MONITOR ACCUMULATE', flush=True)
 
         # accumulate
         all_sims_subs_signature_decile_index_accumulated_np_array[sim_num] += subs_signature_decile_index_accumulated_np_array

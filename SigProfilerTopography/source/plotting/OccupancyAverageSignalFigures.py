@@ -351,9 +351,8 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
 
         figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
 
-        fig.savefig(figureFile)
-        plt.clf()
-        plt.cla()
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+        fig.clear()
         plt.close(fig)
 
 
@@ -559,11 +558,8 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type, filename)
 
         fig.savefig(figureFile, dpi=100, bbox_inches="tight")
-        plt.clf()
-
-        # Clears the axis without removing the axis itself
-        plt.cla()
-        plt.close()
+        fig.clear()
+        plt.close(fig)
 
 
 
@@ -767,10 +763,9 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         figureFile = os.path.join(outputDir,jobname,FIGURE,SAMPLES,sample,occupancy_type,filename)
 
 
-    fig.savefig(figureFile,dpi=100, bbox_inches="tight")
-    plt.clf()
-    plt.cla()
-    plt.close()
+    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    fig.clear()
+    plt.close(fig)
 
 
 
@@ -1188,8 +1183,10 @@ def plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2bio
 
         filename = 'Step2_%s_rows_biosamples_columns_dna_elements_heatmap.png' %(signature)
         figureFile = os.path.join(heatmaps_output_dir, filename)
-        fig.savefig(figureFile,bbox_inches='tight')
-        plt.close()
+
+        fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+        fig.clear()
+        plt.close(fig)
 
 
 # After Filtering, After Filtering and Significant Ones
@@ -1307,8 +1304,10 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
 
 
     figureFile = os.path.join(heatmaps_output_dir, filename)
-    fig.savefig(figureFile,bbox_inches='tight')
-    plt.close()
+
+    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    fig.clear()
+    plt.close(fig)
 
 
 
@@ -1349,10 +1348,9 @@ def plot_heatmap_one_row_only_for_each_biosample_given_signature(signature2Biosa
             filename = 'Step1_%s_%s_rows_%s_columns_dna_elements_heatmap.png' % (cancer_type,signature,biosample)
             figureFile = os.path.join(heatmap_output_path,filename)
 
-            plt.tight_layout()
-            fig.savefig(figureFile,bbox_inches='tight')
-            plt.clf()
-            plt.cla()
+            # plt.tight_layout()
+            fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+            fig.clear()
             plt.close(fig)
 
     if verbose:

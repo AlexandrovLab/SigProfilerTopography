@@ -148,9 +148,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUT
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
-
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
+
+from SigProfilerTopography.source.annotation.Mutation_Annotation_Integration import mutation_annotation_replication_timing_integration
+from SigProfilerTopography.source.annotation.Mutation_Annotation_Integration import mutation_annotation_replication_timing_integration_signature_specific
 
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import compute_fold_change_with_p_values_plot_heatmaps
@@ -963,6 +965,7 @@ def runAnalyses(genome,
                 replication_strand_bias = False,
                 transcription_strand_bias = False,
                 processivity = False,
+                mutation_annotation_integration=False,
                 sample_based = False,
                 plot_figures = True,
                 step1_sim_data = True,
@@ -2165,6 +2168,7 @@ def runAnalyses(genome,
         print('#################################################################################\n', file=log_out)
         log_out.close()
 
+
     if replication_strand_bias:
         # Replication Strand Bias
         if delete_old:
@@ -2325,6 +2329,20 @@ def runAnalyses(genome,
     ####################################################################################################################
     ################################### Run SigProfilerTopography Analysis ends ########################################
     ####################################################################################################################
+
+    if mutation_annotation_integration:
+        # mutation_annotation_replication_timing_integration
+        ordered_all_consequences = mutation_annotation_replication_timing_integration(inputDir,
+                                                           outputDir,
+                                                           jobname,
+                                                           cancer_type=jobname)
+
+        mutation_annotation_replication_timing_integration_signature_specific(inputDir,
+                                                        outputDir,
+                                                        jobname,
+                                                        ordered_all_consequences,
+                                                        subsSignature_cutoff_numberofmutations_averageprobability_df,
+                                                        cancer_type=jobname)
 
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################
