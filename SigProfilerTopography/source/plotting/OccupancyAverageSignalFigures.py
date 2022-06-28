@@ -2166,11 +2166,11 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           nucleosome_file,
                           epigenomics_dna_elements):
 
-    #Fill and return this dictionary
+    # Fill and return this dictionary
     signature2dna_element2combined_p_value_list_dict = {}
     signature2dna_element2avg_fold_change_dict = {}
 
-    #Pooling for biosample and dna_element combine q_values
+    # Pooling for biosample and dna_element combine q_values
     for signature in signature2Biosample2DNAElement2PValueDict:
         for biosample in signature2Biosample2DNAElement2PValueDict[signature]:
             # dna_element_long <-- epigenomics_file_memo
@@ -2343,7 +2343,7 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
             combined_p_value=q_value_list[6]
             q_value=q_value_list[7]
 
-            #Filter here
+            # Filter here
             # if (q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change)):
             # Let's plot all
             if (q_value <= epigenomics_heatmap_significance_level):

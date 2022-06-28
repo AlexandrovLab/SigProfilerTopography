@@ -19,9 +19,9 @@
 ###### Write the chromosome based average nucleosome occupancy signal arrays ######
 ###################################################################################
 
-#This code must be working for bed or wig files.
-#Converting bed and wig files into chr based dataframes and then chr based arrays
-#Please notice that unnesting requires too much memory because of that jobs sleep and then become zombie
+# This code must be working for bed or wig files.
+# Converting bed and wig files into chr based dataframes and then chr based arrays
+# Please notice that unnesting requires too much memory because of that jobs sleep and then become zombie
 
 import os
 import matplotlib
@@ -86,16 +86,16 @@ def writeChrBasedOccupancySignalArray(inputList):
     chromSize = inputList[3]
     chrBasedFileDF = inputList[4]
     file_name_with_path = inputList[5]
-    occupancy_type= inputList[6]
-    max_signal=inputList[7]
+    occupancy_type = inputList[6]
+    max_signal = inputList[7]
     min_signal = inputList[8]
 
     if (occupancy_type == NUCLEOSOMEOCCUPANCY):
-        os.makedirs(os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED), exist_ok=True)
+        os.makedirs(os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED), exist_ok=True)
     elif (occupancy_type == EPIGENOMICSOCCUPANCY):
-        os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
     else:
-        os.makedirs(os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED), exist_ok=True)
 
     filenameWoExtension = os.path.splitext(os.path.basename(file_name_with_path))[0]
 
@@ -116,20 +116,29 @@ def writeChrBasedOccupancySignalArray(inputList):
     [updateSignalArray(row,signalArray) for row in chrBasedFileDF.values]
 
     # Save as npy
-    signalArrayFilename = '%s_signal_%s' %(chrLong,filenameWoExtension)
+    signalArrayFilename = '%s_signal_%s' %(chrLong, filenameWoExtension)
+
     if occupancy_type == NUCLEOSOMEOCCUPANCY:
-        chrBasedSignalFile = os.path.join(current_abs_path,ONE_DIRECTORY_UP,ONE_DIRECTORY_UP,LIB,NUCLEOSOME,CHRBASED,signalArrayFilename)
+        chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, signalArrayFilename)
+        print('chrBasedSignalFile:', chrBasedSignalFile)
+        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
+        signalArray = signalArray.astype(np.float16)
+        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
         np.save(chrBasedSignalFile, signalArray)
     else:
         # When we submit multiple jobs then they try to write on the same location on disk and it causes error.
         # Therefore save location is changed.
-        chrBasedSignalFile = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED,signalArrayFilename)
-        np.save(chrBasedSignalFile,signalArray)
+        chrBasedSignalFile = os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
+        print('chrBasedSignalFile:', chrBasedSignalFile)
+        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
+        signalArray = signalArray.astype(np.float16)
+        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
+        np.save(chrBasedSignalFile, signalArray)
 
 
 # Used by nuclesome occupancy read all file at once
 # Filter w.r.t. a quantileValue
-def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
+def readNucleosomeOccupancyData(quantileValue, nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
     nucleosome_df = pd.read_csv(nucleosomeFilename, sep='\t', header=None, comment='#', names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
@@ -170,6 +179,9 @@ def readNucleosomeOccupancyData(quantileValue,nucleosomeFilename):
     #########################################################
 
     nucleosome_df_grouped = nucleosome_df.groupby(CHROM)
+
+    # Groups
+    print('Groups:', nucleosome_df_grouped.groups.keys())
 
     print('After nucleosome occupancy grouped by')
     print('Memory usage in %s MB' % memory_usage())
@@ -629,14 +641,14 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
     log_out = open(log_file,'a')
 
     if os.path.exists(file_with_path):
-        file_df = pd.read_csv(file_with_path, header=None, nrows=1,sep='\t')  # 2.25 GB
-        ncols=file_df.shape[1]
+        file_df = pd.read_csv(file_with_path, header=None, nrows=1, sep='\t')  # 2.25 GB
+        ncols = file_df.shape[1]
 
         if (ncols <= 3):
-            print('--- There is no enough columns in this bed file', file=log_out)
-        elif (ncols == 4):
+            print('--- There are %d columns in this bed file' %(ncols), file=log_out)
+        elif (ncols == 4 and (not discard_signal)):
             print('--- SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header', file=log_out)
-            file_df=pd.read_csv(file_with_path,
+            file_df = pd.read_csv(file_with_path,
                                 header=None,
                                 usecols=[0, 1, 2, 3],
                                 names = [CHROM,START,END,SIGNAL],
@@ -651,10 +663,10 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
             elif (ncols == 9):
                 print('--- ENCODE narrowpeak BED6+3', file=log_out)
 
-            if discard_signal==True:
+            if discard_signal == True:
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
                                         names=[CHROM,START,END],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32},sep='\t')
+                                        dtype={0: 'category', 1: np.int32, 2: np.int32}, sep='\t')
 
             else:
                 print('--- SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header', file=log_out)
@@ -666,21 +678,28 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
                 # file_df.drop([3,4,5], inplace=True, axis=1)
                 file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
 
+        elif (ncols >= 3 and discard_signal):
+            file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2],
+                                  names=[CHROM, START, END],
+                                  dtype={0: 'category', 1: np.int32, 2: np.int32}, sep='\t')
 
         elif (ncols >= 5):
             print('--- SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header', file=log_out)
-            file_df = pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4], names = [CHROM,START,END,SIGNAL], dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
+            file_df = pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4],
+                                  names = [CHROM, START, END, SIGNAL],
+                                  dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
+
 
         print("--- file_df.dtypes:", file_df.dtypes, file=log_out)
         print('--- file_df.columns.values:', file_df.columns.values, file=log_out)
         print('--- file_df.shape:(%d,%d)' %(file_df.shape[0],file_df.shape[1]), file=log_out)
 
         if SIGNAL in file_df.columns.values:
-            max_signal=file_df[SIGNAL].max()
-            min_signal=file_df[SIGNAL].min()
-            mean_skipna_True_signal=file_df[SIGNAL].mean(skipna=True)
-            mean_skipna_False_signal=file_df[SIGNAL].mean(skipna=False)
-            std_signal=file_df[SIGNAL].std()
+            max_signal = file_df[SIGNAL].max()
+            min_signal = file_df[SIGNAL].min()
+            mean_skipna_True_signal = file_df[SIGNAL].mean(skipna=True)
+            mean_skipna_False_signal = file_df[SIGNAL].mean(skipna=False)
+            std_signal = file_df[SIGNAL].std()
 
             print('--- Max Signal: %f' %max_signal, file=log_out)
             print('--- Min Signal: %f' %min_signal, file=log_out)
@@ -773,6 +792,7 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
         nucleosome_df_grouped, max_signal, min_signal = readNucleosomeOccupancyData(quantileValue, nucleosomeFilename)
         print('max_signal:%d min_signal:%d' %(max_signal,min_signal))
         print('np.finfo(np.float16).min:%f np.finfo(np.float16).max:%f' % (np.finfo(np.float16).min,np.finfo(np.float16).max))
+        print('np.finfo(np.float32).min:%f np.finfo(np.float32).max:%f' % (np.finfo(np.float32).min,np.finfo(np.float32).max))
 
         pool = multiprocessing.Pool(numofProcesses)
 
@@ -782,18 +802,19 @@ def readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(ge
 
         for chrLong, chromBasedNucleosomeDF in nucleosome_df_grouped:
             print('for %s write nucleosome signal and count array' %(chrLong))
-            chromSize = chromSizesDict[chrLong]
-            inputList = []
-            inputList.append(None)
-            inputList.append(None)
-            inputList.append(chrLong)
-            inputList.append(chromSize)
-            inputList.append(chromBasedNucleosomeDF)
-            inputList.append(nucleosomeFilename)
-            inputList.append(NUCLEOSOMEOCCUPANCY)
-            inputList.append(max_signal)
-            inputList.append(min_signal)
-            poolInputList.append(inputList)
+            if chrLong in chromSizesDict:
+                chromSize = chromSizesDict[chrLong]
+                inputList = []
+                inputList.append(None)
+                inputList.append(None)
+                inputList.append(chrLong)
+                inputList.append(chromSize)
+                inputList.append(chromBasedNucleosomeDF)
+                inputList.append(nucleosomeFilename)
+                inputList.append(NUCLEOSOMEOCCUPANCY)
+                inputList.append(max_signal)
+                inputList.append(min_signal)
+                poolInputList.append(inputList)
 
         pool.map(writeChrBasedOccupancySignalArray, poolInputList)
 

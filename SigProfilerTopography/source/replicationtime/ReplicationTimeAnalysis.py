@@ -103,7 +103,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import getChrShort
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 
 from SigProfilerTopography.source.commons.TopographyCommons import  MEGABYTE_IN_BYTES
-from SigProfilerTopography.source.commons.TopographyCommons import  decideFileType
+from SigProfilerTopography.source.commons.TopographyCommons import  isFileTypeBedGraph
 
 from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_combined_df
 from SigProfilerTopography.source.commons.TopographyCommons import  get_chrBased_simBased_dfs
@@ -133,9 +133,9 @@ def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_ge
     ############### Read RepliSeq Time data starts ####################
     ###################################################################
 
-    isFileTypeBEDGRAPH = decideFileType(repliseqDataFilename)
+    filetype_BEDGRAPH = isFileTypeBedGraph(repliseqDataFilename)
 
-    if isFileTypeBEDGRAPH:
+    if filetype_BEDGRAPH:
         column_names = [CHROM, START, END, SIGNAL]
         replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
     else:
@@ -146,7 +146,7 @@ def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_ge
     print('Before --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]), file=log_out)
 
     # Remove rows with chromosomes that are not in chromNamesList
-    replication_time_interval_version_df=replication_time_interval_version_df[replication_time_interval_version_df[CHROM].isin(chromNamesList)]
+    replication_time_interval_version_df = replication_time_interval_version_df[replication_time_interval_version_df[CHROM].isin(chromNamesList)]
 
     chrNamesInReplicationTimeDataArray = replication_time_interval_version_df[CHROM].unique()
     print('After considering only chromosomes in chromNamesList --- Chromosome names in replication time signal data: %s replication_time_interval_version_df.shape(%d,%d)\n' %(chrNamesInReplicationTimeDataArray,replication_time_interval_version_df.shape[0],replication_time_interval_version_df.shape[1]), file=log_out)
@@ -1225,6 +1225,52 @@ def augment(genome, wavelet_processed_df, matrix_generator_path, log_file, verbo
     return augment_df
 
 
+def write_mutations_decile_based_replication_timing(outputDir,
+                                                    jobname,
+                                                    list_of_all_decile1_dicts,
+                                                    list_of_all_decile2_dicts,
+                                                    list_of_all_decile3_dicts,
+                                                    list_of_all_decile4_dicts,
+                                                    list_of_all_decile5_dicts,
+                                                    list_of_all_decile6_dicts,
+                                                    list_of_all_decile7_dicts,
+                                                    list_of_all_decile8_dicts,
+                                                    list_of_all_decile9_dicts,
+                                                    list_of_all_decile10_dicts):
+
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME), exist_ok=True)
+
+    for i in range(1,11):
+        filename = 'Mutations_decile%d_replicating_timing.txt' %i
+
+        if i == 1:
+            list_of_all_decile_dicts = list_of_all_decile1_dicts
+        elif i == 2:
+            list_of_all_decile_dicts = list_of_all_decile2_dicts
+        elif i == 3:
+            list_of_all_decile_dicts = list_of_all_decile3_dicts
+        elif i == 4:
+            list_of_all_decile_dicts = list_of_all_decile4_dicts
+        elif i == 5:
+            list_of_all_decile_dicts = list_of_all_decile5_dicts
+        elif i == 6:
+            list_of_all_decile_dicts = list_of_all_decile6_dicts
+        elif i == 7:
+            list_of_all_decile_dicts = list_of_all_decile7_dicts
+        elif i == 8:
+            list_of_all_decile_dicts = list_of_all_decile8_dicts
+        elif i == 9:
+            list_of_all_decile_dicts = list_of_all_decile9_dicts
+        elif i == 10:
+            list_of_all_decile_dicts = list_of_all_decile10_dicts
+
+        mutations_decile1_replicating_timing_df = pd.DataFrame(list_of_all_decile_dicts)
+        mutations_decile1_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, filename),
+                                                       sep='\t', header=True, index=False)
+
+
+
+
 # August 3, 2020
 # Using numpy array
 # decile_df_list is RepliSeq input file dependent
@@ -1543,46 +1589,18 @@ def replicationTimeAnalysis(computationType,
                                             all_sims_dinucs_signature_decile_index_accumulated_np_array,
                                             all_sims_indels_signature_decile_index_accumulated_np_array)
 
-
-    filename = 'Mutations_decile1_replicating_timing.txt'
-    mutations_decile1_replicating_timing_df = pd.DataFrame(list_of_all_decile1_dicts)
-    mutations_decile1_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile2_replicating_timing.txt'
-    mutations_decile2_replicating_timing_df = pd.DataFrame(list_of_all_decile2_dicts)
-    mutations_decile2_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile3_replicating_timing.txt'
-    mutations_decile3_replicating_timing_df = pd.DataFrame(list_of_all_decile3_dicts)
-    mutations_decile3_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile4_replicating_timing.txt'
-    mutations_decile4_replicating_timing_df = pd.DataFrame(list_of_all_decile4_dicts)
-    mutations_decile4_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile5_replicating_timing.txt'
-    mutations_decile5_replicating_timing_df = pd.DataFrame(list_of_all_decile5_dicts)
-    mutations_decile5_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile6_replicating_timing.txt'
-    mutations_decile6_replicating_timing_df = pd.DataFrame(list_of_all_decile6_dicts)
-    mutations_decile6_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile7_replicating_timing.txt'
-    mutations_decile7_replicating_timing_df = pd.DataFrame(list_of_all_decile7_dicts)
-    mutations_decile7_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile8_replicating_timing.txt'
-    mutations_decile8_replicating_timing_df = pd.DataFrame(list_of_all_decile8_dicts)
-    mutations_decile8_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile9_replicating_timing.txt'
-    mutations_decile9_replicating_timing_df = pd.DataFrame(list_of_all_decile9_dicts)
-    mutations_decile9_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
-
-    filename = 'Mutations_decile10_replicating_timing.txt'
-    mutations_decile10_replicating_timing_df = pd.DataFrame(list_of_all_decile10_dicts)
-    mutations_decile10_replicating_timing_df.to_csv(os.path.join(outputDir, jobname, filename), sep='\t', header=True, index=False)
+    write_mutations_decile_based_replication_timing(outputDir,
+                                                    jobname,
+                                                    list_of_all_decile1_dicts,
+                                                    list_of_all_decile2_dicts,
+                                                    list_of_all_decile3_dicts,
+                                                    list_of_all_decile4_dicts,
+                                                    list_of_all_decile5_dicts,
+                                                    list_of_all_decile6_dicts,
+                                                    list_of_all_decile7_dicts,
+                                                    list_of_all_decile8_dicts,
+                                                    list_of_all_decile9_dicts,
+                                                    list_of_all_decile10_dicts)
 
     #######################################################################################################
     ################################### Replication Time Data Analysis ends ###############################

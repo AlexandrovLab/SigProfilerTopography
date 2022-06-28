@@ -74,6 +74,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC_RE
 from SigProfilerTopography.source.commons.TopographyCommons import LAGGING_REAL_COUNT
 from SigProfilerTopography.source.commons.TopographyCommons import LEADING_REAL_COUNT
 
+from SigProfilerTopography.source.commons.TopographyCommons import ODDS_RATIO
+from SigProfilerTopography.source.commons.TopographyCommons import REAL_RATIO
+from SigProfilerTopography.source.commons.TopographyCommons import SIMS_RATIO
+
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_SIMULATIONS_MEAN_COUNT
 from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT
 
@@ -2058,11 +2062,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     #########################  signatures and samples ends  ##################################
     ##########################################################################################
 
-    # Step1 Read p_value
+    # Step1 Read p_value from strand asymmetry analysis results
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         # Replication Strand Bias
         signature_mutation_type_lagging_versus_leading_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
-        signature_mutation_type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS,signature_mutation_type_lagging_versus_leading_table_file_name)
+        signature_mutation_type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, signature_mutation_type_lagging_versus_leading_table_file_name)
         signature_lagging_versus_leading_df = pd.read_csv(signature_mutation_type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
         type_lagging_versus_leading_table_file_name = 'Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
@@ -2154,17 +2158,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             if (signature is not None) and (versus_type == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
                 signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[CANCER_TYPE]==cancer_type) &
                                                    (signature_transcribed_versus_untranscribed_df[SIGNATURE]==signature) &
-                                                   (signature_transcribed_versus_untranscribed_df[MUTATION_TYPE]==mutation_type),TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE]=q_value
+                                                   (signature_transcribed_versus_untranscribed_df[MUTATION_TYPE]==mutation_type),TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE] = q_value
 
             elif (signature is not None) and (versus_type == GENIC_VERSUS_INTERGENIC):
                 signature_genic_versus_intergenic_df.loc[(signature_genic_versus_intergenic_df[CANCER_TYPE]==cancer_type) &
                                                    (signature_genic_versus_intergenic_df[SIGNATURE]==signature) &
-                                                   (signature_genic_versus_intergenic_df[MUTATION_TYPE]==mutation_type),GENIC_VERSUS_INTERGENIC_Q_VALUE]=q_value
+                                                   (signature_genic_versus_intergenic_df[MUTATION_TYPE]==mutation_type),GENIC_VERSUS_INTERGENIC_Q_VALUE] = q_value
 
             elif (signature is not None) and (versus_type==LAGGING_VERSUS_LEADING):
                 signature_lagging_versus_leading_df.loc[(signature_lagging_versus_leading_df[CANCER_TYPE]==cancer_type) &
                                                    (signature_lagging_versus_leading_df[SIGNATURE]==signature) &
-                                                   (signature_lagging_versus_leading_df[MUTATION_TYPE]==mutation_type),LAGGING_VERSUS_LEADING_Q_VALUE]=q_value
+                                                   (signature_lagging_versus_leading_df[MUTATION_TYPE]==mutation_type),LAGGING_VERSUS_LEADING_Q_VALUE] = q_value
 
 
             elif (signature is None) and (versus_type == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
@@ -2176,7 +2180,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
 
 
         # Reorder columns
-        # Write dataframes
+        # Write dataframes with q-values
         if LAGGING_VERSUS_LEADING in strand_bias_list:
             signature_lagging_versus_leading_df = signature_lagging_versus_leading_df[
                 ['cancer_type', 'signature', 'mutation_type',
@@ -2187,10 +2191,13 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                  'Leading_real_count.1', 'Leading_mean_sims_count.1', 'Leading_min_sims_count',
                  'Leading_max_sims_count', 'Leading_sims_count_list']]
 
-            type_lagging_versus_leading_df=type_lagging_versus_leading_df[['cancer_type', 'type',
-                'Lagging_real_count', 'Leading_real_count', 'Lagging_mean_sims_count', 'Leading_mean_sims_count', 'lagging_versus_leading_p_value', 'lagging_versus_leading_q_value',
-                'Lagging_real_count.1', 'Lagging_mean_sims_count.1', 'Lagging_min_sims_count', 'Lagging_max_sims_count', 'Lagging_sims_count_list',
-                'Leading_real_count.1', 'Leading_mean_sims_count.1', 'Leading_min_sims_count', 'Leading_max_sims_count', 'Leading_sims_count_list' ]]
+            type_lagging_versus_leading_df = type_lagging_versus_leading_df[['cancer_type', 'type',
+                'Lagging_real_count', 'Leading_real_count', 'Lagging_mean_sims_count', 'Leading_mean_sims_count',
+                'lagging_versus_leading_p_value', 'lagging_versus_leading_q_value',
+                'Lagging_real_count.1', 'Lagging_mean_sims_count.1',
+                'Lagging_min_sims_count', 'Lagging_max_sims_count', 'Lagging_sims_count_list',
+                'Leading_real_count.1', 'Leading_mean_sims_count.1',
+                'Leading_min_sims_count', 'Leading_max_sims_count', 'Leading_sims_count_list' ]]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (LAGGING_VERSUS_LEADING)
             signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2201,21 +2208,29 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_lagging_versus_leading_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
         if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
-            signature_transcribed_versus_untranscribed_df=signature_transcribed_versus_untranscribed_df[['cancer_type', 'signature', 'mutation_type',
+            signature_transcribed_versus_untranscribed_df=signature_transcribed_versus_untranscribed_df[[
+                'cancer_type', 'signature', 'mutation_type',
                 'Transcribed_real_count', 'UnTranscribed_real_count', 'NonTranscribed_real_count',
                 'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'NonTranscribed_mean_sims_count',
                 'transcribed_versus_untranscribed_p_value', 'transcribed_versus_untranscribed_q_value',
-                'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
-                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
+                'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1',
+                'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
+                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1',
+                'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1',
+                'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
 
-            type_transcribed_versus_untranscribed_df=type_transcribed_versus_untranscribed_df[['cancer_type', 'type',
+            type_transcribed_versus_untranscribed_df=type_transcribed_versus_untranscribed_df[[
+                'cancer_type', 'type',
                 'Transcribed_real_count', 'UnTranscribed_real_count', 'NonTranscribed_real_count',
                 'Transcribed_mean_sims_count', 'UnTranscribed_mean_sims_count', 'NonTranscribed_mean_sims_count',
                 'transcribed_versus_untranscribed_p_value', 'transcribed_versus_untranscribed_q_value',
-                'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
-                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
+                'Transcribed_real_count.1', 'Transcribed_mean_sims_count.1',
+                'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
+                'UnTranscribed_real_count.1', 'UnTranscribed_mean_sims_count.1',
+                'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count.1', 'NonTranscribed_mean_sims_count.1',
+                'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list']]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
             signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2226,17 +2241,27 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_transcribed_versus_untranscribed_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
         if GENIC_VERSUS_INTERGENIC in strand_bias_list:
-            signature_genic_versus_intergenic_df=signature_genic_versus_intergenic_df[['cancer_type', 'signature', 'mutation_type',
-                'genic_real_count', 'intergenic_real_count', 'genic_mean_sims_count', 'intergenic_mean_sims_count', 'genic_versus_intergenic_p_value', 'genic_versus_intergenic_q_value',
-                'Transcribed_real_count', 'Transcribed_mean_sims_count', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count', 'UnTranscribed_mean_sims_count', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
-                'NonTranscribed_real_count', 'NonTranscribed_mean_sims_count', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list' ]]
+            signature_genic_versus_intergenic_df=signature_genic_versus_intergenic_df[[
+                'cancer_type', 'signature', 'mutation_type',
+                'genic_real_count', 'intergenic_real_count', 'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                'genic_versus_intergenic_p_value', 'genic_versus_intergenic_q_value',
+                'Transcribed_real_count', 'Transcribed_mean_sims_count',
+                'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
+                'UnTranscribed_real_count', 'UnTranscribed_mean_sims_count',
+                'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count', 'NonTranscribed_mean_sims_count',
+                'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list' ]]
 
-            type_genic_versus_intergenic_df=type_genic_versus_intergenic_df[['cancer_type', 'type',
-                'genic_real_count', 'intergenic_real_count', 'genic_mean_sims_count', 'intergenic_mean_sims_count', 'genic_versus_intergenic_p_value', 'genic_versus_intergenic_q_value',
-                'Transcribed_real_count', 'Transcribed_mean_sims_count', 'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
-                'UnTranscribed_real_count', 'UnTranscribed_mean_sims_count', 'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
-                'NonTranscribed_real_count', 'NonTranscribed_mean_sims_count', 'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list' ]]
+            type_genic_versus_intergenic_df=type_genic_versus_intergenic_df[[
+                'cancer_type', 'type',
+                'genic_real_count', 'intergenic_real_count', 'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                'genic_versus_intergenic_p_value', 'genic_versus_intergenic_q_value',
+                'Transcribed_real_count', 'Transcribed_mean_sims_count',
+                'Transcribed_min_sims_count', 'Transcribed_max_sims_count', 'Transcribed_sims_count_list',
+                'UnTranscribed_real_count', 'UnTranscribed_mean_sims_count',
+                'UnTranscribed_min_sims_count', 'UnTranscribed_max_sims_count', 'UnTranscribed_sims_count_list',
+                'NonTranscribed_real_count', 'NonTranscribed_mean_sims_count',
+                'NonTranscribed_min_sims_count', 'NonTranscribed_max_sims_count', 'NonTranscribed_sims_count_list' ]]
 
             signature_filename = 'Signature_Mutation_Type_%s_Q_Value_Table.txt' % (GENIC_VERSUS_INTERGENIC)
             signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2246,7 +2271,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
             type_genic_versus_intergenic_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
-    # Step3 Filter q-values, Decide significant strand and set 10,20,30,50,75, 100 percent
+
+    # Step3 Filter q-values, Decide significant strand and set 10, 20, 30, 50, 75, 100 percent
     # Add Significant Strand
     # Set significant strands
     # Set percentages
@@ -2264,17 +2290,55 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
 
         signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
         signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]), SIGNIFICANT_STRAND] = LEADING
-        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND]=LAGGING
-        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]),SIGNIFICANT_STRAND]=LEADING
+        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
+        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]),SIGNIFICANT_STRAND] = LEADING
 
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Lagging strand
+        signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] / signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]
+        signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT] / signature_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT]
+
+        type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] / type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]
+        type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT] / type_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Leading strand
+        signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) & (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] / signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]
+        signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) & (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT] / signature_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT]
+
+        type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) & (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] / type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]
+        type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) & (type_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_lagging_versus_leading_filtered_q_value_df[LEADING_SIMULATIONS_MEAN_COUNT] / type_lagging_versus_leading_filtered_q_value_df[LAGGING_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate ODDS_RATIO
+        signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = signature_lagging_versus_leading_filtered_q_value_df[REAL_RATIO] / signature_lagging_versus_leading_filtered_q_value_df[SIMS_RATIO]
+        type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = type_lagging_versus_leading_filtered_q_value_df[REAL_RATIO] / type_lagging_versus_leading_filtered_q_value_df[SIMS_RATIO]
+
+        # new way Set percentages based on ODDS_RATIO
         for percentage_index, percentage_number in enumerate(percentage_numbers, 0):
             percentage_string = percentage_strings[percentage_index]
+            fold_change = (percentage_number + 100) / 100
+
             # Set percentages for signature mutation_type
-            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
-            signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            signature_lagging_versus_leading_filtered_q_value_df.loc[(signature_lagging_versus_leading_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
             # Set percentages for type
-            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
-            type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+            type_lagging_versus_leading_filtered_q_value_df.loc[(type_lagging_versus_leading_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
+        # # old way Set percentages
+        # for percentage_index, percentage_number in enumerate(percentage_numbers, 0):
+        #     percentage_string = percentage_strings[percentage_index]
+        #     # Set percentages for signature mutation_type
+        #     signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+        #     signature_lagging_versus_leading_filtered_q_value_df.loc[((signature_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (signature_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+        #     # Set percentages for type
+        #     type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
+        #     type_lagging_versus_leading_filtered_q_value_df.loc[((type_lagging_versus_leading_filtered_q_value_df[LEADING_REAL_COUNT] - type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT]) >= (type_lagging_versus_leading_filtered_q_value_df[LAGGING_REAL_COUNT] * percentage_number / 100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (LAGGING_VERSUS_LEADING)
         signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2284,16 +2348,15 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_lagging_versus_leading_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
-
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
         signature_transcribed_versus_untranscribed_filtered_q_value_df = signature_transcribed_versus_untranscribed_df[signature_transcribed_versus_untranscribed_df[TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
         type_transcribed_versus_untranscribed_filtered_q_value_df= type_transcribed_versus_untranscribed_df[type_transcribed_versus_untranscribed_df[TRANSCRIBED_VERSUS_UNTRANSCRIBED_Q_VALUE]<= SIGNIFICANCE_LEVEL].copy()
 
         signature_transcribed_versus_untranscribed_filtered_q_value_df[SIGNIFICANT_STRAND] = None
-        type_transcribed_versus_untranscribed_filtered_q_value_df[SIGNIFICANT_STRAND]=None
+        type_transcribed_versus_untranscribed_filtered_q_value_df[SIGNIFICANT_STRAND] = None
 
         for percentage_string in percentage_strings:
-            signature_transcribed_versus_untranscribed_filtered_q_value_df[percentage_string]=None
+            signature_transcribed_versus_untranscribed_filtered_q_value_df[percentage_string] = None
             type_transcribed_versus_untranscribed_filtered_q_value_df[percentage_string] = None
 
         signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
@@ -2301,14 +2364,52 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
         type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
 
-        for percentage_index, percentage_number in enumerate(percentage_numbers,0):
-            percentage_string=percentage_strings[percentage_index]
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Transcribed strand
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] / signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] / signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT]
+
+        type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] / type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]
+        type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] / type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Untranscribed strand
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] / signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] / signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT]
+
+        type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] / type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]
+        type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] / type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate ODDS_RATIO
+        signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = signature_transcribed_versus_untranscribed_filtered_q_value_df[REAL_RATIO] / signature_transcribed_versus_untranscribed_filtered_q_value_df[SIMS_RATIO]
+        type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = type_transcribed_versus_untranscribed_filtered_q_value_df[REAL_RATIO] / type_transcribed_versus_untranscribed_filtered_q_value_df[SIMS_RATIO]
+
+        # new way Set percentages based on ODDS_RATIO
+        for percentage_index, percentage_number in enumerate(percentage_numbers, 0):
+            percentage_string = percentage_strings[percentage_index]
+            fold_change = (percentage_number + 100) / 100
+
             # Set percentages for signature mutation_type
-            signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]-signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) >= (signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
-            signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]-signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) >= (signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+            signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[(signature_transcribed_versus_untranscribed_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
             # Set percentages for type
-            type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]-type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) >= (type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
-            type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]-type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) >= (type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+            type_transcribed_versus_untranscribed_filtered_q_value_df.loc[(type_transcribed_versus_untranscribed_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
+        # # old way for setting percentages
+        # for percentage_index, percentage_number in enumerate(percentage_numbers,0):
+        #     percentage_string=percentage_strings[percentage_index]
+        #     # Set percentages for signature mutation_type
+        #     signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]-signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) >= (signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     signature_transcribed_versus_untranscribed_filtered_q_value_df.loc[((signature_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]-signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) >= (signature_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     # Set percentages for type
+        #     type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]-type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]) >= (type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     type_transcribed_versus_untranscribed_filtered_q_value_df.loc[((type_transcribed_versus_untranscribed_filtered_q_value_df[UNTRANSCRIBED_REAL_COUNT]-type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]) >= (type_transcribed_versus_untranscribed_filtered_q_value_df[TRANSCRIBED_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2317,8 +2418,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_transcribed_versus_untranscribed_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True,index=False)
-
-
 
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
         signature_genic_versus_intergenic_filtered_q_value_df = signature_genic_versus_intergenic_df[signature_genic_versus_intergenic_df[GENIC_VERSUS_INTERGENIC_Q_VALUE] <= SIGNIFICANCE_LEVEL].copy()
@@ -2332,19 +2431,56 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_genic_versus_intergenic_filtered_q_value_df[percentage_string] = None
 
         signature_genic_versus_intergenic_filtered_q_value_df.loc[(signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
-        signature_genic_versus_intergenic_filtered_q_value_df.loc[(signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]),SIGNIFICANT_STRAND] = INTERGENIC
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[(signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = INTERGENIC
         type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
         type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = INTERGENIC
 
-        # Set percentages
-        for percentage_index, percentage_number in enumerate(percentage_numbers,0):
-            percentage_string=percentage_strings[percentage_index]
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations in Genic regions
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] / signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT] / signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT]
+
+        type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] / type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]
+        type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT] / type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations in Intergenic regions
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+            signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] / signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] / signature_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT]
+
+        type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) & (type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+            type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] / type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]
+        type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT] > type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) & (type_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+            type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] / type_genic_versus_intergenic_filtered_q_value_df[GENIC_SIMULATIONS_MEAN_COUNT]
+
+        # Calculate ODDS_RATIO
+        signature_genic_versus_intergenic_filtered_q_value_df.loc[(signature_genic_versus_intergenic_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = signature_genic_versus_intergenic_filtered_q_value_df[REAL_RATIO] / signature_genic_versus_intergenic_filtered_q_value_df[SIMS_RATIO]
+        type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[SIMS_RATIO] > 0), ODDS_RATIO] = type_genic_versus_intergenic_filtered_q_value_df[REAL_RATIO] / type_genic_versus_intergenic_filtered_q_value_df[SIMS_RATIO]
+
+        # new way Set percentages based on ODDS_RATIO
+        for percentage_index, percentage_number in enumerate(percentage_numbers, 0):
+            percentage_string = percentage_strings[percentage_index]
+            fold_change = (percentage_number + 100) / 100
+
             # Set percentages for signature mutation_type
-            signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]-signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) >= (signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
-            signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]-signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) >= (signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+            signature_genic_versus_intergenic_filtered_q_value_df.loc[(signature_genic_versus_intergenic_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
             # Set percentages for type
-            type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]-type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) >= (type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
-            type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]-type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) >= (type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+            type_genic_versus_intergenic_filtered_q_value_df.loc[(type_genic_versus_intergenic_filtered_q_value_df[ODDS_RATIO].round(2) >= fold_change), percentage_string] = 1
+
+        # # old way Set percentages
+        # for percentage_index, percentage_number in enumerate(percentage_numbers,0):
+        #     percentage_string=percentage_strings[percentage_index]
+        #     # Set percentages for signature mutation_type
+        #     signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]-signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) >= (signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     signature_genic_versus_intergenic_filtered_q_value_df.loc[((signature_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]-signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) >= (signature_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     # Set percentages for type
+        #     type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]-type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]) >= (type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
+        #     type_genic_versus_intergenic_filtered_q_value_df.loc[((type_genic_versus_intergenic_filtered_q_value_df[INTERGENIC_REAL_COUNT]-type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]) >= (type_genic_versus_intergenic_filtered_q_value_df[GENIC_REAL_COUNT]*percentage_number/100)), percentage_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (GENIC_VERSUS_INTERGENIC)
         signature_filepath = os.path.join(strandbias_figures_tables_outputDir, signature_filename)
@@ -2353,7 +2489,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         type_filename = 'Type_%s_Filtered_Q_Value_Percentages_Table.txt' % (GENIC_VERSUS_INTERGENIC)
         type_filepath = os.path.join(strandbias_figures_tables_outputDir, type_filename)
         type_genic_versus_intergenic_filtered_q_value_df.to_csv(type_filepath, sep='\t', header=True, index=False)
-
 
     # Write Excel Files
     sheet_list = ['corrected_p_value', 'percentages']
@@ -2375,8 +2510,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         types_filename="Types_%s.xlsx" %(strand1_versus_strand2)
         file_name_with_path=os.path.join(strandbias_figures_excel_files_outputDir, types_filename)
         write_excel_file(types_df_list, sheet_list, file_name_with_path)
-
-
 
     # Circle plots starts
     # Step4 Fill this dictionary
@@ -2407,17 +2540,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                 if mutation_type in signature2mutation_type2strand2percentagedict[signature]:
                     if significant_strand in signature2mutation_type2strand2percentagedict[signature][mutation_type]:
                         if (percent_10 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_10_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_10_PERCENT_DIFF] = 1
                         if (percent_20 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_20_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_20_PERCENT_DIFF] = 1
                         if (percent_30 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_30_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_30_PERCENT_DIFF] = 1
                         if (percent_50 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_50_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_50_PERCENT_DIFF] = 1
                         if (percent_75 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                         if (percent_100 == 1):
-                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
+                            signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
 
                     else:
                         signature2mutation_type2strand2percentagedict[signature][mutation_type][significant_strand]={}
@@ -2516,17 +2649,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             if my_type in type2strand2percentagedict:
                 if significant_strand in type2strand2percentagedict[my_type]:
                     if (percent_10 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF] = 1
                     if (percent_20 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF] = 1
                     if (percent_30 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF] = 1
                     if (percent_50 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF] = 1
                     if (percent_75 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                     if (percent_100 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
 
                 else:
                     type2strand2percentagedict[my_type][significant_strand]={}
@@ -2538,17 +2671,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                     type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 0
 
                     if (percent_10 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF] = 1
                     if (percent_20 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF] = 1
                     if (percent_30 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF] = 1
                     if (percent_50 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF] = 1
                     if (percent_75 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                     if (percent_100 == 1):
-                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
+                        type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
             else:
                 type2strand2percentagedict[my_type] = {}
                 type2strand2percentagedict[my_type][significant_strand] = {}
@@ -2560,17 +2693,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                 type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 0
 
                 if (percent_10 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_10_PERCENT_DIFF] = 1
                 if (percent_20 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_20_PERCENT_DIFF] = 1
                 if (percent_30 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_30_PERCENT_DIFF] = 1
                 if (percent_50 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_50_PERCENT_DIFF] = 1
                 if (percent_75 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_75_PERCENT_DIFF] = 1
                 if (percent_100 == 1):
-                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF]=1
+                    type2strand2percentagedict[my_type][significant_strand][AT_LEAST_100_PERCENT_DIFF] = 1
 
 
     # Step5 Plot figures
@@ -2603,7 +2736,6 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                            type2strand2percentagedict,
                                            percentage_strings,
                                            log_file)
-
 
 
     ########################################################################

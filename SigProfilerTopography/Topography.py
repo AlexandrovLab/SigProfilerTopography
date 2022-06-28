@@ -46,10 +46,14 @@ from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import K562
 from SigProfilerTopography.source.commons.TopographyCommons import MCF7
+from SigProfilerTopography.source.commons.TopographyCommons import IMR90
+
 from SigProfilerTopography.source.commons.TopographyCommons import MEF
+from SigProfilerTopography.source.commons.TopographyCommons import ESC
 
 from SigProfilerTopography.source.commons.TopographyCommons import MM10
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
 
 from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 
@@ -78,9 +82,22 @@ from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4M
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27ME3_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K36ME3_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K9ME3_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K27AC_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME1_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_H3K4ME3_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_CTCF_GRCh38_OCCUPANCY_FILE
+
+from SigProfilerTopography.source.commons.TopographyCommons import MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import MM10_MEF_NUCLEOSOME_FILE
+
 from SigProfilerTopography.source.commons.TopographyCommons import GM12878_NUCLEOSOME_OCCUPANCY_FILE
+
 from SigProfilerTopography.source.commons.TopographyCommons import K562_NUCLEOSOME_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
 
 from SigProfilerTopography.source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
 from SigProfilerTopography.source.commons.TopographyCommons import ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1
@@ -197,13 +214,12 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
     #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/DBS/output/vcf_files/DBS
 
-
     df_columns_contain_ordered_signatures = None
 
-    os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED),exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, CHRBASED), exist_ok=True)
     for simNum in range(1,endSimNum+1):
         simName = 'sim%d' % (simNum)
-        os.makedirs(os.path.join(outputDir,jobname,DATA,CHRBASED,simName), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, DATA, CHRBASED, simName), exist_ok=True)
 
     if ((mutations_probabilities_file_path is not None) and (os.path.exists(mutations_probabilities_file_path))):
         mutations_probabilities_df = readProbabilities(mutations_probabilities_file_path, log_file, verbose)
@@ -242,12 +258,16 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
         for simNum, chrShort in sim_num_chr_tuples:
             simName = 'sim%d' % (simNum)
             chr_based_mutation_filename = '%s_seqinfo.txt' % (chrShort)
+
             if (simNum == 0):
                 matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'vcf_files', partialDirname)
+                os.makedirs(matrix_generator_output_dir_path, exist_ok=True)
             else:
-                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'simulations', simName,mutation_type_context, 'output', 'vcf_files',partialDirname)
+                matrix_generator_output_dir_path = os.path.join(inputDir, 'output', 'simulations', simName, mutation_type_context, 'output', 'vcf_files', partialDirname)
+                os.makedirs(matrix_generator_output_dir_path, exist_ok=True)
+
             if (os.path.exists(matrix_generator_output_dir_path)):
-                chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path,chr_based_mutation_filename)
+                chr_based_mutation_filepath = os.path.join(matrix_generator_output_dir_path, chr_based_mutation_filename)
                 inputList = []
                 inputList.append(chrShort)
                 inputList.append(outputDir)
@@ -338,9 +358,9 @@ def check_download_replication_time_files(replication_time_signal_file, replicat
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
 
     # These are currently full path, therefore convert them to filename
-    replication_time_signal_file=os.path.basename(replication_time_signal_file)
-    replication_time_valley_file=os.path.basename(replication_time_valley_file)
-    replication_time_peak_file=os.path.basename(replication_time_peak_file)
+    replication_time_signal_file = os.path.basename(replication_time_signal_file)
+    replication_time_valley_file = os.path.basename(replication_time_valley_file)
+    replication_time_peak_file = os.path.basename(replication_time_peak_file)
 
     os.makedirs(os.path.join(current_abs_path,'lib','replication'),exist_ok=True)
     lib_replication_path = os.path.join(current_abs_path,'lib','replication')
@@ -494,8 +514,8 @@ def check_download_sample_vcf_files():
 def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
 
-    os.makedirs(os.path.join(current_abs_path,'lib','epigenomics','chrbased'),exist_ok=True)
-    chrombased_npy_path = os.path.join(current_abs_path,'lib','epigenomics','chrbased')
+    os.makedirs(os.path.join(current_abs_path, 'lib', 'epigenomics', 'chrbased'), exist_ok=True)
+    chrombased_npy_path = os.path.join(current_abs_path, 'lib', 'epigenomics', 'chrbased')
 
     if os.path.isabs(chrombased_npy_path):
         os.chdir(chrombased_npy_path)
@@ -589,15 +609,17 @@ def install_default_nucleosome(genome):
 
     if genome == MM10:
         #Case1: File is not set, Biosample is not set
-        nucleosome_biosample = MEF
-        nucleosome_file = MM10_MEF_NUCLEOSOME_FILE
+        nucleosome_file = MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
         check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
     elif genome == GRCh37:
         # Case1: File is not set, Biosample is not set
-        nucleosome_biosample = K562
         nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
-        # nucleosome_biosample = GM12878
-        # nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
+        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+    elif genome == GRCh38:
+        # Case1: File is not set, Biosample is not set
+        nucleosome_file = K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
         check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 
 
@@ -607,8 +629,15 @@ def install_default_atac_seq(genome):
 
     if genome == GRCh37:
         atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
-        check_download_chrbased_npy_atac_seq_files(atac_seq_file,chromNamesList)
+        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
+    elif genome == GRCh38:
+        atac_seq_file = DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
+        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
+
+    elif genome == MM10:
+        atac_seq_file = ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
+        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
 def install_sample_vcf_files():
     # Download to where the SigProfilerTopography is run
@@ -703,7 +732,6 @@ def runReplicationTimeAnalysis(genome,
                                log_file,
                                verbose,
                                matrix_generator_path):
-
 
     # Fill np array during runtime managed by replication_time_np_arrays_fill_runtime=True
     # Supported computation types
@@ -941,6 +969,7 @@ def runAnalyses(genome,
                 outputDir,
                 jobname,
                 numofSimulations,
+                gender = 'female', # 'male'
                 sbs_probabilities = None,
                 dbs_probabilities = None,
                 id_probabilities = None,
@@ -972,9 +1001,10 @@ def runAnalyses(genome,
                 step2_matgen_data = True,
                 step3_prob_merged_data = True,
                 step4_tables = True,
-                discreet_mode = True,
-                average_probability = DEFAULT_AVERAGE_PROBABILITY,
-                default_cutoff = DEFAULT_CUTOFF,
+                discreet_mode = True, # discreet_mode = False means prob_mode
+                show_all_signatures = False,
+                average_probability = DEFAULT_AVERAGE_PROBABILITY, # applies for discreet_mode=True
+                default_cutoff = DEFAULT_CUTOFF, # applies for discreet_mode=False
                 parallel_mode = True,
                 num_of_sbs_required = DEFAULT_NUM_OF_SBS_REQUIRED,
                 num_of_dbs_required = DEFAULT_NUM_OF_DBS_REQUIRED,
@@ -1027,8 +1057,18 @@ def runAnalyses(genome,
 
     ############################## Log and Error Files #######################################
     time_stamp = datetime.date.today()
-    error_file = os.path.join(outputDir, jobname , 'logs', 'SigProfilerTopography_' + jobname + '_' + genome + '_' + str(time_stamp) + '.err')
-    log_file = os.path.join(outputDir, jobname, 'logs', 'SigProfilerTopography_' + jobname + '_' + genome + '_' + str(time_stamp) + '.out')
+
+    current_hour = datetime.datetime.now().hour
+    current_minute = datetime.datetime.now().minute
+    current_second = datetime.datetime.now().second
+
+    error_file = os.path.join(outputDir, jobname , 'logs', 'SigProfilerTopography_' + jobname + '_' + genome + '_' +
+                              str(time_stamp) + '_' +
+                              str(current_hour) + '-' + str(current_minute) + '-' + str(current_second) + '.err')
+
+    log_file = os.path.join(outputDir, jobname, 'logs', 'SigProfilerTopography_' + jobname + '_' + genome + '_' +
+                            str(time_stamp) + '_' +
+                            str(current_hour) + '-' + str(current_minute) + '-' + str(current_second) + '.out')
 
     if not os.path.exists(os.path.join(outputDir, jobname, 'logs/')):
         os.makedirs(os.path.join(outputDir, jobname, 'logs/'))
@@ -1092,15 +1132,15 @@ def runAnalyses(genome,
         print('There is a situation/problem: Parameter genome:%s must be set for SigProfilerTopography Analysis.' %(genome), file=log_out)
 
     if strand_bias:
-        replication_strand_bias=True
-        transcription_strand_bias=True
+        replication_strand_bias = True
+        transcription_strand_bias = True
 
     if plot_strand_bias:
-        plot_replication_strand_bias=True
-        plot_transcription_strand_bias=True
+        plot_replication_strand_bias = True
+        plot_transcription_strand_bias = True
 
     # We need full path of the library files
-    if (genome==GRCh37) and (epigenomics_files==None):
+    if (genome == GRCh37) and (epigenomics_files == None):
         epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
                             DEFAULT_H3K27ME3_OCCUPANCY_FILE,
                             DEFAULT_H3K36ME3_OCCUPANCY_FILE,
@@ -1110,7 +1150,7 @@ def runAnalyses(genome,
                             DEFAULT_H3K4ME3_OCCUPANCY_FILE,
                             DEFAULT_CTCF_OCCUPANCY_FILE]
 
-        epigenomics_files_memos=[]
+        epigenomics_files_memos = []
         for epigenomics_file in epigenomics_files:
             epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
 
@@ -1127,6 +1167,35 @@ def runAnalyses(genome,
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
         # These must be under epigenomics under installed SigPofilerTopography
+
+    elif (genome == GRCh38) and (epigenomics_files == None):
+        epigenomics_files = [DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K27ME3_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K36ME3_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K9ME3_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K27AC_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K4ME1_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_H3K4ME3_GRCh38_OCCUPANCY_FILE,
+                            DEFAULT_CTCF_GRCh38_OCCUPANCY_FILE]
+
+        epigenomics_files_memos = []
+        for epigenomics_file in epigenomics_files:
+            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
+
+        # Defines columns in the heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_dna_elements = ['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
+
+        # Defines rows in the detailed heatmap
+        # These strings must be within filenames (without file extension)
+        # Order is not important
+        epigenomics_biosamples = ['lung']
+
+        for file_index, filename in enumerate(epigenomics_files):
+            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+        # These must be under epigenomics under installed SigProfilerTopography
+
 
     elif (genome == MM10) and (epigenomics_files == None):
         epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
@@ -1156,13 +1225,13 @@ def runAnalyses(genome,
     if genome == MM10:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
-            nucleosome_biosample = MEF
-            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+            nucleosome_biosample = ESC
+            nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
-                nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+                nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
         # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
@@ -1173,12 +1242,28 @@ def runAnalyses(genome,
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = K562
-            nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+            nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
-                nucleosome_file = getNucleosomeFile(nucleosome_biosample)
+                nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
+        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
+            # We expect that user has provided nucleosome file with full path
+            nucleosome_biosample = UNDECLARED
+        # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
+        # Do nothing use as it is
+    elif genome == GRCh38:
+        # Case1: File is not set, Biosample is not set
+        if (nucleosome_file is None) and (nucleosome_biosample is None):
+            nucleosome_biosample = K562
+            nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
+        # Case2: File is not set, Biosample is set
+        elif (nucleosome_file is None) and (nucleosome_biosample is not None):
+            if (nucleosome_biosample in available_nucleosome_biosamples):
+                #Sets the filename without the full path
+                nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
         # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
         elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
             # We expect that user has provided nucleosome file with full path
@@ -1189,19 +1274,19 @@ def runAnalyses(genome,
     if genome == MM10:
         # Case1: Files are not set, Biosample is not set
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
-            replication_time_biosample=MEF
+            replication_time_biosample = MEF
             # We only set replication_time_signal_file
             # replication_time_valley_file is None
             # replication_time_peak_file is None
-            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
+            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
 
     elif genome == GRCh37:
         # We need full path of the library files
         # By default replication_time_biosample=MCF7 and signal, valley, peak files are None
         # Case1: Files are not set, Biosample is not set
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
-            replication_time_biosample=MCF7
-            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file=getReplicationTimeFiles(replication_time_biosample)
+            replication_time_biosample = MCF7
+            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
@@ -1209,24 +1294,39 @@ def runAnalyses(genome,
         # Case2: Files are not set, Biosample is set
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in available_replication_time_biosamples):
-                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample)
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
                 if (replication_time or replication_strand_bias):
                     # For using SigProfilerTopography Provided Replication Time Files
                     check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
 
-        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
+        # Case3: replication_time_file is a filename with fullpath (User provided) , biosample is not set
         elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
             replication_time_biosample = UNDECLARED
         # Case4: Files are set. Biosample is set. Use as it is. Do nothing.
+
+    elif genome == GRCh38:
+        # We need full path of the library files
+        # By default replication_time_biosample = IMR90 and signal, valley, peak files are None
+        # Case1: Files are not set, Biosample is not set
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+            replication_time_biosample = IMR90
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
+            if (replication_time or replication_strand_bias):
+                # For using SigProfilerTopography Provided Replication Time Files
+                check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file, replication_time_peak_file)
+
+        # Case4: Files are set. Biosample is set. Use as it is. Do nothing. Use them .
+        pass
 
     # Data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
     epigenomics_file_memos_created = []
 
     # Run for each epigenomics file
     if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-        for idx, epigenomics_file in enumerate(epigenomics_files):
-            epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
-            epigenomics_file_memos_created.append(epigenomics_file_memo)
+        if epigenomics_files is not None:
+            for idx, epigenomics_file in enumerate(epigenomics_files):
+                epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
+                epigenomics_file_memos_created.append(epigenomics_file_memo)
 
     # Used for plotting
     if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
@@ -1273,7 +1373,8 @@ def runAnalyses(genome,
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos, file=log_out)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples, file=log_out)
     print('--- epigenomics_dna_elements:%s' %epigenomics_dna_elements, file=log_out)
-    print('--- number of epigenomics_files:%d' %len(epigenomics_files), file=log_out)
+    if epigenomics_files is not None:
+        print('--- number of epigenomics_files:%d' %len(epigenomics_files), file=log_out)
 
     print('\n--- nucleosome_biosample:%s' %nucleosome_biosample, file=log_out)
     print('--- nucleosome_file:%s' % nucleosome_file, file=log_out)
@@ -1339,7 +1440,6 @@ def runAnalyses(genome,
     print('--- current_abs_path: %s ' % current_abs_path, file=log_out)
     print('#################################################################################\n', file=log_out)
 
-
     ###################################################################################################################
     ################################################# All Steps starts ################################################
     ###################################################################################################################
@@ -1390,8 +1490,10 @@ def runAnalyses(genome,
             mutation_type_context_for_simulator.append(mutation_type_context)
             # Please notice that Simulator reverse the given input mutationTypes_for_simulator
             print('--- SigProfilerSimulator is running for %s' %(mutation_type_context), file=log_out)
-            simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator, simulations=numofSimulations, chrom_based=True)
-
+            simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,
+                                            gender=gender,
+                                            simulations=numofSimulations,
+                                            chrom_based=True)
         print("--- SigProfilerSimulator for %d simulations: %s seconds" %(numofSimulations,(time.time() -  start_time)), file=log_out)
         print("--- SigProfilerSimulator for %d simulations: %f minutes" %(numofSimulations,float((time.time()-start_time)/60)), file=log_out)
         print('--- SigProfilerSimulator for %d simulations ends' %(numofSimulations), file=log_out)
@@ -1506,6 +1608,9 @@ def runAnalyses(genome,
     ###################################################################################################################
 
     log_out.close()
+
+    # create DATA directory before step3 and step4
+    os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
 
     ###################################################################################################################
     ########### Step3 Merge chrom based matrix generator generated files with probabilities starts ####################
@@ -1810,7 +1915,8 @@ def runAnalyses(genome,
                                                                                                 default_cutoff,
                                                                                                 num_of_sbs_required,
                                                                                                 mutationType2PropertiesDict,
-                                                                                                chrLong2NumberofMutationsDict)
+                                                                                                chrLong2NumberofMutationsDict,
+                                                                                                show_all_signatures)
 
                 subsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir, jobname, DATA,
                                      Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', index=False)
@@ -1846,7 +1952,8 @@ def runAnalyses(genome,
                                                                                             default_cutoff,
                                                                                             num_of_dbs_required,
                                                                                             mutationType2PropertiesDict,
-                                                                                            chrLong2NumberofMutationsDict)
+                                                                                            chrLong2NumberofMutationsDict,
+                                                                                            show_all_signatures)
 
             dinucsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
                     os.path.join(outputDir, jobname, DATA,
@@ -1884,7 +1991,8 @@ def runAnalyses(genome,
                                                                                             default_cutoff,
                                                                                             num_of_id_required,
                                                                                             mutationType2PropertiesDict,
-                                                                                            chrLong2NumberofMutationsDict)
+                                                                                            chrLong2NumberofMutationsDict,
+                                                                                            show_all_signatures)
 
             indelsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(
                     os.path.join(outputDir, jobname, DATA,
@@ -1974,10 +2082,10 @@ def runAnalyses(genome,
     else:
         mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(os.path.join(outputDir,jobname,DATA,Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename),sep='\t', header=0, dtype={'mutation_type':str, 'number_of_mutations':np.int32})
 
-        all_samples_string=mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
-        all_samples_list=eval(all_samples_string)
+        all_samples_string = mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']=='All']['samples_list'].values[0]
+        all_samples_list = eval(all_samples_string)
         all_samples_list = sorted(all_samples_list, key=natural_key)
-        all_samples_np_array=np.array(all_samples_list)
+        all_samples_np_array = np.array(all_samples_list)
 
         log_out = open(log_file, 'a')
         print('sample_based:%s --- len(all_samples_list):%d --- all_samples_list:%s' %(sample_based,len(all_samples_list), all_samples_list), file=log_out)
@@ -2487,8 +2595,6 @@ def plotFigures(outputDir,
     if ((replication_strand_bias and transcription_strand_bias) or (plot_replication_strand_bias and plot_transcription_strand_bias)):
         if delete_old:
             deleteOldFigures(outputDir, jobname, STRANDBIAS)
-        # old way
-        # transcriptionReplicationStrandBiasFigures(outputDir,jobname,figureAugmentation,numberofSimulations,sample_based)
         strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
@@ -2499,7 +2605,7 @@ def plotFigures(outputDir,
         log_out.close()
 
     elif (replication_strand_bias or plot_replication_strand_bias):
-        strand_bias_list=[LAGGING_VERSUS_LEADING]
+        strand_bias_list = [LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
                                                                  log_file)
@@ -2509,7 +2615,7 @@ def plotFigures(outputDir,
         log_out.close()
 
     elif (transcription_strand_bias or plot_transcription_strand_bias):
-        strand_bias_list=[TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC]
+        strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED, GENIC_VERSUS_INTERGENIC]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
                                                                  log_file)

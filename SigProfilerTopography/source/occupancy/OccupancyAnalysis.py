@@ -96,7 +96,7 @@ from SigProfilerTopography.source.occupancy.ChrBasedSignalArrays import readWig_
 from SigProfilerTopography.source.occupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_chunks
 from SigProfilerTopography.source.occupancy.ChrBasedSignalArrays import readWig_write_derived_from_bedgraph_using_pool_read_all
 
-from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
+from SigProfilerTopography.source.commons.TopographyCommons import isFileTypeBedGraph
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df_split
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
@@ -1226,8 +1226,8 @@ def occupancyAnalysis(genome,
             # For inhouse preparation
             # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysSequentially(genome, quantileValue,library_file_with_path)
             # readAllNucleosomeOccupancyDataAndWriteChrBasedSignalCountArraysInParallel(genome, quantileValue,library_file_with_path)
-            isFileTypeBEDGRAPH = decideFileType(library_file_with_path)
-            if isFileTypeBEDGRAPH:
+            filetype_BEDGRAPH = isFileTypeBedGraph(library_file_with_path)
+            if filetype_BEDGRAPH:
                 if verbose: start_time = time.time()
                 # Read by chunks
                 # readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, genome, library_file_with_path,occupancy_type,remove_outliers,verbose)
@@ -1248,7 +1248,7 @@ def occupancyAnalysis(genome,
             library_file_type = BEDGRAPH
             readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, genome, library_file_with_path,occupancy_type, remove_outliers, verbose, quantileValue, log_file)
         else:
-            library_file_type=LIBRARY_FILE_TYPE_OTHER
+            library_file_type = LIBRARY_FILE_TYPE_OTHER
 
 
     def accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList):

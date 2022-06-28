@@ -67,7 +67,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_combined_df
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
-from SigProfilerTopography.source.commons.TopographyCommons import decideFileType
+from SigProfilerTopography.source.commons.TopographyCommons import isFileTypeBedGraph
 
 from SigProfilerTopography.source.commons.TopographyCommons import C2A
 from SigProfilerTopography.source.commons.TopographyCommons import C2G
@@ -664,25 +664,35 @@ def fill_chr_based_replication_strand_array(chrLong,
     return chrBased_replication_array
 
 
-def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename, valleysBEDFilename, peaksBEDFilename, log_file):
+def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
+                             valleysBEDFilename,
+                             peaksBEDFilename,
+                             chromNamesList,
+                             log_file):
 
     # Read the Smoothed Wavelet Replication Time Signal
     file_extension = os.path.splitext(os.path.basename(smoothedWaveletRepliseqDataFilename))[1]
     if (file_extension.lower() == '.wig'):
-        isFileTypeBEDGRAPH = decideFileType(smoothedWaveletRepliseqDataFilename)
-        if isFileTypeBEDGRAPH:
-            repliseq_wavelet_signal_df=pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#', header=None, names=[CHROM,START,END,SIGNAL])
+        filetype_BEDGRAPH = isFileTypeBedGraph(smoothedWaveletRepliseqDataFilename)
+        if filetype_BEDGRAPH:
+            repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+                                                     header=None, names=[CHROM, START, END, SIGNAL])
         else:
-            repliseq_wavelet_signal_df=readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
-    elif (file_extension.lower()=='.bedgraph'):
-        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',header=None, names=[CHROM, START, END, SIGNAL])
+            repliseq_wavelet_signal_df = readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
+    elif (file_extension.lower() == '.bedgraph'):
+        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+                                                 header=None, names=[CHROM, START, END, SIGNAL])
+    elif (file_extension.lower() == '.bed'):
+        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+                                                 header=None, names=[CHROM, START, END, SIGNAL])
 
     # Read the Valleys
-    discard_signal=True
+    discard_signal = True
     valleys_df= readFileInBEDFormat(valleysBEDFilename, discard_signal, log_file)
     valleys_df[END] = valleys_df[END] - 1
 
     # Read the Peaks
+    discard_signal = True
     peaks_df = readFileInBEDFormat(peaksBEDFilename, discard_signal, log_file)
     peaks_df[END] = peaks_df[END] - 1
 
@@ -690,7 +700,33 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename, valleysBEDFile
     print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df[CHROM].unique()), file=log_out)
     print('Chromosome names in replication time valleys data: %s' % (valleys_df[CHROM].unique()), file=log_out)
     print('Chromosome names in replication time peaks data: %s' % (peaks_df[CHROM].unique()), file=log_out)
+
+    # Remove rows with chromosomes that are not in chromNamesList
+    repliseq_wavelet_signal_df = repliseq_wavelet_signal_df[repliseq_wavelet_signal_df[CHROM].isin(chromNamesList)]
+    valleys_df = valleys_df[valleys_df[CHROM].isin(chromNamesList)]
+    peaks_df = peaks_df[peaks_df[CHROM].isin(chromNamesList)]
+
+    repliseq_wavelet_signal_df_unique_chr_names = repliseq_wavelet_signal_df[CHROM].unique()
+    valleys_df_unique_chr_names = valleys_df[CHROM].unique()
+    peaks_df_unique_chr_names = peaks_df[CHROM].unique()
+
+    print('After considering only chromosomes in chromNamesList --- ' +
+          'Chromosome names in repliseq_wavelet_signal_df: %s repliseq_wavelet_signal_df.shape(%d,%d)\n'
+          %(repliseq_wavelet_signal_df_unique_chr_names,
+            repliseq_wavelet_signal_df.shape[0],
+            repliseq_wavelet_signal_df.shape[1]),
+          file=log_out)
+
+    print('After considering only chromosomes in chromNamesList --- ' +
+          'Chromosome names in valleys_df: %s valleys_df.shape(%d,%d)\n'
+          %(valleys_df_unique_chr_names, valleys_df.shape[0], valleys_df.shape[1]), file=log_out)
+
+    print('After considering only chromosomes in chromNamesList --- ' +
+          'Chromosome names in peaks_df: %s peaks_df.shape(%d,%d)\n'
+          %(peaks_df_unique_chr_names, peaks_df.shape[0], peaks_df.shape[1]), file=log_out)
+
     log_out.close()
+    # just added end
 
     return repliseq_wavelet_signal_df, valleys_df, peaks_df
 
@@ -1146,6 +1182,7 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
     repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
                                                                         valleysBEDFilename,
                                                                         peaksBEDFilename,
+                                                                        chromNamesList,
                                                                         log_file)
 
     def write_chrom_based_replication_array(result_tuple):
