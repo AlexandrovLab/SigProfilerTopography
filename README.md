@@ -44,6 +44,13 @@ $ python
 >> topography.install_default_atac_seq('GRCh37')
 ```
 
+For GRCh38:
+```
+$ python
+>> from SigProfilerTopography import Topography as topography
+>> topography.install_default_nucleosome('GRCh38')
+>> topography.install_default_atac_seq('GRCh38')
+```
 4. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
 ```
 $ pip install SigProfilerMatrixGenerator

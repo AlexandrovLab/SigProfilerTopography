@@ -205,7 +205,8 @@ SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE,
                                        GM12878_GRCh38_NUCLEOSOME_OCCUPANCY_FILE,
                                        K562_NUCLEOSOME_OCCUPANCY_FILE,
                                        K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE,
-                                       DEFAULT_ATAC_SEQ_OCCUPANCY_FILE]
+                                       DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
+                                       DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE]
 
 #REPLICATION  TIME FILES
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'

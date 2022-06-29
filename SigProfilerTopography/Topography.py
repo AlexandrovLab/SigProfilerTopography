@@ -1139,6 +1139,7 @@ def runAnalyses(genome,
         plot_replication_strand_bias = True
         plot_transcription_strand_bias = True
 
+    # Epigenomics Occupancy
     # We need full path of the library files
     if (genome == GRCh37) and (epigenomics_files == None):
         epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
@@ -1194,8 +1195,7 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-        # These must be under epigenomics under installed SigProfilerTopography
-
+        # These files must be under epigenomics under installed SigProfilerTopography
 
     elif (genome == MM10) and (epigenomics_files == None):
         epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
@@ -1222,6 +1222,7 @@ def runAnalyses(genome,
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
 
+    # Nucleosome Occupancy
     if genome == MM10:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
@@ -1238,6 +1239,7 @@ def runAnalyses(genome,
             nucleosome_biosample = UNDECLARED
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
         # Do nothing use as it is
+
     elif genome == GRCh37:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
@@ -1254,6 +1256,7 @@ def runAnalyses(genome,
             nucleosome_biosample = UNDECLARED
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
         # Do nothing use as it is
+
     elif genome == GRCh38:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
@@ -1271,6 +1274,7 @@ def runAnalyses(genome,
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
         # Do nothing use as it is
 
+    # Replication Timing
     if genome == MM10:
         # Case1: Files are not set, Biosample is not set
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
