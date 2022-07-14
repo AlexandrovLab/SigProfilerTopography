@@ -644,7 +644,15 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
         file_df = pd.read_csv(file_with_path, header=None, nrows=1, sep='\t')  # 2.25 GB
         ncols = file_df.shape[1]
 
-        if (ncols <= 3):
+        if (ncols == 3 and discard_signal):
+            file_df = pd.read_csv(file_with_path,
+                                  header=None,
+                                  usecols=[0, 1, 2],
+                                  names=[CHROM, START, END],
+                                  dtype={0: 'category', 1: np.int32, 2: np.int32},
+                                  sep='\t')
+
+        elif (ncols <= 3 and (not discard_signal)):
             print('--- There are %d columns in this bed file' %(ncols), file=log_out)
         elif (ncols == 4 and (not discard_signal)):
             print('--- SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header', file=log_out)
@@ -663,7 +671,7 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
             elif (ncols == 9):
                 print('--- ENCODE narrowpeak BED6+3', file=log_out)
 
-            if discard_signal == True:
+            if discard_signal:
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
                                         names=[CHROM,START,END],
                                         dtype={0: 'category', 1: np.int32, 2: np.int32}, sep='\t')

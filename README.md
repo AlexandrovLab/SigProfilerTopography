@@ -36,12 +36,15 @@ $ pip install SigProfilerTopography
 $ pip install SigProfilerTopography --upgrade
 ```
 
-3. Install default nucleosome occupancy (Mnase-seq) and open chromatin regions (ATAC-seq) files:
+3. Install default nucleosome occupancy (Mnase-seq), open chromatin regions (ATAC-seq) and replication timing (Repli-seq) files:
+
+For GRCh37:
 ```
 $ python
 >> from SigProfilerTopography import Topography as topography
 >> topography.install_default_nucleosome('GRCh37')
 >> topography.install_default_atac_seq('GRCh37')
+>> topography.install_default_repli_seq('GRCh37')
 ```
 
 For GRCh38:
@@ -50,7 +53,18 @@ $ python
 >> from SigProfilerTopography import Topography as topography
 >> topography.install_default_nucleosome('GRCh38')
 >> topography.install_default_atac_seq('GRCh38')
+>> topography.install_default_repli_seq('GRCh38')
 ```
+
+For mm10:
+```
+$ python
+>> from SigProfilerTopography import Topography as topography
+>> topography.install_default_nucleosome('mm10')
+>> topography.install_default_atac_seq('mm10')
+>> topography.install_default_repli_seq('mm10')
+```
+
 4. SigProfilerTopography requires SigProfilerMatrixGenerator and SigProfilerSimulator. Please install them as follows:
 ```
 $ pip install SigProfilerMatrixGenerator
@@ -258,3 +272,4 @@ The SigProfilerTopography framework is free software and is distributed in the h
 **CONTACT INFORMATION**
 
 Please address any queries or bug reports to Burcak Otlu at burcakotlu@eng.ucsd.edu
+

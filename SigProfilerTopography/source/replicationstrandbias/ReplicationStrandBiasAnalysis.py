@@ -584,7 +584,7 @@ def checkforValidness(chrBased_valleys_peaks_df):
     for index, row in chrBased_valleys_peaks_df.iterrows():
         if formerRowType is None:
             formerRowType = row['type']
-        elif (row['type']== formerRowType):
+        elif (row['type'] == formerRowType):
             return False
         else:
             formerRowType = row['type']
@@ -598,10 +598,10 @@ def get_chr_based_replication_strand_array_for_callback(chrLong,chromSize,replis
                                                                         repliseq_signal_df,
                                                                         valleys_df,
                                                                         peaks_df)
-    return (chrLong,chrBased_replication_array)
+    return (chrLong, chrBased_replication_array)
 
 
-def get_chr_based_replication_strand_array(chrLong,chromSize,repliseq_signal_df,valleys_df,peaks_df):
+def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
 
     # Read chrBasedSmoothedWaveletReplicationTimeSignalDF
     chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
@@ -614,17 +614,23 @@ def get_chr_based_replication_strand_array(chrLong,chromSize,repliseq_signal_df,
     chrBasedPeaksDF['type'] = 'Peak'
     chrBasedPeaksDF.astype(dtype={START: int, END: int})
 
-    # Concat Peaks and Valleys
+    # Concat valleys and peaks vertically
     chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
 
-    # Sort Valleys and peaks
+    # Sort valleys and peaks in ascending order
     chrBased_valleys_peaks_df.sort_values(START, inplace=True)
 
-    if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and (checkforValidness(chrBased_valleys_peaks_df))):
+    # start the index from zero
+    chrBased_valleys_peaks_df.reset_index(drop=True, inplace=True)
+
+    if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and
+            (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and
+            (checkforValidness(chrBased_valleys_peaks_df))):
         chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,
                                                                              chromSize,
                                                                              chrBased_SmoothedWaveletReplicationTimeSignal_df,
                                                                              chrBased_valleys_peaks_df)
+
         return chrBased_replication_array
     else:
         return None

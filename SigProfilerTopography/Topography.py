@@ -50,12 +50,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import IMR90
 
 from SigProfilerTopography.source.commons.TopographyCommons import MEF
 from SigProfilerTopography.source.commons.TopographyCommons import ESC
+from SigProfilerTopography.source.commons.TopographyCommons import ENDODERM
 
 from SigProfilerTopography.source.commons.TopographyCommons import MM10
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
-
-from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 
 from SigProfilerTopography.source.commons.TopographyCommons import getNucleosomeFile
 from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
@@ -368,9 +367,9 @@ def check_download_replication_time_files(replication_time_signal_file, replicat
     if os.path.isabs(lib_replication_path):
         os.chdir(lib_replication_path)
 
-        replication_time_signal_file_path= os.path.join(lib_replication_path,replication_time_signal_file)
-        replication_time_valley_file_path= os.path.join(lib_replication_path,replication_time_valley_file)
-        replication_time_peak_file_path= os.path.join(lib_replication_path,replication_time_peak_file)
+        replication_time_signal_file_path = os.path.join(lib_replication_path, replication_time_signal_file)
+        replication_time_valley_file_path = os.path.join(lib_replication_path, replication_time_valley_file)
+        replication_time_peak_file_path = os.path.join(lib_replication_path, replication_time_peak_file)
 
         if not os.path.exists(replication_time_signal_file_path):
             print('Does not exists: %s' %(replication_time_signal_file_path))
@@ -608,19 +607,15 @@ def install_default_nucleosome(genome):
     chromNamesList = list(chromSizesDict.keys())
 
     if genome == MM10:
-        #Case1: File is not set, Biosample is not set
         nucleosome_file = MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
-        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 
     elif genome == GRCh37:
-        # Case1: File is not set, Biosample is not set
         nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
-        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 
     elif genome == GRCh38:
-        # Case1: File is not set, Biosample is not set
         nucleosome_file = K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
-        check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+
+    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 
 
 def install_default_atac_seq(genome):
@@ -629,15 +624,39 @@ def install_default_atac_seq(genome):
 
     if genome == GRCh37:
         atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
-        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
     elif genome == GRCh38:
         atac_seq_file = DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
-        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
     elif genome == MM10:
         atac_seq_file = ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
-        check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
+
+    check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
+
+def install_default_repli_seq(genome):
+    if genome == MM10:
+        replication_time_biosample = ENDODERM
+        replication_time_signal_file, \
+        replication_time_valley_file, \
+        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+
+    elif genome == GRCh37:
+        replication_time_biosample = MCF7
+        replication_time_signal_file, \
+        replication_time_valley_file, \
+        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+
+    elif genome == GRCh38:
+        replication_time_biosample = IMR90
+        replication_time_signal_file, \
+        replication_time_valley_file, \
+        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+
+    check_download_replication_time_files(replication_time_signal_file,
+                                          replication_time_valley_file,
+                                          replication_time_peak_file)
+
+
 
 def install_sample_vcf_files():
     # Download to where the SigProfilerTopography is run
@@ -969,7 +988,7 @@ def runAnalyses(genome,
                 outputDir,
                 jobname,
                 numofSimulations,
-                gender = 'female', # 'male'
+                gender = 'female', # 'male' for simulations
                 sbs_probabilities = None,
                 dbs_probabilities = None,
                 id_probabilities = None,
@@ -1167,7 +1186,7 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-        # These must be under epigenomics under installed SigPofilerTopography
+        # These files must be under epigenomics under installed SigPofilerTopography except ATAC-seq file
 
     elif (genome == GRCh38) and (epigenomics_files == None):
         epigenomics_files = [DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
@@ -1195,7 +1214,7 @@ def runAnalyses(genome,
 
         for file_index, filename in enumerate(epigenomics_files):
             epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-        # These files must be under epigenomics under installed SigProfilerTopography
+        # These files must be under epigenomics under installed SigProfilerTopography except ATAC-seq file
 
     elif (genome == MM10) and (epigenomics_files == None):
         epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
@@ -1228,85 +1247,110 @@ def runAnalyses(genome,
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = ESC
             nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
+
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
-        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
-        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
-            # We expect that user has provided nucleosome file with full path
-            nucleosome_biosample = UNDECLARED
+
+        # Case3: nucleosome_file is a filename with fullpath (User provided), biosample is not set
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-        # Do nothing use as it is
+        # We expect that user has provided nucleosome file with full path
+        elif (nucleosome_file is not None):
+            if (nucleosome_biosample is None):
+                nucleosome_biosample = UNDECLARED
 
     elif genome == GRCh37:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = K562
             nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
+
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
-        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
-        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
-            # We expect that user has provided nucleosome file with full path
-            nucleosome_biosample = UNDECLARED
+
+        # Case3: nucleosome_file is a filename with fullpath (User provided), biosample is not set
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-        # Do nothing use as it is
+        # We expect that user has provided nucleosome file with full path
+        elif (nucleosome_file is not None):
+            if (nucleosome_biosample is None):
+                nucleosome_biosample = UNDECLARED
 
     elif genome == GRCh38:
         # Case1: File is not set, Biosample is not set
         if (nucleosome_file is None) and (nucleosome_biosample is None):
             nucleosome_biosample = K562
             nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
+
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
                 #Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
-        # Case3: nucleosome_file is a filename with fullpath (User provided) , biosample is not set
-        elif ((nucleosome_file is not None) and (nucleosome_biosample is None)):
-            # We expect that user has provided nucleosome file with full path
-            nucleosome_biosample = UNDECLARED
+
+        # Case3: nucleosome_file is a filename with fullpath (User provided), biosample is not set
         # Case4: nucleosome_file is a filename with fullpath (User provided), biosample is set
-        # Do nothing use as it is
+        # We expect that user has provided nucleosome file with full path
+        elif ((nucleosome_file is not None)):
+            if (nucleosome_biosample is None):
+                nucleosome_biosample = UNDECLARED
+
 
     # Replication Timing
     if genome == MM10:
-        # Case1: Files are not set, Biosample is not set
-        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
-            replication_time_biosample = MEF
-            # We only set replication_time_signal_file
-            # replication_time_valley_file is None
-            # replication_time_peak_file is None
-            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
+        # Case1: Files are not set, Biosample is not set. Use defualt files.
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
+                (replication_time_peak_file is None) and (replication_time_biosample is None):
+            replication_time_biosample = ENDODERM
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            if (replication_time or replication_strand_bias):
+                # For using SigProfilerTopography Provided Replication Time Files
+                check_download_replication_time_files(replication_time_signal_file,
+                                                      replication_time_valley_file,
+                                                      replication_time_peak_file)
+
+        # Case2: Replication timing files are given with fullpath (User provided). Biosample is not set.
+        # Case3: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
+        elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or
+              (replication_time_peak_file is not None)):
+            if (replication_time_biosample is None):
+                replication_time_biosample = UNDECLARED
 
     elif genome == GRCh37:
         # We need full path of the library files
         # By default replication_time_biosample=MCF7 and signal, valley, peak files are None
-        # Case1: Files are not set, Biosample is not set
-        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+        # Case1: Files are not set, Biosample is not set. Use defualt files.
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
+                (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = MCF7
-            replication_time_signal_file, replication_time_valley_file,replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
-                check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+                check_download_replication_time_files(replication_time_signal_file,
+                                                      replication_time_valley_file,
+                                                      replication_time_peak_file)
 
-        # Case2: Files are not set, Biosample is set
-        elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is not None):
+        # Case2: Files are not set, Biosample is set and available.
+        elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
+                (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in available_replication_time_biosamples):
-                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
                 if (replication_time or replication_strand_bias):
                     # For using SigProfilerTopography Provided Replication Time Files
-                    check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file,replication_time_peak_file)
+                    check_download_replication_time_files(replication_time_signal_file,
+                                                          replication_time_valley_file,
+                                                          replication_time_peak_file)
 
-        # Case3: replication_time_file is a filename with fullpath (User provided) , biosample is not set
-        elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or (replication_time_peak_file is not None)) and (replication_time_biosample is None):
-            replication_time_biosample = UNDECLARED
-        # Case4: Files are set. Biosample is set. Use as it is. Do nothing.
+        # Case3: Replication timing files are given with fullpath (User provided). Biosample is not set.
+        # Case4: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
+        elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or
+              (replication_time_peak_file is not None)):
+            if (replication_time_biosample is None):
+                replication_time_biosample = UNDECLARED
 
     elif genome == GRCh38:
         # We need full path of the library files
@@ -1314,13 +1358,19 @@ def runAnalyses(genome,
         # Case1: Files are not set, Biosample is not set
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = IMR90
-            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(replication_time_biosample, genome)
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
-                check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file, replication_time_peak_file)
+                check_download_replication_time_files(replication_time_signal_file,
+                                                      replication_time_valley_file,
+                                                      replication_time_peak_file)
 
-        # Case4: Files are set. Biosample is set. Use as it is. Do nothing. Use them .
-        pass
+        # Case2: Replication timing files are given with fullpath (User provided). Biosample is not set.
+        # Case3: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
+        elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or
+              (replication_time_peak_file is not None)):
+            if (replication_time_biosample is None):
+                replication_time_biosample = UNDECLARED
 
     # Data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
     epigenomics_file_memos_created = []

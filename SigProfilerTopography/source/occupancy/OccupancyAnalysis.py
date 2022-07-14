@@ -106,6 +106,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import MISSING_SIGNA
 from SigProfilerTopography.source.commons.TopographyCommons import SIGPROFILERTOPOGRAPHY_DEFAULT_FILES
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
 
 # requires chrBased_simBased_combined_df_split which can be real split or whole in fact
 # This is common for pool.imap_unordered and pool.apply_async variations
@@ -158,8 +159,9 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
     if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, signalArrayFilename)
     elif (occupancy_type == EPIGENOMICSOCCUPANCY):
-        if (os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_OCCUPANCY_FILE) or \
-                (os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE):
+        if ((os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_OCCUPANCY_FILE) or \
+                (os.path.basename(library_file_with_path) == DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE) or \
+                (os.path.basename(library_file_with_path) == ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq)):
             chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, EPIGENOMICS, CHRBASED, signalArrayFilename)
         else:
             chrBasedSignalFile = os.path.join(outputDir,jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
