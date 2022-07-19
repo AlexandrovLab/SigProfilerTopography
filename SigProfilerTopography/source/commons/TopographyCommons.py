@@ -39,8 +39,8 @@ WINDOWS = 'windows'
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
-LEADING = 'Leading'
 LAGGING = 'Lagging'
+LEADING = 'Leading'
 
 GENIC = 'Genic'
 INTERGENIC = 'Intergenic'
@@ -63,36 +63,46 @@ GENIC_VERSUS_INTERGENIC_Q_VALUE = 'genic_versus_intergenic_q_value'
 
 TRANSCRIBED_REAL_COUNT = 'Transcribed_real_count'
 UNTRANSCRIBED_REAL_COUNT = 'UnTranscribed_real_count'
+TRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'Transcribed_mean_sims_count'
+UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'UnTranscribed_mean_sims_count'
+TOTAL_TRANSCRIBED_REAL_COUNT = 'total_transcribed_real_count'
+TOTAL_UNTRANSCRIBED_REAL_COUNT = 'total_untranscribed_real_count'
 
 GENIC_REAL_COUNT = 'genic_real_count'
 INTERGENIC_REAL_COUNT = 'intergenic_real_count'
+GENIC_SIMULATIONS_MEAN_COUNT = 'genic_mean_sims_count'
+INTERGENIC_SIMULATIONS_MEAN_COUNT = 'intergenic_mean_sims_count'
+TOTAL_GENIC_REAL_COUNT = 'total_genic_real_count'
+TOTAL_INTERGENIC_REAL_COUNT = 'total_intergenic_real_count'
 
 LAGGING_REAL_COUNT = 'Lagging_real_count'
 LEADING_REAL_COUNT = 'Leading_real_count'
-
-ODDS_RATIO = 'Odds_ratio'
-REAL_RATIO = 'Real_ratio'
-SIMS_RATIO = 'Sims_ratio'
-
-TRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'Transcribed_mean_sims_count'
-UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT = 'UnTranscribed_mean_sims_count'
-
-GENIC_SIMULATIONS_MEAN_COUNT = 'genic_mean_sims_count'
-INTERGENIC_SIMULATIONS_MEAN_COUNT = 'intergenic_mean_sims_count'
-
 LAGGING_SIMULATIONS_MEAN_COUNT = 'Lagging_mean_sims_count'
 LEADING_SIMULATIONS_MEAN_COUNT = 'Leading_mean_sims_count'
+TOTAL_LAGGING_REAL_COUNT = 'total_lagging_real_count'
+TOTAL_LEADING_REAL_COUNT = 'total_leading_real_count'
 
-AT_LEAST_5_PERCENT_DIFF = '5%'
-AT_LEAST_10_PERCENT_DIFF = '10%'
-AT_LEAST_20_PERCENT_DIFF = '20%'
-AT_LEAST_30_PERCENT_DIFF = '30%'
-AT_LEAST_50_PERCENT_DIFF = '50%'
-AT_LEAST_75_PERCENT_DIFF = '75%'
+TOTAL_REAL_COUNT = 'total_real_count'
+PERCENTAGE_OF_REAL_MUTATIONS = 'percentage_of_real_mutations'
+
+ODDS_RATIO = 'odds_ratio'
+REAL_RATIO = 'real_ratio'
+SIMS_RATIO = 'sims_ratio'
+
+AT_LEAST_5_PERCENT_DIFF   = '5%'
+AT_LEAST_10_PERCENT_DIFF  = '10%'
+AT_LEAST_20_PERCENT_DIFF  = '20%'
+AT_LEAST_30_PERCENT_DIFF  = '30%'
+AT_LEAST_50_PERCENT_DIFF  = '50%'
+AT_LEAST_75_PERCENT_DIFF  = '75%'
 AT_LEAST_100_PERCENT_DIFF = '100%'
 
 percentage_numbers = [10, 20, 30, 50, 75, 100]
-percentage_strings = [AT_LEAST_10_PERCENT_DIFF, AT_LEAST_20_PERCENT_DIFF, AT_LEAST_30_PERCENT_DIFF, AT_LEAST_50_PERCENT_DIFF, AT_LEAST_75_PERCENT_DIFF, AT_LEAST_100_PERCENT_DIFF]
+percentage_strings = [AT_LEAST_10_PERCENT_DIFF, AT_LEAST_20_PERCENT_DIFF, AT_LEAST_30_PERCENT_DIFF,
+                      AT_LEAST_50_PERCENT_DIFF, AT_LEAST_75_PERCENT_DIFF, AT_LEAST_100_PERCENT_DIFF]
+
+fold_change_numbers = [1.1, 1.2, 1.3, 1.5, 1.75, 2]
+fold_change_strings = ['1.1', '1.2', '1.3', '1.5', '1.75', '2+']
 
 PLUS = '+'
 MINUS = '-'
@@ -210,7 +220,7 @@ SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE,
                                        DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
                                        ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq]
 
-#REPLICATION  TIME FILES
+# REPLICATION  TIME FILES
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 MCF7_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
 MCF7_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
@@ -306,6 +316,7 @@ VARIABLE_STEP = 'variableStep'
 
 COMBINE_P_VALUES_METHOD_FISHER = 'fisher'
 COMBINE_P_VALUES_METHOD_STOUFFER = 'stouffer'
+
 WEIGHTED_AVERAGE_METHOD = 'WEIGHTED_AVERAGE_METHOD'
 COLORBAR_SEISMIC = 'seismic'
 COLORBAR_DISCREET = 'discreet'
@@ -314,6 +325,7 @@ PLOTS = 'plots'
 TABLES = 'tables'
 DETAILED = 'detailed'
 EXCEL_FILES = 'excel_files'
+TEXT_FILES = 'text_files'
 NUCLEOSOME_DNA_ELEMENT = 'Nucleosome'
 ATAC_DNA_ELEMENT = 'ATAC'
 OPEN_CHROMATIN = 'Open\nChromatin'
@@ -428,7 +440,7 @@ T2A = 'T>A'
 T2C = 'T>C'
 T2G = 'T>G'
 
-six_mutation_types = [C2A,C2G,C2T,T2A,T2C,T2G]
+six_mutation_types = [C2A, C2G, C2T, T2A, T2C, T2G]
 
 SIGNATURE = 'Signature'
 MUTATION = 'Mutation'

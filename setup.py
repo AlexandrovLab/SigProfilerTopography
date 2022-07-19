@@ -10,7 +10,7 @@ def readme():
 	with open('README.rst') as f:
 		return(f.read())
 
-VERSION = '1.0.63'
+VERSION = '1.0.64'
 
 def write_version_py(filename='SigProfilerTopography/version.py'):
 	# Copied from numpy setup.py

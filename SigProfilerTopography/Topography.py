@@ -969,26 +969,13 @@ def get_all_signatures_array(ordered_all_sbs_signatures_wrt_probabilities_file_a
     return np.array(ordered_all_sbs_signatures)
 
 
-#######################################################
-# inputDir ='/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/input_for_matgen/BreastCancer560_subs_indels_dinucs'
-# outputDir = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output_test/'
-# jobname = 'BreastCancer560'
-
-# Run SigProfilerTopography Analyses
-# Former full path now only the filename with extension
-# nucleosomeOccupancy = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/nucleosome/wgEncodeSydhNsomeGm12878Sig.wig'
-# replicationSignal = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
-# replicationValley = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
-# replicationPeak = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/lib/replication/GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
-# subs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/SBS96/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-# indels_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/ID83/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
-# dinucs_probabilities_file_path = '/oasis/tscc/scratch/burcak/developer/python/SigProfilerTopography/SigProfilerTopography/output/560_BRCA_WGS_DINUCS/DBS78/Suggested_Solution/Decomposed_Solution/Mutation_Probabilities.txt'
 def runAnalyses(genome,
                 inputDir,
                 outputDir,
                 jobname,
                 numofSimulations,
-                gender = 'female', # 'male' for simulations
+                gender = 'female', # 'male' for simulations using SigProfilerSimulator
+                matrix_generator_path=MATRIX_GENERATOR_PATH, # for SigProfilerMatrixGenerator
                 sbs_probabilities = None,
                 dbs_probabilities = None,
                 id_probabilities = None,
@@ -1013,28 +1000,23 @@ def runAnalyses(genome,
                 replication_strand_bias = False,
                 transcription_strand_bias = False,
                 processivity = False,
-                mutation_annotation_integration=False,
+                mutation_annotation_integration = False,
                 sample_based = False,
-                plot_figures = True,
                 step1_sim_data = True,
                 step2_matgen_data = True,
                 step3_prob_merged_data = True,
                 step4_tables = True,
-                discreet_mode = True, # discreet_mode = False means prob_mode
-                show_all_signatures = False,
-                average_probability = DEFAULT_AVERAGE_PROBABILITY, # applies for discreet_mode=True
-                default_cutoff = DEFAULT_CUTOFF, # applies for discreet_mode=False
-                parallel_mode = True,
-                num_of_sbs_required = DEFAULT_NUM_OF_SBS_REQUIRED,
-                num_of_dbs_required = DEFAULT_NUM_OF_DBS_REQUIRED,
-                num_of_id_required = DEFAULT_NUM_OF_ID_REQUIRED,
-                plusorMinus_epigenomics = 1000,
-                plusorMinus_nucleosome = 1000,
-                epigenomics_heatmap_significance_level = 0.05,
-                processivity_significance_level = 0.05,
                 verbose = False,
-                matrix_generator_path = MATRIX_GENERATOR_PATH,
                 PCAWG = False,
+                discreet_mode = True, # discreet_mode = False for prob_mode
+                show_all_signatures = False, # you can set True for prob_mode
+                average_probability = 0.75, # applies for discreet_mode=True
+                default_cutoff = 0.5, # applies for discreet_mode=False
+                parallel_mode = True,
+                num_of_sbs_required = 2000,
+                num_of_dbs_required = 200,
+                num_of_id_required = 1000,
+                plot_figures = True,
                 plot_epigenomics = False,
                 plot_nucleosome = False,
                 plot_replication_time = False,
@@ -1042,16 +1024,23 @@ def runAnalyses(genome,
                 plot_replication_strand_bias = False,
                 plot_transcription_strand_bias = False,
                 plot_processivity = False,
-                remove_outliers = False,
-                quantileValue = 0.97,
                 delete_old = False,
                 plot_mode = PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
-                occupancy_calculation_type = MISSING_SIGNAL,
-                processivity_calculation_type = CONSIDER_DISTANCE,
-                processivity_inter_mutational_distance = 10000,
-                combine_p_values_method = COMBINE_P_VALUES_METHOD_FISHER,
-                fold_change_window_size = 100,
-                num_of_real_data_avg_overlap = DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED):
+                occupancy_calculation_type = MISSING_SIGNAL, # for occupancy analysis
+                remove_outliers = False, # for occupancy analysis
+                quantile_value = 0.97, # for occupancy analysis
+                plus_minus_epigenomics = 1000, # for occupancy analysis
+                plus_minus_nucleosome = 1000, # for occupancy analysis
+                epigenomics_heatmap_significance_level = 0.05, # for occupancy analysis
+                combine_p_values_method = 'fisher', # for occupancy analysis
+                fold_change_window_size = 100, # for occupancy analysis
+                num_of_real_data_avg_overlap = 100, # for occupancy analysis
+                odds_ratio_cutoff = 1.1, # for strand asymmetry analysis
+                percentage_of_real_mutations_cutoff = 5, # for strand asymmetry analysis
+                processivity_calculation_type=CONSIDER_DISTANCE,  # for strandcoordinated mutagenesis
+                processivity_inter_mutational_distance=10000,  # for strandcoordinated mutagenesis
+                processivity_significance_level=0.05  # for strandcoordinated mutagenesis
+                ):
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1334,7 +1323,7 @@ def runAnalyses(genome,
                                                       replication_time_valley_file,
                                                       replication_time_peak_file)
 
-        # Case2: Files are not set, Biosample is set and available.
+        # Case2: Files are not set, Only biosample is set and available.
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in available_replication_time_biosamples):
@@ -1476,9 +1465,9 @@ def runAnalyses(genome,
     print('--- minimum number of id mutations required: %d' %num_of_id_required, file=log_out)
     print('--- minimum number of dbs mutations required: %d' %num_of_dbs_required, file=log_out)
     if epigenomics:
-        print('--- number of bases considered before and after mutation start for epigenomics analysis: %d' %plusorMinus_epigenomics, file=log_out)
+        print('--- number of bases considered before and after mutation start for epigenomics analysis: %d' %plus_minus_epigenomics, file=log_out)
     if nucleosome:
-        print('--- number of bases considered before and after mutation start for nucleosome occupancy analysis: %d' %plusorMinus_nucleosome, file=log_out)
+        print('--- number of bases considered before and after mutation start for nucleosome occupancy analysis: %d' %plus_minus_nucleosome, file=log_out)
     print('#################################################################################\n', file=log_out)
 
     print('#################################################################################', file=log_out)
@@ -2276,9 +2265,9 @@ def runAnalyses(genome,
                              computation_type,
                              occupancy_type,
                              occupancy_calculation_type,
-                             plusorMinus_nucleosome,
+                             plus_minus_nucleosome,
                              remove_outliers,
-                             quantileValue,
+                             quantile_value,
                              discreet_mode,
                              default_cutoff,
                              parallel_mode,
@@ -2468,9 +2457,9 @@ def runAnalyses(genome,
                                  computation_type,
                                  occupancy_type,
                                  occupancy_calculation_type,
-                                 plusorMinus_epigenomics,
+                                 plus_minus_epigenomics,
                                  remove_outliers,
-                                 quantileValue,
+                                 quantile_value,
                                  discreet_mode,
                                  default_cutoff,
                                  parallel_mode,
@@ -2535,8 +2524,8 @@ def runAnalyses(genome,
                     replication_strand_bias,
                     transcription_strand_bias,
                     processivity,
-                    plusorMinus_epigenomics,
-                    plusorMinus_nucleosome,
+                    plus_minus_epigenomics,
+                    plus_minus_nucleosome,
                     epigenomics_heatmap_significance_level,
                     processivity_significance_level,
                     log_file,
@@ -2551,7 +2540,9 @@ def runAnalyses(genome,
                     plot_mode,
                     combine_p_values_method,
                     fold_change_window_size,
-                    num_of_real_data_avg_overlap)
+                    num_of_real_data_avg_overlap,
+                    odds_ratio_cutoff,
+                    percentage_of_real_mutations_cutoff)
 
         log_out = open(log_file, 'a')
         print('#################################################################################', file=log_out)
@@ -2608,7 +2599,9 @@ def plotFigures(outputDir,
                 plot_mode,
                 combine_p_values_method,
                 fold_change_window_size,
-                num_of_real_data_avg_overlap):
+                num_of_real_data_avg_overlap,
+                odds_ratio_cutoff,
+                percentage_of_real_mutations_cutoff):
 
     if (nucleosome or plot_nucleosome):
         occupancy_type = NUCLEOSOMEOCCUPANCY
@@ -2652,7 +2645,8 @@ def plotFigures(outputDir,
         strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
-                                                                 log_file)
+                                                                 odds_ratio_cutoff,
+                                                                 percentage_of_real_mutations_cutoff)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)
@@ -2662,7 +2656,8 @@ def plotFigures(outputDir,
         strand_bias_list = [LAGGING_VERSUS_LEADING]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
-                                                                 log_file)
+                                                                 odds_ratio_cutoff,
+                                                                 percentage_of_real_mutations_cutoff)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)
@@ -2672,7 +2667,8 @@ def plotFigures(outputDir,
         strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED, GENIC_VERSUS_INTERGENIC]
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  mutation_types_contexts, strand_bias_list, plot_mode,
-                                                                 log_file)
+                                                                 odds_ratio_cutoff,
+                                                                 percentage_of_real_mutations_cutoff)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)

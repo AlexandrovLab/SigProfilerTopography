@@ -109,9 +109,6 @@ def writeChrBasedOccupancySignalArray(inputList):
     # To avoid overflow signal array dtype is set as np.float32
     signalArray = np.zeros(chromSize, dtype=np.float32)
 
-    # Using apply
-    # chrBasedFileDF.apply(updateSignalArrays, signalArray=signalArray, axis=1)
-
     # Use list comprehension
     [updateSignalArray(row,signalArray) for row in chrBasedFileDF.values]
 
@@ -120,21 +117,20 @@ def writeChrBasedOccupancySignalArray(inputList):
 
     if occupancy_type == NUCLEOSOMEOCCUPANCY:
         chrBasedSignalFile = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, NUCLEOSOME, CHRBASED, signalArrayFilename)
-        print('chrBasedSignalFile:', chrBasedSignalFile)
-        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
-        signalArray = signalArray.astype(np.float16)
-        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
         np.save(chrBasedSignalFile, signalArray)
+        # print('chrBasedSignalFile:', chrBasedSignalFile)
+        # print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
+        # signalArray = signalArray.astype(np.float16)
+        # print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
     else:
         # When we submit multiple jobs then they try to write on the same location on disk and it causes error.
         # Therefore save location is changed.
         chrBasedSignalFile = os.path.join(outputDir, jobname, DATA, occupancy_type, LIB, CHRBASED, signalArrayFilename)
-        print('chrBasedSignalFile:', chrBasedSignalFile)
-        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
-        signalArray = signalArray.astype(np.float16)
-        print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
         np.save(chrBasedSignalFile, signalArray)
-
+        # print('chrBasedSignalFile:', chrBasedSignalFile)
+        # print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
+        # signalArray = signalArray.astype(np.float16)
+        # print('np.max(signalArray):', np.max(signalArray), 'np.min(signalArray):', np.min(signalArray), 'signalArray.dtype:', signalArray.dtype)
 
 # Used by nuclesome occupancy read all file at once
 # Filter w.r.t. a quantileValue
