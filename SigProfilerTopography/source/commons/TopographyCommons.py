@@ -329,9 +329,9 @@ TEXT_FILES = 'text_files'
 NUCLEOSOME_DNA_ELEMENT = 'Nucleosome'
 ATAC_DNA_ELEMENT = 'ATAC'
 OPEN_CHROMATIN = 'Open\nChromatin'
-###################################################################################################
 
-###################################################################################################
+
+
 # Tables
 Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_SBS_Signature_NumberofMutations_AverageProbability.txt"
 Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_ID_Signature_NumberofMutations_AverageProbability.txt"
@@ -366,13 +366,13 @@ Sample2NumberofIndelsDictFilename = 'Sample2NumberofIndelsDict.txt'
 IndelsSignature2NumberofMutationsDictFilename = 'IndelsSignature2NumberofMutationsDict.txt'
 Sample2IndelsSignature2NumberofMutationsDictFilename = 'Sample2IndelsSignature2NumberofMutationsDict.txt'
 
-#For Dinucs
+# For Dinucs
 Sample2NumberofDinucsDictFilename = 'Sample2NumberofDinucsDict.txt'
 DinucsSignature2NumberofMutationsDictFilename = 'DinucsSignature2NumberofMutationsDict.txt'
 Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2NumberofMutationsDict.txt'
-###################################################################################################
 
-#For Replication
+
+# For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
 
 ONE_DIRECTORY_UP = '..'
@@ -473,8 +473,8 @@ DEFAULT_NUM_OF_ID_REQUIRED = 1000
 DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED = 100
 NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT = 1
 
-############################################
-#Column Names
+
+# Column Names
 PROJECT = 'Project'
 SAMPLE = 'Sample'
 GENOME = 'Genome'
@@ -516,7 +516,7 @@ DOT= 'Dot'
 DATASOURCE = 'DataSource'
 
 SIMULATION_NUMBER= 'Simulation_Number'
-############################################
+
 
 Type2ReplicationStrand2CountDict_Filename = 'Type2ReplicationStrand2CountDict.txt'
 Sample2Type2ReplicationStrand2CountDict_Filename = 'Sample2Type2ReplicationStrand2CountDict.txt'
@@ -538,20 +538,23 @@ USING_NULL_DISTRIBUTION = 'USING_NULL_DISTRIBUTION'
 USING_GAUSSIAN_KDE = 'USING_GAUSSIAN_KDE'
 USING_ZSCORE = 'USING_ZSCORE'
 
-SBS96 = '96'
-SBS192 = '192'
-SBS288 = '288'
-SBS384 = '384'
-SBS1536 = '1536'
-SBS3072 = '3072'
+# Reference https://osf.io/s93d5/wiki/5.%20Output%20-%20SBS/
+SBS_6 = '6' # (6) Pyrimidine single nucleotide variants [C>A, C>G, C>T, T>A, T>C, T>G]
+SBS_24 = '24' # (6) Pyrimidine single nucleotide variants * (4) transcriptional bias categories = 24 e.g.: T:C>A
+SBS_96 = '96' # (4) Possible starting nucleotides * (6) Pyrimidine single nucleotide variants * (4) possible ending nucleotides = 96 e.g.: A[C>A]A
+SBS_192 = '192' # SBS96 * (2) transcriptional bias categories = 192 e.g.: T:A[C>A]A U:A[C>A]A there is no N:A[C>A]A or B:A[C>A]A
+SBS_288 = '288' # SBS96 * (3) transcriptional bias categories = 288 e.g.: T:A[C>A]A U:A[C>A]A N:A[C>A]A there is no B:A[C>A]A
+SBS_384 = '384' # SBS96 * (4) transcriptional bias categories = 384 e.g.: T:A[C>A]A
+SBS_1536 = '1536' # 16 (4x4) possible starting dinucleotides x 6 pyrimidine variants x 16 (4x4) possible ending dinucleotides = 1536 e.g.: AA[C>A]AA
+SBS_6144 = '6144' # SBS_1536 * (4) transcriptional bias categories = 6124 e.g.: T:AA[C>A]AA
 
-#These 3 (SNV,ID,DBS) are used for matrixgenerator creared directories
+#These 3 (SNV,ID,DBS) are used for matrixgenerator created directories
 SNV ='SNV'
 ID = 'ID'
 DBS = 'DBS'
 
 SBS = 'SBS'
-SBS_CONTEXTS = [SBS96,SBS192,SBS288,SBS384,SBS1536,SBS3072]
+SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
 
 # Used for dictionaries
 # MutationType2NumberofMutationsDict keys
@@ -568,7 +571,6 @@ ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
-
 
 # Always ztest
 # one sample or two_sample?
@@ -595,22 +597,26 @@ def write_excel_file(df_list, sheet_list, file_name):
     writer.save()
 
 
-def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities,mutation_type):
-    if (mutation_type==SUBS) and (SBS96 in mutation_types_contexts_for_signature_probabilities):
-        return SBS96
-    elif (mutation_type==SUBS) and (SBS192 in mutation_types_contexts_for_signature_probabilities):
-        return SBS192
-    elif (mutation_type==SUBS) and (SBS288 in mutation_types_contexts_for_signature_probabilities):
-        return SBS288
-    elif  (mutation_type==SUBS) and (SBS384 in mutation_types_contexts_for_signature_probabilities):
-        return SBS384
-    elif  (mutation_type==SUBS) and (SBS1536 in mutation_types_contexts_for_signature_probabilities):
-        return SBS1536
-    elif  (mutation_type==SUBS) and (SBS3072 in mutation_types_contexts_for_signature_probabilities):
-        return SBS3072
-    elif (mutation_type==INDELS) and (ID in mutation_types_contexts_for_signature_probabilities):
+def get_mutation_type_context_for_probabilities_file(mutation_types_contexts_for_signature_probabilities, mutation_type):
+    if (mutation_type == SUBS) and (SBS_6 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_6
+    elif (mutation_type == SUBS) and (SBS_24 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_24
+    elif (mutation_type == SUBS) and (SBS_96 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_96
+    elif (mutation_type == SUBS) and (SBS_192 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_192
+    elif (mutation_type == SUBS) and (SBS_288 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_288
+    elif  (mutation_type == SUBS) and (SBS_384 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_384
+    elif  (mutation_type == SUBS) and (SBS_1536 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_1536
+    elif  (mutation_type == SUBS) and (SBS_6144 in mutation_types_contexts_for_signature_probabilities):
+        return SBS_6144
+    elif (mutation_type == INDELS) and (ID in mutation_types_contexts_for_signature_probabilities):
         return ID
-    elif (mutation_type==DINUCS) and (DBS in mutation_types_contexts_for_signature_probabilities):
+    elif (mutation_type == DINUCS) and (DBS in mutation_types_contexts_for_signature_probabilities):
         return DBS
     else:
         return None
@@ -671,19 +677,13 @@ def get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum):
         return chrBased_simBased_combined_df
     else:
         return None
-##################################################################
 
 
-##################################################################
-#April 26, 2020
 def index_marks(nrows, chunk_size):
     return range(chunk_size, math.ceil(nrows / chunk_size) * chunk_size, chunk_size)
-##################################################################
 
 
-##################################################################
-#April 26, 2020
-#Returns split df list
+# Returns split df list
 def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
 
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
@@ -708,11 +708,11 @@ def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
         return split_df_list
     else:
         return None
-##################################################################
 
-##################################################################
-#April 9, 2020
-#Returns split df
+
+
+# April 9, 2020
+# Returns split df
 def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex):
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
     chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
@@ -877,12 +877,12 @@ def get_splits(outputDir, jobname, simNum,chrLong):
     return chrBased_subs_df_split_list, chrBased_indels_df_split_list, chrBased_dinucs_df_split_list
 ########################################################
 
-########################################################
+
 # e.g: chrLong='chr3' chrShort='3'
 def getChrShort(chrLong):
     chrShort = chrLong[3:]
     return chrShort
-########################################################
+
 
 def natural_key(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
@@ -1134,22 +1134,22 @@ def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
 
 
 ###################################################################
-#Bookkeeping
-#http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.chrom.sizes
-#http://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.chrom.sizes
-#http://hgdownload.cse.ucsc.edu/goldenpath/mm9/bigZips/mm9.chrom.sizes
-#http://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigZips/mm10.chrom.sizes
+# Bookkeeping
+# http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.chrom.sizes
+# http://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.chrom.sizes
+# http://hgdownload.cse.ucsc.edu/goldenpath/mm9/bigZips/mm9.chrom.sizes
+# http://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigZips/mm10.chrom.sizes
 def getChromSizesDict(genome):
     chromSizesDict = {}
 
     if (genome == GRCh37):
-        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh37ChromSizesDictFilename)
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, GRCh37ChromSizesDictFilename)
     elif (genome == GRCh38):
-        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,GRCh38ChromSizesDictFilename)
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, GRCh38ChromSizesDictFilename)
     elif (genome == MM9):
-        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM9ChromSizesDictFilename)
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM9ChromSizesDictFilename)
     elif (genome == MM10):
-        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB,UCSCGENOME,MM10ChromSizesDictFilename)
+        chromSizesDictPath = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, UCSCGENOME, MM10ChromSizesDictFilename)
 
     if (os.path.exists(chromSizesDictPath)):
         chromSizesDict = readDictionary(chromSizesDictPath)
@@ -1186,8 +1186,9 @@ class NpEncoder(json.JSONEncoder):
 # two header lines
 # rows will be cutoff
 # columns will be for each signature number_of_mutations and average_probability
-def writeAllCutoffs(outputDir, jobname, DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename):
-    signature_list=[]
+def writeAllCutoffs(outputDir, jobname, DATA, cutoff2Signature2NumberofMutationsAverageProbabilityListDict,
+                    table_allcutoffs_signature_numberofmutations_averageprobability_filename):
+    signature_list = []
     cutoff_list=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
 
     for cutoff in cutoff2Signature2NumberofMutationsAverageProbabilityListDict:
@@ -1340,6 +1341,153 @@ def fill_signature_number_of_mutations_df(outputDir,
     return df
 
 
+
+def fill_signature_cutoff_properties_df(outputDir,
+                                        jobname,
+                                        chromNamesList,
+                                        mutation_type,
+                                        cutoffs,
+                                        average_probability,
+                                        num_of_sbs_required,
+                                        num_of_id_required,
+                                        num_of_dbs_required,
+                                        mutationType2PropertiesDict,
+                                        chrLong2NumberofMutationsDict):
+
+    os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
+
+    # Set the filenames and number of required mutations
+    if (mutation_type == SUBS):
+        number_of_required_mutations = num_of_sbs_required
+        table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
+    elif (mutation_type == DINUCS):
+        number_of_required_mutations = num_of_dbs_required
+        table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
+    elif (mutation_type == INDELS):
+        number_of_required_mutations = num_of_id_required
+        table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
+
+    # Step1 fill the dataframe
+    df = pd.DataFrame(columns=['signature',
+                               'cutoff',
+                               'number_of_mutations',
+                               'sum_of_probabilities'])
+
+    df['signature'] = df['signature'].astype('category')
+    df['cutoff'] = df['cutoff'].astype(np.float32)
+    df['number_of_mutations'] = df['number_of_mutations'].astype(np.int32)
+    df['sum_of_probabilities'] = df['sum_of_probabilities'].astype(np.float64)
+
+    # This samples are for this mutation type
+    all_samples = set()
+
+    for chrLong in chromNamesList:
+        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, 0, return_number_of_samples=True)
+        all_samples = all_samples.union(chrbased_samples)
+
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+            # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
+            # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
+            signatures = get_signatures(chrBased_mutation_df)
+
+            if mutation_type in mutationType2PropertiesDict:
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+            else:
+                mutationType2PropertiesDict[mutation_type] = {}
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+
+            if chrLong in chrLong2NumberofMutationsDict:
+                chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
+            else:
+                chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
+
+            # First part starts
+            # First accumulate number of mutations and sum of probabilities with mutations with probability >= cutoff probability
+            for signature in signatures:
+                for cutoff in cutoffs:
+                    number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])
+
+                    # This results in infinity
+                    # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values, dtype=np.float64)
+
+                    # Samples having mutations with prob ge cutoff for given cutoff and signature
+                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)]['Sample'].unique()
+
+                    if df[(df['signature'] == signature) & (df['cutoff'] == cutoff)].values.any():
+                        # Update Accumulate
+                        df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff) , 'number_of_mutations'] += number_of_mutations
+                        df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff), 'sum_of_probabilities'] += sum_of_probabilities
+
+                        # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
+                        df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'] = df.loc[
+                            (df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'].apply(
+                            lambda x: [*{*x}.union({*list(samples_array)})])
+
+                    else:
+                        df = df.append({'signature': signature,
+                                        'cutoff': cutoff,
+                                        'number_of_mutations': number_of_mutations,
+                                        'sum_of_probabilities': sum_of_probabilities,
+                                        'samples_list': samples_array}, ignore_index=True)
+
+    # Step2 calculate len(samples_list) and average probability columns
+    df['len(samples_list)'] = df['samples_list'].str.len()
+
+    df['average_probability'] = np.where(df['number_of_mutations'] > 0,
+                                         df['sum_of_probabilities'] / df['number_of_mutations'],
+                                         0)
+
+    all_cutoffs_df = df
+    all_cutoffs_df['cancer_type'] = jobname
+    all_cutoffs_df = all_cutoffs_df[['cancer_type', 'signature', 'cutoff', 'number_of_mutations', 'average_probability']]
+    all_cutoffs_df['average_probability'] = all_cutoffs_df['average_probability'].astype(np.float32)
+    all_cutoffs_df.to_csv(os.path.join(outputDir, jobname, DATA, table_allcutoffs_signature_numberofmutations_averageprobability_filename), sep='\t', index=False)
+
+    # Step3 Find signatures and cutoffs that satisfy the conditions
+    df = df[(df['number_of_mutations'] >= number_of_required_mutations) & (df['average_probability'] >= average_probability)]
+
+    # group by signature select signature row with min cutoff
+    # grouped = df.groupby('signature')['cutoff'].min().reset_index() # works and resulys in 2 columns: signature column
+    df['min_cutoff'] = df.groupby(['signature'])['cutoff'].transform(min)
+    df = df[df['cutoff'] == df['min_cutoff']]
+
+    df['len(all_samples_list)'] = len(all_samples)
+    df['percentage_of_samples'] = df['len(samples_list)']*100/df['len(all_samples_list)']
+    df = df[['cancer_type', 'signature', 'cutoff', 'number_of_mutations', 'average_probability', 'samples_list',
+             'len(samples_list)', 'len(all_samples_list)', 'percentage_of_samples']]
+    signature_cutoff_numberofmutations_averageprobability_df = df
+
+    signature_cutoff_numberofmutations_averageprobability_df['cancer_type'] = signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
+    signature_cutoff_numberofmutations_averageprobability_df['signature'] = signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
+    signature_cutoff_numberofmutations_averageprobability_df['cutoff'] = signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
+    signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'] = signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
+    signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
+    signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'] = signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'].astype(np.float32)
+
+    signature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir, jobname, DATA, 'signature_cutoff_numberofmutations_averageprobability_df.txt'), sep='\t', index=False)
+
+    return signature_cutoff_numberofmutations_averageprobability_df
+
+    #     # Create empty dataframe
+    #     signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cancer_type',
+    #                                                                                      'signature',
+    #                                                                                      'cutoff',
+    #                                                                                      'number_of_mutations',
+    #                                                                                      'average_probability',
+    #                                                                                      'samples_list',
+    #                                                                                      'len(samples_list)',
+    #                                                                                      'len(all_samples_list)',
+    #                                                                                      'percentage_of_samples'
+    #                                                                                      ])
+    #
+
+
+# TODO depreceated delete after tests
 # Run in SigProfilerTopography discreet_mode = True
 def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                   jobname,
@@ -1399,13 +1547,13 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
             for cutoff in cutoffs:
                 for signature in signatures:
                     # chrBased_mutation_df[signature]=chrBased_mutation_df[signature].astype(np.float64)
-                    number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])
+                    number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])
                     # Samples having mutations with prob ge cutoff for given cutoff and signature
-                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)]['Sample'].unique()
+                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)]['Sample'].unique()
 
                     # This results in infinity
                     # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
-                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values,dtype=np.float64)
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values, dtype=np.float64)
 
                     if cutoff not in cutoff2Signature2PropertiesListDict:
                         cutoff2Signature2PropertiesListDict[cutoff] = {}
@@ -1426,7 +1574,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                         cutoff2Signature2PropertiesListDict[cutoff][signature][0] += number_of_mutations
                         cutoff2Signature2PropertiesListDict[cutoff][signature][1] += sum_of_probabilities
                         existing_samples_list = cutoff2Signature2PropertiesListDict[cutoff][signature][2]
-                        #Update existing_samples with new samples
+                        # Update existing_samples with new samples
                         cutoff2Signature2PropertiesListDict[cutoff][signature][2] = list(set(existing_samples_list).union(set(samples_array)))
 
     # Second part starts
@@ -1435,7 +1583,7 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     # In fact, in this part, we can fill a dataframe
     for cutoff in cutoff2Signature2PropertiesListDict:
         for signature in cutoff2Signature2PropertiesListDict[cutoff]:
-            if (cutoff2Signature2PropertiesListDict[cutoff][signature][0]>0):
+            if (cutoff2Signature2PropertiesListDict[cutoff][signature][0] > 0):
                 if cutoff not in cutoff2Signature2NumberofMutationsAverageProbabilityListDict:
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]={}
                     cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature] = []
@@ -1461,28 +1609,25 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     if (mutation_type == SUBS):
         number_of_required_mutations = num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == DINUCS):
         number_of_required_mutations = num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
     elif (mutation_type == INDELS):
         number_of_required_mutations = num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
-        table_signature_cutoff_numberofmutations_averageprobability_filename = Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 
     # Third part starts
-    # Find the signature based cufoff probability with number of mutations >= required number of mutations and average mutation probability >= required_probability
-    sorted_cutoffs=sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
+    # Find the signature based cutoff probability with number of mutations >= required number of mutations and average mutation probability >= required_probability
+    sorted_cutoffs = sorted(cutoff2Signature2NumberofMutationsAverageProbabilityListDict.keys())
     for cutoff in sorted_cutoffs:
         for signature in cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff]:
             if signature not in signature2PropertiesListDict:
                 if (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0] >= number_of_required_mutations) and \
                         (cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1] >= average_probability):
                     signature2PropertiesListDict[signature] = [cutoff,
-                                                             np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),
-                                                             np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]),
-                                                             cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][2]]
+                                                               np.int(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][0]),
+                                                               np.float(cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][1]),
+                                                               cutoff2Signature2NumberofMutationsAverageProbabilityListDict[cutoff][signature][2]]
     # Third part ends
 
 
@@ -1492,7 +1637,11 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
     # Jobname is added here as the first column
     # AverageProbabilityList contains  number_of_mutations average_probability samples_list
     # Let's not write the samples_list to avoid repetions
-    writeAllCutoffs(outputDir,jobname,DATA,cutoff2Signature2NumberofMutationsAverageProbabilityListDict,table_allcutoffs_signature_numberofmutations_averageprobability_filename)
+    writeAllCutoffs(outputDir,
+                    jobname,
+                    DATA,
+                    cutoff2Signature2NumberofMutationsAverageProbabilityListDict,
+                    table_allcutoffs_signature_numberofmutations_averageprobability_filename)
 
     L = sorted([(jobname,
                  signature,
@@ -1516,24 +1665,24 @@ def fillCutoff2Signature2PropertiesListDictionary(outputDir,
                                                                                            'len(all_samples_list)',
                                                                                            'percentage_of_samples'])
 
-        signature_cutoff_numberofmutations_averageprobability_df['cancer_type']=signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
-        signature_cutoff_numberofmutations_averageprobability_df['signature']=signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
-        signature_cutoff_numberofmutations_averageprobability_df['cutoff']=signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
-        signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations']=signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
+        signature_cutoff_numberofmutations_averageprobability_df['cancer_type'] = signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
+        signature_cutoff_numberofmutations_averageprobability_df['signature'] = signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
+        signature_cutoff_numberofmutations_averageprobability_df['cutoff'] = signature_cutoff_numberofmutations_averageprobability_df['cutoff'].astype(np.float32)
+        signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'] = signature_cutoff_numberofmutations_averageprobability_df['number_of_mutations'].astype(np.int32)
         signature_cutoff_numberofmutations_averageprobability_df['average_probability'] = signature_cutoff_numberofmutations_averageprobability_df['average_probability'].astype(np.float32)
         signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'] = signature_cutoff_numberofmutations_averageprobability_df['percentage_of_samples'].astype(np.float32)
 
     else:
         # Create empty dataframe
         signature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame(columns=['cancer_type',
-                                                                                           'signature',
-                                                                                           'cutoff',
-                                                                                           'number_of_mutations',
-                                                                                           'average_probability',
-                                                                                           'samples_list',
-                                                                                           'len(samples_list)',
-                                                                                           'len(all_samples_list)',
-                                                                                           'percentage_of_samples'
+                                                                                         'signature',
+                                                                                         'cutoff',
+                                                                                         'number_of_mutations',
+                                                                                         'average_probability',
+                                                                                         'samples_list',
+                                                                                         'len(samples_list)',
+                                                                                         'len(all_samples_list)',
+                                                                                         'percentage_of_samples'
                                                                                          ])
 
     return signature_cutoff_numberofmutations_averageprobability_df
@@ -1551,22 +1700,22 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
     signature2NumberofMutationsDict = {}
     sample2Signature2NumberofMutationsDict = {}
 
-    #Fill dictionaries with conditions satisfied
-    if (type==SUBS):
+    # Fill dictionaries with conditions satisfied
+    if (type == SUBS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofSubsDictFilename
         Signature2NumberofMutationsDictFilename = SubsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2SubsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = num_of_sbs_required
-    elif (type==INDELS):
-        Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
-        Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
-        Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
-        minimum_number_of_mutations_required = num_of_id_required
-    elif (type==DINUCS):
+    elif (type == DINUCS):
         Sample2NumberofMutationsDictFilename = Sample2NumberofDinucsDictFilename
         Signature2NumberofMutationsDictFilename = DinucsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = num_of_dbs_required
+    elif (type == INDELS):
+        Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
+        Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
+        Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
+        minimum_number_of_mutations_required = num_of_id_required
 
     for chrLong in chromNamesList:
         chrBased_mutation_df = readChrBasedMutationsDF(outputDir,jobname,chrLong,type,0)
@@ -1618,10 +1767,9 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
     writeDictionaryUnderDataDirectory(new_sample2NumberofMutatiosDict,outputDir,jobname,Sample2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_signature2NumberofMutationsDict,outputDir,jobname,Signature2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_sample2Signature2NumberofMutationsDict,outputDir,jobname,Sample2Signature2NumberofMutationsDictFilename)
-##################################################################
 
-##################################################################
-#Used for all kinds of mutations SUBs and Dinucs and Indels
+
+# Used for all kinds of mutations SUBs and Dinucs and Indels
 def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulationNumber, return_number_of_samples=False):
     filename = '%s_%s_for_topography.txt' %(chrLong, mutation_type)
 
@@ -1632,9 +1780,8 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
         chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, simulation, filename)
 
     chrBased_mutation_df = None
-    #############################################
+
     if (os.path.exists(chrBasedMutationDFFilePath)):
-        #############################################
         try:
          only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
          # Please note thar encoding and engine slow done and increase memory usage
@@ -1643,10 +1790,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
 
          # Please note that we assume that after the column named 'Mutation' there are the signature columns in tab separated way.
          mutationtIndex = columnNamesList.index(MUTATION)
-         signatures = columnNamesList[(mutationtIndex + 1):]
-         #############################################
 
-         #################################################
          mydtypes = {}
 
          # Subs
@@ -1662,8 +1806,8 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
          # np.int32   Integer (-2147483648 to 2147483647)
 
          # To lower the dataframe size
-         for signature in signatures:
-             mydtypes[signature] = np.float16
+         # Do not change the dtype of signatures column to np.float16
+         # Because it causes rounding and differences in number of mutations across different downstream analyses.
 
          if ((mutation_type == SUBS) or (mutation_type == DINUCS)):
              mydtypes[SAMPLE] = 'category'
@@ -1685,7 +1829,6 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
              mydtypes[PYRAMIDINESTRAND] = np.int8
              mydtypes[TRANSCRIPTIONSTRAND] = 'category'
              mydtypes[MUTATION] = 'category'
-         #################################################
 
          chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', header=0, dtype=mydtypes)
 
@@ -1693,8 +1836,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
          chrBased_mutation_df[SIMULATION_NUMBER] = simulationNumber
 
         except pd.errors.EmptyDataError:
-         chrBased_mutation_df = pd.DataFrame()
-    #############################################
+            chrBased_mutation_df = pd.DataFrame()
 
     if return_number_of_samples:
         if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
@@ -1704,13 +1846,11 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
             return set(), chrBased_mutation_df
     else:
         return chrBased_mutation_df
-##################################################################
 
 
 ##########################################################################################
 ############### Common functions for Nucleosome Occupancy Analysis starts ################
 ##########################################################################################
-
 
 # window_array is of size 2*plusOrMinus
 # mutation_row_start will be at position=plusOrMinus of the window_array
@@ -2916,7 +3056,7 @@ def copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numberofSimulat
 # UCEC-US_SP89389 10      2017540 N:AT[T>A]CA     1
 # example line for simulated data
 # UCEC-US_SP89389_1       10      1575080 T:AT[C>T]TG     1
-def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,mutation_type_context_for_probabilities):
+def readChrBasedMutations(chr_based_mutation_filepath, mutation_type_context, mutation_type_context_for_probabilities):
 
     if (os.path.exists(chr_based_mutation_filepath)):
         try:
@@ -2925,7 +3065,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
             mutations_with_genomic_positions_df = pd.DataFrame()
 
         if (not mutations_with_genomic_positions_df.empty):
-            if (mutation_type_context==DBS):
+            if (mutation_type_context == DBS):
                 # For DBS MatrixGenerator provides
                 # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
                 # For DBS Extractor has
@@ -2942,7 +3082,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 # PCAWG_Matlab dbs probabilities has  AT>GC
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
                 mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
-            elif (mutation_type_context==ID):
+            elif (mutation_type_context == ID):
                 # For ID MatrixGenerator provides
                 # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
                 # For ID Extractor has
@@ -2963,7 +3103,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 #order the columns make CONTEXT at the end.
                 ordered_column_names = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,LENGTH,PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND,MUTATION]
                 mutations_with_genomic_positions_df = mutations_with_genomic_positions_df[ordered_column_names]
-            elif(mutation_type_context in SBS_CONTEXTS) and (mutation_type_context_for_probabilities in SBS_CONTEXTS):
+            elif (mutation_type_context in SBS_CONTEXTS) and (mutation_type_context_for_probabilities in SBS_CONTEXTS):
                 # For SNV MatrixGenerator provides
                 # LUAD-US_SP50263 10      440625  U:GG[C>T]AG     -1
                 # For SNV Extractor has
@@ -2975,23 +3115,62 @@ def readChrBasedMutations(chr_based_mutation_filepath,mutation_type_context,muta
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
                 mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
-                # Add new column
-                # Add Context Column from T:TG[C>T]GC to  G[C>T]G
-                # MatrixGenerator generates T:TG[C>T]GC
-                # Extractor and PCAWG_Matlab sbs probabilities has G[C>T]G
-                # SBS288 has T:A[C>G]A
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
-                # TODO Make conversion for each possible mutation context that can be in probabilities file.
-                if (mutation_type_context_for_probabilities==SBS288):
-                    # Since SBS288 probabilities mutation context does not contain B we are assigning B to N
-                    # TODO Maybe more correct way is to assign half of B as T and other half of B as U
-                    mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] == 'B', MUTATION] = 'N:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+
+                # Fill MUTATION in mutations_with_genomic_positions_df to merge with SigProfilerExtractor probabilities file
+                if (mutation_type_context_for_probabilities == SBS_6144):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_6144 T:AA[C>A]AA
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG]
+                elif (mutation_type_context_for_probabilities == SBS_1536):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS1536 AA[C>A]AA
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[2:]
+                elif (mutation_type_context_for_probabilities == SBS_384):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_384 T:A[C>A]A
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                elif (mutation_type_context_for_probabilities == SBS_288):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_288 T:A[C>A]A
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    # SigProfilerExtractor SBS_288 probabilities mutation context does not
+                    # Therefore we are assigning B to either T or U
+                    # Assign half of Bs as T and other half of Bs as U
+                    arr = np.array(mutations_with_genomic_positions_df[mutations_with_genomic_positions_df['MutationLong'].str[0] == 'B'].index)
+                    half_index = len(arr) // 2
+                    mutations_with_genomic_positions_df.loc[arr[0:half_index], MUTATION] = 'T:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                    mutations_with_genomic_positions_df.loc[arr[half_index:], MUTATION] = 'U:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
                     mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
-                elif (mutation_type_context_for_probabilities==SBS96):
+                elif (mutation_type_context_for_probabilities == SBS_192):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_192 T:A[C>A]A
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    # Set half of Bs to T and half of Bs to U
+                    # Do nothing for mutations on Nontranscribed strand of DNA, thet won't be merged with SigProfilerExtractor probabilities as there is no data available for them.
+                    arr = np.array(mutations_with_genomic_positions_df[mutations_with_genomic_positions_df['MutationLong'].str[0] == 'B'].index)
+                    half_index = len(arr) // 2
+                    mutations_with_genomic_positions_df.loc[arr[0:half_index], MUTATION] = 'T:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                    mutations_with_genomic_positions_df.loc[arr[half_index:], MUTATION] = 'U:' + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                    mutations_with_genomic_positions_df.loc[mutations_with_genomic_positions_df[MUTATIONLONG].str[0] != 'B', MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                elif (mutation_type_context_for_probabilities == SBS_96):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_96 A[C>A]A
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
-                else:
-                    # TODO to be updated as needed
-                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[3:10]
+                elif (mutation_type_context_for_probabilities == SBS_24):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_24 T:C>A
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[5:8]
+                elif (mutation_type_context_for_probabilities == SBS_6):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always SBS_6144 T:TG[C>T]GC
+                    # SigProfilerExtractor MUTATION column SBS_6 C>T
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[5:8]
 
             # Set dtype as 'category'
             mutations_with_genomic_positions_df[MUTATION]=mutations_with_genomic_positions_df[MUTATION].astype('category')
@@ -3014,7 +3193,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
     PCAWG = inputList[8]
     log_file = inputList[9]
 
-    chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath, mutation_type_context, mutation_type_context_for_probabilities)
+    chr_based_mutation_df = readChrBasedMutations(chr_based_mutation_filepath,
+                                                  mutation_type_context,
+                                                  mutation_type_context_for_probabilities)
 
     if ((chr_based_mutation_df is not None) and (mutations_probabilities_df is not None)):
 
@@ -3040,9 +3221,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('category')
 
         if SAMPLE not in mutations_probabilities_df.columns.values:
-            merged_df = pd.merge(chr_based_mutation_df,mutations_probabilities_df, how='inner', left_on=[MUTATION], right_on=[MUTATION])
+            merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner', left_on=[MUTATION], right_on=[MUTATION])
         else:
-            merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION])
+            merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner', left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION])
 
         if ((merged_df is not None) and (chr_based_mutation_df.shape[0]!=merged_df.shape[0])):
             log_out = open(log_file,'a')
@@ -3071,10 +3252,10 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,SUBS)
             elif (mutation_type_context == DBS):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,DINUCS)
-            elif (mutation_type_context==ID):
+            elif (mutation_type_context == ID):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort,INDELS)
 
-            if (simNum ==0):
+            if (simNum == 0):
                 chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedMergedMutationsFileName)
             else:
                 simDir = 'sim%d' %(simNum)
@@ -3084,15 +3265,34 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             # if ('MutationLong' in merged_df.columns.values):
             #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
-            # After merge
-            # Make MUTATION column one of six mutation types
-            # TODO Make conversion for every possible probabilities mutation type context
-            if (mutation_type_context_for_probabilities == SBS288):
-                # SBS288 has T:A[C>G]A
+            # SigProfilerTopography analysis uses SBS_6
+            # Therefore after merge we reduce MUTATION column down to SBS_6
+            # SBS_6 Pyrimidine single nucleotide variants [C>A, C>G, C>T, T>A, T>C, T>G]
+            if mutation_type_context_for_probabilities == SBS_6144:
+                # SBS_6144 e.g.: T:AA[C>A]AA --> C>A
+                merged_df[MUTATION] = merged_df[MUTATION].str[5:8]
+            elif (mutation_type_context_for_probabilities == SBS_1536):
+                # SBS1536 has e.g.: e.g.: AA[C>A]AA --> C>A
+                merged_df[MUTATION] = merged_df[MUTATION].str[3:6]
+            elif (mutation_type_context_for_probabilities == SBS_384):
+                # SBS384 has e.g.: T:A[C>G]A --> to C>G
                 merged_df[MUTATION] = merged_df[MUTATION].str[4:7]
-            else:
-                # SBS96 has A[C>G]A
+            elif (mutation_type_context_for_probabilities == SBS_288):
+                # SBS288 has e.g.: T:A[C>G]A --> C>G
+                merged_df[MUTATION] = merged_df[MUTATION].str[4:7]
+            elif (mutation_type_context_for_probabilities == SBS_192):
+                # SBS192 has e.g.: T:A[C>G]A --> C>G
+                merged_df[MUTATION] = merged_df[MUTATION].str[4:7]
+            elif (mutation_type_context_for_probabilities == SBS_96):
+                # SBS96 has e.g.: A[C>G]A --> C>G
                 merged_df[MUTATION] = merged_df[MUTATION].str[2:5]
+            elif (mutation_type_context_for_probabilities == SBS_24):
+                # SBS24 has e.g.: T:C>A --> C>A
+                merged_df[MUTATION] = merged_df[MUTATION].str[2:]
+            elif (mutation_type_context_for_probabilities == SBS_6):
+                # SBS_6 has e.g.: C>G --> C>G
+                # No action
+                pass
 
             merged_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)
         else:
@@ -3131,15 +3331,34 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         # if ('MutationLong' in merged_df.columns.values):
         #     merged_df.drop(['MutationLong'], inplace=True, axis=1)
 
-        # After merge
-        # Make MUTATION column one of six mutation types
-        # TODO Make conversion for every possible probabilities mutation type context
-        if (mutation_type_context_for_probabilities == SBS288):
-            # SBS288 has T:A[C>G]A
+        # SigProfilerTopography analysis uses SBS_6
+        # Therefore after merge we reduce MUTATION column down to SBS_6
+        # SBS_6 Pyrimidine single nucleotide variants [C>A, C>G, C>T, T>A, T>C, T>G]
+        if mutation_type_context_for_probabilities == SBS_6144:
+            # SBS_6144 e.g.: T:AA[C>A]AA --> C>A
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[5:8]
+        elif (mutation_type_context_for_probabilities == SBS_1536):
+            # SBS1536 has e.g.: e.g.: AA[C>A]AA --> C>A
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[3:6]
+        elif (mutation_type_context_for_probabilities == SBS_384):
+            # SBS384 has e.g.: T:A[C>G]A --> to C>G
             chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[4:7]
-        else:
-            # SBS96 has A[C>G]A
+        elif (mutation_type_context_for_probabilities == SBS_288):
+            # SBS288 has e.g.: T:A[C>G]A --> C>G
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[4:7]
+        elif (mutation_type_context_for_probabilities == SBS_192):
+            # SBS192 has e.g.: T:A[C>G]A --> C>G
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[4:7]
+        elif (mutation_type_context_for_probabilities == SBS_96):
+            # SBS96 has e.g.: A[C>G]A --> C>G
             chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[2:5]
+        elif (mutation_type_context_for_probabilities == SBS_24):
+            # SBS24 has e.g.: T:C>A --> C>A
+            chr_based_mutation_df[MUTATION] = chr_based_mutation_df[MUTATION].str[2:]
+        elif (mutation_type_context_for_probabilities == SBS_6):
+            # SBS_6 has e.g.: C>G --> C>G
+            # No action
+            pass
 
         # write
         chr_based_mutation_df.to_csv(chr_based_merged_mutations_file_path, sep='\t', header=True, index=False)

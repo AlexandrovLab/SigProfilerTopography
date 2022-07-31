@@ -35,10 +35,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS96
-from SigProfilerTopography.source.commons.TopographyCommons import SBS384
-from SigProfilerTopography.source.commons.TopographyCommons import SBS1536
-from SigProfilerTopography.source.commons.TopographyCommons import SBS3072
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_96
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_384
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_1536
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_6144
 
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
 
@@ -269,7 +269,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       log_file,
                                                                       verbose):
 
-    if ((SBS96 in mutation_types_contexts) or (SBS384 in mutation_types_contexts) or (SBS1536 in mutation_types_contexts) or (SBS3072 in mutation_types_contexts)):
+    if ((SBS_96 in mutation_types_contexts) or (SBS_384 in mutation_types_contexts) or (SBS_1536 in mutation_types_contexts) or (SBS_6144 in mutation_types_contexts)):
 
         for simNum in range(0,numofSimulations+1):
             jobs = []
@@ -309,7 +309,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                     mutationIndex = columnNamesList.index(MUTATION)
                     signatures = columnNamesList[(mutationIndex + 1):]
                     ###########################################
-                    chrBased_subs_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND],inplace=True, errors='ignore', axis=1)
+                    chrBased_subs_df.drop([CHROM, MUTATIONLONG, TRANSCRIPTIONSTRAND], inplace=True, errors='ignore', axis=1)
                     chrBased_subs_df['Signature'] = (chrBased_subs_df.loc[:, signatures]).idxmax(axis=1)
 
                     # Add new column. We take the probability of signature with highest probability

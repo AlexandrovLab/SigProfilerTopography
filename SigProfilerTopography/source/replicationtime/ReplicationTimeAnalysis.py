@@ -134,8 +134,12 @@ def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_ge
     ###################################################################
 
     filetype_BEDGRAPH = isFileTypeBedGraph(repliseqDataFilename)
+    file_extension = os.path.splitext(os.path.basename(repliseqDataFilename))[1]
 
-    if filetype_BEDGRAPH:
+    if file_extension.lower() == '.bedgraph':
+        column_names = [CHROM, START, END, SIGNAL]
+        replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+    elif filetype_BEDGRAPH:
         column_names = [CHROM, START, END, SIGNAL]
         replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
     else:

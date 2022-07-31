@@ -33,7 +33,7 @@ import statsmodels.stats.multitest
 from decimal import Decimal
 import scipy
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS96
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_96
 from SigProfilerTopography.source.commons.TopographyCommons import AVERAGE_SIGNAL_ARRAY
 from SigProfilerTopography.source.commons.TopographyCommons import ACCUMULATED_COUNT_ARRAY
 
@@ -564,7 +564,7 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
 
 
 def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname,numberofSubs,numberofIndels,numberofDinucs,numberofSimulations,mutationType,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus,plot_mode):
-    if mutationType==SBS96:
+    if mutationType == SBS_96:
         to_be_added_to_the_filename='SBS%s' %(mutationType)
     else:
         to_be_added_to_the_filename=mutationType
@@ -593,7 +593,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         else:
             filename = 'Aggregated_All_Mutations_%s_%s_%s.png' %(to_be_added_to_the_filename,libraryFilenameMemo,filenameEnd)
 
-        if (SBS96==mutationType):
+        if (SBS_96 == mutationType):
             realAggregatedSubstitutions = readData(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
         if (ID==mutationType):
             realAggregatedIndels = readData(None,None, AGGREGATEDINDELS, outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
@@ -601,7 +601,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
             realAggregatedDinucs = readData(None,None,AGGREGATEDDINUCS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
 
         if (numberofSimulations>0):
-            if (SBS96==mutationType):
+            if (SBS_96 == mutationType):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
             if (ID==mutationType):
                 listofSimulationsAggregatedIndels = readDataForSimulations(None,None,AGGREGATEDINDELS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
@@ -616,15 +616,15 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
         else:
             filename = '%s_Aggregated_All_Mutations_%s_%s_%s.png' % (sample,to_be_added_to_the_filename,libraryFilenameMemo,filenameEnd)
 
-        if (SBS96 == mutationType):
+        if (SBS_96 == mutationType):
             realAggregatedSubstitutions = readData(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
         if (ID == mutationType):
             realAggregatedIndels = readData(sample,None,SAMPLEBASED_AGGREGATEDINDELS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
         if (DBS == mutationType):
             realAggregatedDinucs = readData(sample,None,SAMPLEBASED_AGGREGATEDDINUCS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
 
-        if (numberofSimulations>0):
-            if (SBS96 == mutationType):
+        if (numberofSimulations > 0):
+            if (SBS_96 == mutationType):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
             if (ID == mutationType):
                 listofSimulationsAggregatedIndels = readDataForSimulations(sample, None,SAMPLEBASED_AGGREGATEDINDELS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
@@ -656,7 +656,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     listofLegends = []
 
     if (plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL):
-        if (SBS96 == mutationType):
+        if (SBS_96 == mutationType):
             real_label = 'Real Aggregated SBSs'
             simulated_label = 'Simulated Aggregated SBSs'
         elif (DBS == mutationType):
@@ -704,7 +704,7 @@ def plotAllMutationsPooledWithSimulations(xlabel,ylabel,sample,outputDir,jobname
     text=""
 
     # Subs
-    if (mutationType==SBS96) and (numberofSubs>0):
+    if (mutationType == SBS_96) and (numberofSubs>0):
         subs_text="{:,} subs".format(numberofSubs)
         text=subs_text
 
@@ -808,7 +808,7 @@ def plotSignatureBasedFigures(mutationType,
         # For epigenomics, epigenomics_dir_name can be different from EPIGENOMICSOCCUPANCY
         ylabel = 'Average epigenomics signal'
 
-    if (mutationType == SBS96):
+    if (mutationType == SBS_96):
         xlabel = 'Interval around single base substitution (bp)'
         # label = 'Single Base Substitutions'
         label = 'SBSs'
@@ -2480,7 +2480,7 @@ def occupancyAverageSignalFigures(outputDir,
                 print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
                 log_out.close()
 
-            plotSignatureBasedFigures(SBS96,
+            plotSignatureBasedFigures(SBS_96,
                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2SubsSignature2NumberofMutationsDict,
                                       outputDir,
