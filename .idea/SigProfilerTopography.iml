@@ -20,6 +20,7 @@
     <orderEntry type="module" module-name="Test" />
     <orderEntry type="module" module-name="Collaborations" />
     <orderEntry type="module" module-name="MachineLearning" />
+    <orderEntry type="module" module-name="SigProfilerTopographyCombiner" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

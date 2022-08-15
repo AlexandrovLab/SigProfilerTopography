@@ -34,12 +34,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTION
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS
-
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_96
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_384
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_1536
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_6144
-
+from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
@@ -269,7 +264,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       log_file,
                                                                       verbose):
 
-    if ((SBS_96 in mutation_types_contexts) or (SBS_384 in mutation_types_contexts) or (SBS_1536 in mutation_types_contexts) or (SBS_6144 in mutation_types_contexts)):
+    if any(mutation_type_context in mutation_types_contexts for mutation_type_context in SBS_CONTEXTS):
 
         for simNum in range(0,numofSimulations+1):
             jobs = []

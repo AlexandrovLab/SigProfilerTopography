@@ -574,9 +574,13 @@ def plot_processivity_figure(outputDir,
         plot1.clear()
         plt.close(plot1)
 
+# main
 def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, log_file, verbose):
 
+    all_processivity_df = None
+
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,PROCESSIVITY)
+
     if verbose:
         log_out = open(log_file,'a')
         print('\tVerbose Topography.py jobnamePath:%s ' %jobnamePath, file=log_out)
@@ -605,13 +609,16 @@ def processivityFigures(outputDir, jobname, numberofSimulations, processivity_si
         processivity_df_list.append(processivity_df)
 
     # Vertically combine dfs
-    processivity_df = pd.concat(processivity_df_list)
+    # Avoid ValueError: No objects to concatenate
+    if len(processivity_df_list) > 0:
+        all_processivity_df = pd.concat(processivity_df_list)
 
     # Using dataframes
-    plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,
-                                                                              jobname,
-                                                                              processivity_df,
-                                                                              numberofSimulations,
-                                                                              processivity_significance_level,
-                                                                              log_file,
-                                                                              verbose)
+    if (all_processivity_df is not None) and (len(all_processivity_df.index) > 0):
+        plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(outputDir,
+                                                                                  jobname,
+                                                                                  all_processivity_df,
+                                                                                  numberofSimulations,
+                                                                                  processivity_significance_level,
+                                                                                  log_file,
+                                                                                  verbose)

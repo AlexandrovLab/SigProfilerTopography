@@ -1704,7 +1704,6 @@ def plotBarPlotsUsingDataframes(outputDir,
 def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                              jobname,
                                                              numberofSimulations,
-                                                             mutation_types_contexts,
                                                              strand_bias_list,
                                                              plot_mode,
                                                              odds_ratio_cutoff,
@@ -1732,15 +1731,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     strandbias_figures_excel_files_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES)
 
     # Read dataframes related with signatures and samples
-    for mutation_type_context in mutation_types_contexts:
-        if (mutation_type_context in SBS_CONTEXTS):
-            subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-            subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-    if (DBS in mutation_types_contexts):
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    subsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+    dinucsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+    indelsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+
+    if os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
+        subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(subsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+        subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+
+    if os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
+        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(dinucsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-    if (ID in mutation_types_contexts):
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename),sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+
+    if os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
 
     # Step1 Read p_value from strand asymmetry analysis results under data folder
@@ -2486,6 +2490,9 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
         # make aspect ratio square
         ax.set_aspect(1.0)
 
+        # make axis background white
+        ax.set_facecolor('white')
+
         for fold_change_index, fold_change_string in enumerate(fold_change_strings):
             for row_signature_index, row_signature in enumerate(rows_signatures):
                 if (strand_bias == LAGGING_VERSUS_LEADING):
@@ -2572,17 +2579,17 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                         radius_transcribed = 0.49
                         radius_untranscribed = 0.49
                         if (radius_transcribed>radius_untranscribed):
-                            #First transcribed
+                            # First transcribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_transcribed, color='royalblue', fill=True)
                             ax.add_artist(circle)
-                            #Second untranscribed
+                            # Second untranscribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_untranscribed, color='yellowgreen', fill=True)
                             ax.add_artist(circle)
                         else:
-                            #First untranscribed
+                            # First untranscribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_untranscribed, color='yellowgreen', fill=True)
                             ax.add_artist(circle)
-                            #Second transcribed
+                            # Second transcribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_transcribed, color='royalblue', fill=True)
                             ax.add_artist(circle)
 
@@ -2620,17 +2627,17 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                         radius_genic = 0.49
                         radius_intergenic = 0.49
                         if (radius_genic > radius_intergenic):
-                            #First genic
+                            # First genic
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_genic, color='cyan', fill=True)
                             ax.add_artist(circle)
-                            #Second intergenic
+                            # Second intergenic
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_intergenic, color='gray', fill=True)
                             ax.add_artist(circle)
                         else:
-                            #First untranscribed
+                            # First untranscribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_intergenic, color='gray', fill=True)
                             ax.add_artist(circle)
-                            #Second transcribed
+                            # Second transcribed
                             circle = plt.Circle((fold_change_index + 0.5, row_signature_index + 0.5), radius_genic, color='cyan', fill=True)
                             ax.add_artist(circle)
 
@@ -2674,6 +2681,11 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
         # Gridlines based on major ticks
         ax.grid(which='major', color='black')
+
+        # change all spines
+        for axis in ['top', 'bottom', 'left', 'right']:
+            ax.spines[axis].set_linewidth(2)
+            ax.spines[axis].set_color('black')
 
         # create the directory if it does not exists
         filename = '%s_Signatures_%s_with_circles_%s.png' % (signature_type,strand_bias,str(SIGNIFICANCE_LEVEL).replace('.','_'))
@@ -2753,6 +2765,10 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
 
         # make aspect ratio square
         panel1.set_aspect(1.0)
+
+        # make axis background white
+        panel1.set_facecolor('white')
+
         panel1.text(len(fold_change_strings)*3, len(rows_sbs_signatures)+2.5, title,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
 
         # Colors from SigProfilerPlotting tool to be consistent
