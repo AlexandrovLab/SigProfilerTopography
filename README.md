@@ -136,22 +136,22 @@ This section will guide you through the minimum steps required to run SigProfile
 
 	+ The run below will also plot the resulting figures.
 
-	```
-	from SigProfilerTopography import Topography as topography
+		````
+		from SigProfilerTopography import Topography as topography
 
-	def main_function():
-	 genome= 'GRCh37'
-	 inputDir = '/path/to/sample_vcfs/'
-	 outputDir = '/path/to/output_dir/'
-	 jobname = 'sample_21_vcfs'
-	 numofSimulations = 10
-	 sbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
-	 dbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
-	 topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
+		def main_function():
+		 genome= 'GRCh37'
+		 inputDir = '/path/to/sample_vcfs/'
+		 outputDir = '/path/to/output_dir/'
+		 jobname = 'sample_21_vcfs'
+		 numofSimulations = 10
+		 sbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt'
+		 dbs_probabilities_file_path = '/path/to/sample_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt'
+		 topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True)
 
-	if __name__ == "__main__":
-	 main_function()
-	```
+		if __name__ == "__main__":
+		 main_function()
+		````
 
 **INPUT FILE FORMAT**
 
@@ -208,7 +208,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		>> topography.install_nucleosome('GRCh38', 'GM12878')
 		````
 
-+ SigProfilerTopography downloads chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` of interest which requires ~6 GB of storage.
+	+ SigProfilerTopography downloads chrom based signal arrays from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/nucleosome/chrbased/*  for the `nucleosome_biosample` of interest which requires ~6 GB of storage.
 
 	+ Then you have to include `nucleosome_biosample='GM12878'` in the `runAnalyses` call as follows:
 
@@ -228,13 +228,13 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		>> topography.install_repli_seq('GRCh38', 'HELAS3')
 		````
 	
-+ Then you have to include `replication_time_biosample='HELAS3'` in the `runAnalyses` call as follows:
-	            
-	````
-	>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='HELAS3')
-	````
-	                    
-+ SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest which requires ~20-100 MB of storage.
+	+ Then you have to include `replication_time_biosample='HELAS3'` in the `runAnalyses` call as follows:
+		            
+		````
+		>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='HELAS3')
+		````
+		                    
+	+ SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest which requires ~20-100 MB of storage.
 
                     
 
@@ -255,8 +255,8 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		epigenomics_files_list=[histone_dna_binding_file1, histone_dna_binding_file2, ctcf_dna_binding_file1, ctcf_dna_binding_file2, atac_seq_open_chromatin_region_file1, atac_seq_open_chromatin_region_file2]
 		````
 
-+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
-		`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
+	+ Then you need to provide `epigenomics_files` in the `runAnalyses` call as follows:
+			`>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,epigenomics_files=epigenomics_files_list)`
 
 	
 + **NUCLEOSOME OCCUPANCY**
