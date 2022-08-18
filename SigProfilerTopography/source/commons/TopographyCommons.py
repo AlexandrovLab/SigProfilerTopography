@@ -169,6 +169,7 @@ GM06990 = 'GM06990'
 GM12801 = 'GM12801'
 GM12812 = 'GM12812'
 GM12813 = 'GM12813'
+HEK293 = 'HEK293'
 
 MEF = "MEF"
 ESC = "ESC"
@@ -220,7 +221,7 @@ SIGPROFILERTOPOGRAPHY_DEFAULT_FILES = [GM12878_NUCLEOSOME_OCCUPANCY_FILE,
                                        DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
                                        ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq]
 
-# REPLICATION  TIME FILES
+# GRCh37 Replication Timing Files
 MCF7_REPLICATION_TIME_SIGNAL_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7WaveSignalRep1.wig'
 MCF7_REPLICATION_TIME_VALLEY_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7ValleysRep1.bed'
 MCF7_REPLICATION_TIME_PEAK_FILE = 'GSM923442_hg19_wgEncodeUwRepliSeqMcf7PkRep1.bed'
@@ -281,11 +282,72 @@ GM12813_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1.
 GM12813_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813ValleysRep1.bed'
 GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
 
-# GRCh38
-IMR90_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqImr90WaveSignalRep1_GRCh38.bed'
-IMR90_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqImr90ValleysRep1_GRCh38_4_cols_only.bed'
-IMR90_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqImr90PkRep1_GRCh38_4_cols_only.bed'
+# GRCh38 Replication Timing Files
+MCF7_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqMcf7WaveSignalRep1_GRCh38.bed'
+MCF7_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqMcf7WaveSignalRep1_GRCh38_Valleys.bed'
+MCF7_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqMcf7WaveSignalRep1_GRCh38_Pk.bed'
 
+HEPG2_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHepg2WaveSignalRep1_GRCh38.bed'
+HEPG2_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHepg2WaveSignalRep1_GRCh38_Valleys.bed'
+HEPG2_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHepg2WaveSignalRep1_GRCh38_Pk.bed'
+
+HELAS3_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHelas3WaveSignalRep1_GRCh38.bed'
+HELAS3_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHelas3WaveSignalRep1_GRCh38_Valleys.bed'
+HELAS3_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHelas3WaveSignalRep1_GRCh38_Pk.bed'
+
+SKNSH_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqSknshWaveSignalRep1_GRCh38.bed'
+SKNSH_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqSknshWaveSignalRep1_GRCh38_Valleys.bed'
+SKNSH_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqSknshWaveSignalRep1_GRCh38_Pk.bed'
+
+K562_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqK562WaveSignalRep1_GRCh38.bed'
+K562_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqK562WaveSignalRep1_GRCh38_Valleys.bed'
+K562_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqK562WaveSignalRep1_GRCh38_Pk.bed'
+
+IMR90_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqImr90WaveSignalRep1_GRCh38.bed'
+IMR90_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqImr90WaveSignalRep1_GRCh38_Valleys.bed'
+IMR90_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqImr90WaveSignalRep1_GRCh38_Pk.bed'
+
+NHEK_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqNhekWaveSignalRep1_GRCh38.bed'
+NHEK_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqNhekWaveSignalRep1_GRCh38_Valleys.bed'
+NHEK_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqNhekWaveSignalRep1_GRCh38_Pk.bed'
+
+BJ_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqBjWaveSignalRep1_GRCh38.bed'
+BJ_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqBjWaveSignalRep1_GRCh38_Valleys.bed'
+BJ_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqBjWaveSignalRep1_GRCh38_Pk.bed'
+
+HUVEC_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqHuvecWaveSignalRep1_GRCh38.bed'
+HUVEC_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqHuvecWaveSignalRep1_GRCh38_Valleys.bed'
+HUVEC_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqHuvecWaveSignalRep1_GRCh38_Pk.bed'
+
+BG02ES_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqBg02esWaveSignalRep1_GRCh38.bed'
+BG02ES_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqBg02esWaveSignalRep1_GRCh38_Valleys.bed'
+BG02ES_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqBg02esWaveSignalRep1_GRCh38_Pk.bed'
+
+GM12878_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12878WaveSignalRep1_GRCh38.bed'
+GM12878_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12878WaveSignalRep1_GRCh38_Valleys.bed'
+GM12878_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12878WaveSignalRep1_GRCh38_Pk.bed'
+
+GM06990_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm06990WaveSignalRep1_GRCh38.bed'
+GM06990_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm06990WaveSignalRep1_GRCh38_Valleys.bed'
+GM06990_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm06990WaveSignalRep1_GRCh38_Pk.bed'
+
+GM12801_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12801WaveSignalRep1_GRCh38.bed'
+GM12801_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12801WaveSignalRep1_GRCh38_Valleys.bed'
+GM12801_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12801WaveSignalRep1_GRCh38_Pk.bed'
+
+GM12812_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12812WaveSignalRep1_GRCh38.bed'
+GM12812_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12812WaveSignalRep1_GRCh38_Valleys.bed'
+GM12812_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12812WaveSignalRep1_GRCh38_Pk.bed'
+
+GM12813_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1_GRCh38.bed'
+GM12813_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1_GRCh38_Valleys.bed'
+GM12813_GRCh38_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1_GRCh38_Pk.bed'
+
+HEK293_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg38.bedgraph'
+HEK293_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg38_Valleys.bed'
+HEK293_GRCh38_REPLICATION_TIME_PEAK_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg38_Pk.bed'
+
+# mm10 Replication Timing Files
 MEF_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JVQ_mm10_embryonic_fibroblast_wavelet_smoothed_signal.wig'
 
 ENDODERM_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JUX_mm10.bed'
@@ -293,8 +355,14 @@ ENDODERM_REPLICATION_TIME_SIGNAL_VALLEY_FILE = 'ENCFF001JUX_mm10_ValleysRep1.bed
 ENDODERM_REPLICATION_TIME_SIGNAL_PEAK_FILE = 'ENCFF001JUX_mm10_PkRep1.bed'
 
 available_nucleosome_biosamples = [GM12878, K562, ESC, MEF]
-available_replication_time_biosamples = [GM12878, K562, MCF7, HEPG2, HELAS3, SKNSH, IMR90, NHEK,
-                                         BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813]
+
+# Update when new biosample is provided
+GRCh37_available_replication_time_biosamples = [GM12878, K562, MCF7, HEPG2, HELAS3, SKNSH, IMR90, NHEK,
+                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813]
+
+# Update when new biosample is provided
+GRCh38_available_replication_time_biosamples = [GM12878, K562, MCF7, HEPG2, HELAS3, SKNSH, IMR90, NHEK,
+                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813, HEK293]
 
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
@@ -896,19 +964,13 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
     replication_time_peak_file = None
 
     if replication_time_biosample is not None:
+        # mm10
         if (genome == MM10 and replication_time_biosample == ENDODERM ):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, ENDODERM_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, ENDODERM_REPLICATION_TIME_SIGNAL_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, ENDODERM_REPLICATION_TIME_SIGNAL_PEAK_FILE)
 
-        elif (genome == GRCh37 and replication_time_biosample == GM12878):
-            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_SIGNAL_FILE)
-            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_VALLEY_FILE)
-            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_PEAK_FILE)
-        elif (genome == GRCh37 and replication_time_biosample == K562):
-            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_SIGNAL_FILE)
-            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_VALLEY_FILE)
-            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_PEAK_FILE)
+        # GRCh37
         elif (genome == GRCh37 and replication_time_biosample == MCF7):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, MCF7_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, MCF7_REPLICATION_TIME_VALLEY_FILE)
@@ -925,6 +987,10 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,SKNSH_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == K562):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh37 and replication_time_biosample == IMR90):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,IMR90_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,IMR90_REPLICATION_TIME_VALLEY_FILE)
@@ -945,6 +1011,10 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == GM12878):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh37 and replication_time_biosample == GM06990):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM06990_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM06990_REPLICATION_TIME_VALLEY_FILE)
@@ -962,10 +1032,71 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_PEAK_FILE)
 
+        # GRCh38
+        elif (genome == GRCh38 and replication_time_biosample == MCF7):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, MCF7_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, MCF7_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, MCF7_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == HEPG2):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEPG2_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEPG2_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEPG2_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == HELAS3):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HELAS3_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HELAS3_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HELAS3_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == SKNSH) :
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, SKNSH_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, SKNSH_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, SKNSH_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == K562):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP,LIB, REPLICATION, K562_GRCh38_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh38 and replication_time_biosample == IMR90):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, IMR90_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, IMR90_GRCh38_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, IMR90_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == NHEK):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, NHEK_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, NHEK_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, NHEK_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == BJ):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BJ_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BJ_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BJ_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == HUVEC):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == BG02ES):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == GM12878):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12878_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12878_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12878_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == GM06990):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM06990_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM06990_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM06990_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == GM12801):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12801_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12801_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12801_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == GM12812):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12812_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12812_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12812_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == GM12813):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == HEK293):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_PEAK_FILE)
 
     return replication_time_signal_file, replication_time_valley_file, replication_time_peak_file
 

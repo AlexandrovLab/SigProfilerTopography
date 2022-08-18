@@ -49,6 +49,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
 from SigProfilerTopography.source.commons.TopographyCommons import K562
+from SigProfilerTopography.source.commons.TopographyCommons import GM12878
 from SigProfilerTopography.source.commons.TopographyCommons import MCF7
 from SigProfilerTopography.source.commons.TopographyCommons import IMR90
 
@@ -64,7 +65,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import getNucleosome
 from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
 
 from SigProfilerTopography.source.commons.TopographyCommons import available_nucleosome_biosamples
-from SigProfilerTopography.source.commons.TopographyCommons import available_replication_time_biosamples
+
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh37_available_replication_time_biosamples
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh38_available_replication_time_biosamples
 
 from SigProfilerTopography.source.commons.TopographyCommons import EPIGENOMICSOCCUPANCY
 from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOMEOCCUPANCY
@@ -98,6 +101,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import MM10_mmNuc002
 from SigProfilerTopography.source.commons.TopographyCommons import MM10_MEF_NUCLEOSOME_FILE
 
 from SigProfilerTopography.source.commons.TopographyCommons import GM12878_NUCLEOSOME_OCCUPANCY_FILE
+from SigProfilerTopography.source.commons.TopographyCommons import GM12878_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
 
 from SigProfilerTopography.source.commons.TopographyCommons import K562_NUCLEOSOME_OCCUPANCY_FILE
 from SigProfilerTopography.source.commons.TopographyCommons import K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
@@ -338,7 +342,10 @@ def prepareMutationsDataAfterMatrixGenerationAndExtractorForTopography(chromShor
     return df_columns_contain_ordered_signatures
 
 
-def check_download_replication_time_files(replication_time_signal_file, replication_time_valley_file, replication_time_peak_file):
+def check_download_replication_time_files(replication_time_signal_file,
+                                          replication_time_valley_file,
+                                          replication_time_peak_file):
+
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
 
     # These are currently full path, therefore convert them to filename
@@ -587,55 +594,72 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
     os.chdir(current_abs_path)
 
 
-def install_default_nucleosome(genome):
+def install_nucleosome(genome, biosample = None):
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
 
-    if genome == MM10:
-        nucleosome_file = MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
+    # default files
+    if biosample is None:
+        if genome == MM10:
+            nucleosome_file = MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
 
-    elif genome == GRCh37:
-        nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
+        elif genome == GRCh37:
+            nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
 
-    elif genome == GRCh38:
-        nucleosome_file = K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
+        elif genome == GRCh38:
+            nucleosome_file = K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
+
+    elif biosample is not None:
+        if genome == GRCh37 and biosample == GM12878:
+            nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
+
+        if genome == GRCh38 and biosample == GM12878:
+            nucleosome_file = GM12878_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
 
     check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 
 
-def install_default_atac_seq(genome):
+def install_atac_seq(genome, biosample=None):
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
 
-    if genome == GRCh37:
-        atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+    if biosample is None:
+        if genome == GRCh37:
+            atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
 
-    elif genome == GRCh38:
-        atac_seq_file = DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
+        elif genome == GRCh38:
+            atac_seq_file = DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
 
-    elif genome == MM10:
-        atac_seq_file = ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
+        elif genome == MM10:
+            atac_seq_file = ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
 
     check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
-def install_default_repli_seq(genome):
-    if genome == MM10:
-        replication_time_biosample = ENDODERM
-        replication_time_signal_file, \
-        replication_time_valley_file, \
-        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+def install_repli_seq(genome, biosample):
 
-    elif genome == GRCh37:
-        replication_time_biosample = MCF7
-        replication_time_signal_file, \
-        replication_time_valley_file, \
-        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+    if biosample is None:
+        if genome == MM10:
+            replication_time_biosample = ENDODERM
+            replication_time_signal_file, \
+            replication_time_valley_file, \
+            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
 
-    elif genome == GRCh38:
-        replication_time_biosample = IMR90
+        elif genome == GRCh37:
+            replication_time_biosample = MCF7
+            replication_time_signal_file, \
+            replication_time_valley_file, \
+            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+
+        elif genome == GRCh38:
+            replication_time_biosample = IMR90
+            replication_time_signal_file, \
+            replication_time_valley_file, \
+            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+
+    elif biosample is not None:
         replication_time_signal_file, \
         replication_time_valley_file, \
-        replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+        replication_time_peak_file = getReplicationTimeFiles(genome, biosample)
 
     check_download_replication_time_files(replication_time_signal_file,
                                           replication_time_valley_file,
@@ -966,10 +990,8 @@ def runAnalyses(genome,
                 id_probabilities = None,
                 sigprofiler_extractor_sbs_mutation_context = None, # If none auto detected from provided sbs_probabilities. Shows the mutation context type in sbs probabilities file which must be one of SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
                 epigenomics_files = None,
-                epigenomics_files_memos = None,
-                epigenomics_biosamples = None,
-                epigenomics_dna_elements = None,
-                epigenomics_dir_name = None,
+                epigenomics_biosamples = None, # epigenomics_file in epigenomics_files must contain biosamples e.g.: lung
+                epigenomics_dna_elements = None, # epigenomics_file in epigenomics_files must contain dna_elements e.g.: CTCF
                 nucleosome_biosample = None,
                 nucleosome_file = None,
                 replication_time_biosample = None,
@@ -1164,6 +1186,7 @@ def runAnalyses(genome,
                             DEFAULT_H3K4ME3_OCCUPANCY_FILE,
                             DEFAULT_CTCF_OCCUPANCY_FILE]
 
+        # Set internally  using epigenomics_files
         epigenomics_files_memos = []
         for epigenomics_file in epigenomics_files:
             epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
@@ -1328,10 +1351,10 @@ def runAnalyses(genome,
                                                       replication_time_valley_file,
                                                       replication_time_peak_file)
 
-        # Case2: Files are not set, Only biosample is set and available.
+        # Case2: Files are None, biosample is not None and available.
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is not None):
-            if (replication_time_biosample in available_replication_time_biosamples):
+            if (replication_time_biosample in GRCh37_available_replication_time_biosamples):
                 replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
                 if (replication_time or replication_strand_bias):
                     # For using SigProfilerTopography Provided Replication Time Files
@@ -1350,7 +1373,8 @@ def runAnalyses(genome,
         # We need full path of the library files
         # By default replication_time_biosample = IMR90 and signal, valley, peak files are None
         # Case1: Files are not set, Biosample is not set
-        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and (replication_time_peak_file is None) and (replication_time_biosample is None):
+        if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
+                (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = IMR90
             replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
@@ -1360,7 +1384,20 @@ def runAnalyses(genome,
                                                       replication_time_peak_file)
 
         # Case2: Replication timing files are given with fullpath (User provided). Biosample is not set.
-        # Case3: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
+        # Case2: Files are None, biosample is not None and available.
+        elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
+                (replication_time_peak_file is None) and (replication_time_biosample is not None):
+            if (replication_time_biosample in GRCh38_available_replication_time_biosamples):
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+                if (replication_time or replication_strand_bias):
+                    # For using SigProfilerTopography Provided Replication Time Files
+                    check_download_replication_time_files(replication_time_signal_file,
+                                                          replication_time_valley_file,
+                                                          replication_time_peak_file)
+
+
+        # Case3: Replication timing files are given with fullpath (User provided). Biosample is not set.
+        # Case4: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
         elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or
               (replication_time_peak_file is not None)):
             if (replication_time_biosample is None):
@@ -2427,10 +2464,8 @@ def runAnalyses(genome,
     if (epigenomics):
         # Epigenomics
         # If there is  a user provided name use it as occupancy_type
-        if (epigenomics_dir_name is not None):
-            occupancy_type = epigenomics_dir_name
-        else:
-            occupancy_type = EPIGENOMICSOCCUPANCY
+
+        occupancy_type = EPIGENOMICSOCCUPANCY
 
         if delete_old:
             deleteOldData(outputDir,jobname,occupancy_type)
@@ -2519,7 +2554,6 @@ def runAnalyses(genome,
                     epigenomics_files_memos,
                     epigenomics_biosamples,
                     epigenomics_dna_elements,
-                    epigenomics_dir_name,
                     nucleosome_file,
                     nucleosome_biosample,
                     epigenomics,
@@ -2577,7 +2611,6 @@ def plotFigures(outputDir,
                 epigenomics_files_memos,
                 epigenomics_biosamples,
                 epigenomics_dna_elements,
-                epigenomics_dir_name,
                 nucleosome_file,
                 nucleosome_biosample,
                 epigenomics,
@@ -2691,10 +2724,7 @@ def plotFigures(outputDir,
         log_out.close()
 
     if (epigenomics or plot_epigenomics):
-        if epigenomics_dir_name is not None:
-            occupancy_type=epigenomics_dir_name
-        else:
-            occupancy_type=EPIGENOMICSOCCUPANCY
+        occupancy_type = EPIGENOMICSOCCUPANCY
 
         if delete_old:
             deleteOldFigures(outputDir, jobname, occupancy_type)
