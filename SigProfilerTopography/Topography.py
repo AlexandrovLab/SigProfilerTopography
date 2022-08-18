@@ -635,7 +635,7 @@ def install_atac_seq(genome, biosample=None):
 
     check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
 
-def install_repli_seq(genome, biosample):
+def install_repli_seq(genome, biosample=None):
 
     if biosample is None:
         if genome == MM10:

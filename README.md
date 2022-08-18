@@ -105,11 +105,11 @@ This section will guide you through the minimum steps required to run SigProfile
 
 	For GRCh37 (hg19) install GRCh37 reference genome as follows:
 
-		```
-		$ python
-		>> from SigProfilerMatrixGenerator import install as genInstall
-		>> genInstall.install('GRCh37', rsync=False, bash=True)
-		```
+	````
+	$ python
+	>> from SigProfilerMatrixGenerator import install as genInstall
+	>> genInstall.install('GRCh37', rsync=False, bash=True)
+	````
 	This will install the human GRCh37 assembly as a reference genome. 
 	
 	If you have a firewall on your server, you may need to install rsync and use the rsync=True parameter. Similarly, if you do not have bash, use bash=False.
