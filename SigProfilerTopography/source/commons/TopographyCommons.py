@@ -26,6 +26,7 @@ import psutil
 import scipy
 from scipy import stats
 from scipy.stats import sem, t
+from functools import reduce
 
 from statsmodels.stats.weightstats import ztest
 
@@ -1368,7 +1369,7 @@ def fill_signature_number_of_mutations_df(outputDir,
 
         all_samples = all_samples.union(chrbased_samples)
 
-        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+        if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
 
             if mutation_type in mutationType2PropertiesDict:
                 mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
@@ -1388,7 +1389,7 @@ def fill_signature_number_of_mutations_df(outputDir,
         # update all_samples
         all_samples = all_samples.union(chrbased_samples)
 
-        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
+        if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
             # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
             # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
             signatures = get_signatures(chrBased_mutation_df)
@@ -1397,7 +1398,7 @@ def fill_signature_number_of_mutations_df(outputDir,
                 number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
                 number_of_all_mutations = chrBased_mutation_df.shape[0] # number of rows: all mutations
 
-                samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > 0]['Sample'].unique()
+                samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff]['Sample'].unique() # > 0
                 sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values, dtype=np.float64) # > 0
 
                 if df[df['signature'] == signature].values.any():
@@ -1458,6 +1459,7 @@ def fill_signature_cutoff_properties_df(outputDir,
                                         num_of_sbs_required,
                                         num_of_id_required,
                                         num_of_dbs_required,
+                                        exceptions,
                                         mutationType2PropertiesDict,
                                         chrLong2NumberofMutationsDict):
 
@@ -1558,8 +1560,25 @@ def fill_signature_cutoff_properties_df(outputDir,
         all_cutoffs_df['average_probability'] = all_cutoffs_df['average_probability'].astype(np.float32)
         all_cutoffs_df.to_csv(os.path.join(outputDir, jobname, DATA, table_allcutoffs_signature_numberofmutations_averageprobability_filename), sep='\t', index=False)
 
+        ex_df_list = []
+        if exceptions is not None:
+            for ex_signature, ex_avg_prob in exceptions.items():
+
+                ex_df = df[(df['number_of_mutations'] >= number_of_required_mutations) &
+                                  (df['signature'] == ex_signature) &
+                                  (df['average_probability'] >= ex_avg_prob)]
+                ex_df_list.append(ex_df)
+
+
         # Step3 Find signatures and cutoffs that satisfy the conditions
         df = df[(df['number_of_mutations'] >= number_of_required_mutations) & (df['average_probability'] >= average_probability)]
+
+        # Step4 Concat df with all_exceptions_df
+        if len(ex_df_list) > 0:
+            all_exceptions_df = reduce(lambda x,y: pd.concat([x,y], axis=0), ex_df_list)
+
+            if len(all_exceptions_df.index) > 0:
+                df = pd.concat([df, all_exceptions_df], axis=0)
 
         # group by signature select signature row with min cutoff
         # grouped = df.groupby('signature')['cutoff'].min().reset_index() # works and resulys in 2 columns: signature column
@@ -3321,13 +3340,19 @@ def readProbabilities(probabilitiesFile, log_file, verbose):
     # probabilities_df[MUTATION] = probabilities_df[MUTATION].astype('category')
 
     if ('Sample Names' in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={'Sample Names': 'category', 'MutationTypes': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'category', 'MutationTypes': 'category'})
         probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
+    elif ('Sample Names' in probabilities_df.columns.values) and ('MutationType' in probabilities_df.columns.values):
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'category', 'MutationType': 'category'})
+        probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationType': MUTATION}, inplace=True)
     elif ('Sample Names' not in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={'MutationTypes': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationTypes': 'category'})
         probabilities_df.rename(columns={'MutationTypes': MUTATION}, inplace=True)
+    elif ('Sample Names' not in probabilities_df.columns.values) and ('MutationType' in probabilities_df.columns.values):
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationType': 'category'})
+        probabilities_df.rename(columns={'MutationType': MUTATION}, inplace=True)
     else:
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0,dtype={SAMPLE: 'category', MUTATION: 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={SAMPLE: 'category', MUTATION: 'category'})
 
     # Mutation_Probabilities.txt for SBS96
     # Sample Names    MutationTypes   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40

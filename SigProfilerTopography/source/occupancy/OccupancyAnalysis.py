@@ -377,6 +377,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
         jobname,
         chrLong,
         simNum,
+        samples_of_interest,
         chromSizesDict,
         library_file_with_path,
         library_file_type,
@@ -394,6 +395,17 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations(
 
     try:
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
+
+        # filter chrbased_df for samples_of_interest
+        if samples_of_interest is not None:
+            if chrBased_simBased_subs_df is not None:
+                chrBased_simBased_subs_df = chrBased_simBased_subs_df[chrBased_simBased_subs_df['Sample'].isin(samples_of_interest)]
+
+            if chrBased_simBased_dinucs_df is not None:
+                chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[chrBased_simBased_dinucs_df['Sample'].isin(samples_of_interest)]
+
+            if chrBased_simBased_indels_df is not None:
+                chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
 
         return chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                                                                         occupancy_calculation_type,
@@ -1142,6 +1154,7 @@ def occupancyAnalysis(genome,
                         outputDir,
                         jobname,
                         numofSimulations,
+                        samples_of_interest,
                         job_tuples,
                         library_file_with_path,
                         library_file_memo,
@@ -1296,6 +1309,7 @@ def occupancyAnalysis(genome,
                                                    jobname,
                                                    chrLong,
                                                    simNum,
+                                                   samples_of_interest,
                                                    chromSizesDict,
                                                    library_file_with_path,
                                                    library_file_type,
@@ -1356,6 +1370,7 @@ def occupancyAnalysis(genome,
                                    jobname,
                                    chrLong,
                                    simNum,
+                                   samples_of_interest,
                                    chromSizesDict,
                                    library_file_with_path,
                                    library_file_type,

@@ -258,6 +258,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       outputDir,
                                                                       jobname,
                                                                       numofSimulations,
+                                                                      samples_of_interest,
                                                                       considerProbabilityInProcessivityAnalysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                       parallel_mode,
@@ -296,6 +297,12 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
 
             for chrLong in chromNamesList:
                 chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+
+                # filter chrbased_df for samples_of_interest
+                if samples_of_interest is not None:
+                    if chrBased_subs_df is not None:
+                        chrBased_subs_df = chrBased_subs_df[chrBased_subs_df['Sample'].isin(samples_of_interest)]
+
                 if (chrBased_subs_df is not None):
                     ###########################################
                     chrBased_subs_df.drop([SIMULATION_NUMBER], inplace=True, errors='ignore', axis=1)
@@ -369,6 +376,7 @@ def processivityAnalysis(mutation_types_contexts,
                          outputDir,
                          jobname,
                          numofSimulations,
+                         samples_of_interest,
                          considerProbabilityInProcessivityAnalysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                          parallel_mode,
@@ -388,6 +396,7 @@ def processivityAnalysis(mutation_types_contexts,
                                                                       outputDir,
                                                                       jobname,
                                                                       numofSimulations,
+                                                                      samples_of_interest,
                                                                       considerProbabilityInProcessivityAnalysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                       parallel_mode,

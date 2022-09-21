@@ -821,6 +821,7 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
                                                                                                            chrLong,
                                                                                                            chromSize,
                                                                                                            sim_num,
+                                                                                                           samples_of_interest,
                                                                                                            chrBased_grouped_decile_df_list,
                                                                                                            ordered_sbs_signatures,
                                                                                                            ordered_dbs_signatures,
@@ -833,6 +834,18 @@ def combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_simbased_
 
     # To reduce memory usage
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
+
+    # filter chrbased_df for samples_of_interest
+    if samples_of_interest is not None:
+        if chrBased_simBased_subs_df is not None:
+            chrBased_simBased_subs_df = chrBased_simBased_subs_df[chrBased_simBased_subs_df['Sample'].isin(samples_of_interest)]
+
+        if chrBased_simBased_dinucs_df is not None:
+            chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[chrBased_simBased_dinucs_df['Sample'].isin(samples_of_interest)]
+
+        if chrBased_simBased_indels_df is not None:
+            chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
+
 
     return combined_generateReplicationTimeNPArrayAndSearchMutationsOnNPArray_using_numpy_array(chrLong,
                                                                                                 chromSize,
@@ -1021,6 +1034,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
         outputDir,
         jobname,
         numofSimulations,
+        samples,
         job_tuples,
         chromSizesDict,
         chromNamesList,
@@ -1113,6 +1127,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                                            chrLong,
                                            chromSize,
                                            simNum,
+                                           samples,
                                            chrBased_grouped_decile_df_list,
                                            ordered_sbs_signatures,
                                            ordered_dbs_signatures,
@@ -1127,7 +1142,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
             pool.close()
             pool.join()
 
-        elif (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
+        elif (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
 
             numofProcesses = multiprocessing.cpu_count()
             pool = multiprocessing.Pool(processes=numofProcesses)
@@ -1165,6 +1180,7 @@ def calculateCountsForMutationsFillingReplicationTimeNPArrayRuntime_using_numpy_
                       chrLong,
                       chromSize,
                       simNum,
+                      samples,
                       chrBased_grouped_decile_df_list,
                       ordered_sbs_signatures,
                       ordered_dbs_signatures,
@@ -1470,6 +1486,7 @@ def replicationTimeAnalysis(computationType,
                             outputDir,
                             jobname,
                             numofSimulations,
+                            samples,
                             job_tuples,
                             repliseqDataFilename,
                             ordered_sbs_signatures_with_cutoffs,
@@ -1568,6 +1585,7 @@ def replicationTimeAnalysis(computationType,
         outputDir,
         jobname,
         numofSimulations,
+        samples,
         job_tuples,
         chromSizesDict,
         chromNamesList,

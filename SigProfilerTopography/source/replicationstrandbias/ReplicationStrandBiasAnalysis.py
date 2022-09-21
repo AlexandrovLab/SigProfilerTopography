@@ -1089,6 +1089,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    jobname,
                                                                    chrLong,
                                                                    simNum,
+                                                                   samples_of_interest,
                                                                    SBS6_mutation_types_np_array,
                                                                    SBS96_mutation_types_np_array,
                                                                    ordered_sbs_signatures,
@@ -1131,6 +1132,18 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
 
     if chrBased_replication_array is not None:
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
+
+        # filter chrbased_df for samples_of_interest
+        if samples_of_interest is not None:
+
+            if chrBased_simBased_subs_df is not None:
+                chrBased_simBased_subs_df = chrBased_simBased_subs_df[chrBased_simBased_subs_df['Sample'].isin(samples_of_interest)]
+
+            if chrBased_simBased_dinucs_df is not None:
+                chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[chrBased_simBased_dinucs_df['Sample'].isin(samples_of_interest)]
+
+            if chrBased_simBased_indels_df is not None:
+                chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
 
         return searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                           chrBased_simBased_dinucs_df,
@@ -1245,6 +1258,7 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
 def replicationStrandBiasAnalysis(outputDir,
                                   jobname,
                                   numofSimulations,
+                                  samples_of_interest,
                                   job_tuples,
                                   sample_based,
                                   all_samples_np_array,
@@ -1366,6 +1380,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                               jobname,
                                               chrLong,
                                               simNum,
+                                              samples_of_interest,
                                               SBS6_mutation_types_np_array,
                                               SBS96_mutation_types_np_array,
                                               ordered_sbs_signatures,
@@ -1420,6 +1435,7 @@ def replicationStrandBiasAnalysis(outputDir,
                                                jobname,
                                                chrLong,
                                                simNum,
+                                               samples_of_interest,
                                                SBS6_mutation_types_np_array,
                                                SBS96_mutation_types_np_array,
                                                ordered_sbs_signatures,

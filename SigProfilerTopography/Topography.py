@@ -683,6 +683,7 @@ def runOccupancyAnalyses(genome,
                          outputDir,
                          jobname,
                          numofSimulations,
+                         samples_of_interest,
                          job_tuples,
                          sample_based,
                          library_file_with_path,
@@ -721,6 +722,7 @@ def runOccupancyAnalyses(genome,
                       outputDir,
                       jobname,
                       numofSimulations,
+                      samples_of_interest,
                       job_tuples,
                       library_file_with_path,
                       library_file_memo,
@@ -742,6 +744,7 @@ def runReplicationTimeAnalysis(genome,
                                outputDir,
                                jobname,
                                numofSimulations,
+                               samples,
                                job_tuples,
                                sample_based,
                                replicationTimeFilename,
@@ -773,6 +776,7 @@ def runReplicationTimeAnalysis(genome,
                             outputDir,
                             jobname,
                             numofSimulations,
+                            samples,
                             job_tuples,
                             replicationTimeFilename,
                             ordered_sbs_signatures_with_cutoffs,
@@ -792,6 +796,7 @@ def runReplicationTimeAnalysis(genome,
 def runReplicationStrandBiasAnalysis(outputDir,
                                      jobname,
                                      numofSimulations,
+                                     samples_of_interest,
                                      job_tuples,
                                      sample_based,
                                      all_samples_np_array,
@@ -825,6 +830,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
     replicationStrandBiasAnalysis(outputDir,
                                   jobname,
                                   numofSimulations,
+                                  samples_of_interest,
                                   job_tuples,
                                   sample_based,
                                   all_samples_np_array,
@@ -850,6 +856,7 @@ def runReplicationStrandBiasAnalysis(outputDir,
 def runTranscriptionStradBiasAnalysis(outputDir,
                                       jobname,
                                       numofSimulations,
+                                      samples_of_interest,
                                       job_tuples,
                                       sample_based,
                                       all_samples_np_array,
@@ -875,6 +882,7 @@ def runTranscriptionStradBiasAnalysis(outputDir,
     transcriptionStrandBiasAnalysis(outputDir,
                                     jobname,
                                     numofSimulations,
+                                    samples_of_interest,
                                     job_tuples,
                                     sample_based,
                                     all_samples_np_array,
@@ -897,6 +905,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                             outputDir,
                             jobname,
                             numofSimulations,
+                            samples_of_interest,
                             chromNamesList,
                             processivity_calculation_type,
                             processivity_inter_mutational_distance,
@@ -917,6 +926,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                          outputDir,
                          jobname,
                          numofSimulations,
+                         samples_of_interest,
                          considerProbabilityInProcessivityAnalysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                          parallel_mode,
@@ -983,11 +993,12 @@ def runAnalyses(genome,
                 outputDir,
                 jobname,
                 numofSimulations,
+                samples_of_interest = None, # runAnalyses only for these samples if samples is not None but a non-empty list
                 gender = 'female', # default is 'female', other option is 'male' for SigProfilerSimulator for simulations using SigProfilerSimulator
                 matrix_generator_path = MATRIX_GENERATOR_PATH, # for SigProfilerMatrixGenerator
-                sbs_probabilities = None, # Second (1-based) column must hold mutation type contexts.
-                dbs_probabilities = None,
-                id_probabilities = None,
+                sbs_probabilities = None, # Second column must hold mutation type contexts. If None aggregated analysis for all single base substitutions, else aggregated + signature based analyses
+                dbs_probabilities = None, # If None aggregated analysis for all doublet base substitutions, else aggregated + signature based analyses
+                id_probabilities = None, # If None aggregated analysis for small insertions and deletions, else aggregated + signature based analyses
                 sigprofiler_extractor_sbs_mutation_context = None, # If none auto detected from provided sbs_probabilities. Shows the mutation context type in sbs probabilities file which must be one of SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
                 epigenomics_files = None,
                 epigenomics_biosamples = None, # epigenomics_file in epigenomics_files must contain biosamples e.g.: lung
@@ -1009,10 +1020,10 @@ def runAnalyses(genome,
                 mutation_annotation_integration = False,
                 sample_based = False,
                 step1_matgen_real_data = True,
-                step2_sim_data = True,
+                step2_gen_sim_data = True,
                 step3_matgen_sim_data = True,
                 step4_merge_prob_data = True,
-                step5_tables = True,
+                step5_gen_tables = True,
                 verbose = False,
                 PCAWG = False,
                 discreet_mode = True, # discreet_mode = False for prob_mode
@@ -1023,6 +1034,7 @@ def runAnalyses(genome,
                 num_of_sbs_required = 2000,
                 num_of_dbs_required = 200,
                 num_of_id_required = 1000,
+                exceptions = None, # to consider exceptional signatures with average probability < 0.75 e.g.: exceptions = {SBS32 : 0.63} for Biliary-AdenoCA
                 plot_figures = True,
                 plot_epigenomics = False,
                 plot_nucleosome = False,
@@ -1137,27 +1149,21 @@ def runAnalyses(genome,
     log_out.write("Date and Clock time when the execution started: " + str(tic) + "\n\n\n")
 
     ############################## Log and Error Files #######################################
+    if step5_gen_tables:
+        # step5_gen_tables requires sigprofiler_simulator_mutation_type_contexts
+        if os.path.exists(inputDir):
+            # Step1 fills sigprofiler_simulator_mutation_type_contexts by matrices coming from matrix_generator of real data
+            step1_matgen_real_data = True
+        else:
+            # Fill sigprofiler_simulator_mutation_type_contexts by default values
+            sigprofiler_simulator_sbs_mutation_context = SBS_96
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
 
-    if step1_matgen_real_data:
-        step2_sim_data = True
-        step3_matgen_sim_data = True
-        step4_merge_prob_data = True
-        step5_tables = True
-    elif step2_sim_data:
-        step3_matgen_sim_data = True
-        step4_merge_prob_data = True
-        step5_tables = True
-    elif step3_matgen_sim_data:
-        step4_merge_prob_data = True
-        step5_tables = True
-    elif step4_merge_prob_data:
-        step5_tables = True
+            sigprofiler_simulator_dbs_mutation_context = DBS
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
 
-    if (average_probability != DEFAULT_AVERAGE_PROBABILITY) or \
-            (num_of_sbs_required != DEFAULT_NUM_OF_SBS_REQUIRED) or \
-            (num_of_dbs_required != DEFAULT_NUM_OF_DBS_REQUIRED) or \
-            (num_of_id_required != DEFAULT_NUM_OF_ID_REQUIRED):
-        step4_tables = True
+            sigprofiler_simulator_id_mutation_context = ID
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
 
     #################################################################################
     ################################## Setting starts ###############################
@@ -1175,88 +1181,99 @@ def runAnalyses(genome,
         plot_transcription_strand_bias = True
 
     # Epigenomics Occupancy
+    # Set internally  using epigenomics_files
+    epigenomics_files_memos = []
+
     # We need full path of the library files
-    if (genome == GRCh37) and (epigenomics_files == None):
-        epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
-                            DEFAULT_H3K27ME3_OCCUPANCY_FILE,
-                            DEFAULT_H3K36ME3_OCCUPANCY_FILE,
-                            DEFAULT_H3K9ME3_OCCUPANCY_FILE,
-                            DEFAULT_H3K27AC_OCCUPANCY_FILE,
-                            DEFAULT_H3K4ME1_OCCUPANCY_FILE,
-                            DEFAULT_H3K4ME3_OCCUPANCY_FILE,
-                            DEFAULT_CTCF_OCCUPANCY_FILE]
+    if (epigenomics_files == None):
 
-        # Set internally  using epigenomics_files
-        epigenomics_files_memos = []
-        for epigenomics_file in epigenomics_files:
-            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
+        if (genome == GRCh37):
+            epigenomics_files = [DEFAULT_ATAC_SEQ_OCCUPANCY_FILE,
+                                DEFAULT_H3K27ME3_OCCUPANCY_FILE,
+                                DEFAULT_H3K36ME3_OCCUPANCY_FILE,
+                                DEFAULT_H3K9ME3_OCCUPANCY_FILE,
+                                DEFAULT_H3K27AC_OCCUPANCY_FILE,
+                                DEFAULT_H3K4ME1_OCCUPANCY_FILE,
+                                DEFAULT_H3K4ME3_OCCUPANCY_FILE,
+                                DEFAULT_CTCF_OCCUPANCY_FILE]
 
-        # Defines columns in the heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_dna_elements = ['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
+            for epigenomics_file in epigenomics_files:
+                epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
 
-        # Defines rows in the detailed heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_biosamples = ['breast_epithelium']
+            # Defines columns in the heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_dna_elements = ['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
 
-        for file_index, filename in enumerate(epigenomics_files):
-            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-        # These files must be under epigenomics under installed SigPofilerTopography except ATAC-seq file
+            # Defines rows in the detailed heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_biosamples = ['breast_epithelium']
 
-    elif (genome == GRCh38) and (epigenomics_files == None):
-        epigenomics_files = [DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K27ME3_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K36ME3_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K9ME3_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K27AC_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K4ME1_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_H3K4ME3_GRCh38_OCCUPANCY_FILE,
-                            DEFAULT_CTCF_GRCh38_OCCUPANCY_FILE]
+            for file_index, filename in enumerate(epigenomics_files):
+                epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+            # These files must be under epigenomics under installed SigPofilerTopography except ATAC-seq file
 
-        epigenomics_files_memos = []
-        for epigenomics_file in epigenomics_files:
-            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
+        elif (genome == GRCh38):
+            epigenomics_files = [DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K27ME3_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K36ME3_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K9ME3_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K27AC_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K4ME1_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_H3K4ME3_GRCh38_OCCUPANCY_FILE,
+                                DEFAULT_CTCF_GRCh38_OCCUPANCY_FILE]
 
-        # Defines columns in the heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_dna_elements = ['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
+            for epigenomics_file in epigenomics_files:
+                epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
 
-        # Defines rows in the detailed heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_biosamples = ['lung']
+            # Defines columns in the heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_dna_elements = ['H3K27me3', 'H3K36me3', 'H3K9me3', 'H3K27ac', 'H3K4me1', 'H3K4me3', 'CTCF', 'ATAC']
 
-        for file_index, filename in enumerate(epigenomics_files):
-            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
-        # These files must be under epigenomics under installed SigProfilerTopography except ATAC-seq file
+            # Defines rows in the detailed heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_biosamples = ['lung']
 
-    elif (genome == MM10) and (epigenomics_files == None):
-        epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
-                            ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1,
-                            ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3,
-                            ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF,
-                            ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A,
-                            ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac]
+            for file_index, filename in enumerate(epigenomics_files):
+                epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+            # These files must be under epigenomics under installed SigProfilerTopography except ATAC-seq file
 
-        epigenomics_files_memos = []
-        for epigenomics_file in epigenomics_files:
-            epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
+        elif (genome == MM10):
+            epigenomics_files = [ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq,
+                                ENCFF993SRY_mm10_embryonic_fibroblast_H3K4me1,
+                                ENCFF912DNP_mm10_embryonic_fibroblast_H3K4me3,
+                                ENCFF611HDQ_mm10_embryonic_fibroblast_CTCF,
+                                ENCFF152DUV_mm10_embryonic_fibroblast_POLR2A,
+                                ENCFF114VLZ_mm10_embryonic_fibroblast_H3K27ac]
 
-        # Defines columns in the heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_dna_elements = ['ATAC', 'H3K4me1', 'H3K4me3', 'CTCF', 'POLR2A', 'H3K27ac']
+            for epigenomics_file in epigenomics_files:
+                epigenomics_files_memos.append(os.path.splitext(os.path.basename(epigenomics_file))[0])
 
-        # Defines rows in the detailed heatmap
-        # These strings must be within filenames (without file extension)
-        # Order is not important
-        epigenomics_biosamples = ['embryonic_fibroblast']
+            # Defines columns in the heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_dna_elements = ['ATAC', 'H3K4me1', 'H3K4me3', 'CTCF', 'POLR2A', 'H3K27ac']
 
-        for file_index, filename in enumerate(epigenomics_files):
-            epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+            # Defines rows in the detailed heatmap
+            # These strings must be within filenames (without file extension)
+            # Order is not important
+            epigenomics_biosamples = ['embryonic_fibroblast']
+
+            for file_index, filename in enumerate(epigenomics_files):
+                epigenomics_files[file_index] = os.path.join(current_abs_path, LIB, EPIGENOMICS, filename)
+
+    elif epigenomics_files is not None:
+        # User have provided epigenomics_files
+        for idx, epigenomics_file in enumerate(epigenomics_files):
+            epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
+            epigenomics_files_memos.append(epigenomics_file_memo)
+
+        # Used for plotting
+        if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
+            epigenomics_biosamples = [UNDECLARED]
 
     # Nucleosome Occupancy
     if genome == MM10:
@@ -1403,22 +1420,6 @@ def runAnalyses(genome,
             if (replication_time_biosample is None):
                 replication_time_biosample = UNDECLARED
 
-    # Data files are named using user provided epigenomics_files_memos or using epigenomics_file_memos_created
-    epigenomics_file_memos_created = []
-
-    # Run for each epigenomics file
-    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-        if epigenomics_files is not None:
-            for idx, epigenomics_file in enumerate(epigenomics_files):
-                epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
-                epigenomics_file_memos_created.append(epigenomics_file_memo)
-
-    # Used for plotting
-    if (epigenomics_files_memos is None) or (len(epigenomics_files_memos) != len(epigenomics_files)):
-        epigenomics_files_memos = epigenomics_file_memos_created
-
-    if (epigenomics_biosamples is None) or (len(epigenomics_biosamples) == 0):
-        epigenomics_biosamples = [UNDECLARED]
 
     #################################################################################
     ################## Set full path library files ends #############################
@@ -1454,6 +1455,11 @@ def runAnalyses(genome,
         print('--- id_probabilities:%s' %id_probabilities, file=log_out)
 
     print('--- numofSimulations:%d' %numofSimulations, file=log_out)
+
+    if samples_of_interest is not None:
+        print('\n--- samples_of_interest:%s' %samples_of_interest, file=log_out)
+        print('--- len(samples_of_interest):%d' % len(samples_of_interest), file=log_out)
+
     print('\n--- epigenomics_files:%s' %epigenomics_files, file=log_out)
     print('--- epigenomics_files_memos:%s' %epigenomics_files_memos, file=log_out)
     print('--- epigenomics_biosamples:%s' %epigenomics_biosamples, file=log_out)
@@ -1488,10 +1494,10 @@ def runAnalyses(genome,
         print('--- Strand-coordinated Mutagenesis Analysis.', file=log_out)
 
     print('--- step1_matgen_real_data:%s' %step1_matgen_real_data, file=log_out)
-    print('--- step2_sim_data:%s' %step2_sim_data, file=log_out)
+    print('--- step2_gen_sim_data:%s' %step2_gen_sim_data, file=log_out)
     print('--- step3_matgen_sim_data:%s' %step3_matgen_sim_data, file=log_out)
     print('--- step4_merge_prob_data:%s' %step4_merge_prob_data, file=log_out)
-    print('--- step5_tables:%s' % step5_tables, file=log_out)
+    print('--- step5_gen_tables:%s' % step5_gen_tables, file=log_out)
 
     print('--- plot_figures:%s' %plot_figures, file=log_out)
     if discreet_mode:
@@ -1558,6 +1564,9 @@ def runAnalyses(genome,
             print('--- sigprofiler_simulator_mutation_types_contexts has to be set before SigProfilerTopography run.', file=log_out)
 
         print('\n--- sigprofiler_simulator_mutation_types_contexts:%s' % sigprofiler_simulator_mutation_types_contexts, file=log_out)
+        print('--- sigprofiler_simulator_sbs_mutation_context:%s' %sigprofiler_simulator_sbs_mutation_context, file=log_out)
+        print('--- sigprofiler_simulator_dbs_mutation_context:%s' %sigprofiler_simulator_dbs_mutation_context, file=log_out)
+        print('--- sigprofiler_simulator_id_mutation_context:%s' % sigprofiler_simulator_id_mutation_context, file=log_out)
         print('--- sigprofiler_extractor_mutation_types_contexts:%s' % sigprofiler_extractor_mutation_types_contexts, file=log_out)
 
         # original matrix generator chrbased data will be under inputDir/output/vcf_files/SNV
@@ -1574,7 +1583,7 @@ def runAnalyses(genome,
     ###################################################################################################################
     ################################## Step2 Simulations if any starts ################################################
     ###################################################################################################################
-    if ((numofSimulations > 0) and (step2_sim_data)):
+    if ((step2_gen_sim_data) and (numofSimulations > 0)):
 
         ###################################################################################################
         ############################  SigProfilerSimulator for n simulations starts #######################
@@ -1947,16 +1956,16 @@ def runAnalyses(genome,
     mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
     chrlong_numberofmutations_df = pd.DataFrame()
 
-    if (step5_tables):
+    if (step5_gen_tables):
         log_out = open(log_file, 'a')
         print('#################################################################################', file=log_out)
         print('--- Fill tables/dictionaries using original data starts', file=log_out)
         start_time = time.time()
         log_out.close()
 
-        # For each signature we will find a cutoff value for mutations with average probability >=0.9
-        # Our aim is to have at most 10% false positive rate in mutations
-        # number of mutations >= 5K for subs signatures
+        # For each signature we will find a cutoff value for mutations with average probability >= 0.75
+        # Our aim is to have at most 25% false positive rate in mutations
+        # number of mutations >= 2K for subs signatures
         # number of mutations >= 1K for indels signatures
         # number of mutations >= 200 for dinuc signatures
         # If we can not satisfy this condition we will discard the signature
@@ -1984,6 +1993,7 @@ def runAnalyses(genome,
                     num_of_sbs_required,
                     num_of_id_required,
                     num_of_dbs_required,
+                    exceptions,
                     mutationType2PropertiesDict,
                     chrLong2NumberofMutationsDict)
 
@@ -2023,6 +2033,7 @@ def runAnalyses(genome,
                     num_of_sbs_required,
                     num_of_id_required,
                     num_of_dbs_required,
+                    exceptions,
                     mutationType2PropertiesDict,
                     chrLong2NumberofMutationsDict)
 
@@ -2062,6 +2073,7 @@ def runAnalyses(genome,
                     num_of_sbs_required,
                     num_of_id_required,
                     num_of_dbs_required,
+                    exceptions,
                     mutationType2PropertiesDict,
                     chrLong2NumberofMutationsDict)
 
@@ -2140,19 +2152,19 @@ def runAnalyses(genome,
         # This part is deprecated
         if sample_based:
             # Using original data
-            if any(mutation_type_context in sigprofiler_extractor_mutation_types_contexts for mutation_type_context in SBS_CONTEXTS):
+            if any(mutation_type_context in sigprofiler_simulator_mutation_types_contexts for mutation_type_context in SBS_CONTEXTS):
                 fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SUBS,
                                                   subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                   num_of_sbs_required, num_of_id_required,
                                                   num_of_dbs_required)
-            if (DBS in sigprofiler_extractor_mutation_types_contexts):
+            if (DBS in sigprofiler_simulator_mutation_types_contexts):
                 fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DINUCS,
                                                   dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                                   num_of_sbs_required,
                                                   num_of_id_required,
                                                   num_of_dbs_required)
 
-            if (ID in sigprofiler_extractor_mutation_types_contexts):
+            if (ID in sigprofiler_simulator_mutation_types_contexts):
                 fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, INDELS,
                                                   indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                                   num_of_sbs_required,
@@ -2292,6 +2304,7 @@ def runAnalyses(genome,
                              outputDir,
                              jobname,
                              numofSimulations,
+                             samples_of_interest,
                              job_tuples,
                              sample_based,
                              nucleosome_file,
@@ -2335,6 +2348,7 @@ def runAnalyses(genome,
                                    outputDir,
                                    jobname,
                                    numofSimulations,
+                                   samples_of_interest,
                                    job_tuples,
                                    sample_based,
                                    replication_time_signal_file,
@@ -2372,6 +2386,7 @@ def runAnalyses(genome,
         runReplicationStrandBiasAnalysis(outputDir,
                                          jobname,
                                          numofSimulations,
+                                         samples_of_interest,
                                          job_tuples,
                                          sample_based,
                                          all_samples_np_array,
@@ -2409,6 +2424,7 @@ def runAnalyses(genome,
         runTranscriptionStradBiasAnalysis(outputDir,
                                           jobname,
                                           numofSimulations,
+                                          samples_of_interest,
                                           job_tuples,
                                           sample_based,
                                           all_samples_np_array,
@@ -2446,6 +2462,7 @@ def runAnalyses(genome,
                                 outputDir,
                                 jobname,
                                 numofSimulations,
+                                samples_of_interest,
                                 chromNamesList,
                                 processivity_calculation_type,
                                 processivity_inter_mutational_distance,
@@ -2482,6 +2499,7 @@ def runAnalyses(genome,
                                  outputDir,
                                  jobname,
                                  numofSimulations,
+                                 samples_of_interest,
                                  job_tuples,
                                  sample_based,
                                  epigenomics_file,

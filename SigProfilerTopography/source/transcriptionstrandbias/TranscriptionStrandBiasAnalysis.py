@@ -662,6 +662,7 @@ def searchAllMutations_simbased_chrombased(outputDir,
                                         jobname,
                                         chrLong,
                                         simNum,
+                                        samples_of_interest,
                                         sample_based,
                                         all_samples_np_array,
                                         six_mutation_types_np_array,
@@ -688,6 +689,18 @@ def searchAllMutations_simbased_chrombased(outputDir,
     subs_signature_mutation_type_nontranscribed_np_array = np.zeros((number_of_sbs_signatures, six_mutation_types_np_array.size)) # dtype=int
 
     chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
+
+    # filter chrbased_df for samples_of_interest
+    if samples_of_interest is not None:
+        if chrBased_simBased_subs_df is not None:
+            chrBased_simBased_subs_df = chrBased_simBased_subs_df[chrBased_simBased_subs_df['Sample'].isin(samples_of_interest)]
+
+        if chrBased_simBased_dinucs_df is not None:
+            chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[chrBased_simBased_dinucs_df['Sample'].isin(samples_of_interest)]
+
+        if chrBased_simBased_indels_df is not None:
+            chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
+
 
     if sample_based:
         all_samples_np_array_size=all_samples_np_array.size
@@ -740,6 +753,7 @@ def searchAllMutations_simbased_chrombased(outputDir,
 def transcriptionStrandBiasAnalysis(outputDir,
                                     jobname,
                                     numofSimulations,
+                                    samples_of_interest,
                                     job_tuples,
                                     sample_based,
                                     all_samples_np_array,
@@ -844,6 +858,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                               jobname,
                                               chrLong,
                                               simNum,
+                                              samples_of_interest,
                                               sample_based,
                                               all_samples_np_array,
                                               six_mutation_types_np_array,
@@ -895,6 +910,7 @@ def transcriptionStrandBiasAnalysis(outputDir,
                                                jobname,
                                                chrLong,
                                                simNum,
+                                               samples_of_interest,
                                                sample_based,
                                                all_samples_np_array,
                                                six_mutation_types_np_array,
