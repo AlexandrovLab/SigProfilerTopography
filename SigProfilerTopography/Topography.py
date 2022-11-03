@@ -1028,8 +1028,8 @@ def runAnalyses(genome,
                 PCAWG = False,
                 discreet_mode = True, # discreet_mode = False for prob_mode
                 show_all_signatures = False, # you can set True for prob_mode
-                average_probability = 0.75, # applies for discreet_mode=True
-                default_cutoff = 0.5, # applies for discreet_mode=False
+                average_probability = 0.75, # applies for discreet_mode=True mutations_avg_probability >= average_probability
+                default_cutoff = 0.5, # applies for discreet_mode=False mutation_signature_probability >= default_cutoff
                 parallel_mode = True,
                 num_of_sbs_required = 2000,
                 num_of_dbs_required = 200,
@@ -1056,6 +1056,7 @@ def runAnalyses(genome,
                 num_of_real_data_avg_overlap = 100, # for occupancy analysis
                 odds_ratio_cutoff = 1.1, # for strand asymmetry analysis
                 percentage_of_real_mutations_cutoff = 5, # for strand asymmetry analysis
+                ylim_multiplier = 1.25, # for strand asymmetry analysis
                 processivity_calculation_type = CONSIDER_DISTANCE,  # for strand coordinated mutagenesis
                 processivity_inter_mutational_distance = 10000,  # for strand coordinated mutagenesis
                 processivity_significance_level = 0.05  # for strand coordinated mutagenesis
@@ -2598,7 +2599,8 @@ def runAnalyses(genome,
                     fold_change_window_size,
                     num_of_real_data_avg_overlap,
                     odds_ratio_cutoff,
-                    percentage_of_real_mutations_cutoff)
+                    percentage_of_real_mutations_cutoff,
+                    ylim_multiplier)
 
         log_out = open(log_file, 'a')
         print('#################################################################################', file=log_out)
@@ -2655,7 +2657,8 @@ def plotFigures(outputDir,
                 fold_change_window_size,
                 num_of_real_data_avg_overlap,
                 odds_ratio_cutoff,
-                percentage_of_real_mutations_cutoff):
+                percentage_of_real_mutations_cutoff,
+                ylim_multiplier):
 
     if (nucleosome or plot_nucleosome):
         occupancy_type = NUCLEOSOMEOCCUPANCY
@@ -2698,7 +2701,8 @@ def plotFigures(outputDir,
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,
-                                                                 percentage_of_real_mutations_cutoff)
+                                                                 percentage_of_real_mutations_cutoff,
+                                                                 ylim_multiplier)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)
@@ -2709,7 +2713,8 @@ def plotFigures(outputDir,
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,
-                                                                 percentage_of_real_mutations_cutoff)
+                                                                 percentage_of_real_mutations_cutoff,
+                                                                 ylim_multiplier)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)
@@ -2720,7 +2725,8 @@ def plotFigures(outputDir,
         transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname, numberofSimulations,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,
-                                                                 percentage_of_real_mutations_cutoff)
+                                                                 percentage_of_real_mutations_cutoff,
+                                                                 ylim_multiplier)
 
         log_out = open(log_file, 'a')
         print("--- Plot strand bias ends", file=log_out)

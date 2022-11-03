@@ -21,6 +21,8 @@
     <orderEntry type="module" module-name="Collaborations" />
     <orderEntry type="module" module-name="MachineLearning" />
     <orderEntry type="module" module-name="SigProfilerTopographyCombiner" />
+    <orderEntry type="module" module-name="SigProfilerExtractor-master" />
+    <orderEntry type="module" module-name="SigProfilerAssignment-main" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

@@ -415,7 +415,8 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
                                      width,
                                      plot_mode,
                                      odds_ratio_cutoff,
-                                     percentage_of_real_mutations_cutoff):
+                                     percentage_of_real_mutations_cutoff,
+                                     ylim_multiplier):
 
     # Here we can take into difference between strand1_values and strand2_values while deciding on significance
     from matplotlib import rcParams
@@ -446,7 +447,8 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
         ax.tick_params(axis='y', labelsize=35)
 
         locs, labels = plt.yticks()
-        ax.set_ylim(0, locs[-1] + 5000)
+        # ax.set_ylim(0, locs[-1] + 5000)
+        ax.set_ylim(0, locs[-1] * ylim_multiplier)
 
         # To make the bar width not too wide
         if len(ind) < 6:
@@ -477,7 +479,7 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
             simulationsStrand2Name = 'Simulated %s' % (strand2Name)
             if ((rects1 is not None) and (rects2 is not None) and (rects3 is not None) and (rects4 is not None)):
                 if ((len(rects1) > 0) and (len(rects2) > 0) and (len(rects3) > 0) and (len(rects4) > 0)):
-                    legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 25}, ncol=1, loc='best')
+                    legend = ax.legend((rects1[0], rects2[0], rects3[0], rects4[0]),(realStrand1Name, realStrand2Name, simulationsStrand1Name, simulationsStrand2Name),prop={'size': 25}, ncol=2, loc='best')
         else:
             # Old way with no simulations
             ax.set_xticks(ind + width / 2)
@@ -1588,7 +1590,8 @@ def plotBarPlotsUsingDataframes(outputDir,
                                 figureName,
                                 plot_mode,
                                 odds_ratio_cutoff,
-                                percentage_of_real_mutations_cutoff):
+                                percentage_of_real_mutations_cutoff,
+                                ylim_multiplier):
 
     # signature_strand1_versus_strand2_df column names here
     # ['cancer_type', 'signature', 'mutation_type',
@@ -1695,7 +1698,8 @@ def plotBarPlotsUsingDataframes(outputDir,
                                              width,
                                              plot_mode,
                                              odds_ratio_cutoff,
-                                             percentage_of_real_mutations_cutoff)
+                                             percentage_of_real_mutations_cutoff,
+                                             ylim_multiplier)
 
 
 
@@ -1707,7 +1711,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                              strand_bias_list,
                                                              plot_mode,
                                                              odds_ratio_cutoff,
-                                                             percentage_of_real_mutations_cutoff):
+                                                             percentage_of_real_mutations_cutoff,
+                                                             ylim_multiplier):
 
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data
@@ -2346,7 +2351,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                      width,
                                                      plot_mode,
                                                      odds_ratio_cutoff,
-                                                     percentage_of_real_mutations_cutoff)
+                                                     percentage_of_real_mutations_cutoff,
+                                                     ylim_multiplier)
 
     # Plot Bar Plots --- SBS Signatures
     if not subsSignature_cutoff_numberofmutations_averageprobability_df.empty:
@@ -2367,7 +2373,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         'mutationtypes_transcription_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,
-                                        percentage_of_real_mutations_cutoff)
+                                        percentage_of_real_mutations_cutoff,
+                                        ylim_multiplier)
 
         if GENIC_VERSUS_INTERGENIC in strand_bias_list:
             plotBarPlotsUsingDataframes(outputDir,
@@ -2386,7 +2393,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         'mutationtypes_genic_versus_intergenic_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,
-                                        percentage_of_real_mutations_cutoff)
+                                        percentage_of_real_mutations_cutoff,
+                                        ylim_multiplier)
 
         if LAGGING_VERSUS_LEADING in strand_bias_list:
             plotBarPlotsUsingDataframes(outputDir,
@@ -2405,7 +2413,8 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         'mutationtypes_replication_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,
-                                        percentage_of_real_mutations_cutoff)
+                                        percentage_of_real_mutations_cutoff,
+                                        ylim_multiplier)
 
     # Circle Bar Plots
     # Plot circle plots and bar plots all together
