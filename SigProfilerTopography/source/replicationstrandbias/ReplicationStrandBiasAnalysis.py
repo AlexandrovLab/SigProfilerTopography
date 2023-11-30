@@ -592,7 +592,7 @@ def checkforValidness(chrBased_valleys_peaks_df):
     return True
 
 
-def get_chr_based_replication_strand_array_for_callback(chrLong,chromSize,repliseq_signal_df,valleys_df,peaks_df):
+def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
     chrBased_replication_array = get_chr_based_replication_strand_array(chrLong,
                                                                         chromSize,
                                                                         repliseq_signal_df,
@@ -1205,12 +1205,12 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
                                                                         log_file)
 
     def write_chrom_based_replication_array(result_tuple):
-        chrLong=result_tuple[0]
-        chrBased_replication_array=result_tuple[1]
+        chrLong = result_tuple[0]
+        chrBased_replication_array = result_tuple[1]
         if (chrBased_replication_array is not None):
             os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED), exist_ok=True)
             # File name without extension
-            chr_based_replication_time_file_name='%s_replication_time' %(chrLong)
+            chr_based_replication_time_file_name = '%s_replication_time' %(chrLong)
             chr_based_replication_time_file_path = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,LIB,CHRBASED,chr_based_replication_time_file_name)
             np.save(chr_based_replication_time_file_path, chrBased_replication_array)
 

@@ -2712,6 +2712,10 @@ def plot_legend(strandbias_figures_outputDir):
     for strandbias in strand_biases:
         fig = plt.figure(figsize=(4,1), dpi=300)
         ax = plt.gca()
+
+        # This code makes the background white.
+        ax.set_facecolor('white')
+
         plt.axis('off')
 
         if strandbias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
@@ -2727,7 +2731,7 @@ def plot_legend(strandbias_figures_outputDir):
                 Line2D([0], [0], marker='o', color='white', label=LAGGING, markerfacecolor='indianred', markersize=20),
                 Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=20)]
 
-        ax.legend(handles=legend_elements, bbox_to_anchor=(0, 0.5), loc='center left' ,fontsize = 20)
+        ax.legend(facecolor='white', handles=legend_elements, bbox_to_anchor=(0, 0.5), loc='center left' ,fontsize = 20)
 
         # create the directory if it does not exists
         filename = 'Legend_%s.png' % (strandbias)

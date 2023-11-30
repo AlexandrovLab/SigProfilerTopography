@@ -74,7 +74,7 @@ def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
     return simulation2Signature2ProcessiveGroupLength2PropertiesDict
 
 
-def plot_color_bar(outputDir,jobname,norm):
+def plot_color_bar(outputDir, jobname, norm):
 
     # Make a figure and axes with dimensions as desired.
     fig = plt.figure(figsize=(4, 8))
@@ -83,10 +83,11 @@ def plot_color_bar(outputDir,jobname,norm):
     cmap = cm.get_cmap('YlOrRd')  # Looks better good
     # cb=fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
 
-    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap,
-                                     norm=norm,
-                                     spacing='proportional',
-                                     orientation='vertical')
+    cb = mpl.colorbar.ColorbarBase(ax,
+                                    cmap=cmap,
+                                    norm=norm,
+                                    spacing='proportional',
+                                    orientation='vertical')
 
     # cb = plt.colorbar(cmap=cmap,ax=ax,orientation='vertical')  # this works because of the scatter
     cb.ax.set_xticklabels(cb.ax.get_xticklabels(), fontsize=20)
@@ -521,7 +522,8 @@ def plot_processivity_figure(outputDir,
         if (numberofSimulations>0):
             # Vertical/Horizontal Colorbar
             # Vertical volorbar to the right
-            cb = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))  # this works because of the scatter
+            # cb = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))  # this works because of the scatter
+            cb = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax = plt.gca())  # ax was asked
             # cb.ax.set_ylabel("-log10 (q-value)", va="bottom", rotation=-90, labelpad=25)
             cb.ax.set_ylabel("-log10 (q-value)", fontsize=50, labelpad=25)
 

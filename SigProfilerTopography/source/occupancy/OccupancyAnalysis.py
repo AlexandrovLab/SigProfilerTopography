@@ -1227,7 +1227,7 @@ def occupancyAnalysis(genome,
 
         if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bw')):
             library_file_type = BIGWIG
-            #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
+            # if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
         elif ((file_extension.lower() == '.bigbed') or (file_extension.lower() == '.bb')):
             library_file_type = BIGBED
             #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray

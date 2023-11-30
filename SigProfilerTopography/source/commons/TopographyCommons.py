@@ -149,6 +149,9 @@ NUCLEOSOME = 'nucleosome'
 REPLICATION = 'replication'
 UCSCGENOME = 'ucscgenome'
 
+LNCRNA = 'lncRNA'
+MIRNA = 'miRNA'
+
 HISTONE_MODIFICATION = "histone modification"
 TRANSCRIPTION_FACTOR = "transcription factor"
 
@@ -1395,11 +1398,19 @@ def fill_signature_number_of_mutations_df(outputDir,
             signatures = get_signatures(chrBased_mutation_df)
 
             for signature in signatures:
-                number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
-                number_of_all_mutations = chrBased_mutation_df.shape[0] # number of rows: all mutations
+                if default_cutoff > 0:
+                    number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
+                    number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
 
-                samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff]['Sample'].unique() # > 0
-                sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values, dtype=np.float64) # > 0
+                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff]['Sample'].unique()  # > 0
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values, dtype=np.float64)  # > 0
+
+                else:
+                    number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])  # > 0
+                    number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
+
+                    samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff]['Sample'].unique()  # > 0
+                    sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])[signature]).values, dtype=np.float64)  # > 0
 
                 if df[df['signature'] == signature].values.any():
                     # Update Accumulate
@@ -3391,3 +3402,10 @@ def readProbabilities(probabilitiesFile, log_file, verbose):
 
     return probabilities_df
 
+def get_genome_length(genome):
+    if genome == GRCh37:
+        genome_length = 3098825702  # from ensembl 3,098,825,702
+    elif genome == GRCh38:
+        genome_length = 3096649726  # from ensembl 3,096,649,726
+
+    return genome_length

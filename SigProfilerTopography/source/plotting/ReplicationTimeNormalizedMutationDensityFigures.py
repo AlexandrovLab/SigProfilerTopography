@@ -27,6 +27,13 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 
 from matplotlib import pyplot as plt
 
+from matplotlib.lines import Line2D
+import matplotlib.patches as mpatches
+
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+rcParams.update({'figure.max_open_warning': 0})
+
 from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
@@ -63,8 +70,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import Sample2Dinucs
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
 
-plt.rcParams.update({'figure.max_open_warning': 0})
 
+# Same plot function for aggregated mutations and signature based mutations
 def plotNormalizedMutationDensityFigureWithSimulations(title,
                                                        ylabel,
                                                        normalizedMutationDensityList,
@@ -105,33 +112,52 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
 
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, REPLICATIONTIME), exist_ok=True)
 
-    from matplotlib import rcParams
-    rcParams.update({'figure.autolayout': True})
-
     # Note if you decrease the figure size decrease the fontsize accordingly
-    fig = plt.figure(figsize=(15, 15), dpi=300)
+    # if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT and (title == 'Aggregated Substitutions' or
+    #                                                                     title == 'Aggregated Dinucs' or
+    #                                                                     title == 'Aggregated Indels'):
+        # fig = plt.figure(figsize=(17, 17), dpi=300) # wider and higher for aggregated mutations
+    # else:
+    #     fig = plt.figure(figsize=(15, 15), dpi=300)
+
+    # if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+    # else:
+    #     ax = plt.gca()
+
+    # Let's use same for aggregated mutations and signature based mutations
+    fwidth = 15
+    fheight = 15
+
+    fig = plt.figure(figsize=(fwidth, fheight), facecolor=None)
+    plt.style.use('ggplot')
+
+    # define margins -> size in inches / figure dimension
+    left_margin = 0.95 / fwidth
+    right_margin = 0.2 / fwidth
+    bottom_margin = 0.5 / fheight
+    top_margin = 0.25 / fheight
+
+    # create axes
+    # dimensions are calculated relative to the figure size
+    x = left_margin  # horiz. position of bottom-left corner
+    y = bottom_margin  # vert. position of bottom-left corner
+    w = 1 - (left_margin + right_margin)  # width of axes
+    h = 1 - (bottom_margin + top_margin)  # height of axes
+    ax = fig.add_axes([x, y, w, h])
 
     plt.style.use('ggplot')
 
-    ax = plt.gca()
     # This code makes the background white.
     ax.set_facecolor('white')
 
     # Note x get labels w.r.t. the order given here, 0 means get the 0th label from  xticks
     x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     width = 0.9  # the width of the bars
-    bars=plt.bar(x, normalizedMutationDensityList, width, label='Real Somatic Mutations', color=barcolor, edgecolor="black", linewidth=3, zorder=1)
+    plt.bar(x, normalizedMutationDensityList, width, label='Real Somatic Mutations', color=barcolor, edgecolor="black", linewidth=3, zorder=1)
 
     # plt.xticks(np.arange(10),('1st', '2nd', '3rd', '4th', '5th','6th','7th','8th','9th','10th'),rotation=20)
     # also works
     # plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-
-    if simulationsMeans is not None:
-        sims_dashed_line=plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=5, zorder =2)
-        if (simulationsLows is not None) and (simulationsHighs is not None):
-            # if (len(simulationsLows)==len(simulationsHighs)):
-            plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs),facecolor=fillcolor, zorder =2)
-
 
     if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL:
         plt.title(title, fontsize=40, fontweight='bold')
@@ -160,14 +186,45 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
             top=False,  # ticks along the top edge are off
             labelbottom=False)  # labels along the bottom edge are off
 
+        if simulationsMeans is not None:
+            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=5, zorder=2)
+            if (simulationsLows is not None) and (simulationsHighs is not None):
+                # if (len(simulationsLows)==len(simulationsHighs)):
+                plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs), facecolor=fillcolor, zorder=2)
+
+
     elif plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT:
+        plt.title(title, fontsize=90, pad=80, loc='center') # fontweight='bold'
+
+        if title == 'Aggregated Substitutions' or title ==  'Aggregated Dinucs' or title == 'Aggregated Indels':
+            plt.xlabel('Early <-------------> Late\nReplication Time', fontsize=80) # fontweight='semibold'
+            plt.ylabel('Normalized\nMutation Density', fontsize=80,  labelpad=15) # fontweight='semibold'
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(True)
+
+        for edge_i in ['left']:
+            ax.spines[edge_i].set_edgecolor("black")
+            ax.spines[edge_i].set_linewidth(3)
+            # This code draws line only between [0,1]
+            ax.spines[edge_i].set_bounds(0, 1)
+
         # set axis ticks
         # ax.tick_params(axis='both', which='both', length=0)
         ax.tick_params(axis='x', which='both', length=0)
-        ax.tick_params(axis='y', which='both', length=0)
+        plt.tick_params(axis='y', which='major', labelsize=80, width=3, length=10)
+        plt.tick_params(axis='y', which='minor', labelsize=80, width=3, length=10)
+
+        # Set label locations.
+        plt.yticks(np.arange(0, 1.01, step=0.2))
+        # This code puts some extra space below 0 and above 1.0
+        plt.ylim(-0.01, 1.01)
+
         # set axis labels
         plt.setp(ax.get_xticklabels(), visible=False)
-        plt.setp(ax.get_yticklabels(), visible=False)
+        plt.setp(ax.get_yticklabels(), visible=True)
         ax.spines["bottom"].set_color('black')
         ax.spines["left"].set_color('black')
         ax.spines["top"].set_color('black')
@@ -176,12 +233,18 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
         # to put the legend's upper right-hand corner at (0.8,1) optimized for SBS6 in BreastCancer560 data for SigProfilerTopography Overview Figure
         # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 50}, loc='upper right', bbox_to_anchor = (0.8, 1))
         # to put the legend's upper left corner at (x,y) optimized for SBS2 in BreastCancer560 data for Replication Overview Figure
-        legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 43}, loc='upper left', bbox_to_anchor = (0.02, 0.9))
+        # legend = ax.legend((bars[0], sims_dashed_line[0]),('Real', 'Simulated'),prop={'size': 43}, loc='upper left', bbox_to_anchor = (0.02, 0.9))
 
-        if (legend is not None):
-            frame = legend.get_frame()
-            frame.set_facecolor('white')
-            frame.set_edgecolor('black')
+        # if (legend is not None):
+        #    frame = legend.get_frame()
+        #    frame.set_facecolor('white')
+        #    frame.set_edgecolor('black')
+
+        if simulationsMeans is not None:
+            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=6, zorder=2)
+            if (simulationsLows is not None) and (simulationsHighs is not None):
+                # if (len(simulationsLows)==len(simulationsHighs)):
+                plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs), facecolor=fillcolor, zorder=2)
 
     if sample is None:
         if (analysesType == INDELBASED):
@@ -406,6 +469,37 @@ def plotAllMutationTypesFigures(title,
                                                                    plot_mode)
 
 
+# Plot legend only
+def plot_replication_time_legend(output_dir, jobname):
+    fig, ax = plt.subplots(figsize=(6, 3))
+
+    # This code makes the background white.
+    ax.set_facecolor('white')
+
+    plt.gca().set_axis_off()
+
+    real_subs_rectangle = mpatches.Patch(label='Real Subs', edgecolor='black', facecolor='royalblue', lw=3)
+    real_dinucs_rectangle = mpatches.Patch(label='Real Dinucs', edgecolor='black', facecolor='crimson', lw=3)
+    real_indels_rectangle = mpatches.Patch(label='Real Indels', edgecolor='black', facecolor='yellowgreen', lw=3)
+
+    legend_elements = [
+        real_subs_rectangle,
+        real_dinucs_rectangle,
+        real_indels_rectangle,
+        Line2D([0], [2], linestyle="--", marker='.', lw=5, color='black', label='Simulations', markerfacecolor='black', markersize=30)]
+
+    plt.legend(facecolor='white',handles=legend_elements, handlelength=5, ncol=1, loc="lower center", fontsize=30)  # bbox_to_anchor=(1, 0.5),
+    plt.gca().set_axis_off()
+
+    filename = 'Replication_Time_Legend.png'
+    filepath = os.path.join(output_dir, jobname, FIGURE, REPLICATIONTIME, filename)
+    fig.savefig(filepath, dpi=100, bbox_inches="tight")
+
+    plt.cla()
+    plt.close(fig)
+
+
+
 def replicationTimeNormalizedMutationDensityFigures(outputDir,
                                                     jobname,
                                                     numberofSimulations,
@@ -478,6 +572,9 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                                 numberofSimulations, sample_based, sample2NumberofIndelsDict,
                                 indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2IndelsSignature2NumberofMutationsDict, plot_mode)
+
+    if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT :
+        plot_replication_time_legend(outputDir, jobname)
 
     if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         plotSignatureFigures('royalblue',

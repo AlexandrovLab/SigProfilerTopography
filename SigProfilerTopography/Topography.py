@@ -117,6 +117,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import SBS
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 
+from SigProfilerTopography.source.commons.TopographyCommons import LNCRNA
+
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
 from SigProfilerTopography.source.commons.TopographyCommons import USING_APPLY_ASYNC
@@ -170,6 +172,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Sign
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUTATIONS_IN_EACH_SPLIT
 
+from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import annotated_region_analysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
@@ -184,6 +187,7 @@ from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import 
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
 from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
+from SigProfilerTopography.source.plotting.AnnotatedRegionFigures import  annotated_regions_figures
 
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_VERSUS_UNTRANSCRIBED
 from SigProfilerTopography.source.commons.TopographyCommons import GENIC_VERSUS_INTERGENIC
@@ -677,6 +681,44 @@ def install_sample_probability_files():
     check_download_sample_probability_files()
 
 
+def run_region_analysis(genome,
+                        outputDir,
+                        jobname,
+                        numofSimulations,
+                        region_type,
+                        chromNamesList,
+                        samples_of_interest,
+                        ordered_sbs_signatures_with_cutoffs_array,
+                        ordered_dbs_signatures_with_cutoffs_array,
+                        ordered_id_signatures_with_cutoffs_array,
+                        ordered_sbs_signatures_cutoffs,
+                        ordered_dbs_signatures_cutoffs,
+                        ordered_id_signatures_cutoffs,
+                        discreet_mode,
+                        default_cutoff,
+                        parallel_mode,
+                        log_file,
+                        verbose):
+
+    annotated_region_analysis(genome,
+                            outputDir,
+                            jobname,
+                            numofSimulations,
+                            region_type,
+                            chromNamesList,
+                            samples_of_interest,
+                            ordered_sbs_signatures_with_cutoffs_array,
+                            ordered_dbs_signatures_with_cutoffs_array,
+                            ordered_id_signatures_with_cutoffs_array,
+                            ordered_sbs_signatures_cutoffs,
+                            ordered_dbs_signatures_cutoffs,
+                            ordered_id_signatures_cutoffs,
+                            discreet_mode,
+                            default_cutoff,
+                            parallel_mode,
+                            log_file,
+                            verbose)
+
 # For Skin-Melanoma USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT is better
 # For others USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM is better
 def runOccupancyAnalyses(genome,
@@ -744,7 +786,8 @@ def runReplicationTimeAnalysis(genome,
                                outputDir,
                                jobname,
                                numofSimulations,
-                               samples,
+                               samples_of_interest,
+                               all_samples_list,
                                job_tuples,
                                sample_based,
                                replicationTimeFilename,
@@ -776,7 +819,8 @@ def runReplicationTimeAnalysis(genome,
                             outputDir,
                             jobname,
                             numofSimulations,
-                            samples,
+                            samples_of_interest,
+                            all_samples_list,
                             job_tuples,
                             replicationTimeFilename,
                             ordered_sbs_signatures_with_cutoffs,
@@ -909,15 +953,13 @@ def runProcessivityAnalysis(mutation_types_contexts,
                             chromNamesList,
                             processivity_calculation_type,
                             processivity_inter_mutational_distance,
+                            considerProbabilityInProcessivityAnalysis,
                             subsSignature_cutoff_numberofmutations_averageprobability_df,
                             parallel_mode,
                             log_file,
                             verbose):
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,PROCESSIVITY),exist_ok=True)
-
-    # Internally Set
-    considerProbabilityInProcessivityAnalysis = True
 
     processivityAnalysis(mutation_types_contexts,
                          chromNamesList,
@@ -1012,6 +1054,7 @@ def runAnalyses(genome,
                 computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM,
                 epigenomics = False,
                 nucleosome = False,
+                lncRNA = False,
                 replication_time = False,
                 strand_bias = False,
                 replication_strand_bias = False,
@@ -1026,18 +1069,19 @@ def runAnalyses(genome,
                 step5_gen_tables = True,
                 verbose = False,
                 PCAWG = False,
-                discreet_mode = True, # discreet_mode = False for prob_mode
-                show_all_signatures = False, # you can set True for prob_mode
-                average_probability = 0.75, # applies for discreet_mode=True mutations_avg_probability >= average_probability
-                default_cutoff = 0.5, # applies for discreet_mode=False mutation_signature_probability >= default_cutoff
+                discreet_mode = True, # set discreet_mode = False for prob_mode
+                show_all_signatures = True, # applies for prob_mode, you can set to False
+                average_probability = 0.75, # applies for discreet_mode=True mutations_avg_probability >= average_probability (There are signature specific cutoffs but their average probability must be at least 0.75)
+                default_cutoff = 0.5, # applies for discreet_mode=False mutation_signature_probability >= default_cutoff (Applies for all signatures) This parameter must be set for step5_gen_tables = True and while running topography analyses.
                 parallel_mode = True,
-                num_of_sbs_required = 2000,
-                num_of_dbs_required = 200,
-                num_of_id_required = 1000,
+                num_of_sbs_required = 2000, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
+                num_of_dbs_required = 200, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
+                num_of_id_required = 1000, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
                 exceptions = None, # to consider exceptional signatures with average probability < 0.75 e.g.: exceptions = {SBS32 : 0.63} for Biliary-AdenoCA
                 plot_figures = True,
                 plot_epigenomics = False,
                 plot_nucleosome = False,
+                plot_lncRNA = False,
                 plot_replication_time = False,
                 plot_strand_bias = False,
                 plot_replication_strand_bias = False,
@@ -1054,11 +1098,14 @@ def runAnalyses(genome,
                 combine_p_values_method = 'fisher', # for occupancy analysis
                 fold_change_window_size = 100, # for occupancy analysis
                 num_of_real_data_avg_overlap = 100, # for occupancy analysis
+                plot_detailed_epigemomics_heatmaps = False, # for occupancy analysis
+                remove_dna_elements_with_all_nans_in_epigemomics_heatmaps = True, # for occupancy analysis
                 odds_ratio_cutoff = 1.1, # for strand asymmetry analysis
                 percentage_of_real_mutations_cutoff = 5, # for strand asymmetry analysis
                 ylim_multiplier = 1.25, # for strand asymmetry analysis
                 processivity_calculation_type = CONSIDER_DISTANCE,  # for strand coordinated mutagenesis
                 processivity_inter_mutational_distance = 10000,  # for strand coordinated mutagenesis
+                considerProbabilityInProcessivityAnalysis = True, # for strand coordinated mutagenesis
                 processivity_significance_level = 0.05  # for strand coordinated mutagenesis
                 ):
 
@@ -2350,6 +2397,7 @@ def runAnalyses(genome,
                                    jobname,
                                    numofSimulations,
                                    samples_of_interest,
+                                   all_samples_list,
                                    job_tuples,
                                    sample_based,
                                    replication_time_signal_file,
@@ -2467,6 +2515,7 @@ def runAnalyses(genome,
                                 chromNamesList,
                                 processivity_calculation_type,
                                 processivity_inter_mutational_distance,
+                                considerProbabilityInProcessivityAnalysis,
                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 parallel_mode,
                                 log_file,
@@ -2532,6 +2581,32 @@ def runAnalyses(genome,
             print('#################################################################################\n', file=log_out)
             log_out.close()
 
+    if lncRNA:
+        # lncRNA
+        # miRNA
+        # protein coding genes
+        # known oncogenes
+        region_type = LNCRNA
+        run_region_analysis(genome,
+                            outputDir,
+                            jobname,
+                            numofSimulations,
+                            region_type,
+                            chromNamesList,
+                            samples_of_interest,
+                            ordered_sbs_signatures_with_cutoffs,
+                            ordered_dbs_signatures_with_cutoffs,
+                            ordered_id_signatures_with_cutoffs,
+                            ordered_sbs_signatures_cutoffs,
+                            ordered_dbs_signatures_cutoffs,
+                            ordered_id_signatures_cutoffs,
+                            discreet_mode,
+                            default_cutoff,
+                            parallel_mode,
+                            log_file,
+                            verbose)
+
+
     log_out = open(log_file, 'a')
     print('--- Run SigProfilerTopography Analysis ends', file=log_out)
     print('#################################################################################\n', file=log_out)
@@ -2565,7 +2640,8 @@ def runAnalyses(genome,
         log_out.close()
 
         start_time = time.time()
-        plotFigures(outputDir,
+        plotFigures(genome,
+                    outputDir,
                     jobname,
                     numofSimulations,
                     sample_based,
@@ -2577,6 +2653,7 @@ def runAnalyses(genome,
                     nucleosome_biosample,
                     epigenomics,
                     nucleosome,
+                    lncRNA,
                     replication_time,
                     replication_strand_bias,
                     transcription_strand_bias,
@@ -2589,6 +2666,7 @@ def runAnalyses(genome,
                     verbose,
                     plot_epigenomics,
                     plot_nucleosome,
+                    plot_lncRNA,
                     plot_replication_time,
                     plot_replication_strand_bias,
                     plot_transcription_strand_bias,
@@ -2598,6 +2676,8 @@ def runAnalyses(genome,
                     combine_p_values_method,
                     fold_change_window_size,
                     num_of_real_data_avg_overlap,
+                    plot_detailed_epigemomics_heatmaps,
+                    remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                     odds_ratio_cutoff,
                     percentage_of_real_mutations_cutoff,
                     ylim_multiplier)
@@ -2623,7 +2703,8 @@ def runAnalyses(genome,
 
 
 # Plot figures for the attainded data after SigProfilerTopography Analyses
-def plotFigures(outputDir,
+def plotFigures(genome,
+                outputDir,
                 jobname,
                 numberofSimulations,
                 sample_based,
@@ -2635,6 +2716,7 @@ def plotFigures(outputDir,
                 nucleosome_biosample,
                 epigenomics,
                 nucleosome,
+                lncRNA,
                 replication_time,
                 replication_strand_bias,
                 transcription_strand_bias,
@@ -2647,6 +2729,7 @@ def plotFigures(outputDir,
                 verbose,
                 plot_epigenomics,
                 plot_nucleosome,
+                plot_lncRNA,
                 plot_replication_time,
                 plot_replication_strand_bias,
                 plot_transcription_strand_bias,
@@ -2656,6 +2739,8 @@ def plotFigures(outputDir,
                 combine_p_values_method,
                 fold_change_window_size,
                 num_of_real_data_avg_overlap,
+                plot_detailed_epigemomics_heatmaps,
+                remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                 odds_ratio_cutoff,
                 percentage_of_real_mutations_cutoff,
                 ylim_multiplier):
@@ -2679,6 +2764,24 @@ def plotFigures(outputDir,
 
         log_out = open(log_file, 'a')
         print("--- Plot nucleosome occupancy ends", file=log_out)
+        log_out.close()
+
+    if (lncRNA or plot_lncRNA):
+        if delete_old:
+            deleteOldFigures(outputDir, jobname, occupancy_type)
+
+        annotated_regions_filename = 'lncRNA'
+
+        annotated_regions_figures(genome,
+                                  outputDir,
+                                  jobname,
+                                  numberofSimulations,
+                                  annotated_regions_filename,
+                                  log_file,
+                                  verbose)
+
+        log_out = open(log_file, 'a')
+        print("--- Plot annotated regions ends", file=log_out)
         log_out.close()
 
     if (replication_time or plot_replication_time):
@@ -2805,6 +2908,7 @@ def plotFigures(outputDir,
         #                               verbose,
         #                               plot_mode)
 
+        # plot epigenomics heatmaps
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
                                               num_of_real_data_avg_overlap,
@@ -2819,6 +2923,8 @@ def plotFigures(outputDir,
                                               plusOrMinus_epigenomics,
                                               plusOrMinus_nucleosome,
                                               epigenomics_heatmap_significance_level,
+                                              plot_detailed_epigemomics_heatmaps,
+                                              remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                                               log_file,
                                               verbose)
 

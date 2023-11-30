@@ -137,7 +137,8 @@ def writeChrBasedOccupancySignalArray(inputList):
 def readNucleosomeOccupancyData(quantileValue, nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
-    nucleosome_df = pd.read_csv(nucleosomeFilename, sep='\t', header=None, comment='#', names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+    nucleosome_df = pd.read_csv(nucleosomeFilename, sep='\t', header=None, comment='#',
+                                names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
 
     max_signal = nucleosome_df[SIGNAL].max()
     min_signal = nucleosome_df[SIGNAL].min()

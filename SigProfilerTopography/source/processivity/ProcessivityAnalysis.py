@@ -71,7 +71,8 @@ def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_d
     # sampleBased_chrBased_subs_df.drop(['Signature_Max_Pro', 'Max_Pro'], inplace=True, axis=1)
 
     # Sort it
-    sampleBased_chrBased_subs_df.sort_values(START, inplace=True)
+    # sampleBased_chrBased_subs_df.sort_values(START, inplace=True) # causes copy of as lice warning
+    sampleBased_chrBased_subs_df = sampleBased_chrBased_subs_df.sort_values(START)
 
     return findProcessiveGroupsWithDistance(processivity_inter_mutational_distance,
                                             simNum,
@@ -274,7 +275,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
             pool = multiprocessing.Pool(processes=numofProcesses)
 
             signature2ProcessiveGroupLength2DistanceListDict = {}
-            mutations_loci_df_list=[]
+            mutations_loci_df_list = []
 
             def accumulate_apply_async_result_with_distance(result_tuple):
                 my_dict = result_tuple[0]
