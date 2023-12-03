@@ -1919,7 +1919,8 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                                                                                                          combine_p_values_method,
                                                                                                                                                          num_of_real_data_avg_overlap,
                                                                                                                                                          nucleosome_file,
-                                                                                                                                                         epigenomics_dna_elements)
+                                                                                                                                                         epigenomics_dna_elements,
+                                                                                                                                                         log_file)
 
     if plot_detailed_epigemomics_heatmaps:
         # Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
@@ -1942,7 +1943,8 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
-                          epigenomics_dna_elements)
+                          epigenomics_dna_elements,
+                          log_file)
 
     step3_sbs_signature2dna_element2avg_fold_change_dict, \
     step3_dbs_signature2dna_element2avg_fold_change_dict, \
@@ -2104,16 +2106,16 @@ def calculate_fold_change_real_over_sim(center,
                                         epigenomics_biosamples,
                                         occupancy_type):
 
-    avg_real_signal=None
-    avg_sim_signal=None
+    avg_real_signal = None
+    avg_sim_signal = None
     fold_change = None
-    min_sim_signal=None
-    max_sim_signal=None
-    pvalue=None
-    num_of_sims=None
-    num_of_sims_with_not_nan_avgs=None
-    real_data_avg_count=None
-    sim_avg_count=None
+    min_sim_signal = None
+    max_sim_signal = None
+    pvalue = None
+    num_of_sims = None
+    num_of_sims_with_not_nan_avgs = None
+    real_data_avg_count = None
+    sim_avg_count = None
     simulationsHorizontalMeans = None
 
     biosample=None
@@ -2138,7 +2140,7 @@ def calculate_fold_change_real_over_sim(center,
     else:
         real_data_avg_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, jobname, occupancy_type, dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
 
-    if real_data_avg_signal_array is not None:
+    if real_data_avg_signal_array is not None and (len(real_data_avg_signal_array) > 0) and (not np.isnan(real_data_avg_signal_array[start:end]).all()):
         #If there is nan in the list np.mean returns nan.
         avg_real_signal = np.nanmean(real_data_avg_signal_array[start:end])
 
@@ -2148,7 +2150,7 @@ def calculate_fold_change_real_over_sim(center,
     else:
         real_data_accumulated_count_array = readData(None, signature, SIGNATUREBASED, output_dir, jobname, occupancy_type, dna_element_to_be_read,ACCUMULATED_COUNT_ARRAY)
 
-    if real_data_accumulated_count_array is not None:
+    if real_data_accumulated_count_array is not None and (len(real_data_accumulated_count_array) > 0) and (not np.isnan(real_data_accumulated_count_array[start:end]).all()):
         #If there is nan in the list np.mean returns nan.
         real_data_avg_count = np.nanmean(real_data_accumulated_count_array[start:end])
 
@@ -2223,7 +2225,9 @@ def calculate_fold_change_real_over_sim(center,
 
 
     if (avg_real_signal is not None) and (avg_sim_signal is not None):
-        fold_change = avg_real_signal / avg_sim_signal
+
+        if avg_sim_signal > 0:
+            fold_change = avg_real_signal / avg_sim_signal
 
         if (simulationsHorizontalMeans is not None):
             zstat, pvalue = calculate_pvalue_teststatistics(avg_real_signal, simulationsHorizontalMeans)
@@ -2345,7 +2349,6 @@ def step1_calculate_p_value(fold_change_window_size,
     signature2Biosample2DNAElement2PValueDict = {}
     plusorMinus = fold_change_window_size//2
 
-
     def update_dictionary(complete_list):
         # complete_list:[jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
         #  max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count,
@@ -2415,7 +2418,8 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
-                          epigenomics_dna_elements):
+                          epigenomics_dna_elements,
+                          log_file):
 
     # Fill and return this dictionary
     signature2biosample2pooled_dna_element2combined_p_value_list_dict = {}
@@ -2498,7 +2502,9 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                 try:
                     test_statistic, combined_p_value = scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
                 except FloatingPointError:
-                    print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list))
+                    log_out = open(log_file, 'a')
+                    print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature, dna_element, fold_change_list, p_value_list), file=log_out)
+                    log_out.close()
                     if len(p_value_list)>0:
                         combined_p_value=p_value_list[0]
 
@@ -2537,7 +2543,8 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
-                          epigenomics_dna_elements):
+                          epigenomics_dna_elements,
+                          log_file):
 
     # Fill and return this dictionary
     signature2dna_element2combined_p_value_list_dict = {}
@@ -2613,7 +2620,9 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
             try:
                 test_statistic, combined_p_value = scipy.stats.combine_pvalues(p_values_array, method=combine_p_values_method, weights=None)
             except FloatingPointError:
-                print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list))
+                log_out = open(log_file, 'a')
+                print('signature:%s dna_element:%s fold_change_list:%s p_value_list:%s' %(signature,dna_element,fold_change_list,p_value_list), file=log_out)
+                log_out.close()
                 if len(p_value_list)>0:
                     combined_p_value=p_value_list[0]
 

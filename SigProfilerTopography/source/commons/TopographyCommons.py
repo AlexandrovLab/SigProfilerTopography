@@ -655,10 +655,15 @@ def calculate_pvalue_teststatistics(observed_value,
                                     expected_values,
                                     alternative = 'two-sided'):
 
-    zstat, pvalue = ztest(expected_values, [observed_value], alternative=alternative) # pvalue 0.0115612696237375
+    try:
+        zstat, pvalue = ztest(expected_values, [observed_value], alternative=alternative) # pvalue 0.0115612696237375
+    except RuntimeWarning as w:
+        zstat = None
+        pvalue = None
+        # print('expected_values:', expected_values, 'observed_value:', observed_value, 'alternative:', alternative, 'w:', w)
+
     # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way. # (-25.37854961568692, 4.351195335930552e-142)
     # stats.ttest_1samp(expected_values, observed_value) # Ttest_1sampResult(statistic=-25.378549615686918, pvalue=3.99359102646761e-45)
-
     return zstat, pvalue
 
 # sheet name must be less than 31 characters

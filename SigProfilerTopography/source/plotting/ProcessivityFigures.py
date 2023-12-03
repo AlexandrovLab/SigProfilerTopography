@@ -233,7 +233,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                     # Please note
                     # If pvalue is np.nan e.g.: due to a few expected values like only one [1]
                     # Then there must be cases when you may want to manually set minus_log10_qvalue to np.inf
-                    if np.isnan(pvalue):
+                    if (pvalue is not None) and np.isnan(pvalue):
                         signature_processive_group_length_properties_df.loc[
                             ((signature_processive_group_length_properties_df['signature'] == signature) &
                              (signature_processive_group_length_properties_df['processive_group_length'] == processive_group_length)), 'minus_log10_qvalue'] = np.inf
