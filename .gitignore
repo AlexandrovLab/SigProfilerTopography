@@ -2,7 +2,7 @@
 *.pbs
 *.txt
 *.csv
-*.png
+#*.png
 *.wig
 *.bigWig
 *.bed

@@ -2700,6 +2700,7 @@ def runAnalyses(genome,
     print('#################################################################################\n', file=log_out)
     log_out.close()
     sys.stderr.close()
+    sys.stderr = sys.__stderr__ # redirect to original stderr
 
 
 # Plot figures for the attainded data after SigProfilerTopography Analyses

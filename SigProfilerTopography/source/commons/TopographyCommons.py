@@ -31,7 +31,7 @@ from functools import reduce
 from statsmodels.stats.weightstats import ztest
 
 # To handle warnings as errors
-# import warnings
+import warnings
 # warnings.filterwarnings("error")
 
 LINUX = 'linux'
@@ -654,13 +654,14 @@ PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTT
 def calculate_pvalue_teststatistics(observed_value,
                                     expected_values,
                                     alternative = 'two-sided'):
-
-    try:
-        zstat, pvalue = ztest(expected_values, [observed_value], alternative=alternative) # pvalue 0.0115612696237375
-    except RuntimeWarning as w:
-        zstat = None
-        pvalue = None
-        # print('expected_values:', expected_values, 'observed_value:', observed_value, 'alternative:', alternative, 'w:', w)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            zstat, pvalue = ztest(expected_values, [observed_value], alternative=alternative) # pvalue 0.0115612696237375
+        except Warning as w:
+            zstat = None
+            pvalue = None
+            # print('expected_values:', expected_values, 'observed_value:', observed_value, 'alternative:', alternative, 'w:', w)
 
     # zstat, pvalue = ztest(expectedValues, value=observedValue) results in very small p-values therefore we are not calling in this way. # (-25.37854961568692, 4.351195335930552e-142)
     # stats.ttest_1samp(expected_values, observed_value) # Ttest_1sampResult(statistic=-25.378549615686918, pvalue=3.99359102646761e-45)
@@ -3182,7 +3183,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
         if simNum >= 1:
             # Get rid of simulation number at the end
-            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit(pat='_', n=1, expand=True)[0]
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('category')
 
         if SAMPLE not in mutations_probabilities_df.columns.values:
@@ -3277,7 +3278,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 
         if simNum >= 1:
             # Get rid of simulation number at the end
-            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit('_', 1, expand=True)[0]
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit(pat='_', n=1, expand=True)[0]
 
         if (sigprofiler_simulator_mutation_context in SBS_CONTEXTS):
             chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SUBS)

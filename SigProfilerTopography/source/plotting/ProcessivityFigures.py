@@ -34,6 +34,9 @@ if matplotlib.get_backend().lower() != BACKEND.lower():
 
 from matplotlib import pyplot as plt
 
+import matplotlib.cm as matplotlib_cm
+from matplotlib import colors
+
 import matplotlib as mpl
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
@@ -58,6 +61,12 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 # SigProfilerTopography PROCESSIVITY CONSTRAINTS
 MINIMUM_REQUIRED_PROCESSIVE_GROUP_LENGTH = 2
 MINIMUM_REQUIRED_NUMBER_OF_PROCESSIVE_GROUPS = 2
+
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = colors.LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
 
 def readSimulationBasedDictionaries(outputDir,jobname,numberofSimulations):
     simulation2Signature2ProcessiveGroupLength2PropertiesDict = {}
@@ -457,11 +466,12 @@ def plot_processivity_figure(outputDir,
 
         panel1.set_yticks(np.arange(0, len(sorted_signature_list) + 1, 1))
 
-        cmap = cm.get_cmap('YlOrRd')  # Looks better good
+        cmap = matplotlib_cm.get_cmap('Purples')
+        cmap = truncate_colormap(cmap, 0.2, 1)
+
         v_min = 2
         v_max = 20
-        # Very important: You have to normalize
-        norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
+        norm = plt.Normalize(v_min, v_max) # legacy
 
         if not signature_processive_group_length_properties_df.empty:
             # Plot the circles with color
