@@ -644,6 +644,115 @@ PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TO
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
 
+
+def generate_probability_file(signatures_file, activities_file, sample_mutation_type_rows_signatures_columns_probabilities_file):
+    signatures_df = pd.read_csv(signatures_file, sep='\t')
+    activities_df = pd.read_csv(activities_file, sep='\t')
+
+    # print('######################################')
+    # print('activities_df.isnull().sum().sum():', activities_df.isnull().sum().sum())
+    # print('signatures_df.isnull().sum().sum():', signatures_df.isnull().sum().sum())
+
+    # print('######################################')
+    # print('activities_df.columns.values:\n', activities_df.columns.values)
+    # print('signatures_df.columns.values:\n', signatures_df.columns.values)
+
+    # print('\n######################################')
+    # print('activities_df.shape:\n', activities_df.shape)
+    # print('signatures_df.shape:\n', signatures_df.shape)
+
+    # print('\n######################################')
+    # print('activities_df.info():\n', activities_df.info())
+    # print('signatures_df.info():\n', signatures_df.info())
+
+    # print('\n######################################')
+    # print('activities_df.describe():\n', activities_df.describe())
+    # print('signatures_df.describe():\n', signatures_df.describe())
+
+    # print('\n######################################')
+    # print('activities_df.head:\n', activities_df.head)
+    # print('signatures_df.head:\n', signatures_df.head)
+
+    # Column-wise sum must be 1.
+    # print('Double check --> In rows mutation types, columns signatures input file '
+    #       '--> column-wise sum must be 1 --> signatures_df.sum(axis=0):\n', signatures_df.sum(axis=0))
+
+    # print('signatures_df.sum(axis=0):', signatures_df.sum(axis=0))
+    sum_series = signatures_df.sum(axis=0)[1:].astype(float) # series ignore the first column of mutation types
+    assert (sum_series.values.round() == 1).all(), "Signatures Matrix: Column-wise sum must be 1.0"
+
+    i = 0
+    df_list = []
+
+    signatures_arr = signatures_df.values
+
+    # Still columnwise sum is 1 but to get probabilities for all sample mutation types
+    # signatures_arr[signatures_arr == 0] = np.nextafter(np.float32(0), np.float32(1))
+    # assert (signatures_arr[:, 1:].sum(axis=0).astype(float).round() == 1.0).all(), "Signatures Array: Column-wise sum must be 1.0"
+
+    grouped_df = activities_df.groupby('Samples')
+
+    # get the row for each sample
+    for sample, sample_df in grouped_df:
+        # print('################################################')
+        i += 1
+        sample_activities_arr = sample_df.values
+
+        # print('sample_number_of_mutations_arr.shape:', sample_number_of_mutations_arr.shape, 'sample_number_of_mutations_arr:', sample_number_of_mutations_arr)
+        # print('probabilities_arr.shape:', probabilities_arr.shape, 'probabilities_arr:', probabilities_arr)
+        # print(i, sample, sample_number_of_mutations_arr.shape, probabilities_arr.shape)
+
+        # element-wise multiplication
+        # 1536*number_of_signatures multiplied by number_of_mutations_for_each_signature
+        # therefore number_of_mutations_for_each_signature is broadcasted 1536 times
+        # arr = np.multiply(probabilities_arr[:,1:], sample_number_of_mutations_arr[:,1:])
+
+        # np.multiply element-wise multiplication
+        arr = np.multiply(signatures_arr[:,1:], sample_activities_arr[:, 1:])
+        arr = arr.astype('float64')
+
+        # row-wise sum
+        arr_sum = arr.sum(axis=1, keepdims=True)
+
+        # To avoid division by zero error
+        # Set zeros to very small positive floating point numbers
+        arr_sum[arr_sum == 0] = np.nextafter(np.float32(0), np.float32(1))
+
+        arr = arr / arr_sum
+
+        df = pd.DataFrame(arr, columns=sample_df.columns.values[1:])
+
+        df['Sample Names'] = sample
+        df['MutationTypes'] = signatures_df['MutationType']
+
+        # order columns
+        df_columns = ['Sample Names', 'MutationTypes'] + sample_df.columns.values[1:].tolist()
+        df = df[df_columns]
+
+        # df.to_csv('sample_%s.txt' %(sample), sep='\t', index=False)
+        # print('arr.shape:', arr.shape, 'df.shape:', df.shape)
+
+        df_list.append(df)
+
+    # concat dfs vertically
+    all_df = reduce(lambda x, y: pd.concat([x, y], axis=0), df_list)
+    all_df.to_csv(sample_mutation_type_rows_signatures_columns_probabilities_file, sep='\t', index=False)
+
+    # print('all_df.shape:', all_df.shape)
+    # print('all_df.head(5):\n', all_df.head(5))
+
+    # Row-wise sum must be 1.
+    # print('Double check -->  In rows samples and mutation types, columns signatures --> output probabilities file row-wise sum must be 1 --> all_df.sum(axis=1):\n', all_df.sum(axis=1))
+
+    sum_series = all_df.sum(axis=1).astype(float) # series
+    # For some DBS signatures row-wise sum is zero.
+    # assert (sum_series.values.round() == 1).all(), "Probabilities File: Row-wise sum must be 1."
+
+    return all_df
+
+
+
+
 # Always ztest
 # one sample or two_sample?
 # I decided to use one sample because for simulations I will get vertical vector and average of that vertical vector  must be equal to avg_simulated_signal, there is a way to self verification
@@ -2986,15 +3095,11 @@ def copyMafFiles(copyFromDir,copyToMainDir,mutation_type_context,numberofSimulat
     # os.chdir(copyFromDir)
 
     for simNum in range(1,numberofSimulations+1):
-        simDir= 'sim%d' %(simNum)
-        fname='%d.maf' %(simNum)
-        fileDir=os.path.join(copyFromDir,fname)
+        simDir = 'sim%d' %(simNum)
+        fname = '%d.maf' %(simNum)
+        fileDir = os.path.join(copyFromDir,fname)
         copyToDir = os.path.join(copyToMainDir, simDir, mutation_type_context)
         shutil.copy(fileDir, copyToDir)
-
-
-
-
 
 
 """
