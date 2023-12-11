@@ -22,6 +22,7 @@ import pickle
 import re
 import shutil
 import psutil
+import hashlib
 
 import scipy
 from scipy import stats
@@ -449,6 +450,8 @@ DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBas
 
 ONE_DIRECTORY_UP = '..'
 
+MD5_filename = 'md5.txt'
+
 #These are used for getting chromosome names
 GRCh37ChromSizesDictFilename = 'hg19ChromSizesDict.txt'
 GRCh38ChromSizesDictFilename = 'hg38ChromSizesDict.txt'
@@ -644,6 +647,24 @@ PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TO
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
 
+# memory inefficient, read all in once
+def md5(file_name):
+    # Open,close, read file and calculate MD5 on its contents
+    with open(file_name, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+
+    return md5_returned
+
+# memory efficient, read in chunks of 4096 bytes
+def md5_read_in_chunks(file_name):
+    hash_md5 = hashlib.md5()
+    with open(file_name, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 def generate_probability_file(signatures_file, activities_file, sample_mutation_type_rows_signatures_columns_probabilities_file):
     signatures_df = pd.read_csv(signatures_file, sep='\t')
@@ -1358,6 +1379,22 @@ def getSample2IndelsSignature2NumberofMutationsDict(outputDir,jobname):
 
     return sample2IndelsSignature2NumberofMutationsDict
 ########################################################################################
+
+
+
+def read_md5_dict_from_file():
+    dict_path = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, MD5_filename)
+
+    with open(dict_path, "r") as f:
+        return {line.strip().split('\t')[0]: line.strip().split('\t')[1] for line in f}
+
+    # fname_2_md5_dict = {}
+    # with open(dict_path, "r") as f:
+    #     for line in f:
+    #         fname, md5 = line.strip().split('\t')
+    #         fname_2_md5_dict[fname] = md5
+    # return fname_2_md5_dict
+
 
 
 ###################################################################

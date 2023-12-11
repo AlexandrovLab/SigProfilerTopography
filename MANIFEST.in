@@ -9,6 +9,7 @@ include SigProfilerTopography/source/processivity/*
 include SigProfilerTopography/source/plotting/*
 include SigProfilerTopography/source/annotation/*
 include SigProfilerTopography/source/annotatedregion/*
+include SigProfilerTopography/lib/md5.txt
 include SigProfilerTopography/lib/ucscgenome/hg19ChromSizesDict.txt
 include SigProfilerTopography/lib/ucscgenome/hg38ChromSizesDict.txt
 include SigProfilerTopography/lib/ucscgenome/mm9ChromSizesDict.txt

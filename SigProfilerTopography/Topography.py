@@ -157,6 +157,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import SNV
 from SigProfilerTopography.source.commons.TopographyCommons import CHRBASED
 from SigProfilerTopography.source.commons.TopographyCommons import LIB
 
+from SigProfilerTopography.source.commons.TopographyCommons import read_md5_dict_from_file
 from SigProfilerTopography.source.commons.TopographyCommons import getChromSizesDict
 from SigProfilerTopography.source.commons.TopographyCommons import getShortNames
 from SigProfilerTopography.source.commons.TopographyCommons import copyMafFiles
@@ -202,6 +203,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import WEIGHTED_AVER
 from SigProfilerTopography.source.commons.TopographyCommons import COLORBAR_SEISMIC
 
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
+from SigProfilerTopography.source.commons.TopographyCommons import md5
+from SigProfilerTopography.source.commons.TopographyCommons import md5_read_in_chunks
+
 
 MATRIX_GENERATOR_PATH = matrix_generator.__path__[0]
 
@@ -509,7 +513,7 @@ def check_download_sample_vcf_files():
     os.chdir(current_path)
 
 
-def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList):
+def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList, fname_2_md5_dict):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
 
     os.makedirs(os.path.join(current_abs_path, 'lib', 'epigenomics', 'chrbased'), exist_ok=True)
@@ -524,7 +528,8 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList):
             filename = '%s_signal_%s.npy' % (chrLong, atac_seq_filename_wo_extension)
 
             chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
-            if not os.path.exists(chrbased_npy_array_path):
+            if (not os.path.exists(chrbased_npy_array_path)) or \
+                    (os.path.exists(chrbased_npy_array_path) and (filename in fname_2_md5_dict) and (md5_read_in_chunks(chrbased_npy_array_path) != fname_2_md5_dict[filename])):
                 print('Does not exists: %s' % (chrbased_npy_array_path))
                 try:
                     print('Downloading %s under %s' % (filename, chrbased_npy_array_path))
@@ -545,6 +550,9 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList):
                 except:
                     # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                     print("The UCSD ftp site is not responding...")
+            else:
+                print(f"{chrbased_npy_array_path} already exists.")
+
 
     else:
         #It has to be an absolute path
@@ -555,7 +563,7 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList):
 
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
 # We are using this function if user is using our available nucleosome data for GM12878 adnd K562 cell lines
-def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList):
+def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList, fname_2_md5_dict):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
 
@@ -576,7 +584,8 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
                 filename = '%s_signal_%s.npy' % (chrLong, nucleosome_filename_wo_extension)
 
                 chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
-                if not os.path.exists(chrbased_npy_array_path):
+                if (not os.path.exists(chrbased_npy_array_path)) or \
+                        (os.path.exists(chrbased_npy_array_path) and (filename in fname_2_md5_dict) and md5_read_in_chunks(chrbased_npy_array_path) != fname_2_md5_dict[filename]):
                     print('Does not exists: %s' % (chrbased_npy_array_path))
                     try:
                         # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
@@ -592,6 +601,8 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
                     except:
                         # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                         print("The UCSD ftp site is not responding...")
+                else:
+                    print(f"{chrbased_npy_array_path} already exists.")
 
     else:
         # It has to be an absolute path
@@ -604,43 +615,52 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
 def install_nucleosome(genome, biosample = None):
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
+    fname_2_md5_dict = read_md5_dict_from_file()
 
     # default files
     if biosample is None:
         if genome == MM10:
             nucleosome_file = MM10_mmNuc0020101_GSM1004653_ESC_NUCLEOSOME_FILE
+            chromNamesList.remove('chrY')
 
         elif genome == GRCh37:
             nucleosome_file = K562_NUCLEOSOME_OCCUPANCY_FILE
+            chromNamesList.remove('chrY')
 
         elif genome == GRCh38:
             nucleosome_file = K562_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
+            chromNamesList.remove('chrY')
 
     elif biosample is not None:
         if genome == GRCh37 and biosample == GM12878:
             nucleosome_file = GM12878_NUCLEOSOME_OCCUPANCY_FILE
+            chromNamesList.remove('chrY')
 
         if genome == GRCh38 and biosample == GM12878:
             nucleosome_file = GM12878_GRCh38_NUCLEOSOME_OCCUPANCY_FILE
 
-    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList)
+    check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList, fname_2_md5_dict)
 
 
 def install_atac_seq(genome, biosample=None):
     chromSizesDict = getChromSizesDict(genome)
     chromNamesList = list(chromSizesDict.keys())
+    fname_2_md5_dict = read_md5_dict_from_file()
 
     if biosample is None:
         if genome == GRCh37:
             atac_seq_file = DEFAULT_ATAC_SEQ_OCCUPANCY_FILE
+            chromNamesList.remove('chrM')
 
         elif genome == GRCh38:
             atac_seq_file = DEFAULT_ATAC_SEQ_GRCh38_OCCUPANCY_FILE
+            chromNamesList.remove('chrM')
 
         elif genome == MM10:
             atac_seq_file = ENCFF575PMI_mm10_embryonic_facial_prominence_ATAC_seq
+            chromNamesList.remove('chrM')
 
-    check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList)
+    check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList, fname_2_md5_dict)
 
 def install_repli_seq(genome, biosample=None):
 
@@ -1370,7 +1390,7 @@ def runAnalyses(genome,
         # Case2: File is not set, Biosample is set
         elif (nucleosome_file is None) and (nucleosome_biosample is not None):
             if (nucleosome_biosample in available_nucleosome_biosamples):
-                #Sets the filename without the full path
+                # Sets the filename without the full path
                 nucleosome_file = getNucleosomeFile(genome, nucleosome_biosample)
 
         # Case3: nucleosome_file is a filename with fullpath (User provided), biosample is not set
@@ -1588,7 +1608,7 @@ def runAnalyses(genome,
         # Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
         print('#################################################################################', file=log_out)
         print('--- SigProfilerMatrixGenerator for original data', file=log_out)
-        print('--- SigProfilerMatrixGenerator for real mutations')
+        print('--- SigProfilerMatrixGenerator for real mutations\n')
         start_time = time.time()
 
         print('For original data inputDir:%s' % (inputDir), file=log_out)
@@ -1918,7 +1938,7 @@ def runAnalyses(genome,
             ###################################################################################################
             print('#################################################################################', file=log_out)
             print('--- Run SigProfilerMatrixGenerator for each simulation starts', file=log_out)
-            print('\n--- SigProfilerMatrixGenerator for each simulation')
+            print('\n--- SigProfilerMatrixGenerator for each simulation\n')
             start_time = time.time()
             for simNum in range(1,numofSimulations+1):
                 simName = 'sim%d' %(simNum)
