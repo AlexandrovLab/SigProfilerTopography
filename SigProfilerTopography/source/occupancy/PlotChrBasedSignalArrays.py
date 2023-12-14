@@ -40,7 +40,7 @@ def readChromBasedNucleosomeDF(chrLong,nucleosomeFilename):
 
     if (os.path.exists(chrBasedNucleosmeFilePath)):
         column_names = [CHROM, START, END, SIGNAL]
-        chrbased_nucleosome_df = pd.read_csv(chrBasedNucleosmeFilePath, sep='\t', header=None, comment='#',names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+        chrbased_nucleosome_df = pd.read_csv(chrBasedNucleosmeFilePath, sep='\t', header=None, comment='#',names=column_names, dtype={CHROM: 'string', START: np.int32, END: np.int32, SIGNAL: np.float32}) # legacy category
         return chrbased_nucleosome_df
     else:
         return None

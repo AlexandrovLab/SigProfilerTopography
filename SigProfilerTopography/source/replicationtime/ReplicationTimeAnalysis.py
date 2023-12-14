@@ -138,10 +138,10 @@ def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_ge
 
     if file_extension.lower() == '.bedgraph':
         column_names = [CHROM, START, END, SIGNAL]
-        replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+        replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'string', START: np.int32, END: np.int32, SIGNAL: np.float32}) # legacy category
     elif filetype_BEDGRAPH:
         column_names = [CHROM, START, END, SIGNAL]
-        replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+        replication_time_interval_version_df = pd.read_csv(repliseqDataFilename, sep='\t', header=None, comment='#', names=column_names,dtype={CHROM: 'string', START: np.int32, END: np.int32, SIGNAL: np.float32}) # legacy category
     else:
         replication_time_interval_version_df = readWig_with_fixedStep_variableStep(repliseqDataFilename)
 

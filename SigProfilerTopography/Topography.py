@@ -999,7 +999,36 @@ def runProcessivityAnalysis(mutation_types_contexts,
                          verbose)
 
 
-def deleteOldData(outputDir,jobname, occupancy_type):
+
+def delete_unnecessary_files_after_SPT_run(outputDir, jobname):
+    # delete .../data/chrbased
+    # delete .../data/epigenomics_occupancy/lib/chrbased
+    # delete .../data/replication_strand_bias/lib/chrbased
+
+    data_chrbased_path = os.path.join(outputDir,jobname,DATA,CHRBASED)
+    data_epigenomics_occupancy_lib_path = os.path.join(outputDir,jobname,DATA,EPIGENOMICSOCCUPANCY,LIB)
+    data_replication_strand_lib_path = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,LIB)
+
+    if (os.path.exists(data_chrbased_path)):
+        try:
+            shutil.rmtree(data_chrbased_path)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+
+    if (os.path.exists(data_epigenomics_occupancy_lib_path)):
+        try:
+            shutil.rmtree(data_epigenomics_occupancy_lib_path)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+
+    if (os.path.exists(data_replication_strand_lib_path)):
+        try:
+            shutil.rmtree(data_replication_strand_lib_path)
+        except OSError as e:
+            print('Error: %s - %s.' % (e.filename, e.strerror))
+
+
+def deleteOldData(outputDir, jobname, occupancy_type):
     # Delete the output/jobname/DATA/occupancy_type if exists
     jobnamePath = os.path.join(outputDir,jobname,DATA,occupancy_type)
 
@@ -1062,10 +1091,10 @@ def runAnalyses(genome,
                 gender = 'female', # default is 'female', other option is 'male' for SigProfilerSimulator for simulations using SigProfilerSimulator
                 matrix_generator_path = MATRIX_GENERATOR_PATH, # for SigProfilerMatrixGenerator
                 sbs_signatures = None, # SBS signatures matrix
-                sbs_activities = None, # SBS activities matrix
                 dbs_signatures = None, # DBS signatures matrix
-                dbs_activities = None, # DBS activities matrix
                 id_signatures = None, # ID signatures matrix
+                sbs_activities = None,  # SBS activities matrix
+                dbs_activities = None,  # DBS activities matrix
                 id_activities = None, # ID activities matrix
                 sbs_probabilities = None, # Second column must hold mutation type contexts. If None aggregated analysis for all single base substitutions, else aggregated + signature based analyses
                 dbs_probabilities = None, # If None aggregated analysis for all doublet base substitutions, else aggregated + signature based analyses
@@ -1139,9 +1168,9 @@ def runAnalyses(genome,
                 ):
 
     print('\n')
-    print('     =============================================')
-    print('                 SigProfilerTopography                 ')
-    print('     =============================================')
+    print('=============================================')
+    print('            SigProfilerTopography            ')
+    print('=============================================')
     print('\n')
 
     current_abs_path = os.path.dirname(os.path.realpath(__file__))
@@ -1155,7 +1184,6 @@ def runAnalyses(genome,
     ordered_all_sbs_signatures_wrt_probabilities_file_array = None
     ordered_all_dbs_signatures_wrt_probabilities_file_array = None
     ordered_all_id_signatures_wrt_probabilities_file_array = None
-
 
     ############################## Log and Error Files #######################################
     time_stamp = datetime.date.today()
@@ -1600,6 +1628,8 @@ def runAnalyses(genome,
     ################################################# All Steps starts ################################################
     ###################################################################################################################
 
+    matrices = None
+
     ###################################################################################################
     ######################### SigProfilerMatrixGenerator for original data starts #####################
     ###################################################################################################
@@ -1659,7 +1689,7 @@ def runAnalyses(genome,
         if (matrices is not None) and (matrices.keys()):
             if '96' in matrices.keys():
                 path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
                 Analyze.cosmic_fit(path_to_sbs96_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -1679,7 +1709,7 @@ def runAnalyses(genome,
         if (matrices is not None) and (matrices.keys()):
             if 'DINUC' in matrices.keys():
                 path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
                 Analyze.cosmic_fit(path_to_dbs78_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -1699,7 +1729,7 @@ def runAnalyses(genome,
         if (matrices is not None) and (matrices.keys()):
             if 'ID' in matrices.keys():
                 path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
                 Analyze.cosmic_fit(path_to_id83_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -1723,7 +1753,7 @@ def runAnalyses(genome,
         if matrices is not None and  matrices.keys():
             if '96' in matrices.keys():
                 path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
                 Analyze.cosmic_fit(path_to_sbs96_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -1744,7 +1774,7 @@ def runAnalyses(genome,
         if matrices is not None and matrices.keys():
             if 'DINUC' in matrices.keys():
                 path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
                 Analyze.cosmic_fit(path_to_dbs78_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -1765,7 +1795,7 @@ def runAnalyses(genome,
         if matrices is not None and matrices.keys():
             if 'ID' in matrices.keys():
                 path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-                print('--- SigProfilerAssignment for cosmic fit')
+                print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
                 Analyze.cosmic_fit(path_to_id83_matrix,
                                    outputDir,
                                    genome_build=genome,
@@ -2911,6 +2941,9 @@ def runAnalyses(genome,
         print('\n--- Plot figures ends')
         print('#################################################################################\n', file=log_out)
         log_out.close()
+
+        # delete unnecesary files after SPT Run
+        delete_unnecessary_files_after_SPT_run(outputDir, jobname)
     ####################################################################################################################
     ############################################ Plot figures ends #####################################################
     ####################################################################################################################
@@ -2926,9 +2959,9 @@ def runAnalyses(genome,
     print('\n')
 
     print('\n')
-    print('     =============================================')
-    print('                 SigProfilerTopography                 ')
-    print('     =============================================')
+    print('=============================================')
+    print('            SigProfilerTopography            ')
+    print('=============================================')
     print('\n')
 
     log_out.close()

@@ -311,8 +311,8 @@ def plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(signature_cut
                 max_list.append(np.amax(realAverage))
                 min_list.append(np.amin(realAverage))
 
-                if (label==signature):
-                    original = plt.plot(x,realAverage,color=color,label=label,linewidth=3,zorder=10)
+                if (label == signature):
+                    original = plt.plot(x,realAverage,color=color,label=label,linewidth=3,zorder=15)
                 else:
                     original = plt.plot(x,realAverage,color='gray',label=label,linewidth=3,zorder=5)
                 listofLegends.append(original[0])
@@ -462,14 +462,14 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
             x = np.arange(-plusOrMinus, plusOrMinus + 1, 1)
             listofLegends = []
 
-            original = plt.plot(x, realAverage, color=color, label=real_label, linewidth=5)
+            original = plt.plot(x, realAverage, color=color, label=real_label, linewidth=5, zorder=15)
             listofLegends.append(original[0])
 
             if (simulationsSignatureBasedMeans is not None):
-                simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle, label=simulated_label, linewidth=5)
+                simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle, label=simulated_label, linewidth=5, zorder=10)
                 listofLegends.append(simulations[0])
                 if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
-                    plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs), facecolor=fillcolor)
+                    plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs), facecolor=fillcolor, zorder=5)
 
             if ((simulationsSignatureBasedLows is not None) and (not np.all(np.isnan(simulationsSignatureBasedLows)))):
                 min_list.append(np.nanmin(simulationsSignatureBasedLows))
@@ -517,16 +517,16 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
             x = np.arange(-plusOrMinus, plusOrMinus + 1, 1)
             listofLegends = []
 
-            original = plt.plot(x, realAverage, color=color, label=real_label, linewidth=5)
+            original = plt.plot(x, realAverage, color=color, label=real_label, linewidth=5, zorder=15)
             listofLegends.append(original[0])
 
             if (simulationsSignatureBasedMeans is not None):
                 simulations = plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle,
-                                       label=simulated_label, linewidth=5)
+                                       label=simulated_label, linewidth=5, zorder=10)
                 listofLegends.append(simulations[0])
                 if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
                     plt.fill_between(x, np.array(simulationsSignatureBasedLows),
-                                     np.array(simulationsSignatureBasedHighs), facecolor=fillcolor)
+                                     np.array(simulationsSignatureBasedHighs), facecolor=fillcolor, zorder=5)
 
             if ((simulationsSignatureBasedLows is not None) and (not np.all(np.isnan(simulationsSignatureBasedLows)))):
                 min_list.append(np.nanmin(simulationsSignatureBasedLows))
@@ -583,12 +583,12 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
                 ax.spines[edge_i].set_linewidth(3)
 
             x = np.arange(-plusOrMinus, plusOrMinus + 1, 1)
-            plt.plot(x, realAverage, color=color, label=real_label, linewidth=15)
+            plt.plot(x, realAverage, color=color, label=real_label, linewidth=15, zorder=15)
 
             if (simulationsSignatureBasedMeans is not None):
-                plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle, label=simulated_label, linewidth=15)
+                plt.plot(x, simulationsSignatureBasedMeans, color='gray', linestyle=linestyle, label=simulated_label, linewidth=15, zorder=10)
                 if (simulationsSignatureBasedLows is not None) and (simulationsSignatureBasedHighs is not None):
-                    plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs), facecolor=fillcolor)
+                    plt.fill_between(x, np.array(simulationsSignatureBasedLows), np.array(simulationsSignatureBasedHighs), facecolor=fillcolor, zorder=5)
 
             if ((simulationsSignatureBasedLows is not None) and (not np.all(np.isnan(simulationsSignatureBasedLows)))):
                 min_list.append(np.nanmin(simulationsSignatureBasedLows))
@@ -786,16 +786,16 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
 
     if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL or plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE:
         if (realAggregatedSubstitutions is not None):
-            aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label, linewidth=3, zorder=10)
+            aggSubs = plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label, linewidth=3, zorder=15)
             listofLegends.append(aggSubs[0])
         if (simulationsAggregatedSubstitutionsMedians is not None):
             simsAggSubs = plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray',linestyle='dashed', label=simulated_label, linewidth=3,zorder=10)
             listofLegends.append(simsAggSubs[0])
             if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
-                plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=10)
+                plt.fill_between(x,np.array(simulationsAggregatedSubstitutionsLows),np.array(simulationsAggregatedSubstitutionsHighs),facecolor='lightblue',zorder=5)
 
         if (realAggregatedIndels is not None):
-            aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label,linewidth=3,zorder=10)
+            aggIndels = plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label,linewidth=3,zorder=15)
             listofLegends.append(aggIndels[0])
         if simulationsAggregatedIndelsMedians is not None:
             simsAggIndels = plt.plot(x, simulationsAggregatedIndelsMedians, color='gray', linestyle='dashed',label=simulated_label, linewidth=3,zorder=10)
@@ -804,7 +804,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
                 plt.fill_between(x,np.array(simulationsAggregatedIndelsLows),np.array(simulationsAggregatedIndelsHighs),facecolor='lightgreen',zorder=5)
 
         if (realAggregatedDinucs is not None):
-            aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label,linewidth=3,zorder=10)
+            aggDinucs = plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label,linewidth=3,zorder=15)
             listofLegends.append(aggDinucs[0])
         if simulationsAggregatedDinucsMedians is not None:
             simsAggDinucs = plt.plot(x, simulationsAggregatedDinucsMedians, color='gray', linestyle='dashed',label=simulated_label, linewidth=3,zorder=10)
@@ -872,7 +872,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
         max_list = []
 
         if (realAggregatedSubstitutions is not None):
-            plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label, linewidth=15, zorder=10)
+            plt.plot(x, realAggregatedSubstitutions, 'royalblue', label=real_label, linewidth=15, zorder=15)
 
             if ((realAggregatedSubstitutions is not None) and (pd.notna(realAggregatedSubstitutions).any(axis=0)) and (np.any(realAggregatedSubstitutions))):
                 min_list.append(np.amin(realAggregatedSubstitutions))
@@ -881,7 +881,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
         if (simulationsAggregatedSubstitutionsMedians is not None):
             plt.plot(x, simulationsAggregatedSubstitutionsMedians, color='gray', linestyle='dashed', label=simulated_label, linewidth=15, zorder=10)
             if (simulationsAggregatedSubstitutionsLows is not None) and (simulationsAggregatedSubstitutionsHighs is not None):
-                plt.fill_between(x, np.array(simulationsAggregatedSubstitutionsLows), np.array(simulationsAggregatedSubstitutionsHighs), facecolor='lightblue', zorder=10)
+                plt.fill_between(x, np.array(simulationsAggregatedSubstitutionsLows), np.array(simulationsAggregatedSubstitutionsHighs), facecolor='lightblue', zorder=5)
 
             if ((simulationsAggregatedSubstitutionsLows is not None) and (not np.all(np.isnan(simulationsAggregatedSubstitutionsLows)))):
                 min_list.append(np.nanmin(simulationsAggregatedSubstitutionsLows))
@@ -889,7 +889,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
                 max_list.append(np.nanmax(simulationsAggregatedSubstitutionsHighs))
 
         if (realAggregatedIndels is not None):
-            plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label, linewidth=15, zorder=10)
+            plt.plot(x, realAggregatedIndels, 'darkgreen', label=real_label, linewidth=15, zorder=15)
 
             if ((realAggregatedIndels is not None) and (pd.notna(realAggregatedIndels).any(axis=0)) and (np.any(realAggregatedIndels))):
                 min_list.append(np.amin(realAggregatedIndels))
@@ -906,7 +906,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
                 max_list.append(np.nanmax(simulationsAggregatedIndelsHighs))
 
         if (realAggregatedDinucs is not None):
-            plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label, linewidth=15, zorder=10)
+            plt.plot(x, realAggregatedDinucs, 'crimson', label=real_label, linewidth=15, zorder=15)
 
             if ((realAggregatedDinucs is not None) and (pd.notna(realAggregatedDinucs).any(axis=0)) and (np.any(realAggregatedDinucs))):
                 min_list.append(np.amin(realAggregatedDinucs))
@@ -1631,6 +1631,11 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     # signature2dna_element2significancedict contains * only for the signature and dna_element if it is significant
     for signature_index, signature in enumerate(signatures,0):
         for dna_element_index, dna_element in enumerate(dna_elements,0):
+            avg_fold_change = average_fold_change_array[signature_index, dna_element_index]
+            if avg_fold_change <= 0.75 or avg_fold_change >= 1.25:
+                my_color = 'w'
+            else:
+                my_color = 'k'
             if signature2dna_element2significancedict is not None:
                 if signature == 'ALL SUBSTITUTIONS':
                     signature = AGGREGATEDSUBSTITUTIONS
@@ -1640,15 +1645,15 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                     signature = AGGREGATEDINDELS
                 if signature in signature2dna_element2significancedict:
                     if dna_element in signature2dna_element2significancedict[signature]:
-                        text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
+                        text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color=my_color)
                     elif (dna_element == OPEN_CHROMATIN) and any([True for key in signature2dna_element2significancedict[signature].keys() if ATAC_DNA_ELEMENT in key]):
-                        text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
+                        text = ax.text(dna_element_index, signature_index, "%.2f*" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color=my_color)
                     elif not np.isnan(average_fold_change_array[signature_index, dna_element_index]):
-                        text = ax.text(dna_element_index, signature_index, "%.2f" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color="k")
+                        text = ax.text(dna_element_index, signature_index, "%.2f" %(average_fold_change_array[signature_index, dna_element_index]), ha="center", va="center", color=my_color)
                 elif not np.isnan(average_fold_change_array[signature_index, dna_element_index]):
-                    text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color="k")
+                    text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color=my_color)
             elif not np.isnan(average_fold_change_array[signature_index, dna_element_index]):
-                text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color="k")
+                text = ax.text(dna_element_index, signature_index,"%.2f" % (average_fold_change_array[signature_index, dna_element_index]), ha="center",va="center", color=my_color)
 
     # texts = annotate_heatmap(im, valfmt="{x:.2f} ")
     if show_title:

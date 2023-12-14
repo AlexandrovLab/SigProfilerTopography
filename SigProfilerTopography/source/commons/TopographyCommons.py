@@ -1645,7 +1645,7 @@ def fill_signature_cutoff_properties_df(outputDir,
                                'number_of_mutations',
                                'sum_of_probabilities'])
 
-    df['signature'] = df['signature'].astype('category')
+    df['signature'] = df['signature'].astype('string') # legacy category
     df['cutoff'] = df['cutoff'].astype(np.float32)
     df['number_of_mutations'] = df['number_of_mutations'].astype(np.int32)
     df['sum_of_probabilities'] = df['sum_of_probabilities'].astype(np.float64)
@@ -1900,25 +1900,25 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
          # Because it causes rounding and differences in number of mutations across different downstream analyses.
 
          if ((mutation_type == SUBS) or (mutation_type == DINUCS)):
-             mydtypes[SAMPLE] = 'category'
-             mydtypes[CHROM] = 'category'
+             mydtypes[SAMPLE] = 'string' # legacy category
+             mydtypes[CHROM] = 'string' # legacy category
              mydtypes[START] = np.int32
-             mydtypes[MUTATIONLONG] = 'category'
+             mydtypes[MUTATIONLONG] = 'string' # legacy category
              mydtypes[PYRAMIDINESTRAND] = np.int8
-             mydtypes[TRANSCRIPTIONSTRAND] = 'category'
-             mydtypes[MUTATION] = 'category'
+             mydtypes[TRANSCRIPTIONSTRAND] = 'string' # legacy category
+             mydtypes[MUTATION] = 'string' # legacy category
 
          if (mutation_type == INDELS):
-             mydtypes[SAMPLE] = 'category'
-             mydtypes[CHROM] = 'category'
+             mydtypes[SAMPLE] = 'string' # legacy category
+             mydtypes[CHROM] = 'string' # legacy category
              mydtypes[START] = np.int32
-             mydtypes[MUTATIONLONG] = 'category'
+             mydtypes[MUTATIONLONG] = 'string' # legacy category
              mydtypes[REF] = str
              mydtypes[ALT] = str
              mydtypes[LENGTH] = np.int16
              mydtypes[PYRAMIDINESTRAND] = np.int8
-             mydtypes[TRANSCRIPTIONSTRAND] = 'category'
-             mydtypes[MUTATION] = 'category'
+             mydtypes[TRANSCRIPTIONSTRAND] = 'string' # legacy category
+             mydtypes[MUTATION] = 'string' # legacy category
 
          chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', header=0, dtype=mydtypes)
 
@@ -2364,7 +2364,7 @@ def generateIntervalVersion(wig_unprocessed_df):
     # rows_list contain the list of row where each row is a dictionary
     wig_chrom_start_end_signal_version_df = pd.DataFrame(rows_list, columns=[CHROM,START,END,SIGNAL])
 
-    wig_chrom_start_end_signal_version_df[CHROM] = wig_chrom_start_end_signal_version_df[CHROM].astype('category')
+    wig_chrom_start_end_signal_version_df[CHROM] = wig_chrom_start_end_signal_version_df[CHROM].astype('string') # legacy category
     wig_chrom_start_end_signal_version_df[START] = wig_chrom_start_end_signal_version_df[START].astype(np.int32)
     wig_chrom_start_end_signal_version_df[END] = wig_chrom_start_end_signal_version_df[END].astype(np.int32)
     wig_chrom_start_end_signal_version_df[SIGNAL] = wig_chrom_start_end_signal_version_df[SIGNAL].astype(np.float32)
@@ -2415,14 +2415,12 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-
 def writeDictionaryUsingPickle(dictionary,filepath):
     fileDir = os.path.dirname(filepath)
     os.makedirs(fileDir, exist_ok=True)
 
     with open(filepath, "wb") as file:
         pickle.dump(dictionary, file)
-
 
 
 def writeDictionarySimple(dictionary,path,filename,customJSONEncoder):
@@ -2433,15 +2431,12 @@ def writeDictionarySimple(dictionary,path,filename,customJSONEncoder):
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
 
 
-
 def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSONEncoder):
     os.makedirs(os.path.join(outputDir,jobname,DATA,subDirectory), exist_ok=True)
 
     filePath = os.path.join(outputDir,jobname,DATA,subDirectory,filename)
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
-
-
 
 
 # Lagging_Count Leading_Count
@@ -2538,14 +2533,18 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
     #strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
     for my_type in type2Strand2ListDict:
         for strand in type2Strand2ListDict[my_type]:
-            sims_data_list=type2Strand2ListDict[my_type][strand][1]
-            mean_sims=np.nanmean(sims_data_list)
-            min_sims=np.min(sims_data_list)
-            max_sims=np.max(sims_data_list)
+            sims_data_list = type2Strand2ListDict[my_type][strand][1]
+            if sims_data_list is not None and len(sims_data_list) > 0:
+                mean_sims = np.nanmean(sims_data_list)
+                min_sims = np.min(sims_data_list)
+                max_sims = np.max(sims_data_list)
+            else:
+                mean_sims = np.nan
+                min_sims = np.nan
+                max_sims = np.nan
             type2Strand2ListDict[my_type][strand].append(mean_sims)
             type2Strand2ListDict[my_type][strand].append(min_sims)
             type2Strand2ListDict[my_type][strand].append(max_sims)
-
 
     # Calculate p-value only
     for my_type in type2Strand2ListDict:
@@ -2830,10 +2829,15 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
     for signature in signature2MutationType2Strand2ListDict:
         for mutation_type in signature2MutationType2Strand2ListDict[signature]:
             for strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
-                sims_data_list=signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1]
-                mean_sims = np.nanmean(sims_data_list)
-                min_sims = np.nanmin(sims_data_list)
-                max_sims = np.nanmax(sims_data_list)
+                sims_data_list = signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1]
+                if sims_data_list is not None and len(sims_data_list) > 0:
+                    mean_sims = np.nanmean(sims_data_list)
+                    min_sims = np.nanmin(sims_data_list)
+                    max_sims = np.nanmax(sims_data_list)
+                else:
+                    mean_sims = np.nan
+                    min_sims = np.nan
+                    max_sims = np.nan
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(mean_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(min_sims)
                 signature2MutationType2Strand2ListDict[signature][mutation_type][strand].append(max_sims)
@@ -3167,10 +3171,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                 # Sample Names    MutationTypes   DBS2    DBS4    DBS5    DBS6    DBS9    DBS11
                 # LUAD-US_SP50518 AC>CA   0.004819278307958045    0.09604751880153346     0.0     0.07540775450119858     0.8237254483893098      0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE, CHROM, START, MUTATIONLONG, PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('string') # legacy category
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('string') # legacy category
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('string') # legacy category
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 # Add new columns
                 # MatrixGenerator generates Q:A[AC>TT]A
@@ -3185,10 +3189,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                 # Sample Names    MutationTypes   ID1     ID2     ID3     ID4     ID5     ID6     ID8     ID9     ID13
                 # LUAD-US_SP50518 1:Del:C:0       0.002114485363152394    0.0     0.4891560241408412      0.01586903032961574     0.2531175852230711      0.0     0.23974287494331953     0.0     0.0
                 mutations_with_genomic_positions_df.columns = [SAMPLE, CHROM, START, MUTATIONLONG, REF, ALT, PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('string') # legacy category
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('string') # legacy category
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('string') # legacy category
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 # Add new column
                 # MatrixGenerator generates N:1:Ins:T:5
@@ -3207,10 +3211,10 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                 # Sample    Mutation   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40
                 # LUAD-US_SP50518 A[C>A]A 0.005281537126491598    1.091660854697097e-06   0.0     0.0     0.12212513236310162     0.0022549935716281717   0.0     0.0     0.0     0.0     0.8703372452779239
                 mutations_with_genomic_positions_df.columns = [SAMPLE, CHROM, START, MUTATIONLONG, PYRAMIDINESTRAND]
-                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('category')
-                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('category')
+                mutations_with_genomic_positions_df[SAMPLE] = mutations_with_genomic_positions_df[SAMPLE].astype('string') # legacy category
+                mutations_with_genomic_positions_df[CHROM] = mutations_with_genomic_positions_df[CHROM].astype('string') # legacy category
                 mutations_with_genomic_positions_df[START] = mutations_with_genomic_positions_df[START].astype(int)
-                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('category')
+                mutations_with_genomic_positions_df[MUTATIONLONG] = mutations_with_genomic_positions_df[MUTATIONLONG].astype('string') # legacy category
                 mutations_with_genomic_positions_df[PYRAMIDINESTRAND] = mutations_with_genomic_positions_df[PYRAMIDINESTRAND].astype(int)
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
 
@@ -3274,8 +3278,8 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                     mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[5:8]
 
             # Set dtype as 'category'
-            mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATION].astype('category')
-            mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND].astype('category')
+            mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATION].astype('string') # legacy category
+            mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND].astype('string') # legacy category
 
             return mutations_with_genomic_positions_df
 
@@ -3314,7 +3318,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         # Convert CMDI-UK_SP116871 --> SP116871 # simNum=0 Original Data
         if PCAWG:
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.split('_', expand=True)[1]
-            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('category')
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('string') # legacy category
 
         #For Release SigProfilerTopography Python Package
         # For SNV
@@ -3326,7 +3330,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         if simNum >= 1:
             # Get rid of simulation number at the end
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit(pat='_', n=1, expand=True)[0]
-            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('category')
+            chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].astype('string') # legacy category
 
         if SAMPLE not in mutations_probabilities_df.columns.values:
             merged_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='inner', left_on=[MUTATION], right_on=[MUTATION])
@@ -3494,24 +3498,20 @@ def readProbabilities(probabilitiesFile, log_file, verbose):
 
     probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, nrows=1)
 
-    # No need
-    # probabilities_df[SAMPLE]=probabilities_df[SAMPLE].astype('category')
-    # probabilities_df[MUTATION] = probabilities_df[MUTATION].astype('category')
-
     if ('Sample Names' in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'category', 'MutationTypes': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'string', 'MutationTypes': 'string'}) # legacy category
         probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationTypes': MUTATION}, inplace=True)
     elif ('Sample Names' in probabilities_df.columns.values) and ('MutationType' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'category', 'MutationType': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'Sample Names': 'string', 'MutationType': 'string'}) # legacy category
         probabilities_df.rename(columns={'Sample Names': SAMPLE, 'MutationType': MUTATION}, inplace=True)
     elif ('Sample Names' not in probabilities_df.columns.values) and ('MutationTypes' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationTypes': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationTypes': 'string'}) # legacy category
         probabilities_df.rename(columns={'MutationTypes': MUTATION}, inplace=True)
     elif ('Sample Names' not in probabilities_df.columns.values) and ('MutationType' in probabilities_df.columns.values):
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationType': 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={'MutationType': 'string'}) # legacy category
         probabilities_df.rename(columns={'MutationType': MUTATION}, inplace=True)
     else:
-        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={SAMPLE: 'category', MUTATION: 'category'})
+        probabilities_df = pd.read_csv(probabilitiesFile, sep='\t', header=0, dtype={SAMPLE: 'string', MUTATION: 'string'}) # legacy category
 
     # Mutation_Probabilities.txt for SBS96
     # Sample Names    MutationTypes   SBS1    SBS2    SBS3    SBS4    SBS5    SBS13   SBS17a  SBS17b  SBS18   SBS28   SBS40

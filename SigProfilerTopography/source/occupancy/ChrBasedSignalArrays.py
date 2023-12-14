@@ -138,7 +138,7 @@ def readNucleosomeOccupancyData(quantileValue, nucleosomeFilename):
 
     column_names = [CHROM, START, END, SIGNAL]
     nucleosome_df = pd.read_csv(nucleosomeFilename, sep='\t', header=None, comment='#',
-                                names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+                                names=column_names, dtype={CHROM: 'string', START: np.int32, END: np.int32, SIGNAL: np.float32}) # legacy category
 
     max_signal = nucleosome_df[SIGNAL].max()
     min_signal = nucleosome_df[SIGNAL].min()
@@ -402,7 +402,7 @@ def readWig_write_derived_from_bedgraph(outputDir, jobname, genome, library_file
             print(type(chunk_df))
             print(sys.getsizeof(chunk_df))
             chunk_df.columns=[CHROM, START, END, SIGNAL]
-            chunk_df[CHROM] = chunk_df[CHROM].astype('category')
+            chunk_df[CHROM] = chunk_df[CHROM].astype('string') # legacy category
             chunk_df[START] = chunk_df[START].astype(np.int32)
             chunk_df[END] = chunk_df[END].astype(np.int32)
             chunk_df[SIGNAL] = chunk_df[SIGNAL].astype(np.float32)
@@ -479,7 +479,7 @@ def readWig_write_derived_from_bedgraph_using_pool_read_all(outputDir, jobname, 
         jobs = []
 
         column_names = [CHROM, START, END, SIGNAL]
-        data_df=pd.read_csv(library_file_with_path, sep='\t', header=None, comment='#' ,names=column_names, dtype={CHROM: 'category', START: np.int32, END: np.int32, SIGNAL: np.float32})
+        data_df=pd.read_csv(library_file_with_path, sep='\t', header=None, comment='#' ,names=column_names, dtype={CHROM: 'string', START: np.int32, END: np.int32, SIGNAL: np.float32}) # legacy category
 
         if verbose: print('\tVerbose Before data_df[CHROM].unique():%s' % (data_df[CHROM].unique()), file=log_out)
         data_df = data_df[data_df[CHROM].isin(possible_chrom_list)]
@@ -578,7 +578,7 @@ def readWig_write_derived_from_bedgraph_using_pool_chunks(outputDir, jobname, ge
             print(type(chunk_df))
             print(sys.getsizeof(chunk_df))
             chunk_df.columns=[CHROM, START, END, SIGNAL]
-            chunk_df[CHROM] = chunk_df[CHROM].astype('category')
+            chunk_df[CHROM] = chunk_df[CHROM].astype('string') # legacy category
             chunk_df[START] = chunk_df[START].astype(np.int32)
             chunk_df[END] = chunk_df[END].astype(np.int32)
             chunk_df[SIGNAL] = chunk_df[SIGNAL].astype(np.float32)
@@ -646,7 +646,7 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
                                   header=None,
                                   usecols=[0, 1, 2],
                                   names=[CHROM, START, END],
-                                  dtype={0: 'category', 1: np.int32, 2: np.int32},
+                                  dtype={0: 'string', 1: np.int32, 2: np.int32}, # legacy category
                                   sep='\t')
 
         elif (ncols <= 3 and (not discard_signal)):
@@ -657,7 +657,7 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
                                 header=None,
                                 usecols=[0, 1, 2, 3],
                                 names = [CHROM,START,END,SIGNAL],
-                                dtype={0: 'category', 1: np.int32, 2: np.int32, 3: np.float32},
+                                dtype={0: 'string', 1: np.int32, 2: np.int32, 3: np.float32}, # legacy category
                                 sep='\t')
 
         elif ((ncols == 10) or (ncols == 9)):
@@ -671,14 +671,14 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
             if discard_signal:
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0,1,2],
                                         names=[CHROM,START,END],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32}, sep='\t')
+                                        dtype={0: 'string', 1: np.int32, 2: np.int32}, sep='\t') # legacy category
 
             else:
                 print('--- SigProfilerTopography assumes that signal column is in the 7th column of this bed file and there is no header', file=log_out)
                 file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2, 3, 4, 5, 6],
                                         names=[CHROM, START, END, NAME, SCORE, STRAND, SIGNAL],
-                                        dtype={0: 'category', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
-                                               5: 'category', 6: np.float32},sep='\t')
+                                        dtype={0: 'string', 1: np.int32, 2: np.int32, 3: str, 4: np.int32,
+                                               5: 'string', 6: np.float32},sep='\t') # legacy category
 
                 # file_df.drop([3,4,5], inplace=True, axis=1)
                 file_df.drop([NAME, SCORE, STRAND], inplace=True, axis=1)
@@ -686,13 +686,13 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
         elif (ncols >= 3 and discard_signal):
             file_df = pd.read_csv(file_with_path, header=None, usecols=[0, 1, 2],
                                   names=[CHROM, START, END],
-                                  dtype={0: 'category', 1: np.int32, 2: np.int32}, sep='\t')
+                                  dtype={0: 'string', 1: np.int32, 2: np.int32}, sep='\t') # legacy category
 
         elif (ncols >= 5):
             print('--- SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header', file=log_out)
             file_df = pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4],
                                   names = [CHROM, START, END, SIGNAL],
-                                  dtype={0: 'category', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t')
+                                  dtype={0: 'string', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t') # legacy category
 
 
         print("--- file_df.dtypes:", file_df.dtypes, file=log_out)

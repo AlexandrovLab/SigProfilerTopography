@@ -1467,7 +1467,7 @@ def replicationStrandBiasAnalysis(outputDir,
     # For each signature all_sims_subs_signature_SBS96_mutation_type_lagging_np_array
     # For each signature all_sims_subs_signature_SBS96_mutation_type_leading_np_array
     write_sbs_signature_sbs96_mutation_type_replication_strand_bias(all_sims_subs_signature_SBS96_mutation_type_lagging_np_array[0],
-                                                                    all_sims_subs_signature_SBS96_mutation_type_leading_np_array[1],
+                                                                    all_sims_subs_signature_SBS96_mutation_type_leading_np_array[0],
                                                                     SBS96_mutation_types_np_array,
                                                                     sbs_signatures,
                                                                     strand_bias,

@@ -2858,7 +2858,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                 Line2D([0], [0], marker='o', color='white', label=LAGGING, markerfacecolor='indianred', markersize=40),
                 Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
 
-        panel1.legend(handles=legend_elements,ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40)
+        panel1.legend(handles=legend_elements,ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40, facecolor='white', edgecolor='black')
 
         for fold_change_index, fold_change_string in enumerate(fold_change_strings):
              for mutation_type_index, mutation_type in enumerate(mutation_types):

@@ -187,7 +187,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
             labelbottom=False)  # labels along the bottom edge are off
 
         if simulationsMeans is not None:
-            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=5, zorder=2)
+            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=5, zorder=4)
             if (simulationsLows is not None) and (simulationsHighs is not None):
                 # if (len(simulationsLows)==len(simulationsHighs)):
                 plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs), facecolor=fillcolor, zorder=2)
@@ -241,7 +241,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
         #    frame.set_edgecolor('black')
 
         if simulationsMeans is not None:
-            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=6, zorder=2)
+            sims_dashed_line = plt.plot(x, simulationsMeans, 'o--', color='black', label='Simulated Somatic Mutations', linewidth=6, zorder=4)
             if (simulationsLows is not None) and (simulationsHighs is not None):
                 # if (len(simulationsLows)==len(simulationsHighs)):
                 plt.fill_between(x, np.array(simulationsLows), np.array(simulationsHighs), facecolor=fillcolor, zorder=2)
