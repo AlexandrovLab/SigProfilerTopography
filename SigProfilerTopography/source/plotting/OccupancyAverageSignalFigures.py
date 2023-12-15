@@ -1337,7 +1337,6 @@ def heatmap(data, row_labels, col_labels, xlabels_on_top, ax=None, fontsize=None
     # nans are handled here
     # nans in data are converted into --
     data = np.ma.masked_invalid(data)
-    # ax.patch.set(hatch='x', edgecolor='black') # puts hatches for invalid values which is nan in this case
 
     # Plot the heatmap
     im = ax.imshow(data, **kwargs) # legacy
@@ -1603,6 +1602,9 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
     elif signatureType == SBS or signatureType == DBS:
         fontsize = 20
 
+    # create the colormap with extremes
+    cmap = mpl.colormaps["seismic"].with_extremes(bad='white')
+
     # Color the heatmap
     # nans are colored white
     # row and column labels are written here
@@ -1610,12 +1612,12 @@ def plot_heatmap_rows_signatures_columns_pooled_DNA_elements(signature2Biosample
                        signatures,
                        dna_elements,
                        xlabels_on_top,
-                       fontsize=fontsize,
-                       ax=ax,
-                       cmap='seismic',
-                       cbarlabel="Fold Change [Real mutations/Simulated Mutations]",
-                       vmin=0.25,
-                       vmax=1.75)
+                       fontsize = fontsize,
+                       ax = ax,
+                       cmap = cmap,
+                       cbarlabel = "Fold Change [Real mutations/Simulated Mutations]",
+                       vmin = 0.25,
+                       vmax = 1.75)
 
     # Color bar tick labels
     plot_color_bar_separate = False
