@@ -392,7 +392,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         # Plotting starts
         # create the directory if it does not exists
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY), exist_ok=True)
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
 
         # Plot processivity figure
         plot_processivity_figure(outputDir,
@@ -406,8 +405,8 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                  verbose)
 
     # Write dataframe
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES), exist_ok=True)
-    filePath = os.path.join(outputDir, jobname, FIGURE, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
+    os.makedirs(os.path.join(outputDir, jobname, DATA, PROCESSIVITY, TABLES), exist_ok=True)
+    filePath = os.path.join(outputDir, jobname, DATA, PROCESSIVITY, TABLES, '%s_Signatures_Processivity.txt' % (jobname))
     signature_processive_group_length_properties_df.to_csv(filePath, sep='\t', header=True, index=False)
 
     # Append  all_mutations_loci_df' to 'signature_processive_group_length_properties_df'
@@ -418,7 +417,6 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         f.write("\n")
         all_mutations_loci_df.to_csv(f, sep='\t', header=True, index=False)
         f.close()
-
 
 
 def plot_processivity_figure(outputDir,

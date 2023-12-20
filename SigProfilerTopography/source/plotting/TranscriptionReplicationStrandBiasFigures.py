@@ -463,12 +463,12 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
 
         # Set x tick labels
         if len(x_axis_labels) > 6:
-            ax.set_xticklabels(x_axis_labels, fontsize=35, rotation=90, fontweight='bold', fontname='Arial')
+            ax.set_xticklabels(x_axis_labels, fontsize=35, rotation=90, fontweight='normal', fontname='Arial')
         else:
-            ax.set_xticklabels(x_axis_labels, fontsize=35, fontweight='bold', fontname='Arial')
+            ax.set_xticklabels(x_axis_labels, fontsize=35, fontweight='normal', fontname='Arial')
 
         # Set the ylabel
-        plt.ylabel('Number of single base substitutions', fontsize=35, fontweight='bold', fontname='Arial') # fontweight='normal'
+        plt.ylabel('Number of single base substitutions', fontsize=35, fontweight='normal', fontname='Arial') # fontweight='normal'
 
         # set the x axis tick locations
         if (numberofSimulations > 0):
@@ -1724,16 +1724,23 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     dinucsSignatures = np.array([])
     indelsSignatures = np.array([])
 
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TEXT_FILES), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, TEXT_FILES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, EXCEL_FILES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, TEXT_FILES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, EXCEL_FILES), exist_ok=True)
+
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, BAR_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, CIRCLE_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, CIRCLE_BAR_PLOTS), exist_ok=True)
     os.makedirs(os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, SCATTER_PLOTS), exist_ok=True)
 
     strandbias_figures_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS)
-    strandbias_figures_text_files_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, TEXT_FILES)
-    strandbias_figures_excel_files_outputDir = os.path.join(outputDir, jobname, FIGURE, STRANDBIAS, EXCEL_FILES)
+
+    transcription_strand_bias_figures_text_files_outputDir = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, TEXT_FILES)
+    transcription_strand_bias_figures_excel_files_outputDir = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, EXCEL_FILES)
+
+    replication_strand_bias_figures_text_files_outputDir = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, TEXT_FILES)
+    replication_strand_bias_figures_excel_files_outputDir = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, EXCEL_FILES)
 
     # Read dataframes related with signatures and samples
     subsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
@@ -2055,11 +2062,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_lagging_versus_leading_df.loc[(type_lagging_versus_leading_df[ODDS_RATIO].round(2) >= fold_change), fold_change_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s.txt' % (LAGGING_VERSUS_LEADING)
-        signature_filepath = os.path.join(strandbias_figures_text_files_outputDir, signature_filename)
+        signature_filepath = os.path.join(replication_strand_bias_figures_text_files_outputDir, signature_filename)
         signature_lagging_versus_leading_df.to_csv(signature_filepath, sep='\t', header=True,index=False)
 
         type_filename = 'Type_%s.txt' % (LAGGING_VERSUS_LEADING)
-        type_filepath = os.path.join(strandbias_figures_text_files_outputDir, type_filename)
+        type_filepath = os.path.join(replication_strand_bias_figures_text_files_outputDir, type_filename)
         type_lagging_versus_leading_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
@@ -2112,11 +2119,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[ODDS_RATIO].round(2) >= fold_change), fold_change_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_filepath = os.path.join(strandbias_figures_text_files_outputDir, signature_filename)
+        signature_filepath = os.path.join(transcription_strand_bias_figures_text_files_outputDir, signature_filename)
         signature_transcribed_versus_untranscribed_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
         type_filename = 'Type_%s.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        type_filepath = os.path.join(strandbias_figures_text_files_outputDir, type_filename)
+        type_filepath = os.path.join(transcription_strand_bias_figures_text_files_outputDir, type_filename)
         type_transcribed_versus_untranscribed_df.to_csv(type_filepath, sep='\t', header=True,index=False)
 
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
@@ -2169,11 +2176,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             type_genic_versus_intergenic_df.loc[(type_genic_versus_intergenic_df[ODDS_RATIO].round(2) >= fold_change), fold_change_string] = 1
 
         signature_filename = 'Signature_Mutation_Type_%s.txt' % (GENIC_VERSUS_INTERGENIC)
-        signature_filepath = os.path.join(strandbias_figures_text_files_outputDir, signature_filename)
+        signature_filepath = os.path.join(transcription_strand_bias_figures_text_files_outputDir, signature_filename)
         signature_genic_versus_intergenic_df.to_csv(signature_filepath, sep='\t', header=True,index=False)
 
         type_filename = 'Type_%s.txt' % (GENIC_VERSUS_INTERGENIC)
-        type_filepath = os.path.join(strandbias_figures_text_files_outputDir, type_filename)
+        type_filepath = os.path.join(transcription_strand_bias_figures_text_files_outputDir, type_filename)
         type_genic_versus_intergenic_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
     # Write Excel Files
@@ -2182,12 +2189,17 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         if strand1_versus_strand2 == LAGGING_VERSUS_LEADING:
             signatures_df_list = [signature_lagging_versus_leading_df]
             types_df_list = [type_lagging_versus_leading_df]
+            strandbias_figures_excel_files_outputDir = replication_strand_bias_figures_excel_files_outputDir
+
         elif strand1_versus_strand2 == TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             signatures_df_list = [signature_transcribed_versus_untranscribed_df]
             types_df_list = [type_transcribed_versus_untranscribed_df]
+            strandbias_figures_excel_files_outputDir = transcription_strand_bias_figures_excel_files_outputDir
+
         elif strand1_versus_strand2 == GENIC_VERSUS_INTERGENIC:
             signatures_df_list = [signature_genic_versus_intergenic_df]
             types_df_list = [type_genic_versus_intergenic_df]
+            strandbias_figures_excel_files_outputDir = transcription_strand_bias_figures_excel_files_outputDir
 
         signatures_filename = "Signatures_Mutation_Types_%s.xlsx" %(strand1_versus_strand2)
         file_name_with_path = os.path.join(strandbias_figures_excel_files_outputDir, signatures_filename)
@@ -2369,7 +2381,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         transcriptionStrands,
                                         'royalblue',
                                         'yellowgreen',
-                                        'All Mutations',
+                                        'Mutations',
                                         'mutationtypes_transcription_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,
@@ -2389,7 +2401,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         genicVersusIntergenicStrands,
                                         'cyan',
                                         'gray',
-                                        'All Mutations',
+                                        'Mutations',
                                         'mutationtypes_genic_versus_intergenic_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,
@@ -2409,7 +2421,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                         replicationStrands,
                                         'indianred',
                                         'goldenrod',
-                                        'All Mutations',
+                                        'Mutations',
                                         'mutationtypes_replication_strand_bias',
                                         plot_mode,
                                         odds_ratio_cutoff,

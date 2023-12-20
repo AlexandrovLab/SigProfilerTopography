@@ -70,7 +70,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUCLEOSOME_DN
 from SigProfilerTopography.source.commons.TopographyCommons import ATAC_DNA_ELEMENT
 from SigProfilerTopography.source.commons.TopographyCommons import OPEN_CHROMATIN
 
-from SigProfilerTopography.source.commons.TopographyCommons import PLOTS
+from SigProfilerTopography.source.commons.TopographyCommons import OCCUPANCY_PLOTS
 from SigProfilerTopography.source.commons.TopographyCommons import TABLES
 from SigProfilerTopography.source.commons.TopographyCommons import DETAILED
 from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
@@ -646,7 +646,7 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
             if occupancy_type == NUCLEOSOMEOCCUPANCY:
                 figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
             elif occupancy_type == EPIGENOMICSOCCUPANCY:
-                figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS, filename)
+                figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, OCCUPANCY_PLOTS, filename)
         else:
             os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type), exist_ok=True)
             figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, occupancy_type, filename)
@@ -1018,7 +1018,7 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
 
     if (sample is None):
         if occupancy_type == EPIGENOMICSOCCUPANCY:
-            figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS, filename)
+            figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, OCCUPANCY_PLOTS, filename)
         elif occupancy_type == NUCLEOSOMEOCCUPANCY:
             figureFile = os.path.join(outputDir, jobname, FIGURE, occupancy_type, filename)
     else:
@@ -1879,12 +1879,10 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     signatures.extend(dbs_signatures)
     signatures.extend(id_signatures)
 
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, TABLES), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, DETAILED), exist_ok=True)
-    os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, EXCEL_FILES), exist_ok=True)
-
+    os.makedirs(os.path.join(outputDir, jobname, DATA, EPIGENOMICSOCCUPANCY, TABLES), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, EPIGENOMICSOCCUPANCY, EXCEL_FILES), exist_ok=True)
+    heatmaps_data_dir = os.path.join(outputDir, jobname, DATA, EPIGENOMICSOCCUPANCY)
     heatmaps_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS)
-    heatmaps_detailed_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY,HEATMAPS,DETAILED)
 
     # Step1 Calculate p value using z-test
     # Epigenomics Signatures
@@ -1906,47 +1904,28 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                         epigenomics_files_memos,
                         epigenomics_biosamples,
                         signatures,
-                        heatmaps_output_dir)
+                        heatmaps_data_dir)
 
-    if plot_detailed_epigemomics_heatmaps:
-        # Plot heatmaps using step1 under epigenomics_occupancy/heatmaps/detailed/
-        # Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined) under detailed/
-        plot_heatmap_one_row_only_for_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict,
-                                                                     jobname,
-                                                                     heatmaps_detailed_output_dir,
-                                                                     log_file,
-                                                                     verbose)
 
     # Step2 uses Step1
     # Combine p values using Fisher's method
     # Pool for epigenomics_dna_elements only
     # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=100 and get Step2
     step2_combined_p_value_df, step2_signature2biosample2dna_element2combined_p_value_list_dict, step2_signature2biosample2dna_element2avg_fold_change_dict = step2_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
-                                                                                                                                                         heatmaps_output_dir,
+                                                                                                                                                         heatmaps_data_dir,
                                                                                                                                                          combine_p_values_method,
                                                                                                                                                          num_of_real_data_avg_overlap,
                                                                                                                                                          nucleosome_file,
                                                                                                                                                          epigenomics_dna_elements,
                                                                                                                                                          log_file)
 
-    if plot_detailed_epigemomics_heatmaps:
-        # Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
-        # Rows biosamples
-        # Columns dna_elements
-        plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
-                                                                 epigenomics_dna_elements,
-                                                                 remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
-                                                                 jobname,
-                                                                 heatmaps_detailed_output_dir,
-                                                                 log_file,
-                                                                 verbose)
 
     # Step3 uses Step1
     # Combine p values using Fisher's method
     # Pool for biosample and epigenomics_dna_elements
     # Filter Step1 such that fold_change is not (nan,None), p_value is not (nan,None), real_data_avg_count>=num_of_real_data_avg_overlap and get Step3
     step3_combined_p_value_df, step3_signature2dna_element2combined_p_value_list_dict, step3_signature2dna_element2avg_fold_change_dict = step3_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
-                          heatmaps_output_dir,
+                          heatmaps_data_dir,
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
@@ -1958,6 +1937,30 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     step3_id_signature2dna_element2avg_fold_change_dict = breakdown_signatures(step3_signature2dna_element2avg_fold_change_dict,sbs_signatures,dbs_signatures,id_signatures)
 
     if plot_detailed_epigemomics_heatmaps:
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS, DETAILED), exist_ok=True)
+        heatmaps_detailed_output_dir = os.path.join(outputDir, jobname, FIGURE, EPIGENOMICSOCCUPANCY, HEATMAPS,
+                                                    DETAILED)
+
+        # Plot heatmaps using step1 under epigenomics_occupancy/heatmaps/detailed/
+        # Plot heatmap unfiltered --- row biosample, columns DNA elements (unpooled, uncombined) under detailed/
+        plot_heatmap_one_row_only_for_each_biosample_given_signature(step1_signature2Biosample2DNAElement2PValueDict,
+                                                                     jobname,
+                                                                     heatmaps_detailed_output_dir,
+                                                                     log_file,
+                                                                     verbose)
+
+
+        # Plot heatmaps using step2 under epigenomics_occupancy/heatmaps/detailed
+        # Rows biosamples
+        # Columns dna_elements
+        plot_heatmap_rows_biosamples_columns_pooled_DNA_elements(step2_signature2biosample2dna_element2avg_fold_change_dict,
+                                                                 epigenomics_dna_elements,
+                                                                 remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
+                                                                 jobname,
+                                                                 heatmaps_detailed_output_dir,
+                                                                 log_file,
+                                                                 verbose)
+
         # Plot Step3 heatmaps: Step3 have combined p-values pooled for  biosample and epigenomics_dna_elements but multiple testing correction
         if any(step3_sbs_signature2dna_element2avg_fold_change_dict):
             plot_heatmap_rows_signatures_columns_pooled_DNA_elements(step3_sbs_signature2dna_element2avg_fold_change_dict,
@@ -1998,14 +2001,15 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Step4 Correct combined p values
     # combined p value list
     # [fold_change_list,avg_fold_change,p_value_list,combined_p_value]
-    step4_q_value_df, step4_signature2dna_element2q_value_list_dict = step4_apply_multiple_tests_correction(step3_signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir)
+    step4_q_value_df, step4_signature2dna_element2q_value_list_dict = step4_apply_multiple_tests_correction(step3_signature2dna_element2combined_p_value_list_dict,
+                                                                                                            heatmaps_data_dir)
 
     # Step5
     # Filter using q values (combined_q_value<=significance_level and (avg_fold_change>=enriched_fold_change or avg_fold_change<=depleted_fold_change))
     # (signature, cancer_type, dna_element) with combined q_value <= 0.01 and (avg_fold_change >= 1.1 or <=0.9)
     # [fold_change_list, avg_fold_change, q_value_list, combined_q_value]
     step5_filtered_q_value_df, step5_signature2dna_element2average_fold_changedict,signature2dna_element2significancedict = step5_filter_signature_dna_element(step4_signature2dna_element2q_value_list_dict,
-                                                                                                                                                            heatmaps_output_dir,
+                                                                                                                                                            heatmaps_data_dir,
                                                                                                                                                             epigenomics_heatmap_significance_level)
     # Final heatmaps
     # Plot heatmaps
@@ -2050,7 +2054,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
                                                                  verbose)
 
     # write excel files
-    excel_file_path = os.path.join(heatmaps_output_dir,EXCEL_FILES,'Epigenomics_Occupancy.xlsx')
+    excel_file_path = os.path.join(heatmaps_data_dir, EXCEL_FILES,'Epigenomics_Occupancy.xlsx')
     df_list = [step1_p_value_df,step2_combined_p_value_df, step3_combined_p_value_df, step4_q_value_df, step5_filtered_q_value_df]
     sheet_list = ['step1_p_value', 'step2_combined_p_value', 'step3_combined_p_value', 'step4_q_value', 'step5_filtered_q_value']
     write_excel_file(df_list, sheet_list, excel_file_path)
@@ -2347,8 +2351,7 @@ def step1_calculate_p_value(fold_change_window_size,
                         epigenomics_files_memos,
                         epigenomics_biosamples,
                         signatures,
-                        heatmaps_output_dir):
-
+                        heatmaps_data_dir):
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(numofProcesses)
@@ -2413,7 +2416,7 @@ def step1_calculate_p_value(fold_change_window_size,
     # print('Step1 Getting p-values')
     # Write dictionary as a dataframe
     df_filename = 'Step1_Signature_Biosample_DNAElement_PValue.txt'
-    filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
+    filepath = os.path.join(heatmaps_data_dir, TABLES, df_filename)
     step1_p_value_df = write_dictionary_as_dataframe_step1_p_value(signature2Biosample2DNAElement2PValueDict,filepath)
     # print('##############################################################')
 
@@ -2421,7 +2424,7 @@ def step1_calculate_p_value(fold_change_window_size,
 
 
 def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
-                          heatmaps_output_dir,
+                          heatmaps_data_dir,
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
@@ -2539,14 +2542,14 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 
     # Write dictionary as a pandas dataframe
     df_filename = 'Step2_Signature_Biosample_DNAElement_CombinedPValue.txt'
-    filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
+    filepath = os.path.join(heatmaps_data_dir, TABLES, df_filename)
     step2_combined_p_value_df=write_dictionary_as_dataframe_step2_combined_p_value(signature2biosample2pooled_dna_element2combined_p_value_list_dict,filepath)
 
     return step2_combined_p_value_df, signature2biosample2pooled_dna_element2combined_p_value_list_dict, signature2biosample2pooled_dna_element2avg_fold_change_dict
 
 
 def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
-                          heatmaps_output_dir,
+                          heatmaps_data_dir,
                           combine_p_values_method,
                           num_of_real_data_avg_overlap,
                           nucleosome_file,
@@ -2646,14 +2649,14 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 
     # Write dictionary as a pandas dataframe
     df_filename = 'Step3_Signature_DNAElement_CombinedPValue.txt'
-    filepath = os.path.join(heatmaps_output_dir,TABLES, df_filename)
+    filepath = os.path.join(heatmaps_data_dir, TABLES, df_filename)
     step3_combined_p_value_df = write_dictionary_as_dataframe_step3_combined_p_value(signature2dna_element2combined_p_value_list_dict,filepath)
 
     return step3_combined_p_value_df, signature2dna_element2combined_p_value_list_dict, signature2dna_element2avg_fold_change_dict
 
 
 # [dna_element_long_list, avg_real_signal_list, avg_sim_signal_list, fold_change_list, avg_fold_change, p_value_list, combined_p_value]
-def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value_list_dict,heatmaps_output_dir):
+def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value_list_dict, heatmaps_data_dir):
     signature2dna_element2q_value_list_dict={}
 
     all_p_values = []
@@ -2708,13 +2711,16 @@ def step4_apply_multiple_tests_correction(signature2dna_element2combined_p_value
 
     # Write dictionary as a dataframe
     df_filename = 'Step4_Signature_CancerType_DNAElement_QValue.txt'
-    filepath = os.path.join(heatmaps_output_dir, TABLES, df_filename)
+    filepath = os.path.join(heatmaps_data_dir, TABLES, df_filename)
     step4_q_value_df=write_dictionary_as_dataframe_step4_q_value(signature2dna_element2q_value_list_dict,filepath)
 
     return step4_q_value_df,signature2dna_element2q_value_list_dict
 
 
-def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,heatmaps_output_dir,epigenomics_heatmap_significance_level):
+def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,
+                                       heatmaps_data_dir,
+                                       epigenomics_heatmap_significance_level):
+
     signature2dna_element2filtered_q_list_dict={}
     signature2dna_element2average_fold_changedict={}
     signature2dna_element2significancedict = {}
@@ -2760,8 +2766,8 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,h
 
     # Write dictionary as a dataframe
     df_filename = 'Step5_Signature_CancerType_DNAElement_FilteredQValue.txt'
-    filepath = os.path.join(heatmaps_output_dir, TABLES, df_filename)
-    #Filter rows in write_dictionary_as_dataframe_step5_filtered_q_value
+    filepath = os.path.join(heatmaps_data_dir, TABLES, df_filename)
+    # Filter rows in write_dictionary_as_dataframe_step5_filtered_q_value
     step5_filtered_q_value_df=write_dictionary_as_dataframe_step5_filtered_q_value(signature2dna_element2filtered_q_list_dict,epigenomics_heatmap_significance_level,filepath)
 
     return step5_filtered_q_value_df,signature2dna_element2average_fold_changedict,signature2dna_element2significancedict
@@ -2795,7 +2801,7 @@ def occupancyAverageSignalFigures(outputDir,
     if occupancy_type == NUCLEOSOMEOCCUPANCY:
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type), exist_ok=True)
     elif occupancy_type == EPIGENOMICSOCCUPANCY:
-        os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, PLOTS), exist_ok=True)
+        os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, OCCUPANCY_PLOTS), exist_ok=True)
 
     # Read necessary dataframes
     mutationtype_numberofmutations_numberofsamples_sampleslist_path = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename)
@@ -2878,10 +2884,9 @@ def occupancyAverageSignalFigures(outputDir,
             plot_occupancy_legend(outputDir, jobname, occupancy_type)
 
     # Plot Signature Based
-    # ncomms11383 Fig3b signature based average nucleosome occupancy figures
     if checkValidness(SIGNATUREBASED, outputDir, jobname, occupancy_type):
         if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
-            # Subs Signatures
+            # SBS Signatures
             if verbose:
                 log_out = open(log_file, 'a')
                 print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
@@ -2902,7 +2907,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       plot_mode)
 
         if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
-            # Dinucs Signatures
+            # DBS Signatures
             if verbose:
                 log_out = open(log_file, 'a')
                 print('\tVerbose Worker pid %s Plot signature based DBS %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
@@ -2923,7 +2928,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       plot_mode)
 
         if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
-            # Indels Signatures
+            # ID Signatures
             if verbose:
                 log_out = open(log_file, 'a')
                 print('\tVerbose Worker pid %s Plot signature based ID %s' % (str(os.getpid()), libraryFilenameMemo), file=log_out)

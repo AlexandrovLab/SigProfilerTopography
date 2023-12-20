@@ -394,7 +394,7 @@ WEIGHTED_AVERAGE_METHOD = 'WEIGHTED_AVERAGE_METHOD'
 COLORBAR_SEISMIC = 'seismic'
 COLORBAR_DISCREET = 'discreet'
 NUCLEOSOME_BIOSAMPLE = "K562"
-PLOTS = 'plots'
+OCCUPANCY_PLOTS = 'occupancy_plots'
 TABLES = 'tables'
 DETAILED = 'detailed'
 EXCEL_FILES = 'excel_files'
@@ -443,7 +443,6 @@ Sample2IndelsSignature2NumberofMutationsDictFilename = 'Sample2IndelsSignature2N
 Sample2NumberofDinucsDictFilename = 'Sample2NumberofDinucsDict.txt'
 DinucsSignature2NumberofMutationsDictFilename = 'DinucsSignature2NumberofMutationsDict.txt'
 Sample2DinucsSignature2NumberofMutationsDictFilename = 'Sample2DinucsSignature2NumberofMutationsDict.txt'
-
 
 # For Replication
 DecileIndex2NumfAttributableBasesDictFilename = 'DecileIndex2NumfAttributableBasesDict.txt'
@@ -548,7 +547,6 @@ DEFAULT_NUM_OF_ID_REQUIRED = 1000
 DEFAULT_NUM_OF_REAL_DATA_OVERLAP_REQUIRED = 100
 NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT = 1
 
-
 # Column Names
 PROJECT = 'Project'
 SAMPLE = 'Sample'
@@ -646,6 +644,11 @@ ACCUMULATED_SIGNAL_ARRAY = 'AccumulatedSignalArray'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT'
 PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE = 'PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT_OCCUPANCY_ANALYSIS_FIGURE'
+
+# SigProfiler suite of software tools
+SPA = 'SPA'
+
+PROBABILITIES = 'probabilities'
 
 # memory inefficient, read all in once
 def md5(file_name):
