@@ -1074,6 +1074,7 @@ def runAnalyses(genome,
                 jobname,
                 numofSimulations,
                 samples_of_interest = None, # runAnalyses only for these samples if samples is not None but a non-empty list
+                bed_file = None, # [string path to bed_file] SigProfilerSimulator simulates on custom regions of the genome. Requires the full path to the BED file.
                 gender = 'female', # default is 'female', other option is 'male' for SigProfilerSimulator for simulations using SigProfilerSimulator
                 matrix_generator_path = MATRIX_GENERATOR_PATH, # for SigProfilerMatrixGenerator
                 sbs_signatures = None, # SBS signatures matrix
@@ -1512,7 +1513,7 @@ def runAnalyses(genome,
     print('#################################################################################', file=log_out)
 
     print('#################################################################################', file=log_out)
-    print('--- SigProfilerTopography Version:%s' % topography_version.version, file=log_out)
+    print('--- SigProfilerTopography Version: %s' % topography_version.version, file=log_out)
     print("--- SigProfilerMatrixGenerator Version: %s" %matrix_generator_version.version, file=log_out)
     print("--- SigProfilerSimulator version: %s" %simulator_version.version, file=log_out)
     print("--- pandas version: %s" %pd.__version__, file=log_out)
@@ -1872,9 +1873,10 @@ def runAnalyses(genome,
             # Please notice that Simulator reverse the given input mutationTypes_for_simulator
             print('--- SigProfilerSimulator is running for %s' %(mutation_type_context), file=log_out)
             simulator.SigProfilerSimulator(jobname, inputDir, genome, mutation_type_context_for_simulator,
-                                            gender=gender,
-                                            simulations=numofSimulations,
-                                            chrom_based=True)
+                                           bed_file = bed_file,
+                                           gender = gender,
+                                           simulations = numofSimulations,
+                                           chrom_based = True)
         print("--- SigProfilerSimulator for %d simulations: %s seconds" %(numofSimulations,(time.time() -  start_time)), file=log_out)
         print("--- SigProfilerSimulator for %d simulations: %f minutes" %(numofSimulations,float((time.time()-start_time)/60)), file=log_out)
         print('--- SigProfilerSimulator for %d simulations ends' %(numofSimulations), file=log_out)
