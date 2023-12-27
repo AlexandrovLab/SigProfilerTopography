@@ -39,7 +39,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import INDELS
 from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
 
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
-from SigProfilerTopography.source.commons.TopographyCommons import MUTATION_LONG
+from SigProfilerTopography.source.commons.TopographyCommons import MUTATIONLONG
 from SigProfilerTopography.source.commons.TopographyCommons import LENGTH
 
 from SigProfilerTopography.source.commons.TopographyCommons import LEADING
@@ -269,7 +269,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         indexofMutation = np.where(df_columns == MUTATION)[0][0]
         SBS6_mutation_type = mutation_row[indexofMutation]
 
-        index_of_mutation_long = np.where(df_columns == MUTATION_LONG)[0][0]
+        index_of_mutation_long = np.where(df_columns == MUTATIONLONG)[0][0]
 
         # e.g.: T:AA[C>A]AA
         mutation_type_long = mutation_row[index_of_mutation_long]

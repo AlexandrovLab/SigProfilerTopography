@@ -36,6 +36,11 @@ from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
+
+from SigProfilerTopography.source.commons.TopographyCommons import DATA
+from SigProfilerTopography.source.commons.TopographyCommons import FIGURE
+from SigProfilerTopography.source.commons.TopographyCommons import LNCRNA
+
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -64,14 +69,8 @@ def get_best_annotated_regions(combined_df,
             annotated_regions = df['name'][0:num_of_best_annotated_regions].values
             qvalues = df[significance_column_name][0:num_of_best_annotated_regions].values
             all_annotated_regions = all_annotated_regions.union(annotated_regions)
-            print('DEBUG', signature, 'annotated_regions:', annotated_regions)
-            print('DEBUG', signature, 'qvalues:', qvalues)
             if len(annotated_regions) > 0:
                 selected_signatures.append(signature)
-
-    print('DEBUG len(all_annotated_regions):', len(all_annotated_regions))
-    print('DEBUG all_annotated_regions:', all_annotated_regions)
-    print('DEBUG selected_signatures:', selected_signatures)
 
     return selected_signatures, all_annotated_regions
 
@@ -136,12 +135,6 @@ def fill_arrays(combined_df,
                 circle_radius_array[i][j] = np.nan
                 circle_color_array[i][j] = np.nan
 
-    print('DEBUG len(annotated_regions_sorted_list):', len(annotated_regions_sorted_list))
-    print('DEBUG annotated_regions_sorted_list:', annotated_regions_sorted_list)
-    print('DEBUG len(signatures):', len(signatures))
-    print('DEBUG signatures:', signatures)
-    print('DEBUG circle_radius_array.shape:', circle_radius_array.shape)
-    print('DEBUG circle_radius_array:', circle_radius_array)
 
     # which signatures are all nans?
     circle_radius_array_columns_all_nans = np.all(np.isnan(circle_radius_array), axis=0)
@@ -151,9 +144,6 @@ def fill_arrays(combined_df,
 
     # remove the qvalue_array columns all nans
     circle_color_array = circle_color_array[:, ~circle_radius_array_columns_all_nans]
-
-    print('DEBUG signatures:', signatures)
-    print('DEBUG signatures_all_nans:', circle_radius_array_columns_all_nans)
 
     # Remove the signatures all with nans
     signatures_array = np.array(signatures)[~circle_radius_array_columns_all_nans]
@@ -227,7 +217,7 @@ def calculate_radius_add_patch_updated(row_index,
     if ((radius > 0) and (qvalue < significance_level)):
         ax.add_patch(plt.Circle((column_index + 0.5, row_index + 0.5), radius, color=cmap(norm(minus_log10_qvalue)), fill=True, zorder=5))
 
-def plot_radiusbar_vertical(output_path, circle_radius_min, circle_radius_max, annotated_regions_filename):
+def plot_radiusbar_vertical(outputDir, jobname, circle_radius_min, circle_radius_max, annotated_regions_filename):
 
     diameter_labels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
@@ -273,7 +263,6 @@ def plot_radiusbar_vertical(output_path, circle_radius_min, circle_radius_max, a
         which='major',  # both major and minor ticks are affected
         bottom=False)  # labels along the bottom edge are off
 
-
     # CODE GOES HERE TO CENTER Y-AXIS LABELS...
     ax.set_ylim([0, len(diameter_labels)])
     ax.set_yticklabels([])
@@ -297,12 +286,12 @@ def plot_radiusbar_vertical(output_path, circle_radius_min, circle_radius_max, a
     ax.set_ylabel('Fold\nchange', fontsize=30, labelpad=50, rotation=0)
 
     filename = '%s_radius_bar.png' %(annotated_regions_filename)
-    figureFile = os.path.join(output_path, filename)
+    figureFile = os.path.join(outputDir, jobname, FIGURE, LNCRNA, filename)
 
     fig.savefig(figureFile)
     plt.close()
 
-def plot_colorbar_vertical(output_path, cmap, v_min, v_max, annotated_regions_filename):
+def plot_colorbar_vertical(outputDir, jobname, cmap, v_min, v_max, annotated_regions_filename):
     fig = plt.figure(figsize=(4, 10))
     ax = fig.add_axes([0.05, 0.05, 0.1, 0.9])
 
@@ -318,13 +307,14 @@ def plot_colorbar_vertical(output_path, cmap, v_min, v_max, annotated_regions_fi
     cb.set_label("-log10\n(q-value)", verticalalignment='center', rotation=0, labelpad=100, fontsize=40)
 
     filename = '%s_color_bar_vertical.png' %(annotated_regions_filename)
-    figureFile = os.path.join(output_path, filename)
+    figureFile = os.path.join(outputDir, jobname, FIGURE, LNCRNA, filename)
 
     fig.savefig(figureFile)
     plt.close()
 
 
-def plot_circles_on_grid(output_path,
+def plot_circles_on_grid(outputDir,
+                         jobname,
                          rows_list,
                          columns_array,
                          circle_radius_array,
@@ -454,7 +444,7 @@ def plot_circles_on_grid(output_path,
                                                    ax)
 
         filename = '%s.png' %(annotated_regions_filename)
-        figureFile = os.path.join(output_path, filename)
+        figureFile = os.path.join(outputDir, jobname, FIGURE, LNCRNA, filename)
         fig.savefig(figureFile, dpi=dpi, bbox_inches="tight")
         plt.close()
 
@@ -500,7 +490,7 @@ def calculate_binomtest_fisherexacttest_ztest_pvalue(signature,
             qvalue,
             foldchange)
 
-def get_np_array_rows_runs_columns_ordered_annotated_regions(signature, signatures_df):
+def get_np_array_rows_runs_columns_ordered_annotated_regions(signature, signatures_df, outputDir, jobname):
     arr_stacked = None
     signature_based_num_of_mutations = None
 
@@ -510,14 +500,13 @@ def get_np_array_rows_runs_columns_ordered_annotated_regions(signature, signatur
         print(signature, 'signature_based_num_of_mutations:', signature_based_num_of_mutations)
 
         if signature == 'aggregatedsubstitutions':
-            output_path = os.path.join(
-                '/restricted/alexandrov-ddn/users/burcak/SigProfilerTopographyRuns/Mutographs_ESCC_552/topography/all_escc_552_samples/data/lncRNA/aggregatedsubstitutions')
+            output_path = os.path.join(outputDir, jobname, DATA, LNCRNA, 'aggregatedsubstitutions')
+        elif signature == 'aggregateddinucs':
+            output_path = os.path.join(outputDir, jobname, DATA, LNCRNA, 'aggregateddinucs')
         elif signature == 'aggregatedindels':
-            output_path = os.path.join(
-                '/restricted/alexandrov-ddn/users/burcak/SigProfilerTopographyRuns/Mutographs_ESCC_552/topography/all_escc_552_samples/data/lncRNA/aggregatedindels')
+            output_path = os.path.join(outputDir, jobname, DATA, LNCRNA, 'aggregatedindels')
         else:
-            output_path = os.path.join(
-                '/restricted/alexandrov-ddn/users/burcak/SigProfilerTopographyRuns/Mutographs_ESCC_552/topography/all_escc_552_samples/data/lncRNA/signaturebased')
+            output_path = os.path.join(outputDir, jobname, DATA, LNCRNA, 'signaturebased')
 
         arr_list = []
         for sim_num in range(101):
@@ -596,27 +585,28 @@ def convert_dict_2_df(signature, signature_num_of_mutations, signature_2_annotat
 
     return df
 
-def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
-                  genome_length,
-                  signatures,
-                  signature_type,
-                  signatures_df,
-                  ordered_annotated_regions_array,
-                  annotated_region_2_length_dict,
-                  run_parallel,
-                  num_of_best_annotated_regions_per_signature,
-                  pvalue_column_of_interest,
-                  column_for_sorting,
-                  column_for_sorting_ascending,
-                  column_for_circle_radius,
-                  column_for_circle_color,
-                  column_for_significance_level,
-                  significance_level,
-                  radius_adjustment_value,
-                  cmap,
-                  colorbar_v_min,
-                  colorbar_v_max,
-                  output_path):
+def plot_highly_mutated_annotated_regions_figure(outputDir,
+                                                 jobname,
+                                                 annotated_regions_filename,
+                                                 genome_length,
+                                                 signatures,
+                                                 signature_type,
+                                                 signatures_df,
+                                                 ordered_annotated_regions_array,
+                                                 annotated_region_2_length_dict,
+                                                 run_parallel,
+                                                 num_of_best_annotated_regions_per_signature,
+                                                 pvalue_column_of_interest,
+                                                 column_for_sorting,
+                                                 column_for_sorting_ascending,
+                                                 column_for_circle_radius,
+                                                 column_for_circle_color,
+                                                 column_for_significance_level,
+                                                 significance_level,
+                                                 radius_adjustment_value,
+                                                 cmap,
+                                                 colorbar_v_min,
+                                                 colorbar_v_max):
 
     df_list = []
 
@@ -624,7 +614,9 @@ def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
 
         signature_2_annotated_region_2_result_dict = {}
         signature_num_of_mutations, signature_rows_runs_columns_regions_arr = get_np_array_rows_runs_columns_ordered_annotated_regions(signature,
-                                                                                                                                       signatures_df)
+                                                                                                                                       signatures_df,
+                                                                                                                                       outputDir,
+                                                                                                                                       jobname)
         numofProcesses = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=numofProcesses)
 
@@ -750,20 +742,20 @@ def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
             # sort w.r.t column_to_be_sorted
             df.sort_values(by=['%s_%s' %(signature, column_for_sorting)], ascending=column_for_sorting_ascending, inplace=True)
             filename = '%s_%s.txt' %(signature, annotated_regions_filename)
-            df.to_csv(os.path.join(output_path, filename), sep="\t", index=False, header=True)
+            df.to_csv(os.path.join(outputDir, jobname, DATA, LNCRNA, filename), sep="\t", index=False, header=True)
             df.drop(['signature'], inplace=True, axis=1)
             df_list.append(df)
 
     combined_df = reduce(lambda df1, df2: df1.merge(df2, how='inner', on='name'), df_list)
     apply_multiple_testing(combined_df, signatures, pvalue_column_of_interest)
     filename = '%s_common_%s.txt' %(signature_type,annotated_regions_filename)
-    combined_df.to_csv(os.path.join(output_path, filename), sep="\t",
+    combined_df.to_csv(os.path.join(outputDir, jobname, DATA, LNCRNA, filename), sep="\t",
               index=False, header=True)
 
     combined_df = reduce(lambda df1, df2: df1.merge(df2, how='outer', on='name'), df_list)
     apply_multiple_testing(combined_df, signatures, pvalue_column_of_interest)
     filename = '%s_all_%s.txt' %(signature_type,annotated_regions_filename)
-    combined_df.to_csv(os.path.join(output_path, filename), sep="\t",
+    combined_df.to_csv(os.path.join(outputDir, jobname, DATA, LNCRNA, filename), sep="\t",
               index=False, header=True)
 
     # TODO DEFINE PROMOTER REGION
@@ -785,7 +777,8 @@ def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
                                                                                                            significance_level)
 
 
-    plot_colorbar_vertical(output_path,
+    plot_colorbar_vertical(outputDir,
+                           jobname,
                            cmap,
                            colorbar_v_min,
                            colorbar_v_max,
@@ -794,12 +787,14 @@ def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
     circle_radius_min = np.min(circle_radius_array[np.nonzero(circle_radius_array)])
     circle_radius_max = np.max(circle_radius_array[np.nonzero(circle_radius_array)])
 
-    plot_radiusbar_vertical(output_path,
+    plot_radiusbar_vertical(outputDir,
+                            jobname,
                             circle_radius_min,
                             circle_radius_max,
                             annotated_regions_filename)
 
-    plot_circles_on_grid(output_path,
+    plot_circles_on_grid(outputDir,
+                         jobname,
                          annotated_regions_sorted_list,
                          signatures_array,
                          circle_radius_array,
@@ -819,7 +814,7 @@ def plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
 # TODO run from start to end with SigProfilerTopography
 # TODO apply for protein coding genes + miRNAs
 def annotated_regions_figures(genome,
-                              output_path,
+                              outputDir,
                               jobname,
                               numberofSimulations,
                               annotated_regions_filename,
@@ -832,36 +827,44 @@ def annotated_regions_figures(genome,
     genome_length = get_genome_length(genome)
 
     # read
-    sbs_signatures_file_path = os.path.join(
-        '/restricted/alexandrov-ddn/users/burcak/SigProfilerTopographyRuns/Mutographs_ESCC_552/topography/all_escc_552_samples/data/Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt')
-    signatures_df = pd.read_csv(os.path.join(sbs_signatures_file_path),
-                                sep='\t', header=0,
+    sbs_signatures_file_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+    signatures_df = pd.read_csv(sbs_signatures_file_path,
+                                sep='\t',
+                                header=0,
                                 dtype={'cutoff': np.float32,
                                        'signature': str,
                                        'number_of_mutations': np.int32,
                                        'average_probability': np.float32})
 
-    subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
-            os.path.join(outputDir, jobname, DATA,
-                         Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,
-            dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,
-                   'average_probability': np.float32})
-    if (DBS in sigprofiler_extractor_mutation_types_contexts):
-        dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
-            os.path.join(outputDir, jobname, DATA,
-                         Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,
-            dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,
-                   'average_probability': np.float32})
-    if (ID in sigprofiler_extractor_mutation_types_contexts):
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
-            os.path.join(outputDir, jobname, DATA,
-                         Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', header=0,
-            dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,
-                   'average_probability': np.float32})
+    signatures = signatures_df['signature'].unique().tolist()
+    signatures.append('aggregatedsubstitutions')
+
+    # if (DBS in sigprofiler_extractor_mutation_types_contexts):
+    #     dbs_signatures_file_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+    #     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(dbs_signatures_file_path,
+    #                                                                                  sep='\t',
+    #                                                                                  header=0,
+    #                                                                                  dtype={'cutoff': np.float32,
+    #                                                                                         'signature': str,
+    #                                                                                         'number_of_mutations': np.int32,
+    #                                                                                         'average_probability': np.float32})
+    # if (ID in sigprofiler_extractor_mutation_types_contexts):
+    #     id_signatures_file_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
+    #
+    #     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(id_signatures_file_path,
+    #                                                                                  sep='\t',
+    #                                                                                  header=0,
+    #                                                                                  dtype={'cutoff': np.float32,
+    #                                                                                         'signature': str,
+    #                                                                                         'number_of_mutations': np.int32,
+    #                                                                                         'average_probability': np.float32})
 
     # read
-    lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA',
-                                    'gencode.v43lift37.long_noncoding_RNAs.gff3')
+    if genome == GRCh37:
+        lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA', 'gencode.v43lift37.long_noncoding_RNAs.gff3')
+    elif genome == GRCh38:
+        lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh38/lncRNA', 'gencode.v44.long_noncoding_RNAs.gff3')
+
     annotated_region_df = read_lncRNA_GRCh37_annotation_file(lncRNA_file_path)
     annotated_region_df['length'] = annotated_region_df['end'] - annotated_region_df['start'] + 1
     annotated_region_2_length_dict = {k: v for k, v in zip(annotated_region_df['gene_name'], annotated_region_df['length'])}
@@ -870,16 +873,16 @@ def annotated_regions_figures(genome,
     # real and simulated number of hits are stored in the numpy arrays in the order of ordered_annotated_regions_array
     num_of_annotated_regions, ordered_annotated_regions_array, chrom_2_tree_dict = create_intervaltree(annotated_region_df)
 
-    print('num_of_annotated_regions:', num_of_annotated_regions)
-    print('len(ordered_annotated_regions_array):', len(ordered_annotated_regions_array))
+    # print('num_of_annotated_regions:', num_of_annotated_regions)
+    # print('len(ordered_annotated_regions_array):', len(ordered_annotated_regions_array))
 
     # signatures of interest
     # signatures = ['SBS1', 'SBS2', 'SBS3', 'SBS5', 'SBS13', 'SBS16', 'SBS17a', 'SBS17b', 'SBS18', 'SBS40', 'aggregatedsubstitutions']
     # signatures = ['SBS1', 'SBS2', 'SBS3', 'SBS5', 'SBS13', 'SBS16', 'SBS17a', 'SBS17b', 'SBS18', 'SBS40']
-    signatures = ['SBS1', 'SBS2', 'SBS3', 'SBS4', 'SBS5', 'SBS8', 'SBS10a', 'SBS10b', 'SBS12', 'SBS13', 'SBS14',
-                  'SBS15', 'SBS16', 'SBS17a', 'SBS17b', 'SBS18', 'SBS20', 'SBS22', 'SBS23', 'SBS25', 'SBS28',
-                  'SBS30', 'SBS33', 'SBS34', 'SBS39', 'SBS40', 'SBS44', 'SBS288P']
-    # signatures = ['ID1', 'ID2', 'ID3', 'ID4', 'ID6', 'ID8', 'ID9', 'ID11', 'ID14', 'ID17', 'aggregatedindels']
+    # signatures = ['SBS1', 'SBS2', 'SBS3', 'SBS4', 'SBS5', 'SBS8', 'SBS10a', 'SBS10b', 'SBS12', 'SBS13', 'SBS14',
+    #               'SBS15', 'SBS16', 'SBS17a', 'SBS17b', 'SBS18', 'SBS20', 'SBS22', 'SBS23', 'SBS25', 'SBS28',
+    #               'SBS30', 'SBS33', 'SBS34', 'SBS39', 'SBS40', 'SBS44', 'SBS288P']
+    # # signatures = ['ID1', 'ID2', 'ID3', 'ID4', 'ID6', 'ID8', 'ID9', 'ID11', 'ID14', 'ID17', 'aggregatedindels']
     # 'aggregatedsubstitutions'
     # 'aggregateddinucs'
     # 'aggregatedindels'
@@ -909,26 +912,26 @@ def annotated_regions_figures(genome,
 
     cmap = cm.get_cmap('Reds')
     cmap = truncate_colormap(cmap, 0.2, 1)
-    output_path = os.path.join('/oasis/tscc/scratch/burcak/temp/Mutographs_ESCC_552_lncRNA')
 
-    plot_highly_mutated_annotated_regions_figure(annotated_regions_filename,
-        genome_length,
-        signatures,
-        signature_type,
-        signatures_df,
-        ordered_annotated_regions_array,
-        annotated_region_2_length_dict,
-        run_parallel,
-        num_of_best_annotated_regions_per_signature,
-        pvalue_column_of_interest,
-        column_for_sorting,
-        column_for_sorting_ascending,
-        column_for_circle_radius,
-        column_for_circle_color,
-        column_for_significance_level,
-        significance_level,
-        radius_adjustment_value,
-        cmap,
-        colorbar_v_min,
-        colorbar_v_max,
-        output_path)
+    plot_highly_mutated_annotated_regions_figure(outputDir,
+                                                 jobname,
+                                                 annotated_regions_filename,
+                                                 genome_length,
+                                                 signatures,
+                                                 signature_type,
+                                                 signatures_df,
+                                                 ordered_annotated_regions_array,
+                                                 annotated_region_2_length_dict,
+                                                 run_parallel,
+                                                 num_of_best_annotated_regions_per_signature,
+                                                 pvalue_column_of_interest,
+                                                 column_for_sorting,
+                                                 column_for_sorting_ascending,
+                                                 column_for_circle_radius,
+                                                 column_for_circle_color,
+                                                 column_for_significance_level,
+                                                 significance_level,
+                                                 radius_adjustment_value,
+                                                 cmap,
+                                                 colorbar_v_min,
+                                                 colorbar_v_max)

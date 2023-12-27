@@ -23,6 +23,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import LNCRNA
 
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
+from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
+
 import pandas as pd
 import numpy as np
 import os
@@ -182,7 +185,6 @@ def accumulate_arrays(row,
 
         to_be_accumulated_num_of_hits_array = mask_array_1xnumofsignatures.T * annotated_regions_array_1xnum_of_annotated_regions
         accumulated_num_of_hits_np_array += to_be_accumulated_num_of_hits_array
-
 
 
 
@@ -582,8 +584,12 @@ def annotated_region_analysis(genome,
     chrom_2_tree_dict = None
 
     if region_type == LNCRNA:
-        # TODO genome based
-        lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA',
+        # TODO genome based mm genomes
+        if genome == GRCh38:
+            lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh38/lncRNA',
+                                            'gencode.v44.long_noncoding_RNAs.gff3')
+        elif genome == GRCh37:
+            lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA',
                                         'gencode.v43lift37.long_noncoding_RNAs.gff3')
         lncRNA_df = read_lncRNA_GRCh37_annotation_file(lncRNA_file_path)
         num_of_lncRNAs, ordered_lncRNA_regions, chrom_2_tree_dict = create_intervaltree(lncRNA_df)

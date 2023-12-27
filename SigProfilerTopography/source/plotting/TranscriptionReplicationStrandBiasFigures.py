@@ -15,13 +15,15 @@
 
 import os
 import numpy as np
+import pandas as pd
 import statsmodels.stats.multitest
 
+import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib import gridspec
 
-import pandas as pd
+matplotlib.use("Agg")
 
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
@@ -103,6 +105,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_
 from SigProfilerTopography.source.commons.TopographyCommons import write_excel_file
 
 from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT
+from SigProfilerTopography.source.commons.TopographyCommons import clear_plotting_memory
 
 SIGNATURE = 'signature'
 CANCER_TYPE = 'cancer_type'
@@ -223,7 +226,6 @@ def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using
 
         if (mutationType in replicationRatiosDict) and (mutationType in transcriptionRatiosDict):
             plt.scatter(replicationRatiosDict[mutationType], transcriptionRatiosDict[mutationType], label=mutationType)
-
 
 
     legend = plt.legend(loc='upper left', frameon=True, fancybox =False,labels=six_mutation_types, bbox_to_anchor=(-0.0095, 1.0095))
@@ -2211,6 +2213,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
 
     # Step5 Plot figures
     plot_legend(strandbias_figures_outputDir)
+    clear_plotting_memory()
 
     # Circle Plots
     for strand_bias in strand_bias_list:
@@ -2516,6 +2519,7 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
         for fold_change_index, fold_change_string in enumerate(fold_change_strings):
             for row_signature_index, row_signature in enumerate(rows_signatures):
+
                 if (strand_bias == LAGGING_VERSUS_LEADING):
                     lagging_percentage = None
                     leading_percentage = None
@@ -2716,6 +2720,7 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
         fig.clear()
         plt.close(fig)
 
+
 # Plot Legend only
 def plot_legend(strandbias_figures_outputDir):
 
@@ -2783,18 +2788,17 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
     xticklabels_list = fold_change_strings * len(mutation_types)
 
     if (len(rows_sbs_signatures) > 0):
-
-        plot1, panel1 = plt.subplots(figsize=(5+1.5*len(xticklabels_list), 10+1.5*len(rows_sbs_signatures)))
+        plot1, ax = plt.subplots(figsize=(5+1.5*len(xticklabels_list), 10+1.5*len(rows_sbs_signatures)))
         plt.rc('axes', edgecolor='lightgray')
         # panel1 = plt.axes([0.04, 0.09, 0.95, 0.75])
 
         # make aspect ratio square
-        panel1.set_aspect(1.0)
+        ax.set_aspect(1.0)
 
         # make axis background white
-        panel1.set_facecolor('white')
+        ax.set_facecolor('white')
 
-        panel1.text(len(fold_change_strings)*3, len(rows_sbs_signatures)+2.5, title,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
+        ax.text(len(fold_change_strings)*3, len(rows_sbs_signatures)+2.5, title,  horizontalalignment='center', fontsize=60, fontweight='bold', fontname='Arial')
 
         # Colors from SigProfilerPlotting tool to be consistent
         colors = [[3 / 256, 189 / 256, 239 / 256],
@@ -2808,26 +2812,26 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
         x = 0
 
         for i in range(0, len(mutation_types), 1):
-            panel1.text((x+(len(fold_change_strings)/2)-0.75), len(rows_sbs_signatures)+1.5, mutation_types[i], fontsize=55, fontweight='bold', fontname='Arial')
-            panel1.add_patch(plt.Rectangle((x+.0415, len(rows_sbs_signatures)+0.75), len(fold_change_strings)-(2*.0415), .5, facecolor=colors[i], clip_on=False))
-            panel1.add_patch(plt.Rectangle((x, 0), len(fold_change_strings), len(rows_sbs_signatures), facecolor=colors[i], zorder=0, alpha=0.25,edgecolor='grey'))
+            ax.text((x+(len(fold_change_strings)/2)-0.75), len(rows_sbs_signatures)+1.5, mutation_types[i], fontsize=55, fontweight='bold', fontname='Arial')
+            ax.add_patch(plt.Rectangle((x+.0415, len(rows_sbs_signatures)+0.75), len(fold_change_strings)-(2*.0415), .5, facecolor=colors[i], clip_on=False))
+            ax.add_patch(plt.Rectangle((x, 0), len(fold_change_strings), len(rows_sbs_signatures), facecolor=colors[i], zorder=0, alpha=0.25,edgecolor='grey'))
             x += len(fold_change_strings)
 
         # CODE GOES HERE TO CENTER X-AXIS LABELS...
-        panel1.set_xlim([0,len(mutation_types)*len(fold_change_strings)])
-        panel1.set_xticklabels([])
+        ax.set_xlim([0,len(mutation_types)*len(fold_change_strings)])
+        ax.set_xticklabels([])
 
-        panel1.tick_params(axis='x', which='minor', length=0, labelsize=35)
+        ax.tick_params(axis='x', which='minor', length=0, labelsize=35)
 
         # major ticks
-        panel1.set_xticks(np.arange(0, len(mutation_types)*len(fold_change_strings), 1))
+        ax.set_xticks(np.arange(0, len(mutation_types)*len(fold_change_strings), 1))
         # minor ticks
-        panel1.set_xticks(np.arange(0, len(mutation_types)*len(fold_change_strings), 1)+0.5,minor=True)
+        ax.set_xticks(np.arange(0, len(mutation_types)*len(fold_change_strings), 1)+0.5,minor=True)
 
-        panel1.set_xticklabels(xticklabels_list, minor=True, fontweight='bold', fontname='Arial')
+        ax.set_xticklabels(xticklabels_list, minor=True, fontweight='bold', fontname='Arial')
 
-        panel1.xaxis.set_label_position('top')
-        panel1.xaxis.set_ticks_position('top')
+        ax.xaxis.set_label_position('top')
+        ax.xaxis.set_ticks_position('top')
 
         plt.tick_params(
             axis='x',  # changes apply to the x-axis
@@ -2836,17 +2840,17 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             top=False)  # labels along the bottom edge are off
 
         # CODE GOES HERE TO CENTER Y-AXIS LABELS...
-        panel1.set_ylim([0,len(rows_sbs_signatures)])
-        panel1.set_yticklabels([])
+        ax.set_ylim([0,len(rows_sbs_signatures)])
+        ax.set_yticklabels([])
 
-        panel1.tick_params(axis='y', which='minor', length=0, labelsize=40)
+        ax.tick_params(axis='y', which='minor', length=0, labelsize=40)
 
         # major ticks
-        panel1.set_yticks(np.arange(0, len(rows_sbs_signatures), 1))
+        ax.set_yticks(np.arange(0, len(rows_sbs_signatures), 1))
         # minor ticks
-        panel1.set_yticks(np.arange(0, len(rows_sbs_signatures), 1)+0.5,minor=True)
+        ax.set_yticks(np.arange(0, len(rows_sbs_signatures), 1)+0.5,minor=True)
 
-        panel1.set_yticklabels(rows_sbs_signatures, minor=True, fontweight='bold', fontname='Arial')  # fontsize
+        ax.set_yticklabels(rows_sbs_signatures, minor=True, fontweight='bold', fontname='Arial')  # fontsize
 
         plt.tick_params(
             axis='y',  # changes apply to the x-axis
@@ -2854,7 +2858,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             left=False)  # labels along the bottom edge are off
 
         # Gridlines based on major ticks
-        panel1.grid(which='major', color='black', zorder=3)
+        ax.grid(which='major', color='black', zorder=3)
 
         # Put the legend
         if strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED:
@@ -2870,7 +2874,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                 Line2D([0], [0], marker='o', color='white', label=LAGGING, markerfacecolor='indianred', markersize=40),
                 Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
 
-        panel1.legend(handles=legend_elements,ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40, facecolor='white', edgecolor='black')
+        ax.legend(handles=legend_elements, ncol=len(legend_elements), bbox_to_anchor=(1, -0.1),loc='upper right', fontsize=40, facecolor='white', edgecolor='black')
 
         for fold_change_index, fold_change_string in enumerate(fold_change_strings):
              for mutation_type_index, mutation_type in enumerate(mutation_types):
@@ -2902,24 +2906,24 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                         if (lagging_percentage is not None) and (leading_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius, color='indianred', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius, color='indianred', fill=True))
                         elif (leading_percentage is not None) and (lagging_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius, color='goldenrod', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius, color='goldenrod', fill=True))
                         elif (lagging_percentage is not None) and (leading_percentage is not None):
                             radius_lagging = 0.49
                             radius_leading = 0.49
                             if (radius_lagging > radius_leading):
                                 # First lagging
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
                                 # Second leading
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
                             else:
                                 # First leading
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_leading, color='goldenrod', fill=True))
                                 # Second lagging
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5, row_sbs_signature_index + 0.5),radius_lagging, color='indianred', fill=True))
 
                     elif (strand_bias == GENIC_VERSUS_INTERGENIC):
                         genic_percentage = None
@@ -2948,27 +2952,27 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                         if (genic_percentage is not None) and (intergenic_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='cyan',fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='cyan',fill=True))
 
                         elif (intergenic_percentage is not None) and (genic_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='gray',fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='gray',fill=True))
 
                         elif (genic_percentage is not None) and (intergenic_percentage is not None):
                             radius_genic = 0.49
                             radius_intergenic = 0.49
                             if (radius_genic > radius_intergenic):
                                 # First genic
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True))
                                 # Second intergenic
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic,color='gray', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic,color='gray', fill=True))
 
                             else:
                                 # First intergenic
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic, color='gray', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_intergenic, color='gray', fill=True))
                                 # Second genic
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_genic,color='cyan', fill=True))
 
                     elif (strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED):
                         transcribed_percentage = None
@@ -2997,32 +3001,35 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                         if (transcribed_percentage is not None) and (untranscribed_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='royalblue',fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='royalblue',fill=True))
 
                         elif (untranscribed_percentage is not None) and (transcribed_percentage is None):
                             radius = 0.49
                             if (radius > 0):
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='yellowgreen',fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius, color='yellowgreen',fill=True))
 
                         elif (transcribed_percentage is not None) and (untranscribed_percentage is not None):
                             radius_transcribed = 0.49
                             radius_untranscribed = 0.49
                             if (radius_transcribed > radius_untranscribed):
                                 # First transcribed
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True))
                                 # Second untranscribed
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True))
 
                             else:
                                 # First untranscribed
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_untranscribed,color='yellowgreen', fill=True))
                                 # Second transcribed
-                                panel1.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True))
+                                ax.add_patch(plt.Circle((mutation_type_index * len(fold_change_strings) + fold_change_index + 0.5,row_sbs_signature_index + 0.5), radius_transcribed,color='royalblue', fill=True))
 
         # create the directory if it does not exists
         filename = 'SBS_Signatures_%s_with_circle_plot_%s.png' % (strand_bias,str(significance_level).replace('.','_'))
-        figFile = os.path.join(strandbias_figures_outputDir,CIRCLE_PLOTS, filename)
-
-        plot1.savefig(figFile, dpi=100, bbox_inches="tight")
+        figFile = os.path.join(strandbias_figures_outputDir, CIRCLE_PLOTS, filename)
+        try:
+            plot1.savefig(figFile, dpi=100, bbox_inches="tight")
+        except Exception as e:
+            print(e)
         plot1.clear()
         plt.close(plot1)
+
