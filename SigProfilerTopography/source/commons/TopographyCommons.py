@@ -805,9 +805,7 @@ def write_excel_file(df_list, sheet_list, file_name):
     writer = pd.ExcelWriter(file_name,engine='xlsxwriter')
     for dataframe, sheet in zip(df_list, sheet_list):
         dataframe.to_excel(writer, sheet_name=sheet, startrow=0 , startcol=0, index=False)
-    writer.save()
-
-
+    writer.close()
 
 
 def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
@@ -1501,183 +1499,106 @@ def fill_signature_number_of_mutations_df(outputDir,
                                           mutationType2PropertiesDict,
                                           chrLong2NumberofMutationsDict,
                                           show_all_signatures,
-                                          parallel_mode,
                                           ordered_all_signatures_wrt_probabilities_file_array):
 
-    # Create empty dataframe with the following columns
-    # Fill this dataframe
-    df = pd.DataFrame(columns=['cancer_type',
-                               'signature',
-                               'cutoff',
-                               'number_of_mutations_w_prob_ge_cutoff', # additional column for probability mode
-                               'number_of_all_mutations',  # additional column for probability mode
-                               'number_of_mutations', # average_probability * number_of_mutations_w_prob_ge_cutoff
-                               'average_probability',
-                               'samples_list',
-                               'len(samples_list)',
-                               'len(all_samples_list)',
-                               'percentage_of_samples'])
+    # vectorized code
+    # ['Sample' 'Mutation' 'SBS1' 'SBS2' 'SBS3' 'SBS4' 'SBS5' 'SBS6' 'SBS7a' ...
+    signatures = ordered_all_signatures_wrt_probabilities_file_array[2:]
+
+    all_num_of_mutations_w_prob_ge_cutoff_array = np.zeros(len(signatures), np.int64)
+    all_num_of_all_mutations_array = np.zeros(len(signatures), np.int64)
+    all_sum_of_probabilities_array = np.zeros(len(signatures), np.float64)
+    all_samples_list = [set() for signature in signatures] # samples having signature
 
     all_samples = set()
 
-    def accumulate_df_prob_mode(result_tuple):
-        if result_tuple is not None:
-            chrbased_samples = result_tuple[0]
-            signature = result_tuple[1]
-            default_cutoff = result_tuple[2]
-            number_of_mutations_w_prob_ge_cutoff = result_tuple[3]
-            number_of_all_mutations = result_tuple[4]
-            sum_of_probabilities = result_tuple[5]
-            samples_array = result_tuple[6]
+    for chrLong in chromNamesList:
+        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,
+                                                                         jobname,
+                                                                         chrLong,
+                                                                         mutation_type,
+                                                                         0,
+                                                                         return_number_of_samples = True)
 
-            nonlocal df
-            nonlocal all_samples
+        all_samples = all_samples.union(chrbased_samples)
 
-            all_samples = all_samples.union(chrbased_samples)
+        if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
 
-            if df[df['signature'] == signature].values.any():
-                # Update Accumulate
-                df.loc[df['signature'] == signature, 'number_of_mutations_w_prob_ge_cutoff'] = df.loc[df[
-                                                                                                          'signature'] == signature, 'number_of_mutations_w_prob_ge_cutoff'] + number_of_mutations_w_prob_ge_cutoff
-                df.loc[df['signature'] == signature, 'number_of_all_mutations'] = df.loc[df[
-                                                                                             'signature'] == signature, 'number_of_all_mutations'] + number_of_all_mutations
-
-                # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
-                df.loc[df['signature'] == signature, 'samples_list'] = df.loc[
-                    df['signature'] == signature, 'samples_list'].apply(
-                    lambda x: [*{*x}.union({*list(samples_array)})])
-                df.loc[df['signature'] == signature, 'average_probability'] = df.loc[df[
-                                                                                         'signature'] == signature, 'average_probability'] + sum_of_probabilities
+            if mutation_type in mutationType2PropertiesDict:
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
             else:
-                df = df.append({'cancer_type': jobname,
-                                'signature': signature,
-                                'cutoff': default_cutoff,  # np.nan
-                                'number_of_mutations_w_prob_ge_cutoff': number_of_mutations_w_prob_ge_cutoff,
-                                'number_of_all_mutations': number_of_all_mutations,
-                                'number_of_mutations': np.nan,
-                                'average_probability': sum_of_probabilities,
-                                'samples_list': list(samples_array),
-                                'len(samples_list)': len(samples_array),
-                                'len(all_samples_list)': np.nan,
-                                'percentage_of_samples': np.nan}, ignore_index=True)
+                mutationType2PropertiesDict[mutation_type] = {}
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
 
+            if chrLong in chrLong2NumberofMutationsDict:
+                chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
+            else:
+                chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
 
-    if parallel_mode:
-        signatures = ordered_all_signatures_wrt_probabilities_file_array
-        sig_cutoff_chr_tuples = ((signature, default_cutoff, chrLong) for signature in signatures for chrLong in chromNamesList)
-        jobs = []
+        if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
+            # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
+            # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
+            # signatures = get_signatures(chrBased_mutation_df)
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+            if default_cutoff > 0:
+                number_of_mutations_w_prob_ge_cutoff_array = chrBased_mutation_df[signatures].ge(default_cutoff).sum().to_numpy()
+                all_num_of_mutations_w_prob_ge_cutoff_array += number_of_mutations_w_prob_ge_cutoff_array
+                # number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
 
-        for signature, cutoff, chrLong in sig_cutoff_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutations_signature_default_cutoff_chrombased_prob_mode,
-                                         args=(outputDir,
-                                               jobname,
-                                               chrLong,
-                                               mutation_type,
-                                               signature,
-                                               cutoff,),
-                                         callback=accumulate_df_prob_mode))
+                number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
+                all_num_of_all_mutations_array += number_of_all_mutations
 
-        pool.close()
-        pool.join()
+                samples_list = [set(chrBased_mutation_df.Sample[chrBased_mutation_df[signature] >= default_cutoff].unique()) for signature in signatures]
+                all_samples_list = [x.union(y) for x, y in zip(all_samples_list, samples_list)]
+                # samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff]['Sample'].unique()  # > 0
 
-    else:
-        # sequential
-        for chrLong in chromNamesList:
-            chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,
-                                                                             jobname,
-                                                                             chrLong,
-                                                                             mutation_type,
-                                                                             0,
-                                                                             return_number_of_samples = True)
+                sum_of_probabilities_array = (chrBased_mutation_df[chrBased_mutation_df[signatures] >= default_cutoff])[signatures].sum().to_numpy()
+                all_sum_of_probabilities_array += sum_of_probabilities_array
+                # sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values, dtype=np.float64)  # > 0
 
-            if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
+            else:
+                number_of_mutations_w_prob_ge_cutoff_array = chrBased_mutation_df[signatures].gt(default_cutoff).sum().to_numpy()
+                all_num_of_mutations_w_prob_ge_cutoff_array += number_of_mutations_w_prob_ge_cutoff_array
+                # number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])  # > 0
 
-                if mutation_type in mutationType2PropertiesDict:
-                    mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
-                    mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
-                    mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
-                else:
-                    mutationType2PropertiesDict[mutation_type] = {}
-                    mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
-                    mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
-                    mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+                number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
+                all_num_of_all_mutations_array += number_of_all_mutations
 
-                if chrLong in chrLong2NumberofMutationsDict:
-                    chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
-                else:
-                    chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
+                samples_list = [set(chrBased_mutation_df.Sample[chrBased_mutation_df[signature] > default_cutoff].unique()) for signature in signatures]
+                all_samples_list = [x.union(y) for x, y in zip(all_samples_list, samples_list)]
+                # samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff]['Sample'].unique()  # > 0
 
-            if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
-                # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
-                # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
-                signatures = get_signatures(chrBased_mutation_df)
+                sum_of_probabilities_array = (chrBased_mutation_df[chrBased_mutation_df[signatures] > default_cutoff])[signatures].sum().to_numpy()
+                all_sum_of_probabilities_array += sum_of_probabilities_array
+                # sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])[signature]).values, dtype=np.float64)  # > 0
 
-                for signature in signatures:
+    df = pd.DataFrame({'cancer_type' : jobname,
+                       'signature': np.asarray(signatures).ravel(),
+                       'cutoff': default_cutoff,
+                       'number_of_mutations_w_prob_ge_cutoff': all_num_of_mutations_w_prob_ge_cutoff_array.ravel(),
+                       'number_of_all_mutations': all_num_of_all_mutations_array.ravel(),
+                       'average_probability': all_sum_of_probabilities_array.ravel(),
+                       'samples_list': np.asarray(all_samples_list).ravel(),
+                       })
 
-                    result_tuple = searchAllMutations_signature_default_cutoff_chrombased_prob_mode(outputDir,
-                                                                                                    jobname,
-                                                                                                    chrLong,
-                                                                                                    mutation_type,
-                                                                                                    signature,
-                                                                                                    default_cutoff)
+    df = df.sort_values(['signature'], ascending=[True])
 
-                    accumulate_df_prob_mode(result_tuple)
+    df['average_probability'] = np.where(df['number_of_mutations_w_prob_ge_cutoff'] > 0,
+                                         df['average_probability'] / df['number_of_mutations_w_prob_ge_cutoff'],
+                                         0)
 
-                    # if default_cutoff > 0:
-                    #     number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
-                    #     number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
-                    #
-                    #     samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff]['Sample'].unique()  # > 0
-                    #     sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values, dtype=np.float64)  # > 0
-                    #
-                    # else:
-                    #     number_of_mutations_w_prob_ge_cutoff = len(chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])  # > 0
-                    #     number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
-                    #
-                    #     samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff]['Sample'].unique()  # > 0
-                    #     sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])[signature]).values, dtype=np.float64)  # > 0
-
-                    # if df[df['signature'] == signature].values.any():
-                    #     # Update Accumulate
-                    #     df.loc[df['signature'] == signature, 'number_of_mutations_w_prob_ge_cutoff'] = df.loc[df['signature'] == signature, 'number_of_mutations_w_prob_ge_cutoff'] + number_of_mutations_w_prob_ge_cutoff
-                    #     df.loc[df['signature'] == signature, 'number_of_all_mutations'] = df.loc[df['signature'] == signature, 'number_of_all_mutations'] + number_of_all_mutations
-                    #
-                    #     # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
-                    #     df.loc[df['signature'] == signature, 'samples_list'] = df.loc[df['signature'] == signature, 'samples_list'].apply(
-                    #         lambda x: [*{*x}.union({*list(samples_array)})])
-                    #     df.loc[df['signature'] == signature, 'average_probability'] = df.loc[df['signature'] == signature, 'average_probability'] + sum_of_probabilities
-                    # else:
-                    #     df = df.append({'cancer_type':jobname,
-                    #                'signature': signature,
-                    #                'cutoff' : default_cutoff, # np.nan
-                    #                'number_of_mutations_w_prob_ge_cutoff': number_of_mutations_w_prob_ge_cutoff,
-                    #                'number_of_all_mutations': number_of_all_mutations,
-                    #                'number_of_mutations': np.nan,
-                    #                'average_probability' : sum_of_probabilities,
-                    #                'samples_list' : list(samples_array),
-                    #                'len(samples_list)' : len(samples_array),
-                    #                'len(all_samples_list)' : np.nan,
-                    #                'percentage_of_samples': np.nan}, ignore_index=True)
-
-
-    df['average_probability'] = [x / y if y > 0 else 0 for x, y in zip(df['average_probability'], df['number_of_mutations_w_prob_ge_cutoff'])]
-    # df['average_probability'] = df['average_probability'] /df['number_of_mutations'] # ZeroDivisionError
-
-    # number_of_mutations is the int(sum of probabilities of mutations with prob >= default_cutoff)
-    # old way: to make it consistent when default_cutoff = 0
-    # df['number_of_mutations'] = df['number_of_mutations_w_prob_ge_cutoff'] * df['average_probability']
-    # df['number_of_mutations'] = df['number_of_mutations'].astype(int)
-
-    # new way: number of mutations are equal to the number of mutations with prob >= cutoff
     df['number_of_mutations'] = df['number_of_mutations_w_prob_ge_cutoff']
 
     df['len(samples_list)'] = df['samples_list'].str.len()
     df['len(all_samples_list)'] = len(all_samples)
-    df['percentage_of_samples'] = [100 * x / y if y > 0 else 0 for x, y in zip(df['len(samples_list)'] , df['len(all_samples_list)'])]
-    # df['percentage_of_samples'] = 100 * df['len(samples_list)'] / df['len(all_samples_list)'] # ZeroDivisionError
+
+    df['percentage_of_samples'] = np.where(df['len(all_samples_list)'] > 0,
+                                           df['len(samples_list)'] * 100 / df['len(all_samples_list)'],
+                                           0)
 
     # remove signatures where number_of_mutations_w_prob_ge_cutoff is 0
     # cancer_type     signature       cutoff  number_of_mutations_w_prob_ge_cutoff      number_of_all_mutations number_of_mutations     average_probability     samples_list    len(samples_list)       len(all_samples_list)   percentage_of_samples
@@ -1689,82 +1610,6 @@ def fill_signature_number_of_mutations_df(outputDir,
 
     return df
 
-
-# probability mode
-def searchAllMutations_signature_default_cutoff_chrombased_prob_mode(outputDir, jobname, chrLong, mutation_type, signature, default_cutoff):
-
-    chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,
-                                                                     jobname,
-                                                                     chrLong,
-                                                                     mutation_type,
-                                                                     0,
-                                                                     return_number_of_samples=True)
-
-    if ((chrBased_mutation_df is not None) and (len(chrBased_mutation_df.index) > 0)):
-
-        if default_cutoff > 0:
-            number_of_mutations_w_prob_ge_cutoff = len(
-                chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])  # > 0
-            number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
-
-            samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff][
-                'Sample'].unique()  # > 0
-            sum_of_probabilities = np.sum(
-                ((chrBased_mutation_df[chrBased_mutation_df[signature] >= default_cutoff])[signature]).values,
-                dtype=np.float64)  # > 0
-
-        else:
-            number_of_mutations_w_prob_ge_cutoff = len(
-                chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])  # > 0
-            number_of_all_mutations = chrBased_mutation_df.shape[0]  # number of rows: all mutations
-
-            samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff]['Sample'].unique()  # > 0
-            sum_of_probabilities = np.sum(
-                ((chrBased_mutation_df[chrBased_mutation_df[signature] > default_cutoff])[signature]).values,
-                dtype=np.float64)  # > 0
-
-        return(chrbased_samples,
-                signature,
-                default_cutoff,
-                number_of_mutations_w_prob_ge_cutoff,
-                number_of_all_mutations,
-                sum_of_probabilities,
-                samples_array)
-
-    else:
-        return None
-
-
-# discreet mode
-def searchAllMutations_signature_cutoff_chrombased_discreet_mode(outputDir, jobname, chrLong, mutation_type, signature, cutoff):
-    chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir,
-                                                                     jobname,
-                                                                     chrLong,
-                                                                     mutation_type,
-                                                                     0,
-                                                                     return_number_of_samples=True)
-
-    if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
-
-        number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])
-
-        # This results in infinity
-        # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
-        sum_of_probabilities = np.sum(
-            ((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values, dtype=np.float64)
-
-        # Samples having mutations with prob ge cutoff for given cutoff and signature
-        samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)]['Sample'].unique()
-
-        return (chrbased_samples,
-                signature,
-                cutoff,
-                number_of_mutations,
-                sum_of_probabilities,
-                samples_array)
-
-    else:
-        return None
 
 
 def fill_signature_cutoff_properties_df(outputDir,
@@ -1779,7 +1624,6 @@ def fill_signature_cutoff_properties_df(outputDir,
                                         exceptional_signatures,
                                         mutationType2PropertiesDict,
                                         chrLong2NumberofMutationsDict,
-                                        parallel_mode,
                                         ordered_all_signatures_wrt_probabilities_file_array):
 
     os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
@@ -1795,143 +1639,69 @@ def fill_signature_cutoff_properties_df(outputDir,
         number_of_required_mutations = num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
 
-    # Initialization for accumulated df
-    df = pd.DataFrame(columns=['signature',
-                               'cutoff',
-                               'number_of_mutations',
-                               'sum_of_probabilities'])
-
-    df['signature'] = df['signature'].astype('string')
-    df['cutoff'] = df['cutoff'].astype(np.float32)
-    df['number_of_mutations'] = df['number_of_mutations'].astype(np.int32)
-    df['sum_of_probabilities'] = df['sum_of_probabilities'].astype(np.float64)
-
     # This samples are for this mutation type
     all_samples = set()
 
-    def accumulate_df_discreet_mode(result_tuple):
-        if result_tuple is not None:
-            chrbased_samples = result_tuple[0]
-            signature = result_tuple[1]
-            cutoff = result_tuple[2]
-            number_of_mutations = result_tuple[3]
-            sum_of_probabilities = result_tuple[4]
-            samples_array = result_tuple[5]
-
-            nonlocal df
-            nonlocal all_samples
-
-            all_samples = all_samples.union(chrbased_samples)
-
-            if df[(df['signature'] == signature) & (df['cutoff'] == cutoff)].values.any():
-                # Update Accumulate
-                df.loc[
-                    (df['signature'] == signature) & (df['cutoff'] == cutoff), 'number_of_mutations'] += number_of_mutations
-                df.loc[(df['signature'] == signature) & (
-                            df['cutoff'] == cutoff), 'sum_of_probabilities'] += sum_of_probabilities
-
-                # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
-                df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'] = df.loc[
-                    (df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'].apply(
-                    lambda x: [*{*x}.union({*list(samples_array)})])
-
-            else:
-                df = df.append({'signature': signature,
-                                'cutoff': cutoff,
-                                'number_of_mutations': number_of_mutations,
-                                'sum_of_probabilities': sum_of_probabilities,
-                                'samples_list': samples_array}, ignore_index=True)
-
-
-
+    # vectorized code
     # Step1 fill the dataframe
-    if parallel_mode:
-        signatures = ordered_all_signatures_wrt_probabilities_file_array
-        sig_cutoff_chr_tuples = ((signature, cutoff, chrLong) for signature in signatures for cutoff in cutoffs for chrLong in chromNamesList)
-        jobs = []
+    # ['Sample' 'Mutation' 'SBS1' 'SBS2' 'SBS3' 'SBS4' 'SBS5' 'SBS6' 'SBS7a' ...
+    signatures = ordered_all_signatures_wrt_probabilities_file_array[2:]
 
-        numofProcesses = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=numofProcesses)
+    # initialize 2D numpy arrays
+    all_num_of_mutations_array = np.zeros((len(cutoffs), len(signatures)), np.int64)
+    all_sum_of_probabilities_array = np.zeros((len(cutoffs), len(signatures)), np.float64)
+    all_samples_list = [[set() for signature in signatures] for cutoff in cutoffs]
 
-        for signature, cutoff, chrLong in sig_cutoff_chr_tuples:
-            jobs.append(pool.apply_async(searchAllMutations_signature_cutoff_chrombased_discreet_mode,
-                                         args=(outputDir,
-                                               jobname,
-                                               chrLong,
-                                               mutation_type,
-                                               signature,
-                                               cutoff,),
-                                         callback=accumulate_df_discreet_mode))
+    for chrLong in chromNamesList:
+        chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, 0, return_number_of_samples=True)
 
-        pool.close()
-        pool.join()
+        all_samples = all_samples.union(chrbased_samples)
 
-    else:
-        # Step1 fill the dataframe
+        if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
 
-        for chrLong in chromNamesList:
-            chrbased_samples, chrBased_mutation_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, 0, return_number_of_samples=True)
+            # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
+            # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
+            # signatures = get_signatures(chrBased_mutation_df)
 
-            if ((chrBased_mutation_df is not None) and (not chrBased_mutation_df.empty)):
-                # Sample  Chrom   Start   PyrimidineStrand        Mutation        DBS2    DBS4    DBS6    DBS7    DBS11
-                # PD10011a        10      24033661        1       TC>AA   0.0     0.7656325053758131      0.15420390829468886     0.07918943063517644     0.000974155694321615
-                signatures = get_signatures(chrBased_mutation_df)
+            if mutation_type in mutationType2PropertiesDict:
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+            else:
+                mutationType2PropertiesDict[mutation_type] = {}
+                mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
+                mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
+                mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
 
-                if mutation_type in mutationType2PropertiesDict:
-                    mutationType2PropertiesDict[mutation_type]['number_of_mutations'] += chrBased_mutation_df.shape[0]
-                    mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
-                    mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
-                else:
-                    mutationType2PropertiesDict[mutation_type] = {}
-                    mutationType2PropertiesDict[mutation_type]['number_of_mutations'] = chrBased_mutation_df.shape[0]
-                    mutationType2PropertiesDict[mutation_type]['number_of_samples'] = len(all_samples)
-                    mutationType2PropertiesDict[mutation_type]['samples_list'] = list(all_samples)
+            if chrLong in chrLong2NumberofMutationsDict:
+                chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
+            else:
+                chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
 
-                if chrLong in chrLong2NumberofMutationsDict:
-                    chrLong2NumberofMutationsDict[chrLong] += chrBased_mutation_df.shape[0]
-                else:
-                    chrLong2NumberofMutationsDict[chrLong] = chrBased_mutation_df.shape[0]
+            for cutoff_index, cutoff in enumerate(cutoffs):
+                num_of_mutations_array = chrBased_mutation_df[signatures].ge(float(cutoff)).sum().to_numpy()
+                all_num_of_mutations_array[cutoff_index] += num_of_mutations_array
 
-                # First part starts
-                # First accumulate number of mutations and sum of probabilities with mutations with probability >= cutoff probability
-                for signature in signatures:
-                    for cutoff in cutoffs:
-                        result_tuple = searchAllMutations_signature_cutoff_chrombased_discreet_mode(outputDir,
-                                jobname,
-                                chrLong,
-                                mutation_type,
-                                signature,
-                                cutoff)
+                sum_of_probabilities_array = (chrBased_mutation_df[chrBased_mutation_df[signatures] >= float(cutoff)])[signatures].sum().to_numpy()
+                all_sum_of_probabilities_array[cutoff_index] += sum_of_probabilities_array
 
-                        accumulate_df_discreet_mode(result_tuple)
+                samples_list = [set(chrBased_mutation_df.Sample[chrBased_mutation_df[signature] >= float(cutoff)].unique()) for signature in signatures]
+                all_samples_list[cutoff_index] = [x.union(y) for x,y in zip(all_samples_list[cutoff_index], samples_list)]
 
-                        # number_of_mutations = len(chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])
-                        #
-                        # # This results in infinity
-                        # # sum_of_probabilities = (chrBased_mutation_df[chrBased_mutation_df[signature]>=float(cutoff)])[signature].sum()
-                        # sum_of_probabilities = np.sum(((chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)])[signature]).values, dtype=np.float64)
-                        #
-                        # # Samples having mutations with prob ge cutoff for given cutoff and signature
-                        # samples_array = chrBased_mutation_df[chrBased_mutation_df[signature] >= float(cutoff)]['Sample'].unique()
-                        #
-                        # # accumulate
-                        # if df[(df['signature'] == signature) & (df['cutoff'] == cutoff)].values.any():
-                        #     # Update Accumulate
-                        #     df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff) , 'number_of_mutations'] += number_of_mutations
-                        #     df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff), 'sum_of_probabilities'] += sum_of_probabilities
-                        #
-                        #     # df.loc[df['signature'] == signature, 'samples_list'].values[0].extend(list(samples_array))  # working but with not unique values
-                        #     df.loc[(df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'] = df.loc[
-                        #         (df['signature'] == signature) & (df['cutoff'] == cutoff), 'samples_list'].apply(
-                        #         lambda x: [*{*x}.union({*list(samples_array)})])
-                        #
-                        # else:
-                        #     df = df.append({'signature': signature,
-                        #                     'cutoff': cutoff,
-                        #                     'number_of_mutations': number_of_mutations,
-                        #                     'sum_of_probabilities': sum_of_probabilities,
-                        #                     'samples_list': samples_array}, ignore_index=True)
+    # Look at line 1834
+    # all_avg_probabilites_array = np.divide(all_sum_of_probabilities_array,
+    #                                        all_num_of_mutations_array,
+    #                                        out=np.zeros_like(all_sum_of_probabilities_array),
+    #                                        where=all_num_of_mutations_array!=0)
 
+    df = pd.DataFrame({'signature': np.tile(signatures, len(cutoffs)),
+                       'cutoff': np.repeat(cutoffs, len(signatures)),
+                       'number_of_mutations': all_num_of_mutations_array.ravel(),
+                       'sum_of_probabilities': all_sum_of_probabilities_array.ravel(),
+                       'samples_list': np.asarray(all_samples_list).ravel(),
+                       })
+
+    df = df.sort_values(['signature', 'cutoff'], ascending=[True, True])
 
     # Step2 calculate len(samples_list) and average probability columns
     # Step3 Find signatures and cutoffs that satisfy the conditions
@@ -1945,8 +1715,9 @@ def fill_signature_cutoff_properties_df(outputDir,
                                              df['sum_of_probabilities'] / df['number_of_mutations'],
                                              0)
 
+        df['cancer_type'] = jobname
+
         all_cutoffs_df = df
-        all_cutoffs_df['cancer_type'] = jobname
         all_cutoffs_df = all_cutoffs_df[['cancer_type', 'signature', 'cutoff', 'number_of_mutations', 'average_probability']]
         all_cutoffs_df['average_probability'] = all_cutoffs_df['average_probability'].astype(np.float32)
         all_cutoffs_df.to_csv(os.path.join(outputDir, jobname, DATA, table_allcutoffs_signature_numberofmutations_averageprobability_filename), sep='\t', index=False)
@@ -1961,7 +1732,8 @@ def fill_signature_cutoff_properties_df(outputDir,
                 ex_df_list.append(ex_df)
 
         # Step3 Find signatures and cutoffs that satisfy the conditions
-        df = df[(df['number_of_mutations'] >= number_of_required_mutations) & (df['average_probability'] >= average_probability)]
+        df = df[(df['number_of_mutations'] >= number_of_required_mutations) &
+                (df['average_probability'] >= average_probability)]
 
         # Step4 Concat df with all_exceptions_df
         if len(ex_df_list) > 0:
@@ -1978,11 +1750,16 @@ def fill_signature_cutoff_properties_df(outputDir,
         df['len(all_samples_list)'] = len(all_samples)
         df['percentage_of_samples'] = df['len(samples_list)']*100/df['len(all_samples_list)']
 
-        # remove unnecessary columns
-        df = df[['cancer_type', 'signature', 'cutoff', 'number_of_mutations', 'average_probability', 'samples_list',
-                 'len(samples_list)', 'len(all_samples_list)', 'percentage_of_samples']]
-
-        signature_cutoff_numberofmutations_averageprobability_df = df
+        # remove unnecessary columns and order columns
+        signature_cutoff_numberofmutations_averageprobability_df = df[['cancer_type',
+                                                                       'signature',
+                                                                       'cutoff',
+                                                                       'number_of_mutations',
+                                                                       'average_probability',
+                                                                       'samples_list',
+                                                                       'len(samples_list)',
+                                                                       'len(all_samples_list)',
+                                                                       'percentage_of_samples']]
 
         signature_cutoff_numberofmutations_averageprobability_df['cancer_type'] = signature_cutoff_numberofmutations_averageprobability_df['cancer_type'].astype(str)
         signature_cutoff_numberofmutations_averageprobability_df['signature'] = signature_cutoff_numberofmutations_averageprobability_df['signature'].astype(str)
@@ -2003,6 +1780,8 @@ def fill_signature_cutoff_properties_df(outputDir,
                                                                                          'len(all_samples_list)',
                                                                                          'percentage_of_samples'
                                                                                          ])
+
+
     return signature_cutoff_numberofmutations_averageprobability_df
 
 

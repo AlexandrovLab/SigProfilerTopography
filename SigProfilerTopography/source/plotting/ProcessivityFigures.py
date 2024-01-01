@@ -167,6 +167,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                                                             "minus_log10_qvalue", #will be used in coloring
                                                                             "zscore", # for information only
                                                                             "expected_number_of_processive_groups"])
+
     # Dataframe is filled here
     for signature in sorted_signature_list:
         for processive_group_length in sorted_processsive_group_length_list:
@@ -192,8 +193,27 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                                                                   (processivity_df['Signature'] == signature) &
                                                                   (processivity_df['Processsive_Group_Length'] == processive_group_length)]['Number_of_Processive_Groups'].values.tolist()
 
-                signature_processive_group_length_properties_df = signature_processive_group_length_properties_df.append(
-                    {"signature": signature,
+                # append is deprecated
+                # signature_processive_group_length_properties_df = signature_processive_group_length_properties_df.append(
+                #     {"signature": signature,
+                #      "processive_group_length": processive_group_length,
+                #      "number_of_processive_groups": number_of_processive_groups,
+                #      "log10_number_of_processive_groups": np.nan,
+                #      "radius": np.nan,
+                #      "avg_sims": np.nan,
+                #      "min_sims": np.nan,
+                #      "max_sims": np.nan,
+                #      "mean_sims": np.nan,
+                #      "std_sims": np.nan,
+                #      "pvalue": np.nan,
+                #      "qvalue": np.nan,
+                #      "minus_log10_qvalue": np.nan,
+                #      "zscore": np.nan,
+                #      "expected_number_of_processive_groups": expected_number_of_processive_groups}, ignore_index=True)
+
+                # append is deprecated use concat instead
+                signature_processive_group_length_properties_df = pd.concat([signature_processive_group_length_properties_df,
+                                                                             pd.DataFrame.from_records([{"signature": signature,
                      "processive_group_length": processive_group_length,
                      "number_of_processive_groups": number_of_processive_groups,
                      "log10_number_of_processive_groups": np.nan,
@@ -207,8 +227,7 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
                      "qvalue": np.nan,
                      "minus_log10_qvalue": np.nan,
                      "zscore": np.nan,
-                     "expected_number_of_processive_groups": expected_number_of_processive_groups}, ignore_index=True)
-
+                     "expected_number_of_processive_groups": expected_number_of_processive_groups}])], ignore_index=True)
 
     ##########################################################################################
     ############################# Calculate p-values starts ##################################
@@ -354,8 +373,10 @@ def plotRelationshipBetweenSignaturesandProcessiveGroupLengthsUsingDataframes(ou
         signature_processive_group_length_properties_df.loc[(signature_processive_group_length_properties_df['number_of_processive_groups'] == 1), 'log10_number_of_processive_groups'] = np.log10(2) / 2
 
     # Here we set radius
+    # Use apply instead of transform. With apply you have access to all columns which you can use to filter and
+    # calculate values for specific conditions
     signature_processive_group_length_properties_df = \
-        signature_processive_group_length_properties_df.groupby('signature').apply(lambda df: set_radius(df))
+        signature_processive_group_length_properties_df.groupby('signature', group_keys=False).apply(set_radius)  # group_keys=True is added
     # modify ends
 
     # Get the highest processive group length with a nonzero radius
@@ -586,7 +607,6 @@ def plot_processivity_figure(outputDir,
 
 # main
 def processivityFigures(outputDir, jobname, numberofSimulations, processivity_significance_level, log_file, verbose):
-
     all_processivity_df = None
 
     jobnamePath = os.path.join(outputDir,jobname,FIGURE,PROCESSIVITY)
@@ -632,3 +652,4 @@ def processivityFigures(outputDir, jobname, numberofSimulations, processivity_si
                                                                                   processivity_significance_level,
                                                                                   log_file,
                                                                                   verbose)
+

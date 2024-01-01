@@ -282,7 +282,7 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME), exist_ok=True)
         figureFile = os.path.join(outputDir, jobname, FIGURE, SAMPLES, sample, REPLICATIONTIME, figureName)
 
-    fig.savefig(figureFile, dpi=100, bbox_inches="tight")
+    plt.savefig(figureFile, dpi=100, bbox_inches="tight") # test plt instead of fig
     fig.clear()
     plt.close(fig)
 
