@@ -1107,97 +1107,102 @@ def get_all_signatures_array(ordered_all_sbs_signatures_wrt_probabilities_file_a
     return np.array(ordered_all_sbs_signatures)
 
 
-def runAnalyses(genome,
-                inputDir,
-                outputDir,
-                jobname,
-                numofSimulations,
-                samples_of_interest = None, # runAnalyses only for these samples if samples_of_interest is not None but a non-empty list
-                matrix_generator_path = MATRIX_GENERATOR_PATH, # for SigProfilerMatrixGenerator
-                sbs_signatures = None, # SBS signatures matrix
-                dbs_signatures = None, # DBS signatures matrix
-                id_signatures = None, # ID signatures matrix
-                sbs_activities = None,  # SBS activities matrix
-                dbs_activities = None,  # DBS activities matrix
-                id_activities = None, # ID activities matrix
-                sbs_probabilities = None, # Second column must hold mutation type contexts. If None aggregated analysis for all single base substitutions, else aggregated + signature based analyses
-                dbs_probabilities = None, # If None aggregated analysis for all doublet base substitutions, else aggregated + signature based analyses
-                id_probabilities = None, # If None aggregated analysis for small insertions and deletions, else aggregated + signature based analyses
-                sigprofiler_extractor_sbs_mutation_context = None, # If none auto detected from provided sbs_probabilities. Shows the mutation context type in sbs probabilities file which must be one of SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
-                epigenomics_files = None,
-                epigenomics_biosamples = None, # epigenomics_file in epigenomics_files must contain biosamples e.g.: lung
-                epigenomics_dna_elements = None, # epigenomics_file in epigenomics_files must contain dna_elements e.g.: CTCF
-                nucleosome_biosample = None,
-                nucleosome_file = None,
-                replication_time_biosample = None,
-                replication_time_signal_file = None,
-                replication_time_valley_file = None,
-                replication_time_peak_file = None,
-                computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM,
-                epigenomics = False,
-                nucleosome = False,
-                replication_time = False,
-                strand_bias = False,
-                replication_strand_bias = False,
-                transcription_strand_bias = False,
-                processivity = False,
-                step1_matgen_real_data = True,
-                step2_gen_sim_data = True,
-                step3_matgen_sim_data = True,
-                step4_merge_prob_data = True,
-                step5_gen_tables = True,
-                verbose = False,
-                PCAWG = False,
-                discreet_mode = True, # set discreet_mode = False for prob_mode
-                show_all_signatures = True, # applies for prob_mode, you can set to False
-                average_probability = 0.9, # applies for discreet_mode=True mutations_avg_probability >= average_probability (There are signature specific cutoffs but their average probability must be at least 0.75)
-                default_cutoff = 0.5, # applies for discreet_mode=False mutation_signature_probability >= default_cutoff (Applies for all signatures) This parameter must be set for step5_gen_tables = True and while running topography analyses.
-                parallel_mode = True,
-                num_of_sbs_required = 2000, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
-                num_of_dbs_required = 200, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
-                num_of_id_required = 1000, # Applies for discreet mode, may apply to prob_mode if show_all_signatures is set to False
-                exceptional_signatures = None, # Consider exceptional signatures with average probability < 0.90 e.g.: exceptions = {SBS32 : 0.63} for Biliary-AdenoCA
-                plot_figures = True,
-                plot_epigenomics = False,
-                plot_nucleosome = False,
-                plot_replication_time = False,
-                plot_strand_bias = False,
-                plot_replication_strand_bias = False,
-                plot_transcription_strand_bias = False,
-                plot_processivity = False,
-                delete_old = False,
-                plot_mode = PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL,
-                occupancy_calculation_type = MISSING_SIGNAL, # for occupancy analysis
-                remove_outliers = False, # for occupancy analysis
-                quantile_value = 0.97, # for occupancy analysis
-                plus_minus_epigenomics = 1000, # for occupancy analysis
-                plus_minus_nucleosome = 1000, # for occupancy analysis
-                epigenomics_heatmap_significance_level = 0.05, # for occupancy analysis
-                combine_p_values_method = 'fisher', # for occupancy analysis
-                fold_change_window_size = 100, # for occupancy analysis
-                num_of_real_data_avg_overlap = 100, # for occupancy analysis
-                plot_detailed_epigemomics_heatmaps = False, # for occupancy analysis
-                remove_dna_elements_with_all_nans_in_epigemomics_heatmaps = True, # for occupancy analysis
-                odds_ratio_cutoff = 1.1, # for strand asymmetry analysis
-                percentage_of_real_mutations_cutoff = 5, # for strand asymmetry analysis
-                ylim_multiplier = 1.25, # for strand asymmetry analysis
-                processivity_calculation_type = CONSIDER_DISTANCE,  # for strand coordinated mutagenesis
-                processivity_inter_mutational_distance = 10000,  # for strand coordinated mutagenesis
-                considerProbabilityInProcessivityAnalysis = True, # for strand coordinated mutagenesis
-                processivity_significance_level = 0.05,  # for strand coordinated mutagenesis
-                exome = None, # [boolean] SPS simulates on the exome of the reference genome
-                updating = False, # [boolean] SPS updates the chromosome with each mutation. Default is FALSE.
-                bed_file = None, # [string] Path to bed_file. SPS simulates on custom regions of the genome. Requires the full path to the BED file.
-                overlap = False, # [boolean] SPS allows overlapping of mutations along the chromosome. Default is FALSE.
-                gender = 'female', # [string] SPS simulates male or female genomes. Default is 'female'
-                seed_file = None, # [string] SPS. Path to user defined seeds. One seed is required per processor. Uses a built in file by default.
-                noisePoisson = False, # [boolean] SPS. Add poisson noise to the simulations. Default is FALSE.
-                noiseUniform = 0, # SPS
-                seqInfo = False, # [boolean] SPS default False
-                cushion = 100, # [integer] SPS Allowable cushion when simulating on the exome or targetted panel. Default is 100 base pairs.
-                region = None, # [string] SPS Path to targetted region panel for simulated on a user-defined region. Default is whole-genome simulations.
-                vcf = False,  # [boolean] SPS outputs simulated samples as vcf files with one file per iteration per sample. By default, the tool outputs all samples from an iteration into a single maf file.
-                mask = None # [string] SPS. Path to probability mask file. A mask file format is tab-separated with the following required columns: Chromosome, Start, End, Probability.
+def runAnalyses(genome, # [String] The reference genome used for the topography analyses.
+                inputDir, # [String] The path to the directory containing the input files.
+                outputDir, # [String] The path of the directory where the output will be saved.
+                jobname, # [String] The name of the directory containing all of the outputs under outputDir/jobname.
+                numofSimulations, # [Integer] The number of simulations to be created.
+                epigenomics = False, # [Boolean] Generate epigenomics analysis when True.
+                nucleosome = False, # [Boolean] Generate nucleosome occupancy analysis when True.
+                replication_time = False, # [Boolean] Generate replication timing analysis when True.
+                strand_bias = False, # [Boolean] Generate replication and transcription strand asymmetry analysis when True.
+                replication_strand_bias = False, # [Boolean] Generate replication strand asymmetry analysis when True.
+                transcription_strand_bias = False, # [Boolean] Generate transcription strand asymmetry analysis (including genic versus intergenic regions) when True.
+                processivity = False, # [Boolean] Generate strand-coordinated mutagenesis when True.
+                epigenomics_files = None, # [List of Strings] Python list of paths for each epigenomics library file utilized in the epigenomics analysis.
+                epigenomics_dna_elements = None, # [List of Strings] Python list of unique DNA element names for the epigenomics files utilized in the epigenomics analysis. e.g., H3K4me3
+                epigenomics_biosamples = None,  # [List of Strings] Python list of unique biosample names for the epigenomics files utilized in the epigenomics analyses. e.g., lung
+                nucleosome_biosample = None, # [String] Biosample that will be used for nucleosome occupancy analysis.
+                nucleosome_file = None, # [String] The path to the nucleosome occupancy library file that will be used for the analysis.
+                replication_time_biosample = None, # [String] Biosample that will be used to carry out replication timing and replication strand asymmetry analyses.
+                replication_time_signal_file = None, # [String] The path to the replication time signal file.
+                replication_time_valley_file = None, # [String] The path to the replication time valley file.
+                replication_time_peak_file = None, # [String] The path to the replication time peak file.
+                samples_of_interest = None, # [list of Strings] Conduct topography analyses for these samples of interest only.
+                discreet_mode = True, # [Boolean] Each mutation contributes to the topography analyses either with 1 or 0 when True; otherwise, each mutation contributes with its probability when False.
+                average_probability = 0.9, # [Float] The average probability of the mutations assigned to a SBS, DBS, and ID signature.
+                                           # The average_probability applies when discreet_mode is True.
+                                           # We set signature specific cutoffs, such that for the mutations satisfying mutation_signature_probability >= cutoff,
+                                           # average probability of these mutations must be at least 0.90.
+                num_of_sbs_required = 2000, # [Integer] The minimum required number of mutations for a SBS signature.
+                                            # The num_of_sbs_required applies when discreet_mode is True or
+                                            # when discreet_mode is False and show_all_signatures is False
+                num_of_dbs_required = 200,  # [Integer] The minimum required number of mutations for a DBS signature.
+                                            # The num_of_dbs_required applies when discreet_mode is True or
+                                            # when discreet_mode is False and show_all_signatures is False.
+                num_of_id_required = 1000,  # [Integer] The minimum required number of mutations for a ID signature.
+                                            # The num_of_id_required applies when discreet_mode is True or
+                                            # when discreet_mode is False and show_all_signatures is False.
+                exceptional_signatures = None,  # [Dictionary] The dictionary of exceptional signatures.
+                                                # The exceptional_signatures applies when discreet_mode is True.
+                                                # E.g., exceptional_signatures = {"SBS32" : 0.63}
+                                                # Python dictionary where key is a mutational signature and value is an average probability.
+                                                # Exceptional signatures are included in the topography analyses
+                                                # if they satisfy num_of_sbs_required, num_of_dbs_required, and num_of_id_required constraints with average_probability >= given average probability.
+                default_cutoff = 0.5, # [Float] The default_cutoff applies for all signatures when discreet_mode is False.
+                                      # Mutations satisfying mutation_signature_probability >= default_cutoff are considered in the topography analyses with their probability.
+                show_all_signatures = True, # [Boolean] The show_all_signatures applies when discreet_mode is False.
+                                            # All signatures are considered in the topography analyses when True,
+                                            # otherwise signatures satisfying num_of_sbs_required, num_of_dbs_required, and num_of_id_required are considered in the topography analyses when False.
+                plot_figures = True, # [Boolean] Generate plots displaying the results of all topography analyses when True.
+                plot_epigenomics = False, # [Boolean] Generate epigenomics heatmaps and occupancy plots when True.
+                plot_nucleosome = False, # [Boolean] Generate nucleosome occupancy plots when True.
+                plot_replication_time = False, # [Boolean] Generate replication timing plots when True.
+                plot_strand_bias = False, # [Boolean] Generate replication strand asymmetry, transcription strand asymmetry, genic versus intergenic regions plots when True.
+                plot_replication_strand_bias = False, # [Boolean] Generate replication strand asymmetry plots when True.
+                plot_transcription_strand_bias = False, # [Boolean] Generate transcription strand asymmetry and genic versus intergenic regions plots when True.
+                plot_processivity = False, # [Boolean] Generate strand-coordinated mutagenesis plots when True.
+                step1_matgen_real_data = True, # [Boolean] Run SigProfilerMatrixGenerator to generate matrices for the real mutations when True.
+                step2_gen_sim_data = True, # [Boolean] Run SigProfilerSimulator to generate simulated mutations when True.
+                step3_matgen_sim_data = True, # [Boolean] Run SigProfilerMatrixGenerator to generate matrices for the simulated mutations when True.
+                step4_merge_prob_data = True, # [Boolean] Merge real and simulated mutations with the probabilities files when True.
+                step5_gen_tables = True, # [Boolean] Generate tables for providing information on mutational signatures, cutoffs, number of mutations and average probability when True.
+                sbs_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
+                dbs_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
+                id_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
+                sbs_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the SBS mutational signatures.
+                dbs_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the DBS mutational signatures.
+                id_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the ID mutational signatures.
+                sbs_activities = None,  # [String] The activity matrix for the selected SBS signatures.
+                dbs_activities = None,  # [String] The activity matrix for the selected DBS signatures.
+                id_activities = None,  # [String] The activity matrix for the selected ID signatures.
+                verbose = False, # [Boolean] Set to True for detailed debugging messages.
+                parallel_mode = True, # [Boolean] Set to True for running SigProfilerTopography using multiprocessing.
+                plus_minus_epigenomics = 1000, # [Integer] The number of bases considered before and after mutation start for epigenomics occupancy analysis.
+                plus_minus_nucleosome = 1000, # [Integer] The number of bases considered before and after mutation start for nucleosome occupancy analysis.
+                epigenomics_heatmap_significance_level = 0.05, # [Float] Corrected p-values <= epigenomics_heatmap_significance_level are considered statistically significant.
+                fold_change_window_size = 100, # [Integer] In epigenomics analysis, fold change of real versus simulated mutations is calculated for the window size centered at the mutation start.
+                num_of_avg_overlap = 100, # [Integer] The minimum required average number of overlaps between the mutations and the regions outlined in the epigenomics files.
+                plot_detailed_epigemomics_heatmaps = False, # [Boolean] Plot detailed epigenomics heatmaps when True.
+                remove_dna_elements_with_all_nans_in_epigemomics_heatmaps = True, # [Boolean] Remove the DNA elements from the epigenomics heatmap if no result exists.
+                odds_ratio_cutoff = 1.1, # [Float] Strand asymmetries with odd ratio >= odds_ratio_cutoff are shown in the strand asymmetry circle plots.
+                percentage_of_real_mutations_cutoff = 5, # [Float] Strand asymmetries of the SBS signatures with percentage of the mutations >= percentage_of_real_mutations_cutoff are shown in the plots.
+                ylim_multiplier = 1.25, # [Float] Multiply the y-axis view limits with ylim_multiplier in strand asymmetry bar plots.
+                processivity_inter_mutational_distance = 10000, # [Integer] Consecutive mutations with distance <= processivity_inter_mutational_distance are considered for the strand-coordinated mutagenesis.
+                considerProbabilityInProcessivityAnalysis = True, # [Boolean] Mutations with signature probabilities >= cutoff are considered in the strand-coordinated mutagenesis analysis. Cutoffs are signature specific when discreet_mode is True or default_cutoff when discreet_mode is False.
+                processivity_significance_level = 0.05,  # [Float] Corrected p-values <= processivity_significance_level are considered statistically significant for strand coordinated mutagenesis.
+                exome = None, # [Boolean] SigProfilerSimulator simulates on the exome of the reference genome.
+                updating = False, # [Boolean] SigProfilerSimulator updates the chromosome with each mutation.
+                bed_file = None, # [String] SigProfilerSimulator simulates on custom regions of the genome. Requires the full path to the BED file.
+                overlap = False, # [Boolean] SigProfilerSimulator allows overlapping of mutations along the chromosome.
+                gender = 'female', # [String] SigProfilerSimulator simulates male or female genomes.
+                seed_file = None, # [String] SigProfilerSimulator uses this path to user defined seeds. One seed is required per processor. Uses a built in file by default.
+                noisePoisson = False, # [Boolean] SigProfilerSimulator adds poisson noise to the simulations.
+                noiseUniform = 0, # [Integer] SigProfilerSimulator adds a noise dependent on a +/- allowance of noise (e.g., noiseUniform=5 allows +/-2.5% of mutations for each mutation type).
+                cushion = 100, # [Integer] SigProfilerSimulator allows cushion when simulating on the exome or targetted panel.
+                region = None, # [String] For SigProfilerSimulator. Path to targetted region panel for simulated on a user-defined region.
+                vcf = False,  # [Boolean] SigProfilerSimulator outputs simulated samples as vcf files with one file per iteration per sample when True. SigProfilerSimulator outputs all samples from an iteration into a single maf file when False.
+                mask = None # [String] For SigProfilerSimulator. Path to probability mask file. A mask file format is tab-separated with the following required columns: Chromosome, Start, End, Probability.
                             # Note: Mask parameter does not support exome data where bed_file flag is set to true, and the following header fields are required: Chromosome, Start, End, Probability.
                 ):
 
@@ -1219,6 +1224,28 @@ def runAnalyses(genome,
     ordered_all_sbs_signatures_wrt_probabilities_file_array = None
     ordered_all_dbs_signatures_wrt_probabilities_file_array = None
     ordered_all_id_signatures_wrt_probabilities_file_array = None
+
+    # parameters that are not provided in the runAnalyses function
+    matrix_generator_path = MATRIX_GENERATOR_PATH # For SigProfilerMatrixGenerator
+    computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
+    sigprofiler_extractor_sbs_mutation_context = None # If none auto detected from provided sbs_probabilities. Shows the mutation context type in sbs probabilities file which must be one of SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
+    delete_old = False
+    plot_mode = PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
+    PCAWG = False # For PCAWG data it has to be set to True
+    combine_p_values_method = 'fisher' # for occupancy analysis
+    occupancy_calculation_type = MISSING_SIGNAL # for occupancy analysis. Possible vales ['MISSING_SIGNAL' , 'NO_SIGNAL']
+    remove_outliers = False # for occupancy analysis
+    quantile_value = 0.97 # for occupancy analysis
+    processivity_calculation_type = CONSIDER_DISTANCE # for strand coordinated mutagenesis. For information only,
+    chrom_based = True # [boolean] this parameter used by SigProfilerSimulator. chrom_based must be set to True for SigProfilerTopography tool
+    seqInfo = True # [boolean] this parameter is used by SPMG and SPS. SPMGand SPSoutput mutations into a text file that contains the classification for each mutation.
+
+    # parameters that are not maintained anymore or finalized by SPT
+    sample_based = False
+    mutation_annotation_integration = False
+    lncRNA = False
+    plot_lncRNA = False
+
 
     ############################## Log and Error Files #######################################
     time_stamp = datetime.date.today()
@@ -1558,12 +1585,6 @@ def runAnalyses(genome,
     ################################## Setting ends #################################
     #################################################################################
 
-    # parameters below that are not maintained by SPT
-    sample_based = False
-    mutation_annotation_integration = False
-    lncRNA = False
-    plot_lncRNA = False
-
     print('#################################################################################', file=log_out)
     print("--- SigProfilerTopography starts", file=log_out)
     print('#################################################################################', file=log_out)
@@ -1685,7 +1706,7 @@ def runAnalyses(genome,
         start_time = time.time()
 
         print('For original data inputDir:%s' % (inputDir), file=log_out)
-        matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=True)
+        matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=seqInfo)
         print('Generated matrices keys:', matrices.keys(), file=log_out)
 
         if any(mutation_type_contenxt in matrices.keys() for mutation_type_contenxt in SBS_CONTEXTS):
@@ -1947,7 +1968,7 @@ def runAnalyses(genome,
                                            overlap = overlap,
                                            gender = gender,
                                            seqInfo = seqInfo,
-                                           chrom_based = True, # chrom_based must be set to True for SPT
+                                           chrom_based = chrom_based, # chrom_based must be set to True for SigProfilerTopography tool
                                            seed_file = seed_file,
                                            noisePoisson = noisePoisson,
                                            noiseUniform = noiseUniform,
@@ -2049,7 +2070,7 @@ def runAnalyses(genome,
                 for mutation_type_context in sigprofiler_simulator_mutation_types_contexts:
                     simInputDir =  os.path.join(inputDir, 'output', 'simulations', simName, mutation_type_context)
                     print('--- For %s: %s simInputDir:%s' %(mutation_type_context,simName,simInputDir), file=log_out)
-                    matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=True)
+                    matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname,genome,simInputDir,plot=False, seqInfo=seqInfo)
                 print('--- SigProfilerMatrixGenerator is run for %s ends\n' % (simName), file=log_out)
             #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/96/output/vcf_files/SNV
             #sim1 matrix generator chrbased data will be under inputDir/output/simulations/sim1/ID/output/vcf_files/ID
@@ -2572,8 +2593,8 @@ def runAnalyses(genome,
     id_signatures_with_cutoffs = np.array([])
 
     # Fill ordered_signatures arrays w.r.t the order in probabilities file
-    # cutoffs_df (e.g.: subsSignature_cutoff_numberofmutations_averageprobability_df) are filled in (Step4=True or False but full_mode=True) or full_mode=False
-    # ordered_signatures_wrt_probabilities_file are filled in (Step3=True or False but full_mode=True) or full_mode=False
+    # cutoffs_df (e.g.: subsSignature_cutoff_numberofmutations_averageprobability_df)
+    # ordered_signatures_wrt_probabilities_file are filled in
     # We are interested in the signatures in cutoffs_df
     # But user might have changed the order of lines in cutoffs_df
     # Therefore we are setting the order in signatures_array and signatures_cutoff_arrays w.r.t. probabilities file
@@ -3027,7 +3048,7 @@ def runAnalyses(genome,
                     plot_mode,
                     combine_p_values_method,
                     fold_change_window_size,
-                    num_of_real_data_avg_overlap,
+                    num_of_avg_overlap,
                     plot_detailed_epigemomics_heatmaps,
                     remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                     odds_ratio_cutoff,
@@ -3105,7 +3126,7 @@ def plotFigures(genome,
                 plot_mode,
                 combine_p_values_method,
                 fold_change_window_size,
-                num_of_real_data_avg_overlap,
+                num_of_avg_overlap,
                 plot_detailed_epigemomics_heatmaps,
                 remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                 odds_ratio_cutoff,
@@ -3286,7 +3307,7 @@ def plotFigures(genome,
         print("\n--- Plot epigenomics heatmaps")
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
-                                              num_of_real_data_avg_overlap,
+                                              num_of_avg_overlap,
                                               outputDir,
                                               jobname,
                                               numberofSimulations,
