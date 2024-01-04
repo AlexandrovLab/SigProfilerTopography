@@ -2022,20 +2022,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             signature_lagging_versus_leading_df[fold_change_string] = None
             type_lagging_versus_leading_df[fold_change_string] = None
 
-        signature_lagging_versus_leading_df.loc[(signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
+        signature_lagging_versus_leading_df.loc[(signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= signature_lagging_versus_leading_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
         signature_lagging_versus_leading_df.loc[(signature_lagging_versus_leading_df[LEADING_REAL_COUNT] > signature_lagging_versus_leading_df[LAGGING_REAL_COUNT]), SIGNIFICANT_STRAND] = LEADING
-        type_lagging_versus_leading_df.loc[(type_lagging_versus_leading_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
+        type_lagging_versus_leading_df.loc[(type_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= type_lagging_versus_leading_df[LEADING_REAL_COUNT]), SIGNIFICANT_STRAND] = LAGGING
         type_lagging_versus_leading_df.loc[(type_lagging_versus_leading_df[LEADING_REAL_COUNT] > type_lagging_versus_leading_df[LAGGING_REAL_COUNT]),SIGNIFICANT_STRAND] = LEADING
 
-        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Lagging strand
-        signature_lagging_versus_leading_df.loc[((signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
+        # Calculate REAL_RATIO and SIMS_RATIO based on more or equal real mutations on Lagging strand
+        signature_lagging_versus_leading_df.loc[((signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= signature_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
             signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] / signature_lagging_versus_leading_df[LEADING_REAL_COUNT]
-        signature_lagging_versus_leading_df.loc[((signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] > signature_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        signature_lagging_versus_leading_df.loc[((signature_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= signature_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (signature_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             signature_lagging_versus_leading_df[LAGGING_SIMULATIONS_MEAN_COUNT] / signature_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT]
 
-        type_lagging_versus_leading_df.loc[((type_lagging_versus_leading_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
+        type_lagging_versus_leading_df.loc[((type_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= type_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_df[LEADING_REAL_COUNT] > 0)), REAL_RATIO] = \
             type_lagging_versus_leading_df[LAGGING_REAL_COUNT] / type_lagging_versus_leading_df[LEADING_REAL_COUNT]
-        type_lagging_versus_leading_df.loc[((type_lagging_versus_leading_df[LAGGING_REAL_COUNT] > type_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        type_lagging_versus_leading_df.loc[((type_lagging_versus_leading_df[LAGGING_REAL_COUNT] >= type_lagging_versus_leading_df[LEADING_REAL_COUNT]) & (type_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             type_lagging_versus_leading_df[LAGGING_SIMULATIONS_MEAN_COUNT] / type_lagging_versus_leading_df[LEADING_SIMULATIONS_MEAN_COUNT]
 
         # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Leading strand
@@ -2079,20 +2079,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             signature_transcribed_versus_untranscribed_df[fold_change_string] = None
             type_transcribed_versus_untranscribed_df[fold_change_string] = None
 
-        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
+        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
         signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
-        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
+        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
         type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
 
-        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Transcribed strand
-        signature_transcribed_versus_untranscribed_df.loc[((signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+        # Calculate REAL_RATIO and SIMS_RATIO based on more or equal real mutations on Transcribed strand
+        signature_transcribed_versus_untranscribed_df.loc[((signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
             signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] / signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]
-        signature_transcribed_versus_untranscribed_df.loc[((signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        signature_transcribed_versus_untranscribed_df.loc[((signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             signature_transcribed_versus_untranscribed_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] / signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT]
 
-        type_transcribed_versus_untranscribed_df.loc[((type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
+        type_transcribed_versus_untranscribed_df.loc[((type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
             type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] / type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]
-        type_transcribed_versus_untranscribed_df.loc[((type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        type_transcribed_versus_untranscribed_df.loc[((type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             type_transcribed_versus_untranscribed_df[TRANSCRIBED_SIMULATIONS_MEAN_COUNT] / type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_SIMULATIONS_MEAN_COUNT]
 
         # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations on Untranscribed strand
@@ -2136,20 +2136,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             signature_genic_versus_intergenic_df[fold_change_string] = None
             type_genic_versus_intergenic_df[fold_change_string] = None
 
-        signature_genic_versus_intergenic_df.loc[(signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
+        signature_genic_versus_intergenic_df.loc[(signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
         signature_genic_versus_intergenic_df.loc[(signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > signature_genic_versus_intergenic_df[GENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = INTERGENIC
-        type_genic_versus_intergenic_df.loc[(type_genic_versus_intergenic_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
+        type_genic_versus_intergenic_df.loc[(type_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = GENIC
         type_genic_versus_intergenic_df.loc[(type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > type_genic_versus_intergenic_df[GENIC_REAL_COUNT]), SIGNIFICANT_STRAND] = INTERGENIC
 
-        # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations in Genic regions
-        signature_genic_versus_intergenic_df.loc[((signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+        # Calculate REAL_RATIO and SIMS_RATIO based on more or equal real mutations in Genic regions
+        signature_genic_versus_intergenic_df.loc[((signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
             signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] / signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]
-        signature_genic_versus_intergenic_df.loc[((signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] > signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        signature_genic_versus_intergenic_df.loc[((signature_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= signature_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (signature_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             signature_genic_versus_intergenic_df[GENIC_SIMULATIONS_MEAN_COUNT] / signature_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT]
 
-        type_genic_versus_intergenic_df.loc[((type_genic_versus_intergenic_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
+        type_genic_versus_intergenic_df.loc[((type_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT] > 0)), REAL_RATIO] = \
             type_genic_versus_intergenic_df[GENIC_REAL_COUNT] / type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]
-        type_genic_versus_intergenic_df.loc[((type_genic_versus_intergenic_df[GENIC_REAL_COUNT] > type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
+        type_genic_versus_intergenic_df.loc[((type_genic_versus_intergenic_df[GENIC_REAL_COUNT] >= type_genic_versus_intergenic_df[INTERGENIC_REAL_COUNT]) & (type_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT] > 0)), SIMS_RATIO] = \
             type_genic_versus_intergenic_df[GENIC_SIMULATIONS_MEAN_COUNT] / type_genic_versus_intergenic_df[INTERGENIC_SIMULATIONS_MEAN_COUNT]
 
         # Calculate REAL_RATIO and SIMS_RATIO based on more real mutations in Intergenic regions
