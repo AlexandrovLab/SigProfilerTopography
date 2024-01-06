@@ -1017,7 +1017,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                             chromNamesList,
                             processivity_calculation_type,
                             processivity_inter_mutational_distance,
-                            considerProbabilityInProcessivityAnalysis,
+                            consider_probability_in_processivity_analysis,
                             subsSignature_cutoff_numberofmutations_averageprobability_df,
                             parallel_mode,
                             log_file,
@@ -1033,7 +1033,7 @@ def runProcessivityAnalysis(mutation_types_contexts,
                          jobname,
                          numofSimulations,
                          samples_of_interest,
-                         considerProbabilityInProcessivityAnalysis,
+                         consider_probability_in_processivity_analysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                          parallel_mode,
                          log_file,
@@ -1189,7 +1189,6 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 percentage_of_real_mutations_cutoff = 5, # [Float] Strand asymmetries of the SBS signatures with percentage of the mutations >= percentage_of_real_mutations_cutoff are shown in the plots.
                 ylim_multiplier = 1.25, # [Float] Multiply the y-axis view limits with ylim_multiplier in strand asymmetry bar plots.
                 processivity_inter_mutational_distance = 10000, # [Integer] Consecutive mutations with distance <= processivity_inter_mutational_distance are considered for the strand-coordinated mutagenesis.
-                considerProbabilityInProcessivityAnalysis = True, # [Boolean] Mutations with signature probabilities >= cutoff are considered in the strand-coordinated mutagenesis analysis. Cutoffs are signature specific when discreet_mode is True or default_cutoff when discreet_mode is False.
                 processivity_significance_level = 0.05,  # [Float] Corrected p-values <= processivity_significance_level are considered statistically significant for strand coordinated mutagenesis.
                 exome = None, # [Boolean] SigProfilerSimulator simulates on the exome of the reference genome.
                 updating = False, # [Boolean] SigProfilerSimulator updates the chromosome with each mutation.
@@ -1237,6 +1236,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     remove_outliers = False # for occupancy analysis
     quantile_value = 0.97 # for occupancy analysis
     processivity_calculation_type = CONSIDER_DISTANCE # for strand coordinated mutagenesis. For information only,
+    consider_probability_in_processivity_analysis = True # [Boolean] Mutations with signature probabilities >= cutoff are considered in the strand-coordinated mutagenesis analysis. Cutoffs are signature specific when discreet_mode is True or default_cutoff when discreet_mode is False.
+
     chrom_based = True # [boolean] this parameter used by SigProfilerSimulator. chrom_based must be set to True for SigProfilerTopography tool
     seqInfo = True # [boolean] this parameter is used by SPMG and SPS. SPMGand SPSoutput mutations into a text file that contains the classification for each mutation.
 
@@ -2870,7 +2871,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                 chromNamesList,
                                 processivity_calculation_type,
                                 processivity_inter_mutational_distance,
-                                considerProbabilityInProcessivityAnalysis,
+                                consider_probability_in_processivity_analysis,
                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 parallel_mode,
                                 log_file,

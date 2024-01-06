@@ -50,7 +50,7 @@ def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_d
                                                  chrLong,
                                                  sample,
                                                  sampleBased_chrBased_subs_df,
-                                                 considerProbabilityInProcessivityAnalysis,
+                                                 consider_probability_in_processivity_analysis,
                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                  log_file,
                                                  verbose):
@@ -64,7 +64,7 @@ def findProcessiveGroupsForApplySyncWithDistance(processivity_inter_mutational_d
     # sampleBased_chrBased_subs_df['Signature_Max_Pro'] = sampleBased_chrBased_subs_df[signatures_list].idxmax(axis=1)
     # sampleBased_chrBased_subs_df['Max_Pro'] = sampleBased_chrBased_subs_df[signatures_list].max(axis=1)
 
-    if considerProbabilityInProcessivityAnalysis:
+    if consider_probability_in_processivity_analysis:
         sampleBased_chrBased_subs_df = sampleBased_chrBased_subs_df[sampleBased_chrBased_subs_df['Probability'] >= sampleBased_chrBased_subs_df['Signature'].map(subsSignature_cutoff_numberofmutations_averageprobability_df.set_index('signature')['cutoff'])]
 
     # Drop Columns
@@ -260,7 +260,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                       jobname,
                                                                       numofSimulations,
                                                                       samples_of_interest,
-                                                                      considerProbabilityInProcessivityAnalysis,
+                                                                      consider_probability_in_processivity_analysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                       parallel_mode,
                                                                       log_file,
@@ -333,7 +333,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                chrLong,
                                                                sample,
                                                                sampleBased_chrBased_subs_df,
-                                                               considerProbabilityInProcessivityAnalysis,
+                                                               consider_probability_in_processivity_analysis,
                                                                subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                log_file,
                                                                verbose,),
@@ -345,7 +345,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                                                                chrLong,
                                                                sample,
                                                                sampleBased_chrBased_subs_df,
-                                                               considerProbabilityInProcessivityAnalysis,
+                                                               consider_probability_in_processivity_analysis,
                                                                subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                log_file,
                                                                verbose)
@@ -378,7 +378,7 @@ def processivityAnalysis(mutation_types_contexts,
                          jobname,
                          numofSimulations,
                          samples_of_interest,
-                         considerProbabilityInProcessivityAnalysis,
+                         consider_probability_in_processivity_analysis,
                          subsSignature_cutoff_numberofmutations_averageprobability_df,
                          parallel_mode,
                          log_file,
@@ -398,7 +398,7 @@ def processivityAnalysis(mutation_types_contexts,
                                                                       jobname,
                                                                       numofSimulations,
                                                                       samples_of_interest,
-                                                                      considerProbabilityInProcessivityAnalysis,
+                                                                      consider_probability_in_processivity_analysis,
                                                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                       parallel_mode,
                                                                       log_file,

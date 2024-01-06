@@ -17,6 +17,7 @@
 
 # Ignore folder named 'venv'
 venv/
+old/
 donotcopy_noneed_lib/
 extrasourcecode/
 input/
