@@ -1,4 +1,8 @@
 ﻿[![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.io/5unby/wiki/home/)
+ [![Build Status](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography.svg?branch=master)](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography)
+[![Uptime Robot status](https://img.shields.io/uptimerobot/status/m795312784-02766a79f207f67626cef289)](https://stats.uptimerobot.com/jjqW4Ulymx)
+
 
 ![schematic](SigProfilerTopography.png)
 
