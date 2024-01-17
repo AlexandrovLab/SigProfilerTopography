@@ -410,8 +410,9 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 
 ## <a name="citation"></a> Citation
+Otlu B, Alexandrov LB: Evaluating topography of mutational signatures with SigProfilerTopography. __BioRxiv 2024__, [https://doi.org/10.1101/2024.01.08.574683](https://doi.org/10.1101/2024.01.08.574683).
+
 Otlu B, Diaz-Gay M, Vermes I, Bergstrom EN, Zhivagui M, Barnes M, Alexandrov LB: Topography of mutational signatures in human cancer. __Cell Rep 2023__,  [https://doi.org/10.1016/j.celrep.2023.112930](https://doi.org/10.1016/j.celrep.2023.112930).
-Important Notice: After uploading the SigProfilerTopography tool manuscript in BioRxiv, this citation will be updated.
 
 
 ## <a name="copyright"></a> Copyright
