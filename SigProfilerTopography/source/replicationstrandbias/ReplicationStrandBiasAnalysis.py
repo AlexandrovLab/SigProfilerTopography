@@ -24,6 +24,9 @@ import numpy as np
 import pandas as pd
 import os
 
+from functools import reduce
+from scipy.signal import find_peaks
+
 from SigProfilerTopography.source.commons.TopographyCommons import CHROM
 from SigProfilerTopography.source.commons.TopographyCommons import START
 from SigProfilerTopography.source.commons.TopographyCommons import END
@@ -93,53 +96,95 @@ THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH= 10000
 THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE = 25000
 # THRESHOLD_LATEST_TRANSITION_ZONE = 0
 
+def check_for_consecutive_regions_with_same_signed_slope(chrLong,
+                                                         start, # can be repli_seq_start or peak_midpoint or valley_midpoint
+                                                         end, # can be repli_seq_end or peak_midpoint or valley_midpoint
+                                                         chrBased_repli_seq_signal_df,
+                                                         info='No info'):
+    transition_zone_list = []
 
-def checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,peakorValleyStart, peakorValleyEnd, chrBasedSmoothedWaveletReplicationTimeSignalDF):
-    transitionZoneList =[]
-    subset_df = chrBasedSmoothedWaveletReplicationTimeSignalDF[(chrBasedSmoothedWaveletReplicationTimeSignalDF[START]>=peakorValleyStart) & (chrBasedSmoothedWaveletReplicationTimeSignalDF[END]<=peakorValleyEnd)]
+    # Get the repli_seq signals within the given start and end
+    sub_repli_seq_df = chrBased_repli_seq_signal_df[( (chrBased_repli_seq_signal_df[START] + chrBased_repli_seq_signal_df[END])//2 >= start) &
+                                             ((chrBased_repli_seq_signal_df[START] + chrBased_repli_seq_signal_df[END])//2 <= end)]
 
-    consecutiveLength = 0
-    formerRow= None
-    formerSlopeDirection = None
+    sub_repli_seq_df['signal_diff'] = sub_repli_seq_df['Signal'].diff() # signal[i+1] - signal[i]
+    signal_diff_arr = sub_repli_seq_df['signal_diff'].values
 
-    start = peakorValleyStart
+    # Are these all nans?
+    all_nans = np.all(np.isnan(signal_diff_arr))
 
-    for index,row in subset_df.iterrows():
-        if formerRow is None:
-            #We read the row for the first time
-            formerRow = row
-            consecutiveLength += 1000
-        else:
-            slope = (row.get(SIGNAL) - formerRow.get(SIGNAL)) / 1000
-            formerRow = row
+    # Remove nans
+    signal_diff_arr = signal_diff_arr[~np.isnan(signal_diff_arr)]
 
-            if (formerSlopeDirection is None):
-                formerSlopeDirection = np.sign(slope)
-                consecutiveLength += 1000
-            elif (formerSlopeDirection==np.sign(slope)):
-                consecutiveLength += 1000
-            else:
-                #They have different signs
-                if (consecutiveLength>=THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH):
-                    # print('Slope sign changed -- Found one: from %d to %d with %d bases with slope sign %s' %(start,((row.get('start') + row.get('end'))//2), consecutiveLength, formerSlopeDirection))
-                    transitionZoneList.append((chrLong,start,(row.get(START) + row.get(END))//2,formerSlopeDirection,consecutiveLength))
-                #initialize and start again
-                consecutiveLength = 1000
-                start = (row.get(START) + row.get(END))//2
-                formerRow= row
-                formerSlopeDirection= np.sign(slope)
-                continue
+    if all_nans:
+        direction_sign = 0
+        if info == 'up_to_peak':
+            direction_sign = +1
+        elif info == 'down_to_valley':
+            direction_sign = -1
+        # For the last one if there is no other sign it will be 0
+    elif np.all(signal_diff_arr>0):
+        direction_sign = +1
+    elif np.all(signal_diff_arr<0):
+        direction_sign = -1
 
-            # print('slope: %f - np.sign(slope): %f -  consecutiveLength: %d ' %(slope,np.sign(slope),consecutiveLength))
-            formerSlopeDirection = np.sign(slope)
+    transition_zone_list.append((chrLong, start, end, direction_sign, end-start))
 
-    #This is for the last probable transition zone.
-    if (consecutiveLength >= THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH):
-        # print('After for loop ends, found one: from %d to %s with %d bases with slope sign %s' % (start, (row.get('start') + row.get('end'))//2, consecutiveLength, formerSlopeDirection))
-        transitionZoneList.append((chrLong,start,(row.get(START) + row.get(END))//2,formerSlopeDirection,consecutiveLength))
+    return transition_zone_list
 
-    # print('################ checkForConsecutive ends ############ fromStart: %s toEnd: %s' % (peakorValleyStart,peakorValleyEnd))
-    return transitionZoneList
+
+# # deprecated
+# def check_for_same_signed_slope_between_consecutive_peak_and_valley(chrLong,
+#                                                                     peak_or_valley_start,
+#                                                                     peak_or_valley_end,
+#                                                                     chrBased_repli_seq_signal_df):
+#
+#     transition_zone_list = []
+#
+#     # Get the repli-seq signals within peak_or_valley_start and peak_or_valley_end
+#     subset_df = chrBased_repli_seq_signal_df[(chrBased_repli_seq_signal_df[START] >= peak_or_valley_start) &
+#                                              (chrBased_repli_seq_signal_df[END] <= peak_or_valley_end)]
+#
+#     consecutive_length = 0
+#     former_row = None
+#     former_slope_direction = None
+#     start = peak_or_valley_start
+#
+#     for index, row in subset_df.iterrows():
+#         region_length = row.get(END) - row.get(START)
+#
+#         if former_row is None:
+#             # We read the row for the first time
+#             former_row = row
+#             consecutive_length += region_length
+#         else:
+#             slope = (row.get(SIGNAL) - former_row.get(SIGNAL)) / region_length
+#             former_row = row
+#
+#             if (former_slope_direction is None):
+#                 former_slope_direction = np.sign(slope)
+#                 consecutive_length += region_length
+#             elif (former_slope_direction == np.sign(slope)):
+#                 consecutive_length += region_length
+#             else:
+#                 # They have different signs, there is a sign transition
+#                 if (consecutive_length >= THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH):
+#                     transition_zone_list.append((chrLong, start, (row.get(START) + row.get(END))//2, former_slope_direction, consecutive_length))
+#
+#                 # initialize and start again
+#                 consecutive_length = region_length
+#                 start = (row.get(START) + row.get(END)) // 2
+#                 former_row = row
+#                 former_slope_direction = np.sign(slope)
+#                 continue
+#
+#             former_slope_direction = np.sign(slope)
+#
+#     # This is for the last probable transition zone.
+#     if (consecutive_length >= THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH):
+#         transition_zone_list.append((chrLong, start, (row.get(START) + row.get(END)) // 2, former_slope_direction, consecutive_length))
+#
+#     return transition_zone_list
 
 
 
@@ -153,63 +198,94 @@ def checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,peakorValleyS
 # 415     chr10  16454500  16455500    Peak
 # 415  chr10  16528500  16529500  Valley
 
-def findLongStretchesofConsistentTransitionZones(chrLong,fromStart,toEnd,chrBasedSmoothedWaveletReplicationTimeSignalDF,valleys_peaks_df):
-    transitionZonesList =[]
-    for index,row in  valleys_peaks_df.iterrows():
-        peakorValleyStart = row[START]
-        peakorValleyEnd = row[END]
-        peakorValleyMidpoint = (peakorValleyStart+peakorValleyEnd)//2
+def find_long_stretches_of_consistent_transition_zones(chrLong,
+                                                       start,
+                                                       end,
+                                                       chrBased_repli_seq_signal_df,
+                                                       valleys_peaks_df):
 
-        type = row['type']
-        if (type =='Peak'):
-            if (peakorValleyMidpoint>fromStart):
-                # print('from: %d - to: %d - difference: %d'  %(fromStart,peakorValleyMidpoint, (peakorValleyMidpoint-fromStart)))
-                found = checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,fromStart, peakorValleyMidpoint, chrBasedSmoothedWaveletReplicationTimeSignalDF)
-                transitionZonesList.extend(found)
-                # print('found %s' %found)
-            fromStart=peakorValleyMidpoint
-        elif (type=='Valley'):
-            valleyStart =row[START]
-            valleyEnd = row[END]
-            valleyMidpoint = (valleyStart+valleyEnd)//2
-            # This is something special to valley
-            newValleyStart1 = valleyMidpoint - THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE
-            newValleyStart2 = valleyMidpoint + THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE
-            if (newValleyStart1>fromStart):
-                # print('from: %d - to: %d - difference: %d' % (fromStart, newValleyStart1, (newValleyStart1 - fromStart)))
-                found = checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,fromStart, newValleyStart1,chrBasedSmoothedWaveletReplicationTimeSignalDF)
-                transitionZonesList.extend(found)
-                # print('found %s' % found)
-            # bypass the genome region between newValleyStart1 and newValleyStart2
-            fromStart = newValleyStart2
-    #
-    #For the last interval
-    if (toEnd>fromStart):
-        # print('last one from: %d - to: %d -difference: %d' %(fromStart,toEnd,(toEnd-fromStart)))
-        found = checkForSameSignedSlopeBetweenConsecutivePeakandValley(chrLong,fromStart, toEnd, chrBasedSmoothedWaveletReplicationTimeSignalDF)
-        transitionZonesList.extend(found)
-        # print('found %s' %found)
+    transition_zones_list = []
 
-    return transitionZonesList
+    for index, row in valleys_peaks_df.iterrows():
+        if (row['type'] == 'Peak'):
+            peak_start = row[START]
+            peak_end = row[END]
+            peak_midpoint = (peak_start + peak_end) // 2
+
+            if (peak_midpoint > start):
+                found_zone = check_for_consecutive_regions_with_same_signed_slope(chrLong,
+                                                                     start,
+                                                                     peak_midpoint,
+                                                                     chrBased_repli_seq_signal_df,
+                                                                     info='up_to_peak')
+
+                transition_zones_list.extend(found_zone)
+
+            start = peak_midpoint
+
+        elif (row['type'] == 'Valley'):
+            valley_start = row[START]
+            valley_end = row[END]
+            valley_midpoint = (valley_start + valley_end) // 2
+
+            # New Way
+            if valley_midpoint > start:
+                found_zone = check_for_consecutive_regions_with_same_signed_slope(chrLong,
+                                                                     start,
+                                                                     valley_midpoint,
+                                                                     chrBased_repli_seq_signal_df,
+                                                                     info='down_to_valley')
+
+                transition_zones_list.extend(found_zone)
+            start = valley_midpoint
+
+            # # Old Way
+            # # This is something special to valley
+            # # To remain conservative in downstream assignments,
+            # # we removed the last 25kb of the latest zones of the replicating domains
+            # new_valley_start1 = valley_midpoint - THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE
+            # new_valley_start2 = valley_midpoint + THRESHOLD_DISCARD_LATEST_TRANSITION_ZONE
+            #
+            # if (new_valley_start1 > start):
+            #     found_zone = check_for_consecutive_regions_with_same_signed_slope(chrLong,
+            #                                                          start,
+            #                                                          new_valley_start1,
+            #                                                          chrBased_repli_seq_signal_df,
+            #                                                          file2,
+            #                                                          info='down_to_valley')
+            #
+            #     transition_zones_list.extend(found_zone)
+            #
+            # # bypass the genome region between newValleyStart1 and newValleyStart2
+            # start = new_valley_start2
+
+    # For the last interval
+    if (end > start):
+        found_zone = check_for_consecutive_regions_with_same_signed_slope(chrLong,
+                                                             start,
+                                                             end,
+                                                             chrBased_repli_seq_signal_df,
+                                                             info='from start to end')
+
+        transition_zones_list.extend(found_zone)
+
+    return transition_zones_list
 
 
-# TODO Is (replicationStrand_row['end']+1) okey?
 # We assume that there are no overlapping intervals with positive and negative slopes.
 # To test it have one array for positive slope fill with 1s
 #                one array for negative slope fill with -2a
 #                add them if you habe any -1 that means that you contradict this assumption.
-def fillReplicationStrandArray(replicationStrand_row,chrBased_replication_array):
+def fill_replication_strand_array(replication_strand_row,chrBased_replication_array):
     # e.g.: replicationStrand_row
     # chr chrX
     # start   154861998
     # end 155096999
-    # slopeDirection  1 (1 means leading strand -1 means lagging strand on positive strand)
+    # slope_direction  1 (1 means leading strand -1 means lagging strand on positive strand)
     # length  235000
 
-    # labels = ['chr', 'start', 'end', 'slopeDirection', 'length']
-    chrBased_replication_array[replicationStrand_row['start']:replicationStrand_row['end']+1] = replicationStrand_row['slopeDirection']
-
-
+    # labels = ['chr', 'start', 'end', 'slope_direction', 'length']
+    chrBased_replication_array[replication_strand_row['start']:replication_strand_row['end']] = replication_strand_row['slope_direction']
 
 # Using numpy arrays
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
@@ -578,21 +654,27 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
 
 
 # This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
-def checkforValidness(chrBased_valleys_peaks_df):
-    formerRowType = None
+def check_for_validness(chrBased_valleys_peaks_df):
+    former_row_type = None
 
     for index, row in chrBased_valleys_peaks_df.iterrows():
-        if formerRowType is None:
-            formerRowType = row['type']
-        elif (row['type'] == formerRowType):
+        if former_row_type is None:
+            former_row_type = row['type']
+        elif (row['type'] == former_row_type):
+            print('DEBUG There is a problem in repli-seq valleys and peaks.')
             return False
         else:
-            formerRowType = row['type']
+            former_row_type = row['type']
 
     return True
 
 
 def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
+    # global THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH
+    # most_frequent_length = (repliseq_signal_df[END] - repliseq_signal_df[START]).value_counts().idxmax()
+    # THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH = most_frequent_length * 10
+    # print('DEBUG most_frequent_length:', most_frequent_length, 'THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH:', THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH)
+
     chrBased_replication_array = get_chr_based_replication_strand_array(chrLong,
                                                                         chromSize,
                                                                         repliseq_signal_df,
@@ -603,19 +685,19 @@ def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repl
 
 def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
 
-    # Read chrBasedSmoothedWaveletReplicationTimeSignalDF
-    chrBased_SmoothedWaveletReplicationTimeSignal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
+    # Read chrBased_repli_seq_signal_df
+    chrBased_repli_seq_signal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
 
-    chrBasedValleysDF = valleys_df[valleys_df[CHROM] == chrLong].copy()
-    chrBasedValleysDF['type'] = 'Valley'
-    chrBasedValleysDF.astype(dtype={START: int, END: int})
+    chrBased_valleys_df = valleys_df[valleys_df[CHROM] == chrLong].copy()
+    chrBased_valleys_df['type'] = 'Valley'
+    chrBased_valleys_df.astype(dtype={START: int, END: int})
 
-    chrBasedPeaksDF = peaks_df[peaks_df[CHROM] == chrLong].copy()
-    chrBasedPeaksDF['type'] = 'Peak'
-    chrBasedPeaksDF.astype(dtype={START: int, END: int})
+    chrBased_peaks_df = peaks_df[peaks_df[CHROM] == chrLong].copy()
+    chrBased_peaks_df['type'] = 'Peak'
+    chrBased_peaks_df.astype(dtype={START: int, END: int})
 
     # Concat valleys and peaks vertically
-    chrBased_valleys_peaks_df = pd.concat([chrBasedValleysDF, chrBasedPeaksDF], axis=0)
+    chrBased_valleys_peaks_df = pd.concat([chrBased_valleys_df, chrBased_peaks_df], axis=0)
 
     # Sort valleys and peaks in ascending order
     chrBased_valleys_peaks_df.sort_values(START, inplace=True)
@@ -623,12 +705,12 @@ def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_d
     # start the index from zero
     chrBased_valleys_peaks_df.reset_index(drop=True, inplace=True)
 
-    if ((chrBased_SmoothedWaveletReplicationTimeSignal_df is not None) and
-            (not chrBased_SmoothedWaveletReplicationTimeSignal_df.empty) and
-            (checkforValidness(chrBased_valleys_peaks_df))):
+    if ((chrBased_repli_seq_signal_df is not None) and
+            (not chrBased_repli_seq_signal_df.empty) and
+            (check_for_validness(chrBased_valleys_peaks_df))):
         chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,
                                                                              chromSize,
-                                                                             chrBased_SmoothedWaveletReplicationTimeSignal_df,
+                                                                             chrBased_repli_seq_signal_df,
                                                                              chrBased_valleys_peaks_df)
 
         return chrBased_replication_array
@@ -639,35 +721,75 @@ def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_d
 
 def fill_chr_based_replication_strand_array(chrLong,
                                             chromSize,
-                                            chrBasedSmoothedWaveletReplicationTimeSignalDF,
+                                            chrBased_repli_seq_signal_df,
                                             chrBased_valleys_peaks_df):
+
     # +1 means leading strand, -1 means lagging strand
     # we will fill this array using smoothedSignal, peaks and valleys for each chromosome
     chrBased_replication_array = np.zeros(chromSize, dtype=np.int8)
 
-    firstIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[0]
-    lastIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.index[-1]
+    start_column_index = chrBased_repli_seq_signal_df.columns.get_loc(START)
+    end_column_index = chrBased_repli_seq_signal_df.columns.get_loc(END)
 
-    startColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc(START)
-    endColumnIndex = chrBasedSmoothedWaveletReplicationTimeSignalDF.columns.get_loc(END)
+    start = chrBased_repli_seq_signal_df.iloc[0, start_column_index]  # get the first row start
+    end = chrBased_repli_seq_signal_df.iloc[-1, end_column_index]  # get the last row end
 
-    start = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[0, startColumnIndex]  # get the first row start
-    end = chrBasedSmoothedWaveletReplicationTimeSignalDF.iloc[-1, endColumnIndex]  # get the last row end
+    # To remain conservative in downstream assignments,
+    # we removed the last 25kb of the latest zones of the replicating domains
+    start += 25000
+    end -= 25000
 
     # Step1 Find the transition zones
-    chrBasedTransitionZonesList = findLongStretchesofConsistentTransitionZones(chrLong,
-                                                                               start,
-                                                                               end,
-                                                                               chrBasedSmoothedWaveletReplicationTimeSignalDF,
-                                                                               chrBased_valleys_peaks_df)
+    chrBased_transition_zones_list = find_long_stretches_of_consistent_transition_zones(chrLong,
+                                                                                        start,
+                                                                                        end,
+                                                                                        chrBased_repli_seq_signal_df,
+                                                                                        chrBased_valleys_peaks_df)
 
-    labels = ['chr', 'start', 'end', 'slopeDirection', 'length']
-    chrBasedTransitionZonesDF = pd.DataFrame.from_records(chrBasedTransitionZonesList, columns=labels)
+    labels = ['chr', 'start', 'end', 'slope_direction', 'length']
+    chrBased_transition_zones_df = pd.DataFrame.from_records(chrBased_transition_zones_list, columns=labels)
 
     # Step2 Fill the replication array using transition zones
-    chrBasedTransitionZonesDF.apply(fillReplicationStrandArray, chrBased_replication_array=chrBased_replication_array,axis=1)
+    chrBased_transition_zones_df.apply(fill_replication_strand_array,
+                                       chrBased_replication_array=chrBased_replication_array,
+                                       axis=1)
 
     return chrBased_replication_array
+
+def find_repli_seq_peaks_valleys_using_scipy(repli_seq_df):
+
+    grouped = repli_seq_df.groupby(CHROM)
+
+    valleys_df_list = []
+    peaks_df_list = []
+
+    for chrom, chrBased_replicationtimedata_df in grouped:
+
+        # sort w.r.t. start
+        chrBased_replicationtimedata_df = chrBased_replicationtimedata_df.sort_values(by=[START], ascending=True)
+
+        # reset_index
+        chrBased_replicationtimedata_df = chrBased_replicationtimedata_df.reset_index()
+
+        # Find local minima and maxima using peak detection
+        maxima_indices, _ = find_peaks(chrBased_replicationtimedata_df[SIGNAL], prominence=0) # 0
+        minima_indices, _ = find_peaks(-(chrBased_replicationtimedata_df[SIGNAL]), prominence=0) # 0
+
+        # Extract local minima and maxima from indices
+        local_maxima_df = chrBased_replicationtimedata_df.iloc[maxima_indices]
+        local_minima_df = chrBased_replicationtimedata_df.iloc[minima_indices]
+
+        local_maxima_df = local_maxima_df[[CHROM, START, END]]
+        local_minima_df = local_minima_df[[CHROM, START, END]]
+
+        peaks_df_list.append(local_maxima_df)
+        valleys_df_list.append(local_minima_df)
+
+    # Vertically concatenate dataframes using reduce
+    all_peaks_df = reduce(lambda x, y: pd.concat([x, y], axis=0), peaks_df_list)
+    all_valleys_df = reduce(lambda x, y: pd.concat([x, y], axis=0), valleys_df_list)
+
+    return all_peaks_df, all_valleys_df
 
 
 def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
@@ -692,26 +814,29 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
         repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
                                                  header=None, names=[CHROM, START, END, SIGNAL])
 
-    # Read the Valleys
-    discard_signal = True
-    valleys_df= readFileInBEDFormat(valleysBEDFilename, discard_signal, log_file)
-    valleys_df[END] = valleys_df[END] - 1
-
-    # Read the Peaks
-    discard_signal = True
-    peaks_df = readFileInBEDFormat(peaksBEDFilename, discard_signal, log_file)
-    peaks_df[END] = peaks_df[END] - 1
-
-    log_out = open(log_file, 'a')
-    print('Chromosome names in replication time signal data: %s' % (repliseq_wavelet_signal_df[CHROM].unique()), file=log_out)
-    print('Chromosome names in replication time valleys data: %s' % (valleys_df[CHROM].unique()), file=log_out)
-    print('Chromosome names in replication time peaks data: %s' % (peaks_df[CHROM].unique()), file=log_out)
-
     # Remove rows with chromosomes that are not in chromNamesList
     repliseq_wavelet_signal_df = repliseq_wavelet_signal_df[repliseq_wavelet_signal_df[CHROM].isin(chromNamesList)]
+
+    if valleysBEDFilename is not None:
+        # Read the Valleys
+        discard_signal = True
+        valleys_df = readFileInBEDFormat(valleysBEDFilename, discard_signal, log_file)
+        valleys_df[END] = valleys_df[END] - 1
+
+    if peaksBEDFilename is not None:
+        # Read the Peaks
+        discard_signal = True
+        peaks_df = readFileInBEDFormat(peaksBEDFilename, discard_signal, log_file)
+        peaks_df[END] = peaks_df[END] - 1
+
+    if (valleysBEDFilename is None) and (peaksBEDFilename is None):
+        peaks_df, valleys_df = find_repli_seq_peaks_valleys_using_scipy(repliseq_wavelet_signal_df)
+
+    # Remove rows with chromosomes that are not in chromNamesList
     valleys_df = valleys_df[valleys_df[CHROM].isin(chromNamesList)]
     peaks_df = peaks_df[peaks_df[CHROM].isin(chromNamesList)]
 
+    log_out = open(log_file, 'a')
     repliseq_wavelet_signal_df_unique_chr_names = repliseq_wavelet_signal_df[CHROM].unique()
     valleys_df_unique_chr_names = valleys_df[CHROM].unique()
     peaks_df_unique_chr_names = peaks_df[CHROM].unique()
@@ -732,7 +857,6 @@ def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
           %(peaks_df_unique_chr_names, peaks_df.shape[0], peaks_df.shape[1]), file=log_out)
 
     log_out.close()
-    # just added end
 
     return repliseq_wavelet_signal_df, valleys_df, peaks_df
 
@@ -1223,7 +1347,11 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
     for chrLong in chromNamesList:
         chromSize = chromSizesDict[chrLong]
         jobs.append(pool.apply_async(get_chr_based_replication_strand_array_for_callback,
-                                 args=(chrLong, chromSize, repliseq_signal_df,valleys_df, peaks_df,),
+                                 args=(chrLong,
+                                       chromSize,
+                                       repliseq_signal_df,
+                                       valleys_df,
+                                       peaks_df,),
                                  callback=write_chrom_based_replication_array))
 
     log_out = open(log_file, 'a')

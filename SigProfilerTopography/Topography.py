@@ -178,6 +178,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUT
 
 from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import annotated_region_analysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
+from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis_enhanced
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
@@ -1546,6 +1547,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             if (replication_time_biosample is None):
                 replication_time_biosample = UNDECLARED
 
+        # Case5 Replication timing signal file is not None, Replication timing valleys and peaks are None.
+        elif (replication_time_signal_file is not None):
+            if (replication_time_biosample is None):
+                replication_time_biosample = UNDECLARED
+
+
     elif genome == GRCh38:
         # We need full path of the library files
         # By default replication_time_biosample = IMR90 and signal, valley, peak files are None
@@ -1580,6 +1587,10 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             if (replication_time_biosample is None):
                 replication_time_biosample = UNDECLARED
 
+        # Case5 Replication timing signal file is not None, Replication timing valleys and peaks are None.
+        elif (replication_time_signal_file is not None):
+            if (replication_time_biosample is None):
+                replication_time_biosample = UNDECLARED
 
     #################################################################################
     ################## Set full path library files ends #############################
@@ -1716,7 +1727,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         if 'DINUC' in matrices.keys():
             sigprofiler_simulator_dbs_mutation_context = DBS
             sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
-        if 'INDEL' in matrices.keys():
+        if 'ID' in matrices.keys():
             sigprofiler_simulator_id_mutation_context = ID
             sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
 
@@ -3000,7 +3011,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                         cancer_type=jobname)
 
     # delete unnecesary files after SPT Run
-    delete_unnecessary_files_after_SPT_run(outputDir, jobname)
+    # delete_unnecessary_files_after_SPT_run(outputDir, jobname)
 
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################

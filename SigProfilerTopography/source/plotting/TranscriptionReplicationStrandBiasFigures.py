@@ -23,6 +23,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib import gridspec
 
+import matplotlib.font_manager
 matplotlib.use("Agg")
 
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
@@ -132,6 +133,26 @@ from SigProfilerTopography.source.commons.TopographyCommons import Sample2Dinucs
 transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
 genicVersusIntergenicStrands = [GENIC, INTERGENIC]
 replicationStrands = [LAGGING, LEADING]
+
+import SigProfilerTopography.source as spt
+SPT_PATH = spt.__path__[0]
+SPT_FONTS = os.path.join(SPT_PATH, "fonts/")
+
+_FONTS_LOADED = False
+
+# Loads fonts required for plotting
+def load_custom_fonts():
+    global _FONTS_LOADED
+    if not _FONTS_LOADED:
+        for font_file in os.listdir(SPT_FONTS):
+            if font_file.endswith(".ttf"):
+                try:
+                    font_path = os.path.join(SPT_FONTS, font_file)
+                    matplotlib.font_manager.fontManager.addfont(font_path)
+                except Exception as e:
+                    print("ERROR loading font: " + font_file + repr(e))
+    _FONTS_LOADED = True
+
 
 # For Mutation Types
 def plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using_dataframes(sample,numberofMutations,
@@ -424,6 +445,9 @@ def plotStrandBiasFigureWithBarPlots(outputDir,
     from matplotlib import rcParams
     rcParams.update({'figure.autolayout': True})
 
+    # load custom fonts for plotting
+    load_custom_fonts()
+
     # the x locations for the groups
     ind = np.arange(N)
 
@@ -615,6 +639,9 @@ def plot_circle_plot_in_given_axis(ax,
                                    signature_genic_versus_intergenic_df,
                                    odds_ratio_cutoff,
                                    percentage_of_real_mutations_cutoff):
+
+    # load custom fonts for plotting
+    load_custom_fonts()
 
     strand_bias_list = [GENIC_VERSUS_INTERGENIC, TRANSCRIBED_VERSUS_UNTRANSCRIBED, LAGGING_VERSUS_LEADING]
 
@@ -929,6 +956,9 @@ def plot_strand_bias_figure_with_bar_plots(strand_bias,
                                      percentage_of_real_mutations_cutoff,
                                      axis_given=None):
 
+    # load custom fonts for plotting
+    load_custom_fonts()
+
     # Here we can take into difference between strand1_values and strand2_values while deciding on significance
     # the x locations for the groups
     ind = np.arange(N)
@@ -1216,6 +1246,9 @@ def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
                                                    odds_ratio_cutoff,
                                                    percentage_of_real_mutations_cutoff,
                                                    axis_given=None):
+
+    # load custom fonts for plotting
+    load_custom_fonts()
 
     # Replace np.nans with 0
     strand1_values = [0 if np.isnan(x) else x for x in strand1_values]
@@ -2495,6 +2528,9 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
                                               fold_change_strings,
                                               odds_ratio_cutoff):
 
+    # load custom fonts for plotting
+    load_custom_fonts()
+
     if strand_bias == LAGGING_VERSUS_LEADING:
         title = 'Lagging versus Leading Strand Asymmetry'
         q_value_column = 'lagging_versus_leading_q_value'
@@ -2768,6 +2804,8 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                                                      fold_change_strings,
                                                      odds_ratio_cutoff,
                                                      percentage_of_real_mutations_cutoff):
+    # load custom fonts for plotting
+    load_custom_fonts()
 
     if strand_bias == LAGGING_VERSUS_LEADING:
         signature_strand1_versus_strand2_df = signature_lagging_versus_leading_df

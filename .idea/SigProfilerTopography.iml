@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/transcriptionstrandbias" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/annotation" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/annotatedregion" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SigProfilerTopography/source/fonts" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (SigProfilerTopography)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
