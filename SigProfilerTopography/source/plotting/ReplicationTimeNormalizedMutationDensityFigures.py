@@ -155,37 +155,6 @@ def plotNormalizedMutationDensityFigureWithSimulations(title,
     width = 0.9  # the width of the bars
     plt.bar(x, normalizedMutationDensityList, width, label='Real Somatic Mutations', color=barcolor, edgecolor="black", linewidth=3, zorder=1)
 
-    # delete starts
-    if signature == 'SBS4':
-        print(signature, 'For NSLC SBS4 positive samples only, normalizedMutationDensityList: ', normalizedMutationDensityList)
-        print(signature, 'For NSLC SBS4 positive samples only, simulationsMeans: ', simulationsMeans)
-        print(signature, 'For NSLC SBS4 positive samples only, simulationsLows: ', simulationsLows)
-        print(signature, 'For NSLC SBS4 positive samples only, simulationsHighs: ', simulationsHighs)
-
-        np.save(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_real_replication_time'),
-                np.array(normalizedMutationDensityList))
-        np.save(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_means_replication_time'),
-                np.array(simulationsMeans))
-        np.save(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_lows_replication_time'),
-                np.array(simulationsLows))
-        np.save(os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_highs_replication_time'),
-                np.array(simulationsHighs))
-
-        real_average_loaded = np.load(
-            os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_real_replication_time.npy'))
-        simulations_means_loaded = np.load(
-            os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_means_replication_time.npy'))
-        simulations_lows_loaded = np.load(
-            os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_lows_replication_time.npy'))
-        simulations_highs_loaded = np.load(
-            os.path.join(outputDir, jobname, DATA, REPLICATIONTIME, 'SBS4_simulations_highs_replication_time.npy'))
-
-        print(real_average_loaded, type(real_average_loaded), np.shape(real_average_loaded), real_average_loaded.ndim)
-        print(simulations_means_loaded, type(simulations_means_loaded), np.shape(simulations_means_loaded), simulations_means_loaded.ndim)
-        print(simulations_lows_loaded, type(simulations_lows_loaded), np.shape(simulations_lows_loaded), simulations_lows_loaded.ndim)
-        print(simulations_highs_loaded, type(simulations_highs_loaded), np.shape(simulations_highs_loaded), simulations_highs_loaded.ndim)
-    # delete ends
-
     # plt.xticks(np.arange(10),('1st', '2nd', '3rd', '4th', '5th','6th','7th','8th','9th','10th'),rotation=20)
     # also works
     # plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])

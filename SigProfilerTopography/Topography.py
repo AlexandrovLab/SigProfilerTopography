@@ -3010,8 +3010,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                         subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                         cancer_type=jobname)
 
-    # delete unnecesary files after SPT Run
-    # delete_unnecessary_files_after_SPT_run(outputDir, jobname)
+    # delete unnecesary files (chrbased) after SPT Run
+    delete_unnecessary_files_after_SPT_run(outputDir, jobname)
 
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################
