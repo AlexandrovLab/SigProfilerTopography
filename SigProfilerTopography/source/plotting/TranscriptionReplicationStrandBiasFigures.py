@@ -96,9 +96,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import INTERGENIC
 from SigProfilerTopography.source.commons.TopographyCommons import fold_change_numbers
 from SigProfilerTopography.source.commons.TopographyCommons import fold_change_strings
 
-from SigProfilerTopography.source.commons.TopographyCommons import ID
+from SigProfilerTopography.source.commons.TopographyCommons import SBS
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
+from SigProfilerTopography.source.commons.TopographyCommons import ID
 
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL
 from SigProfilerTopography.source.commons.TopographyCommons import PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT
@@ -1173,55 +1173,56 @@ def plot_bar_plot_in_given_axis(axis,
         color2 = 'gray'
 
     groupby_df = signature_strand1_versus_strand2_df.groupby([SIGNATURE])
-    group_df = groupby_df.get_group(sbs_signature)
+    if sbs_signature in groupby_df.groups:
+        group_df = groupby_df.get_group(sbs_signature)
 
-    mutationtype_strand1_real_list = []
-    mutationtype_strand2_real_list = []
-    mutationtype_strand1_sims_mean_list = []
-    mutationtype_strand2_sims_mean_list = []
-    mutationtype_FDR_BH_adjusted_pvalues_list = []
-    odds_ratio_list = []
-    percentage_of_real_mutations_list = []
+        mutationtype_strand1_real_list = []
+        mutationtype_strand2_real_list = []
+        mutationtype_strand1_sims_mean_list = []
+        mutationtype_strand2_sims_mean_list = []
+        mutationtype_FDR_BH_adjusted_pvalues_list = []
+        odds_ratio_list = []
+        percentage_of_real_mutations_list = []
 
-    for mutation_type in six_mutation_types:
-        strand1_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1].values[0]
-        strand2_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2].values[0]
-        strand1_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1_sims].values[0]
-        strand2_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2_sims].values[0]
-        q_value = group_df[group_df[MUTATION_TYPE] == mutation_type][q_value_column_name].values[0]
-        odds_ratio = group_df[group_df[MUTATION_TYPE] == mutation_type][ODDS_RATIO].values[0]
-        percentage_of_real_mutations = group_df[group_df[MUTATION_TYPE] == mutation_type][PERCENTAGE_OF_REAL_MUTATIONS].values[0]
+        for mutation_type in six_mutation_types:
+            strand1_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1].values[0]
+            strand2_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2].values[0]
+            strand1_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1_sims].values[0]
+            strand2_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2_sims].values[0]
+            q_value = group_df[group_df[MUTATION_TYPE] == mutation_type][q_value_column_name].values[0]
+            odds_ratio = group_df[group_df[MUTATION_TYPE] == mutation_type][ODDS_RATIO].values[0]
+            percentage_of_real_mutations = group_df[group_df[MUTATION_TYPE] == mutation_type][PERCENTAGE_OF_REAL_MUTATIONS].values[0]
 
-        mutationtype_strand1_real_list.append(strand1_real_count)
-        mutationtype_strand2_real_list.append(strand2_real_count)
-        mutationtype_strand1_sims_mean_list.append(strand1_sims_count)
-        mutationtype_strand2_sims_mean_list.append(strand2_sims_count)
-        mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
-        odds_ratio_list.append(odds_ratio)
-        percentage_of_real_mutations_list.append(percentage_of_real_mutations)
+            mutationtype_strand1_real_list.append(strand1_real_count)
+            mutationtype_strand2_real_list.append(strand2_real_count)
+            mutationtype_strand1_sims_mean_list.append(strand1_sims_count)
+            mutationtype_strand2_sims_mean_list.append(strand2_sims_count)
+            mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
+            odds_ratio_list.append(odds_ratio)
+            percentage_of_real_mutations_list.append(percentage_of_real_mutations)
 
-    plot_strand_bias_figure_with_bar_plots(strand_bias,
-                             None,
-                             numberofSimulations,
-                             sbs_signature,
-                             len(mutation_types),
-                             mutation_types,
-                             y_axis_label,
-                             mutationtype_strand1_real_list,
-                             mutationtype_strand2_real_list,
-                             mutationtype_strand1_sims_mean_list,
-                             mutationtype_strand2_sims_mean_list,
-                             mutationtype_FDR_BH_adjusted_pvalues_list,
-                             odds_ratio_list,
-                             percentage_of_real_mutations_list,
-                             strands[0],
-                             strands[1],
-                             color1,
-                             color2,
-                             width,
-                             odds_ratio_cutoff,
-                             percentage_of_real_mutations_cutoff,
-                             axis_given = axis)
+        plot_strand_bias_figure_with_bar_plots(strand_bias,
+                                 None,
+                                 numberofSimulations,
+                                 sbs_signature,
+                                 len(mutation_types),
+                                 mutation_types,
+                                 y_axis_label,
+                                 mutationtype_strand1_real_list,
+                                 mutationtype_strand2_real_list,
+                                 mutationtype_strand1_sims_mean_list,
+                                 mutationtype_strand2_sims_mean_list,
+                                 mutationtype_FDR_BH_adjusted_pvalues_list,
+                                 odds_ratio_list,
+                                 percentage_of_real_mutations_list,
+                                 strands[0],
+                                 strands[1],
+                                 color1,
+                                 color2,
+                                 width,
+                                 odds_ratio_cutoff,
+                                 percentage_of_real_mutations_cutoff,
+                                 axis_given = axis)
 
 
 def plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
@@ -1441,65 +1442,66 @@ def plot_stacked_bar_plot_in_given_axis(axis,
         color2 = 'gray'
 
     groupby_df = signature_strand1_versus_strand2_df.groupby([SIGNATURE])
-    group_df = groupby_df.get_group(sbs_signature)
+    if sbs_signature in groupby_df.groups:
+        group_df = groupby_df.get_group(sbs_signature)
 
-    mutationtype_strand1_real_list = []
-    mutationtype_strand2_real_list = []
-    mutationtype_strand1_sims_mean_list = []
-    mutationtype_strand2_sims_mean_list = []
-    mutationtype_FDR_BH_adjusted_pvalues_list = []
-    odds_ratio_list = []
-    percentage_of_real_mutations_list = []
+        mutationtype_strand1_real_list = []
+        mutationtype_strand2_real_list = []
+        mutationtype_strand1_sims_mean_list = []
+        mutationtype_strand2_sims_mean_list = []
+        mutationtype_FDR_BH_adjusted_pvalues_list = []
+        odds_ratio_list = []
+        percentage_of_real_mutations_list = []
 
-    for mutation_type in six_mutation_types:
-        strand1_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1].values[0]
-        strand2_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2].values[0]
-        strand1_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1_sims].values[0]
-        strand2_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2_sims].values[0]
-        q_value = group_df[group_df[MUTATION_TYPE] == mutation_type][q_value_column_name].values[0]
-        odds_ratio = group_df[group_df[MUTATION_TYPE] == mutation_type][ODDS_RATIO].values[0]
-        percentage_of_real_mutations = group_df[group_df[MUTATION_TYPE] == mutation_type][PERCENTAGE_OF_REAL_MUTATIONS].values[0]
+        for mutation_type in six_mutation_types:
+            strand1_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1].values[0]
+            strand2_real_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2].values[0]
+            strand1_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand1_sims].values[0]
+            strand2_sims_count = group_df[group_df[MUTATION_TYPE] == mutation_type][strand2_sims].values[0]
+            q_value = group_df[group_df[MUTATION_TYPE] == mutation_type][q_value_column_name].values[0]
+            odds_ratio = group_df[group_df[MUTATION_TYPE] == mutation_type][ODDS_RATIO].values[0]
+            percentage_of_real_mutations = group_df[group_df[MUTATION_TYPE] == mutation_type][PERCENTAGE_OF_REAL_MUTATIONS].values[0]
 
-        mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
-        odds_ratio_list.append(odds_ratio)
-        percentage_of_real_mutations_list.append(percentage_of_real_mutations)
+            mutationtype_FDR_BH_adjusted_pvalues_list.append(q_value)
+            odds_ratio_list.append(odds_ratio)
+            percentage_of_real_mutations_list.append(percentage_of_real_mutations)
 
-        if (strand1_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT) or (strand2_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT):
-            mutationtype_strand1_real_list.append(strand1_real_count/(strand1_real_count+strand2_real_count))
-            mutationtype_strand2_real_list.append(strand2_real_count/(strand1_real_count+strand2_real_count))
-        else:
-            mutationtype_strand1_real_list.append(np.nan)
-            mutationtype_strand2_real_list.append(np.nan)
+            if (strand1_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT) or (strand2_real_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT):
+                mutationtype_strand1_real_list.append(strand1_real_count/(strand1_real_count+strand2_real_count))
+                mutationtype_strand2_real_list.append(strand2_real_count/(strand1_real_count+strand2_real_count))
+            else:
+                mutationtype_strand1_real_list.append(np.nan)
+                mutationtype_strand2_real_list.append(np.nan)
 
-        if (strand1_sims_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT) or (strand2_sims_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT):
-            mutationtype_strand1_sims_mean_list.append(strand1_sims_count/(strand1_sims_count+strand2_sims_count))
-            mutationtype_strand2_sims_mean_list.append(strand2_sims_count/(strand1_sims_count+strand2_sims_count))
-        else:
-            mutationtype_strand1_sims_mean_list.append(np.nan)
-            mutationtype_strand2_sims_mean_list.append(np.nan)
+            if (strand1_sims_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT) or (strand2_sims_count >= NUMBER_OF_REQUIRED_MUTATIONS_FOR_STRAND_BIAS_BAR_PLOT):
+                mutationtype_strand1_sims_mean_list.append(strand1_sims_count/(strand1_sims_count+strand2_sims_count))
+                mutationtype_strand2_sims_mean_list.append(strand2_sims_count/(strand1_sims_count+strand2_sims_count))
+            else:
+                mutationtype_strand1_sims_mean_list.append(np.nan)
+                mutationtype_strand2_sims_mean_list.append(np.nan)
 
-    plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
-                                                   None,
-                                                   numberofSimulations,
-                                                   sbs_signature,
-                                                   len(mutation_types),
-                                                   mutation_types,
-                                                   y_axis_label,
-                                                   mutationtype_strand1_real_list,
-                                                   mutationtype_strand2_real_list,
-                                                   mutationtype_strand1_sims_mean_list,
-                                                   mutationtype_strand2_sims_mean_list,
-                                                   mutationtype_FDR_BH_adjusted_pvalues_list,
-                                                   odds_ratio_list,
-                                                   percentage_of_real_mutations_list,
-                                                   strands[0],
-                                                   strands[1],
-                                                   color1,
-                                                   color2,
-                                                   width,
-                                                   odds_ratio_cutoff,
-                                                   percentage_of_real_mutations_cutoff,
-                                                   axis_given = axis)
+        plot_strand_bias_figure_with_stacked_bar_plots(strand_bias,
+                                                       None,
+                                                       numberofSimulations,
+                                                       sbs_signature,
+                                                       len(mutation_types),
+                                                       mutation_types,
+                                                       y_axis_label,
+                                                       mutationtype_strand1_real_list,
+                                                       mutationtype_strand2_real_list,
+                                                       mutationtype_strand1_sims_mean_list,
+                                                       mutationtype_strand2_sims_mean_list,
+                                                       mutationtype_FDR_BH_adjusted_pvalues_list,
+                                                       odds_ratio_list,
+                                                       percentage_of_real_mutations_list,
+                                                       strands[0],
+                                                       strands[1],
+                                                       color1,
+                                                       color2,
+                                                       width,
+                                                       odds_ratio_cutoff,
+                                                       percentage_of_real_mutations_cutoff,
+                                                       axis_given = axis)
 
 
 def plot_circle_bar_plots_together(outputDir,
@@ -1743,6 +1745,7 @@ def plotBarPlotsUsingDataframes(outputDir,
 def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                              jobname,
                                                              numberofSimulations,
+                                                             mutation_types,
                                                              strand_bias_list,
                                                              plot_mode,
                                                              odds_ratio_cutoff,
@@ -1782,16 +1785,16 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     dinucsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
     indelsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
 
-    if os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (SBS in mutation_types) and os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
         subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(subsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         subsSignatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
 
-    if os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (DBS in mutation_types) and os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
         dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(dinucsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         dinucsSignatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
 
-    if os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
-        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
+    if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
+        indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
         indelsSignatures = indelsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
 
     # Step1 Read p_value from strand asymmetry analysis results under data folder
@@ -2250,7 +2253,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
 
     # Circle Plots
     for strand_bias in strand_bias_list:
-        if np.any(subsSignatures):
+        if (SBS in mutation_types) and np.any(subsSignatures):
             plot_six_mutations_sbs_signatures_circle_figures(subsSignatures,
                                                              strand_bias,
                                                              strandbias_figures_outputDir,
@@ -2262,7 +2265,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                              odds_ratio_cutoff,
                                                              percentage_of_real_mutations_cutoff)
 
-        if np.any(dinucsSignatures):
+        if (DBS in mutation_types) and np.any(dinucsSignatures):
             plot_dbs_and_id_signatures_circle_figures(DBS,
                                                       dinucsSignatures,
                                                       strand_bias,
@@ -2274,7 +2277,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                       fold_change_strings,
                                                       odds_ratio_cutoff)
 
-        if np.any(indelsSignatures):
+        if (ID in mutation_types) and np.any(indelsSignatures):
             plot_dbs_and_id_signatures_circle_figures(ID,
                                                       indelsSignatures,
                                                       strand_bias,
@@ -2291,10 +2294,20 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     width = 0.20
 
     # Plot Bar Plots --- Types
-    types_list= [('All Mutations', 'mutationtypes', six_mutation_types),
-                 ('All Signatures', 'subs_signatures', subsSignatures),
-                 ('All Signatures', 'indels_signatures', indelsSignatures),
-                 ('All Signatures', 'dinucs_signatures', dinucsSignatures)]
+    # types_list= [('All Mutations', 'mutationtypes', six_mutation_types),
+    #              ('All Signatures', 'subs_signatures', subsSignatures),
+    #              ('All Signatures', 'indels_signatures', indelsSignatures),
+    #              ('All Signatures', 'dinucs_signatures', dinucsSignatures)]
+
+    types_list = []
+    for mutation_type in mutation_types:
+        if mutation_type == SBS:
+            types_list.append(('All Mutations', 'mutationtypes', six_mutation_types))
+            types_list.append(('All Signatures', 'subs_signatures', subsSignatures))
+        elif mutation_type == DBS:
+            types_list.append(('All Signatures', 'dinucs_signatures', dinucsSignatures))
+        elif mutation_type == ID:
+            types_list.append(('All Signatures', 'indels_signatures', indelsSignatures))
 
     for mutationsOrSignatures, sub_figure_name, x_axis_labels in types_list:
         x_axis_labels = sorted(x_axis_labels, key=natural_key)
@@ -2403,7 +2416,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
                                                      ylim_multiplier)
 
     # Plot Bar Plots --- SBS Signatures
-    if not subsSignature_cutoff_numberofmutations_averageprobability_df.empty:
+    if (SBS in mutation_types) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
             plotBarPlotsUsingDataframes(outputDir,
                                         jobname,
@@ -2470,46 +2483,58 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     # At middle ax, 3 bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     # At below ax, 3 normalized bar plots: for genic vs. intergenic, transcribed vs. untranscribed, lagging vs. leading
     if (TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list) and (LAGGING_VERSUS_LEADING in strand_bias_list):
-        sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
-        for sbs_signature in sbs_signatures:
-            plot_circle_bar_plots_together(outputDir,
-                                           jobname,
-                                           sbs_signature,
-                                           six_mutation_types,
-                                           signature_lagging_versus_leading_df,
-                                           signature_transcribed_versus_untranscribed_df,
-                                           signature_genic_versus_intergenic_df,
-                                           genicVersusIntergenicStrands,
-                                           transcriptionStrands,
-                                           replicationStrands,
-                                           odds_ratio_cutoff,
-                                           percentage_of_real_mutations_cutoff)
+        if SBS in mutation_types:
+            sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique()
+            for sbs_signature in sbs_signatures:
+                plot_circle_bar_plots_together(outputDir,
+                                               jobname,
+                                               sbs_signature,
+                                               six_mutation_types,
+                                               signature_lagging_versus_leading_df,
+                                               signature_transcribed_versus_untranscribed_df,
+                                               signature_genic_versus_intergenic_df,
+                                               genicVersusIntergenicStrands,
+                                               transcriptionStrands,
+                                               replicationStrands,
+                                               odds_ratio_cutoff,
+                                               percentage_of_real_mutations_cutoff)
 
     # Scatter Plots
     # Scatter Plots --- SBS Signatures
     # Scatter Plots --- Mutation Types
     if (TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list) and (LAGGING_VERSUS_LEADING in strand_bias_list):
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty)):
+        if ((SBS in mutation_types) and
+                (not type_transcribed_versus_untranscribed_df.empty) and
+                (not type_lagging_versus_leading_df.empty)):
             plot_mutation_types_transcription_log10_ratio_replication_log_10_ratio_using_dataframes(None, None,
                                                                                                     type_transcribed_versus_untranscribed_df,
                                                                                                     type_lagging_versus_leading_df,
                                                                                                     outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((SBS in mutation_types) and
+                (not type_transcribed_versus_untranscribed_df.empty) and
+                (not type_lagging_versus_leading_df.empty) and
+                (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('subs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
                                                                                            subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((DBS in mutation_types) and
+                (not type_transcribed_versus_untranscribed_df.empty) and
+                (not type_lagging_versus_leading_df.empty) and
+                (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('dinucs', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,
                                                                                            dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                                                                            outputDir, jobname)
 
-        if ((not type_transcribed_versus_untranscribed_df.empty) and (not type_lagging_versus_leading_df.empty) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
+        if ((ID in mutation_types) and
+                (not type_transcribed_versus_untranscribed_df.empty) and
+                (not type_lagging_versus_leading_df.empty) and
+                (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty)):
             plot_types_transcription_log10_ratio_replication_log10_ratio_using_dataframes('indels', None, None,
                                                                                            type_transcribed_versus_untranscribed_df,
                                                                                            type_lagging_versus_leading_df,

@@ -33,7 +33,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import MUTATIONLONG
 from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIPTIONSTRAND
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLE
 
-from SigProfilerTopography.source.commons.TopographyCommons import SUBS
+from SigProfilerTopography.source.commons.TopographyCommons import SBS
 from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
 
@@ -297,7 +297,7 @@ def readSinglePointMutationsFindProcessivityGroupsWithMultiProcessing(mutation_t
                             signature2ProcessiveGroupLength2DistanceListDict[signature][processive_group_length] = my_distance_array.tolist()
 
             for chrLong in chromNamesList:
-                chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
+                chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
 
                 # filter chrbased_df for samples_of_interest
                 if samples_of_interest is not None:

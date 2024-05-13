@@ -429,8 +429,13 @@ Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table
 # Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
 
 # Table
-Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_MutationType_NumberofMutations_NumberofSamples_SamplesList.txt'
-Table_ChrLong_NumberofMutations_Filename = 'Table_ChrLong_NumberofMutations.txt'
+Table_SBS_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_SBS_NumberofMutations_NumberofSamples_SamplesList.txt'
+Table_DBS_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_DBS_NumberofMutations_NumberofSamples_SamplesList.txt'
+Table_ID_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_ID_NumberofMutations_NumberofSamples_SamplesList.txt'
+
+Table_SBS_ChrLong_NumberofMutations_Filename = 'Table_SBS_ChrLong_NumberofMutations.txt'
+Table_DBS_ChrLong_NumberofMutations_Filename = 'Table_DBS_ChrLong_NumberofMutations.txt'
+Table_ID_ChrLong_NumberofMutations_Filename = 'Table_ID_ChrLong_NumberofMutations.txt'
 
 # For Subs
 Sample2NumberofSubsDictFilename = 'Sample2NumberofSubsDict.txt'
@@ -810,9 +815,9 @@ def write_excel_file(df_list, sheet_list, file_name):
 
 def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
     # Simulation number is added as the last column
-    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
-    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DBS, simNum) # DINUCS
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, ID, simNum) # INDELS
 
     # In case of empty cells with no signature probability
     # Fill empty cells with zeros
@@ -845,18 +850,18 @@ def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
 
 def get_chrBased_simBased_combined_df(outputDir,jobname,chrLong,simNum):
 
-    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, ID, simNum) # INDELS
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DBS, simNum) # DINUCS
 
     if (chrBased_simBased_subs_df is not None):
-        chrBased_simBased_subs_df[TYPE] = SUBS
+        chrBased_simBased_subs_df[TYPE] = SBS # SUBS
 
     if (chrBased_simBased_indels_df is not None):
-        chrBased_simBased_indels_df[TYPE] = INDELS
+        chrBased_simBased_indels_df[TYPE] = ID # INDELS
 
     if (chrBased_simBased_dinucs_df is not None):
-        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+        chrBased_simBased_dinucs_df[TYPE] = DBS # DINUCS
 
     if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
         chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
@@ -872,18 +877,18 @@ def index_marks(nrows, chunk_size):
 # Returns split df list
 def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
 
-    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, ID, simNum) # INDELS
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DBS, simNum) # DINUCS
 
     if (chrBased_simBased_subs_df is not None):
-        chrBased_simBased_subs_df[TYPE] = SUBS
+        chrBased_simBased_subs_df[TYPE] = SBS # SUBS
 
     if (chrBased_simBased_indels_df is not None):
-        chrBased_simBased_indels_df[TYPE] = INDELS
+        chrBased_simBased_indels_df[TYPE] = ID # INDELS
 
     if (chrBased_simBased_dinucs_df is not None):
-        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+        chrBased_simBased_dinucs_df[TYPE] = DBS # DINUCS
 
     if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
         chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
@@ -900,18 +905,18 @@ def get_chrBased_simBased_combined_chunks_df(outputDir,jobname,chrLong,simNum):
 # April 9, 2020
 # Returns split df
 def get_chrBased_simBased_combined_df_split(outputDir,jobname,chrLong,simNum,splitIndex):
-    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SUBS, simNum)
-    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, INDELS, simNum)
-    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DINUCS, simNum)
+    chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
+    chrBased_simBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, ID, simNum) # INDELS
+    chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DBS, simNum) # DINUCS
 
     if (chrBased_simBased_subs_df is not None):
-        chrBased_simBased_subs_df[TYPE] = SUBS
+        chrBased_simBased_subs_df[TYPE] = SBS # SUBS
 
     if (chrBased_simBased_indels_df is not None):
-        chrBased_simBased_indels_df[TYPE] = INDELS
+        chrBased_simBased_indels_df[TYPE] = ID # INDELS
 
     if (chrBased_simBased_dinucs_df is not None):
-        chrBased_simBased_dinucs_df[TYPE] = DINUCS
+        chrBased_simBased_dinucs_df[TYPE] = DBS # DINUCS
 
     if (chrBased_simBased_subs_df is not None) or (chrBased_simBased_indels_df is not None) or (chrBased_simBased_dinucs_df is not None):
         chrBased_simBased_combined_df = pd.concat([chrBased_simBased_subs_df, chrBased_simBased_indels_df, chrBased_simBased_dinucs_df], ignore_index=True,axis=0)
@@ -948,9 +953,9 @@ def get_splits(outputDir, jobname, simNum,chrLong):
     if (chrLong == 'chrM'):
         chrLong_for_mutations_data = 'chrMT'
 
-    chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, SUBS, simNum)
-    chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, INDELS, simNum)
-    chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, DINUCS, simNum)
+    chrBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, SBS, simNum) # SUBS
+    chrBased_indels_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, ID, simNum) # INDELS
+    chrBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong_for_mutations_data, DBS, simNum) # DINUCS
 
     #default behaviour
     chrBased_subs_df_split_list = [chrBased_subs_df]
@@ -1629,13 +1634,13 @@ def fill_signature_cutoff_properties_df(outputDir,
     os.makedirs(os.path.join(outputDir, jobname, DATA), exist_ok=True)
 
     # Set the filenames and number of required mutations
-    if (mutation_type == SUBS):
+    if (mutation_type == SBS): # SUBS
         number_of_required_mutations = num_of_sbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename
-    elif (mutation_type == DINUCS):
+    elif (mutation_type == DBS): # DINUCS
         number_of_required_mutations = num_of_dbs_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_DinucsSignature_NumberofMutations_AverageProbability_Filename
-    elif (mutation_type == INDELS):
+    elif (mutation_type == ID): # INDELS
         number_of_required_mutations = num_of_id_required
         table_allcutoffs_signature_numberofmutations_averageprobability_filename = Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename
 
@@ -1688,11 +1693,6 @@ def fill_signature_cutoff_properties_df(outputDir,
                 samples_list = [set(chrBased_mutation_df.Sample[chrBased_mutation_df[signature] >= float(cutoff)].unique()) for signature in signatures]
                 all_samples_list[cutoff_index] = [x.union(y) for x,y in zip(all_samples_list[cutoff_index], samples_list)]
 
-    # Look at line 1834
-    # all_avg_probabilites_array = np.divide(all_sum_of_probabilities_array,
-    #                                        all_num_of_mutations_array,
-    #                                        out=np.zeros_like(all_sum_of_probabilities_array),
-    #                                        where=all_num_of_mutations_array!=0)
 
     df = pd.DataFrame({'signature': np.tile(signatures, len(cutoffs)),
                        'cutoff': np.repeat(cutoffs, len(signatures)),
@@ -1781,7 +1781,6 @@ def fill_signature_cutoff_properties_df(outputDir,
                                                                                          'percentage_of_samples'
                                                                                          ])
 
-
     return signature_cutoff_numberofmutations_averageprobability_df
 
 
@@ -1798,17 +1797,17 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
     sample2Signature2NumberofMutationsDict = {}
 
     # Fill dictionaries with conditions satisfied
-    if (type == SUBS):
+    if (type == SBS): # SUBS
         Sample2NumberofMutationsDictFilename = Sample2NumberofSubsDictFilename
         Signature2NumberofMutationsDictFilename = SubsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2SubsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = num_of_sbs_required
-    elif (type == DINUCS):
+    elif (type == DBS): # DINUCS
         Sample2NumberofMutationsDictFilename = Sample2NumberofDinucsDictFilename
         Signature2NumberofMutationsDictFilename = DinucsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2DinucsSignature2NumberofMutationsDictFilename
         minimum_number_of_mutations_required = num_of_dbs_required
-    elif (type == INDELS):
+    elif (type == ID): # ID
         Sample2NumberofMutationsDictFilename = Sample2NumberofIndelsDictFilename
         Signature2NumberofMutationsDictFilename = IndelsSignature2NumberofMutationsDictFilename
         Sample2Signature2NumberofMutationsDictFilename = Sample2IndelsSignature2NumberofMutationsDictFilename
@@ -1906,7 +1905,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
          # Do not change the dtype of signatures column to np.float16
          # Because it causes rounding and differences in number of mutations across different downstream analyses.
 
-         if ((mutation_type == SUBS) or (mutation_type == DINUCS)):
+         if ((mutation_type == SBS) or (mutation_type == DBS)):
              mydtypes[SAMPLE] = 'string' # legacy category
              mydtypes[CHROM] = 'string' # legacy category
              mydtypes[START] = np.int32
@@ -1915,7 +1914,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
              mydtypes[TRANSCRIPTIONSTRAND] = 'string' # legacy category
              mydtypes[MUTATION] = 'string' # legacy category
 
-         if (mutation_type == INDELS):
+         if (mutation_type == ID):
              mydtypes[SAMPLE] = 'string' # legacy category
              mydtypes[CHROM] = 'string' # legacy category
              mydtypes[START] = np.int32
@@ -3368,11 +3367,11 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
 
         if ((merged_df is not None) and (not merged_df.empty)):
             if (sigprofiler_simulator_mutation_context in SBS_CONTEXTS):
-                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SUBS)
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SBS) # SUBS
             elif (sigprofiler_simulator_mutation_context == DBS):
-                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, DINUCS)
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, DBS) # DINUCS
             elif (sigprofiler_simulator_mutation_context == ID):
-                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, INDELS)
+                chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, ID) # INDELS
 
             if (simNum == 0):
                 chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedMergedMutationsFileName)
@@ -3434,11 +3433,11 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             chr_based_mutation_df[SAMPLE] = chr_based_mutation_df[SAMPLE].str.rsplit(pat='_', n=1, expand=True)[0]
 
         if (sigprofiler_simulator_mutation_context in SBS_CONTEXTS):
-            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SUBS)
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SBS) # SUBS
         elif (sigprofiler_simulator_mutation_context == DBS):
-            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, DINUCS)
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, DBS) # DINUCS
         elif (sigprofiler_simulator_mutation_context == ID):
-            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, INDELS)
+            chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, ID) # INDELS
 
         if (simNum == 0):
             chr_based_merged_mutations_file_path = os.path.join(outputDir, jobname, DATA, CHRBASED, chrBasedMergedMutationsFileName)

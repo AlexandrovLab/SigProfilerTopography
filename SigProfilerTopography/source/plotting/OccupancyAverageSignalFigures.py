@@ -78,7 +78,10 @@ from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
 from SigProfilerTopography.source.commons.TopographyCommons import takeAverage
 from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
-from SigProfilerTopography.source.commons.TopographyCommons import Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_NumberofMutations_NumberofSamples_SamplesList_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_NumberofMutations_NumberofSamples_SamplesList_Filename
+from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_NumberofMutations_NumberofSamples_SamplesList_Filename
+
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename
@@ -481,7 +484,7 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
 
             # put the number of mutations at top right position
             tobeWrittenText = "{:,}".format(numberofMutations)
-            tobeWrittenText=tobeWrittenText + " " + text
+            tobeWrittenText = tobeWrittenText + " " + text
             plt.text(0.99, 0.99, tobeWrittenText, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
 
             # put the library filename
@@ -658,12 +661,9 @@ def plotSignatureBasedAverageOccupancyFigureWithSimulations(sample,
 
 # Occupancy plot for aggregated mutations
 def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, jobname, numberofSubs, numberofIndels,
-                                          numberofDinucs, numberofSimulations, mutationType, libraryFilename,
+                                          numberofDinucs, numberofSimulations, mutation_type, libraryFilename,
                                           libraryFilenameMemo, occupancy_type, plusOrMinus, plot_mode):
-    if mutationType in SBS_CONTEXTS:
-        to_be_added_to_the_filename = 'SBS%s' %(mutationType)
-    else:
-        to_be_added_to_the_filename = mutationType
+    to_be_added_to_the_filename = mutation_type
 
     if (occupancy_type == NUCLEOSOMEOCCUPANCY):
         filenameEnd = 'NucleosomeOccupancy'
@@ -686,19 +686,19 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
         else:
             filename = 'Aggregated_All_Mutations_%s_%s_%s.png' %(to_be_added_to_the_filename, libraryFilenameMemo, filenameEnd)
 
-        if (mutationType in SBS_CONTEXTS):
+        if (mutation_type == SBS):
             realAggregatedSubstitutions = readData(None, None, AGGREGATEDSUBSTITUTIONS, outputDir, jobname, occupancy_type, libraryFilenameMemo, AVERAGE_SIGNAL_ARRAY)
-        if (mutationType == DBS):
+        if (mutation_type == DBS):
             realAggregatedDinucs = readData(None, None,AGGREGATEDDINUCS, outputDir, jobname, occupancy_type, libraryFilenameMemo, AVERAGE_SIGNAL_ARRAY)
-        if (mutationType == ID):
+        if (mutation_type == ID):
             realAggregatedIndels = readData(None, None, AGGREGATEDINDELS, outputDir, jobname, occupancy_type, libraryFilenameMemo, AVERAGE_SIGNAL_ARRAY)
 
         if (numberofSimulations > 0):
-            if (mutationType in SBS_CONTEXTS):
+            if (mutation_type == SBS):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(None,None,AGGREGATEDSUBSTITUTIONS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-            if (mutationType == DBS):
+            if (mutation_type == DBS):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(None,None,AGGREGATEDDINUCS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-            if (mutationType == ID):
+            if (mutation_type == ID):
                 listofSimulationsAggregatedIndels = readDataForSimulations(None,None,AGGREGATEDINDELS,outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
 
     else:
@@ -708,19 +708,19 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
         else:
             filename = '%s_Aggregated_All_Mutations_%s_%s_%s.png' % (sample,to_be_added_to_the_filename,libraryFilenameMemo,filenameEnd)
 
-        if (mutationType in SBS_CONTEXTS):
+        if (mutation_type == SBS):
             realAggregatedSubstitutions = readData(sample,None,SAMPLEBASED_AGGREGATEDSUBSTITUTIONS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-        if (mutationType == DBS):
+        if (mutation_type == DBS):
             realAggregatedDinucs = readData(sample,None,SAMPLEBASED_AGGREGATEDDINUCS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-        if (mutationType == ID):
+        if (mutation_type == ID):
             realAggregatedIndels = readData(sample,None,SAMPLEBASED_AGGREGATEDINDELS,outputDir,jobname,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
 
         if (numberofSimulations > 0):
-            if (mutationType in SBS_CONTEXTS):
+            if (mutation_type == SBS):
                 listofSimulationsAggregatedSubstitutions = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDSUBSTITUTIONS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-            if (mutationType == DBS):
+            if (mutation_type == DBS):
                 listofSimulationsAggregatedDinucs = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDDINUCS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
-            if (mutationType == ID):
+            if (mutation_type == ID):
                 listofSimulationsAggregatedIndels = readDataForSimulations(sample, None, SAMPLEBASED_AGGREGATEDINDELS, outputDir,jobname,numberofSimulations,occupancy_type,libraryFilenameMemo,AVERAGE_SIGNAL_ARRAY)
 
     # 95%CI
@@ -769,13 +769,13 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
     listofLegends = []
 
     if (plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_TOOL):
-        if (mutationType in SBS_CONTEXTS):
+        if (mutation_type == SBS):
             real_label = 'Real Aggregated SBSs'
             simulated_label = 'Simulated Aggregated SBSs'
-        elif (mutationType == DBS):
+        elif (mutation_type == DBS):
             real_label = 'Real Aggregated DBSs'
             simulated_label = 'Simulated Aggregated DBSs'
-        elif (mutationType == ID):
+        elif (mutation_type == ID):
             real_label = 'Real Aggregated IDs'
             simulated_label = 'Simulated Aggregated IDs'
 
@@ -818,25 +818,25 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
         text = ""
 
         # Subs
-        if (mutationType in SBS_CONTEXTS) and (numberofSubs > 0):
-            subs_text="{:,} subs".format(numberofSubs)
-            text=subs_text
+        if (mutation_type == SBS) and (numberofSubs > 0):
+            subs_text = "{:,} substitutions".format(numberofSubs)
+            text = subs_text
 
         # Dinucs
-        if (mutationType == DBS) and (numberofDinucs > 0):
-            dinucs_text = "{:,} dinucs".format(numberofDinucs)
+        if (mutation_type == DBS) and (numberofDinucs > 0):
+            dinucs_text = "{:,} doublets".format(numberofDinucs)
             if len(text)>0:
-                text= text + ', ' + dinucs_text
+                text = text + ', ' + dinucs_text
             else:
-                text= dinucs_text
+                text = dinucs_text
 
         # Indels
-        if (mutationType == ID) and (numberofIndels > 0):
+        if (mutation_type == ID) and (numberofIndels > 0):
             indels_text = "{:,} indels".format(numberofIndels)
             if len(text)>0:
-                text= text + ', ' + indels_text
+                text = text + ', ' + indels_text
             else:
-                text= indels_text
+                text = indels_text
 
         # put number of mutations
         plt.text(0.99, 0.99, text, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=24)
@@ -1009,11 +1009,11 @@ def plotAllMutationsPooledWithSimulations(xlabel, ylabel, sample, outputDir, job
             else:
                 plt.ylabel('Average\nEpigenomics Signal', fontsize=60, labelpad=15)
 
-        if (mutationType in SBS_CONTEXTS):
+        if (mutation_type == SBS):
             plt.title('All Substitutions', fontsize=65)
-        if (mutationType == DBS):
+        if (mutation_type == DBS):
             plt.title('All Doublets', fontsize=65)
-        if (mutationType == ID):
+        if (mutation_type == ID):
             plt.title('All Indels', fontsize=65)
 
     if (sample is None):
@@ -1075,7 +1075,7 @@ def checkValidness(analsesType,outputDir,jobname,occupancy_type):
 
 
 # Occupancy plot for signature based figures
-def plotSignatureBasedFigures(mutationType,
+def plotSignatureBasedFigures(mutation_type,
                               signature_df,
                               sample2Signature2NumberofMutationsDict,
                               outputDir,
@@ -1097,15 +1097,15 @@ def plotSignatureBasedFigures(mutationType,
         # For epigenomics, epigenomics_dir_name can be different from EPIGENOMICSOCCUPANCY
         ylabel = 'Average epigenomics signal'
 
-    if (mutationType == SBS_96):
+    if (mutation_type == SBS):
         xlabel = 'Interval around single base substitution (bp)'
         # label = 'Single Base Substitutions'
         label = 'SBSs'
-        text = 'subs'
+        text = 'substitutions'
         color = 'royalblue'
         fillcolor = 'lightblue'
         linestyle='dashed'
-    elif (mutationType == ID):
+    elif (mutation_type == ID):
         xlabel = 'Interval around insertion and deletion (bp)'
         # label = 'Insertions and Deletions'
         label = 'IDs'
@@ -1113,11 +1113,11 @@ def plotSignatureBasedFigures(mutationType,
         color = 'darkgreen'
         fillcolor = 'lightgreen'
         linestyle='dashed'
-    elif (mutationType == DBS):
+    elif (mutation_type == DBS):
         xlabel = 'Interval around doublet base substitution (bp)'
         # label = 'Doublet Base Substitutions'
         label = 'DBSs'
-        text = 'dinucs'
+        text = 'doublets'
         color = 'crimson'
         fillcolor = 'lightpink'
         linestyle='dashed'
@@ -1765,6 +1765,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           outputDir,
                                           jobname,
                                           numberofSimulations,
+                                          mutation_types,
                                           nucleosome_file,
                                           nucleosome_biosample,
                                           epigenomics_files_memos,
@@ -1794,21 +1795,21 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
     dinucsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
     indelsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
 
-    if os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (SBS in mutation_types) and os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
         subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
             subsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,
             dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32,'average_probability': np.float32})
 
         sbs_signatures = subsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique().tolist()
 
-    if os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (DBS in mutation_types) and os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
         dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
             dinucsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,
             dtype={'cutoff': np.float32, 'signature': str, 'number_of_mutations': np.int32, 'average_probability': np.float32})
 
         dbs_signatures = dinucsSignature_cutoff_numberofmutations_averageprobability_df['signature'].unique().tolist()
 
-    if os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
         indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(
             indelsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,
             dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
@@ -1818,9 +1819,12 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
     
     # We can plot heatmaps if there is at least one simulation
     if (numberofSimulations >= 1):
-        sbs_signatures.append(AGGREGATEDSUBSTITUTIONS)
-        dbs_signatures.append(AGGREGATEDDINUCS)
-        id_signatures.append(AGGREGATEDINDELS)
+        if SBS in mutation_types:
+            sbs_signatures.append(AGGREGATEDSUBSTITUTIONS)
+        if DBS in mutation_types:
+            dbs_signatures.append(AGGREGATEDDINUCS)
+        if ID in mutation_types:
+            id_signatures.append(AGGREGATEDINDELS)
 
         # For tests
         # signatures.append(('DBS6',DBS))
@@ -2776,6 +2780,7 @@ def step5_filter_signature_dna_element(signature2dna_element2q_value_list_dict,
 def occupancyAverageSignalFigures(outputDir,
                                   jobname,
                                   numberofSimulations,
+                                  mutation_types,
                                   sample_based,
                                   libraryFilename,
                                   libraryFilenameMemo,
@@ -2793,7 +2798,13 @@ def occupancyAverageSignalFigures(outputDir,
 
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data
-    mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+
+    # mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+
+    sbs_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+    dbs_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+    id_numberofmutations_numberofsamples_sampleslist_df = pd.DataFrame()
+
     subsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
     dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
     indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.DataFrame()
@@ -2804,21 +2815,26 @@ def occupancyAverageSignalFigures(outputDir,
         os.makedirs(os.path.join(outputDir, jobname, FIGURE, occupancy_type, OCCUPANCY_PLOTS), exist_ok=True)
 
     # Read necessary dataframes
-    mutationtype_numberofmutations_numberofsamples_sampleslist_path = os.path.join(outputDir, jobname, DATA, Table_MutationType_NumberofMutations_NumberofSamples_SamplesList_Filename)
+    sbs_numberofmutations_numberofsamples_sampleslist_path = os.path.join(outputDir, jobname, DATA, Table_SBS_NumberofMutations_NumberofSamples_SamplesList_Filename)
+    dbs_numberofmutations_numberofsamples_sampleslist_path = os.path.join(outputDir, jobname, DATA, Table_DBS_NumberofMutations_NumberofSamples_SamplesList_Filename)
+    id_numberofmutations_numberofsamples_sampleslist_path = os.path.join(outputDir, jobname, DATA, Table_ID_NumberofMutations_NumberofSamples_SamplesList_Filename)
+
     subsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
     dinucsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
     indelsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
 
-    if os.path.exists(mutationtype_numberofmutations_numberofsamples_sampleslist_path):
-        mutationtype_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(mutationtype_numberofmutations_numberofsamples_sampleslist_path, sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    if (SBS in mutation_types) and os.path.exists(sbs_numberofmutations_numberofsamples_sampleslist_path):
+        sbs_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(sbs_numberofmutations_numberofsamples_sampleslist_path, sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    if (DBS in mutation_types) and os.path.exists(dbs_numberofmutations_numberofsamples_sampleslist_path):
+        dbs_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(dbs_numberofmutations_numberofsamples_sampleslist_path, sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
+    if (ID in mutation_types) and os.path.exists(id_numberofmutations_numberofsamples_sampleslist_path):
+        id_numberofmutations_numberofsamples_sampleslist_df = pd.read_csv(id_numberofmutations_numberofsamples_sampleslist_path, sep='\t', header=0,dtype={'mutation_type': str,'number_of_mutations': np.int32})
 
-    if os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (SBS in mutation_types) and os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
         subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(subsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-
-    if os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (DBS in mutation_types) and os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
         dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(dinucsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
-
-    if os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
         indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
     if sample_based:
@@ -2842,23 +2858,25 @@ def occupancyAverageSignalFigures(outputDir,
     numberofIndels = 0
     numberofDinucs = 0
 
-    mutation_type_list = []
+    # mutation_type_list = []
 
-    if (len(mutationtype_numberofmutations_numberofsamples_sampleslist_df.index) > 0):
-        if (SUBS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
-            numberofSubs = mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==SUBS,'number_of_mutations'].values[0]
-            mutation_type_list.append(SBS_96) # SigProfilerTopography plotting can be any SBS mutation contexts
+    if (len(sbs_numberofmutations_numberofsamples_sampleslist_df.index) > 0):
+        if (SBS in sbs_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()): # SUBS
+            numberofSubs = sbs_numberofmutations_numberofsamples_sampleslist_df.loc[ sbs_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==SBS,'number_of_mutations'].values[0]
+            # mutation_type_list.append(SBS_96) # SigProfilerTopography plotting can be any SBS mutation contexts
 
-        if (DINUCS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
-            numberofDinucs = mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==DINUCS,'number_of_mutations'].values[0]
-            mutation_type_list.append(DBS)
+    if (len(dbs_numberofmutations_numberofsamples_sampleslist_df.index) > 0):
+        if (DBS in dbs_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()): # DINUCS
+            numberofDinucs = dbs_numberofmutations_numberofsamples_sampleslist_df.loc[ dbs_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==DBS,'number_of_mutations'].values[0]
+            # mutation_type_list.append(DBS)
 
-        if (INDELS in mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()):
-            numberofIndels = mutationtype_numberofmutations_numberofsamples_sampleslist_df.loc[ mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==INDELS,'number_of_mutations'].values[0]
-            mutation_type_list.append(ID)
+    if (len(id_numberofmutations_numberofsamples_sampleslist_df.index) > 0):
+        if (ID in id_numberofmutations_numberofsamples_sampleslist_df['mutation_type'].unique()): # INDELS
+            numberofIndels = id_numberofmutations_numberofsamples_sampleslist_df.loc[ id_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==ID,'number_of_mutations'].values[0]
+            # mutation_type_list.append(ID)
 
     # Plot Aggregated Mutations
-    for mutation_type in mutation_type_list:
+    for mutation_type in mutation_types:
         if verbose:
             log_out = open(log_file, 'a')
             print('\tVerbose Worker pid %s Plot all mutations pooled %s\t%s' %(str(os.getpid()),str(mutation_type),libraryFilenameMemo), file=log_out)
@@ -2885,14 +2903,14 @@ def occupancyAverageSignalFigures(outputDir,
 
     # Plot Signature Based
     if checkValidness(SIGNATUREBASED, outputDir, jobname, occupancy_type):
-        if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (SBS in mutation_types) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # SBS Signatures
             if verbose:
                 log_out = open(log_file, 'a')
                 print('\tVerbose Worker pid %s Plot signature based SBS96 %s' % (str(os.getpid()),libraryFilenameMemo), file=log_out)
                 log_out.close()
 
-            plotSignatureBasedFigures(SBS_96,
+            plotSignatureBasedFigures(SBS,
                                       subsSignature_cutoff_numberofmutations_averageprobability_df,
                                       sample2SubsSignature2NumberofMutationsDict,
                                       outputDir,
@@ -2906,7 +2924,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       verbose,
                                       plot_mode)
 
-        if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (DBS in mutation_types) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # DBS Signatures
             if verbose:
                 log_out = open(log_file, 'a')
@@ -2927,7 +2945,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       verbose,
                                       plot_mode)
 
-        if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (ID in mutation_types) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             # ID Signatures
             if verbose:
                 log_out = open(log_file, 'a')
@@ -2951,11 +2969,11 @@ def occupancyAverageSignalFigures(outputDir,
     if sample_based:
         # ALL SAMPLES IN ONE
         # Plot "all samples pooled" and "sample based" signature based in one figure
-        if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (SBS in mutation_types) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(subsSignature_cutoff_numberofmutations_averageprobability_df,sample2SubsSignature2NumberofMutationsDict,outputDir,jobname,'royalblue','Interval around single point mutation (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
-        if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (DBS in mutation_types) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(dinucsSignature_cutoff_numberofmutations_averageprobability_df,sample2DinucsSignature2NumberofMutationsDict,outputDir,jobname,'crimson','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
-        if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+        if (ID in mutation_types) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
             plotAllSamplesPooledAndSampleBasedSignaturesFiguresInOneFigure(indelsSignature_cutoff_numberofmutations_averageprobability_df,sample2IndelsSignature2NumberofMutationsDict,outputDir,jobname,'darkgreen','Interval around indel (bp)',ylabel,libraryFilename,libraryFilenameMemo,occupancy_type,plusOrMinus)
 
         samplesfromSubs  = sample2NumberofSubsDict.keys()
@@ -2974,7 +2992,7 @@ def occupancyAverageSignalFigures(outputDir,
                 numberofDinucs = sample2NumberofDinucsDict[sample]
 
             # sample based
-            for mutation_type in mutation_type_list:
+            for mutation_type in mutation_types:
                 plotAllMutationsPooledWithSimulations('Interval around variant (bp)', ylabel, sample, outputDir,
                                                       jobname, numberofSubs, numberofIndels, numberofDinucs,
                                                       numberofSimulations, mutation_type, libraryFilename,

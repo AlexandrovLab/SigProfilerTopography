@@ -123,9 +123,9 @@ def check_for_consecutive_regions_with_same_signed_slope(chrLong,
         elif info == 'down_to_valley':
             direction_sign = -1
         # For the last one if there is no other sign it will be 0
-    elif np.all(signal_diff_arr>0):
+    elif np.all(signal_diff_arr>=0):
         direction_sign = +1
-    elif np.all(signal_diff_arr<0):
+    elif np.all(signal_diff_arr<=0):
         direction_sign = -1
 
     transition_zone_list.append((chrLong, start, end, direction_sign, end-start))
@@ -222,6 +222,7 @@ def find_long_stretches_of_consistent_transition_zones(chrLong,
                 transition_zones_list.extend(found_zone)
 
             start = peak_midpoint
+
 
         elif (row['type'] == 'Valley'):
             valley_start = row[START]
@@ -443,6 +444,10 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
 
         # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
+        # PyramidineStrand can be -1, 1 and 0.
+        # If pyramidineStrand is 0, it means that its transcription strand is Q: Questionable.
+        # This category is used to classify any mutations that are a mix of purines and pyrimidines and
+        # thus can't be classified into one of the 4 transcription strandcategories T, U, N, B.
         if (uniqueValueArray.size == 1):
             for uniqueValue in np.nditer(uniqueValueArray):
                 # type(decileIndex) is numpy.ndarray
@@ -457,8 +462,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                     all_types_lagging_np_array += all_types_mask_array
                     subs_signature_SBS6_mutation_type_lagging_np_array += subs_signature_SBS6_mutation_type_mask_array
                     subs_signature_SBS96_mutation_type_lagging_np_array += subs_signature_SBS96_mutation_type_mask_array
-
-        elif ((uniqueValueArray.size==2) and (pyramidineStrand!=0)):
+        elif ((uniqueValueArray.size == 2) and (pyramidineStrand != 0)):
             # Increment both LEADING and LAGGING
             all_types_leading_np_array += all_types_mask_array
             all_types_lagging_np_array += all_types_mask_array
@@ -466,10 +470,15 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             subs_signature_SBS6_mutation_type_lagging_np_array += subs_signature_SBS6_mutation_type_mask_array
             subs_signature_SBS96_mutation_type_leading_np_array += subs_signature_SBS96_mutation_type_mask_array
             subs_signature_SBS96_mutation_type_lagging_np_array += subs_signature_SBS96_mutation_type_mask_array
-        elif (uniqueValueArray.size>2):
-            print('There is a situation!!!')
-        else:
-            print('There is a situation!!!')
+            # This can be a case especially in indels. We can discard these mutations which contain both -1 and 1 as slopes.
+            print('DEBUGXXX', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidineStrand:', pyramidineStrand)
+        elif (uniqueValueArray.size > 2):
+            # This is not expected, uniqueValueArray holds the sign of the slopes which can be either -1 or 1.
+            # Thus, uniqueValueArray must be of size 2.
+            print('DEBUGYYY', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidineStrand:', pyramidineStrand)
+
+        # Do not consider the situation where pyramidineStrand is 0
+        # Do not consider the situation where uniqueValueArray is greater than  2
 
     if sample_based:
         if (np.any(slicedArray)):
@@ -495,11 +504,6 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                 all_samples_all_types_lagging_np_array[sample_index] += all_types_mask_array
                 all_samples_subs_signature_mutation_type_leading_np_array[sample_index] += subs_signature_SBS6_mutation_type_mask_array
                 all_samples_subs_signature_mutation_type_lagging_np_array[sample_index] += subs_signature_SBS6_mutation_type_mask_array
-            elif (uniqueValueArray.size > 2):
-                print('There is a situation!!!')
-            else:
-                print('There is a situation!!!')
-
 
 
 # For df split
@@ -507,7 +511,8 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
 # Using numpy arrays
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
-# sample_based for further usage
+#  sample_based for further usage
+# This function is deprecated
 def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array_for_df_split(
         mutation_row,
         chrBasedReplicationArray,
@@ -646,12 +651,8 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             all_types_lagging_np_array += all_types_mask_array
             subs_signature_mutation_type_leading_np_array += subs_signature_mutation_type_mask_array
             subs_signature_mutation_type_lagging_np_array += subs_signature_mutation_type_mask_array
-        elif (uniqueValueArray.size>2):
-            print('There is a situation!!!')
-        else:
-            print('There is a situation!!!')
-
-
+        # Do not consider the situation where pyramidineStrand is 0
+        # Do not consider the situation where uniqueValueArray is greater than  2
 
 # This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
 def check_for_validness(chrBased_valleys_peaks_df):
@@ -661,7 +662,7 @@ def check_for_validness(chrBased_valleys_peaks_df):
         if former_row_type is None:
             former_row_type = row['type']
         elif (row['type'] == former_row_type):
-            print('DEBUG There is a problem in repli-seq valleys and peaks.')
+            print('There is a problem/situation in repli-seq valleys and peaks.')
             return False
         else:
             former_row_type = row['type']
@@ -723,7 +724,6 @@ def fill_chr_based_replication_strand_array(chrLong,
                                             chromSize,
                                             chrBased_repli_seq_signal_df,
                                             chrBased_valleys_peaks_df):
-
     # +1 means leading strand, -1 means lagging strand
     # we will fill this array using smoothedSignal, peaks and valleys for each chromosome
     chrBased_replication_array = np.zeros(chromSize, dtype=np.int8)
@@ -1232,7 +1232,6 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
     chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
-
     number_of_sbs_signatures = ordered_sbs_signatures.size
 
     # Initialization
@@ -1252,7 +1251,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
     if (os.path.exists(chr_based_replication_time_file_path)):
         chrBased_replication_array = np.load(chr_based_replication_time_file_path)
     else:
-        chrBased_replication_array=None
+        chrBased_replication_array = None
 
     if chrBased_replication_array is not None:
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
@@ -1495,7 +1494,6 @@ def replicationStrandBiasAnalysis(outputDir,
     if parallel_mode:
         jobs = []
 
-        # April 30, 2020
         # read chrom based sim based mutations data and chrom based replication time data in each worker process
         if (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
 
@@ -1639,7 +1637,3 @@ def replicationStrandBiasAnalysis(outputDir,
     print('--- Replication Strand Asymmetry Analysis ends', file=log_out)
     print('#################################################################################\n', file=log_out)
     log_out.close()
-
-
-
-

@@ -34,7 +34,8 @@ from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 rcParams.update({'figure.max_open_warning': 0})
 
-from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
+#from SigProfilerTopography.source.commons.TopographyCommons import SBS_CONTEXTS
+from SigProfilerTopography.source.commons.TopographyCommons import SBS
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 from SigProfilerTopography.source.commons.TopographyCommons import DBS
 
@@ -347,6 +348,7 @@ def readNormalizedMutationDataForSimulations(sample, indelorSignatureorAnalysesT
 
 def plotSignatureFigures(color,
                          fillcolor,
+                         ylabel,
                          analysesType,
                          outputDir,
                          jobname,
@@ -365,7 +367,7 @@ def plotSignatureFigures(color,
             # if not all([v == 0.0 for v in normalizedMutationData]):
             # use all generator for all true check
             plotNormalizedMutationDensityFigureWithSimulations(signature,
-                                                               'Normalized\nsingle base substitution density',
+                                                               ylabel, # 'Normalized\nsingle base substitution density',
                                                                normalizedMutationData,
                                                                None,
                                                                signature,
@@ -390,7 +392,7 @@ def plotSignatureFigures(color,
                     # if not all([v == 0.0 for v in normalizedMutationData]):
                     # use all generator for all true check
                     plotNormalizedMutationDensityFigureWithSimulations('%s_%s' % (signature, sample),
-                                                                       'Normalized\nsingle base substitution density',
+                                                                       ylabel, #'Normalized\nsingle base substitution density',
                                                                        normalizedMutationData,
                                                                        sample,
                                                                        signature,
@@ -503,6 +505,7 @@ def plot_replication_time_legend(output_dir, jobname):
 def replicationTimeNormalizedMutationDensityFigures(outputDir,
                                                     jobname,
                                                     numberofSimulations,
+                                                    mutation_types,
                                                     sample_based,
                                                     plot_mode):
 
@@ -516,13 +519,13 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
     dinucsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
     indelsSignature_cutoff_numberofmutations_averageprobability_path = os.path.join(outputDir, jobname, DATA, Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename)
 
-    if os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (SBS in mutation_types) and os.path.exists(subsSignature_cutoff_numberofmutations_averageprobability_path):
         subsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(subsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
-    if os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (DBS in mutation_types) and os.path.exists(dinucsSignature_cutoff_numberofmutations_averageprobability_path):
         dinucsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(dinucsSignature_cutoff_numberofmutations_averageprobability_path, sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
-    if os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
+    if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
         indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
     if sample_based:
@@ -548,17 +551,19 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
     ##########################  Plot figures starts  #########################################
     ##########################################################################################
     # Plot aggregated mutations figures
-    plotAllMutationTypesFigures('Aggregated Substitutions', 'royalblue', 'lightblue', AGGREGATEDSUBSTITUTIONS, None,
+    if SBS in mutation_types:
+        plotAllMutationTypesFigures('Aggregated Substitutions', 'royalblue', 'lightblue', AGGREGATEDSUBSTITUTIONS, None,
                                 outputDir, jobname, numberofSimulations, sample_based, sample2NumberofSubsDict,
                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2SubsSignature2NumberofMutationsDict, plot_mode)
 
-    plotAllMutationTypesFigures('Aggregated Dinucs', 'crimson', 'lightpink', AGGREGATEDDINUCS, None, outputDir, jobname,
+    if DBS in mutation_types:
+        plotAllMutationTypesFigures('Aggregated Doublets', 'crimson', 'lightpink', AGGREGATEDDINUCS, None, outputDir, jobname,
                                 numberofSimulations, sample_based, sample2NumberofDinucsDict,
                                 dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2DinucsSignature2NumberofMutationsDict, plot_mode)
-
-    plotAllMutationTypesFigures('Aggregated Indels', 'yellowgreen', 'lightgreen', AGGREGATEDINDELS, None, outputDir,
+    if ID in mutation_types:
+        plotAllMutationTypesFigures('Aggregated Indels', 'yellowgreen', 'lightgreen', AGGREGATEDINDELS, None, outputDir,
                                 jobname, numberofSimulations, sample_based, sample2NumberofIndelsDict,
                                 indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2IndelsSignature2NumberofMutationsDict, plot_mode)
@@ -576,9 +581,10 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
     if plot_mode == PLOTTING_FOR_SIGPROFILERTOPOGRAPHY_MANUSCRIPT :
         plot_replication_time_legend(outputDir, jobname)
 
-    if (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+    if (SBS in mutation_types) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         plotSignatureFigures('royalblue',
                              'lightblue',
+                             'Normalized\nsingle base substitution density',
                              SIGNATUREBASED,
                              outputDir,
                              jobname,
@@ -588,9 +594,10 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                              subsSignature_cutoff_numberofmutations_averageprobability_df,
                              sample2SubsSignature2NumberofMutationsDict,
                              plot_mode)
-    if (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+    if (DBS in mutation_types) and (not dinucsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         plotSignatureFigures('crimson',
                              'lightpink',
+                             'Normalized\ndoublet base substitution density',
                              SIGNATUREBASED,
                              outputDir,
                              jobname,
@@ -600,9 +607,10 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                              dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                              sample2DinucsSignature2NumberofMutationsDict,
                              plot_mode)
-    if (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
+    if (ID in mutation_types) and (not indelsSignature_cutoff_numberofmutations_averageprobability_df.empty):
         plotSignatureFigures('yellowgreen',
                              'lightgreen',
+                             'Normalized\nsmall insertion and deletion density',
                              SIGNATUREBASED,
                              outputDir,
                              jobname,
