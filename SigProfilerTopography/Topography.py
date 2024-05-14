@@ -1182,7 +1182,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 sbs_activities = None,  # [String] The activity matrix for the selected SBS signatures.
                 dbs_activities = None,  # [String] The activity matrix for the selected DBS signatures.
                 id_activities = None,  # [String] The activity matrix for the selected ID signatures.
-                mutation_types = None, # [List of String] SBS for single base substitutions, DBS for doublet base substitutions, and ID for small insertions and deletions
+                mutation_types = None, # [List of String] Include "SBS" for single base substitutions, "DBS" for doublet base substitutions, and "ID" for small insertions and deletions, SPT will carry out analyses only for the included mutation types.
                 verbose = False, # [Boolean] Set to True for detailed debugging messages.
                 parallel_mode = True, # [Boolean] Set to True for running SigProfilerTopography using multiprocessing.
                 plus_minus_epigenomics = 1000, # [Integer] The number of bases considered before and after mutation start for epigenomics occupancy analysis.
@@ -1317,15 +1317,16 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     sigprofiler_simulator_dbs_mutation_context = None
     sigprofiler_simulator_id_mutation_context = None
 
-    if  SBS in mutation_types:
-        sigprofiler_simulator_sbs_mutation_context = SBS_96
-        sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
-    if DBS in mutation_types:
-        sigprofiler_simulator_dbs_mutation_context = DBS
-        sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
-    if ID in mutation_types:
-        sigprofiler_simulator_id_mutation_context = ID
-        sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
+    if mutation_types is not None:
+        if  SBS in mutation_types:
+            sigprofiler_simulator_sbs_mutation_context = SBS_96
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
+        if DBS in mutation_types:
+            sigprofiler_simulator_dbs_mutation_context = DBS
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
+        if ID in mutation_types:
+            sigprofiler_simulator_id_mutation_context = ID
+            sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
 
     #################################################################################
     ################################## Setting starts ###############################
@@ -1722,15 +1723,21 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=seqInfo)
         print('Generated matrices keys:', matrices.keys(), file=log_out)
 
-        # if any(mutation_type_contenxt in matrices.keys() for mutation_type_contenxt in SBS_CONTEXTS):
-        #     sigprofiler_simulator_sbs_mutation_context = SBS_96
-        #     sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
-        # if 'DINUC' in matrices.keys():
-        #     sigprofiler_simulator_dbs_mutation_context = DBS
-        #     sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
-        # if 'ID' in matrices.keys():
-        #     sigprofiler_simulator_id_mutation_context = ID
-        #     sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
+        # if the user hasn't specified mutation_types then we will fill it based on matrices.keys()
+        if mutation_types is None:
+            mutation_types = []
+            if any(mutation_type_contenxt in matrices.keys() for mutation_type_contenxt in SBS_CONTEXTS):
+                mutation_types.append('SBS')
+                sigprofiler_simulator_sbs_mutation_context = SBS_96
+                sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
+            if 'DINUC' in matrices.keys():
+                mutation_types.append('DBS')
+                sigprofiler_simulator_dbs_mutation_context = DBS
+                sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
+            if 'ID' in matrices.keys():
+                mutation_types.append('ID')
+                sigprofiler_simulator_id_mutation_context = ID
+                sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
 
         # If still None
         if sigprofiler_simulator_mutation_types_contexts is None:
