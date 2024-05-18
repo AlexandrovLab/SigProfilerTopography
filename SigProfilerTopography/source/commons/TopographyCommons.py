@@ -34,6 +34,8 @@ from functools import reduce
 
 from statsmodels.stats.weightstats import ztest
 
+from SigProfilerAssignment import decompose_subroutines
+
 # To handle warnings as errors
 import warnings
 # warnings.filterwarnings("error")
@@ -674,6 +676,46 @@ def md5_read_in_chunks(file_name):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+# uses SPA tool decompose_subroutines.py
+# signatures_file (W): rows_mutation_types_columns_signatures_cells_probabilities_file (column-wise sum must be 1
+# activities_file (H): rows_samples_columns_signatures_cells_activities_file
+# original matrix Genomes = W * H.T
+# probabilities_file (P): rows_samples_mutation_types_columns_signatures_cells_probabilities_file (row-wise sum must be 1)
+def generate_probabilities_file(signatures_file, activities_file, probabilities_file):
+    signatures_df = pd.read_csv(signatures_file, sep='\t')
+    activities_df = pd.read_csv(activities_file, sep='\t')
+
+    # get mutation types
+    # index holds mutation types
+    index = signatures_df.iloc[:, 0].to_list()
+
+    # Discard the first column, since it holds mutation types
+    signatures_df = signatures_df.drop(signatures_df.columns[0], axis=1)
+    W = np.array(signatures_df)
+
+    # get samples
+    # allcolnames holds the samples
+    # get the first column of activities_df as the samples
+    allcolnames = activities_df.iloc[:, 0].to_list()
+
+    # Discard the first column, since it holds the samples
+    activities_df = activities_df.drop(activities_df.columns[0], axis=1)
+
+    H = np.array(activities_df)
+    H = H.T # take transpose to get rows as signatures, columns as samples
+
+    # W*H gives the original matrix where rows are mutation types and columns as samples
+
+    # get signatures
+    allsigids = signatures_df.columns.to_list()
+
+    result = decompose_subroutines.probabilities(W, H, index, allsigids, allcolnames)
+
+    result.to_csv(probabilities_file, sep='\t', index=False)
+
+# Deprecated
+# No more used or maintained
+# It gives the same results as generate_probabilities_file using SPA
 def generate_probability_file(signatures_file, activities_file, sample_mutation_type_rows_signatures_columns_probabilities_file):
     signatures_df = pd.read_csv(signatures_file, sep='\t')
     activities_df = pd.read_csv(activities_file, sep='\t')
@@ -752,7 +794,8 @@ def generate_probability_file(signatures_file, activities_file, sample_mutation_
         df = pd.DataFrame(arr, columns=sample_df.columns.values[1:])
 
         df['Sample Names'] = sample
-        df['MutationTypes'] = signatures_df['MutationType']
+        # df['MutationTypes'] = signatures_df['MutationType']
+        df['MutationTypes'] = signatures_df.iloc[:, 0]
 
         # order columns
         df_columns = ['Sample Names', 'MutationTypes'] + sample_df.columns.values[1:].tolist()

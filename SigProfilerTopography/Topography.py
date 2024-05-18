@@ -165,7 +165,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import fill_signatur
 from SigProfilerTopography.source.commons.TopographyCommons import fill_signature_number_of_mutations_df
 from SigProfilerTopography.source.commons.TopographyCommons import fill_mutations_dictionaries_write
 from SigProfilerTopography.source.commons.TopographyCommons import detect_sbs_mutation_context
-from SigProfilerTopography.source.commons.TopographyCommons import generate_probability_file
+from SigProfilerTopography.source.commons.TopographyCommons import generate_probabilities_file
 
 from SigProfilerTopography.source.commons.TopographyCommons import Table_SBS_NumberofMutations_NumberofSamples_SamplesList_Filename
 from SigProfilerTopography.source.commons.TopographyCommons import Table_DBS_NumberofMutations_NumberofSamples_SamplesList_Filename
@@ -1173,13 +1173,13 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 step3_matgen_sim_data = True, # [Boolean] Run SigProfilerMatrixGenerator to generate matrices for the simulated mutations when True.
                 step4_merge_prob_data = True, # [Boolean] Merge real and simulated mutations with the probabilities files when True.
                 step5_gen_tables = True, # [Boolean] Generate tables for providing information on mutational signatures, cutoffs, number of mutations and average probability when True.
-                sbs_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
+                sbs_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample. Rows are the samples and mutation types. Columns are the signatures. Cells are the probabilities for each specific mutation type, sample and signature. Row-wise sum must be 1 or 0.
                 dbs_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
                 id_probabilities = None, # [String] The probabilities matrix includes the probabilities of each mutation type in each sample.
-                sbs_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the SBS mutational signatures.
+                sbs_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the SBS mutational signatures. Rows mutation types, columns signatures, cell probabilties for each specific mutation type and signature. Column-wise sum must be 1.
                 dbs_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the DBS mutational signatures.
                 id_signatures = None,  # [String] The signatures matrix contains the distribution of mutation types in the ID mutational signatures.
-                sbs_activities = None,  # [String] The activity matrix for the selected SBS signatures.
+                sbs_activities = None,  # [String] The activity matrix for the selected SBS signatures. Rows are samples, columns are signatures, cells are the number of mutations for each specific sample and signature.
                 dbs_activities = None,  # [String] The activity matrix for the selected DBS signatures.
                 id_activities = None,  # [String] The activity matrix for the selected ID signatures.
                 mutation_types = None, # [List of String] Include "SBS" for single base substitutions, "DBS" for doublet base substitutions, and "ID" for small insertions and deletions, SPT will carry out analyses only for the included mutation types.
@@ -1740,6 +1740,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
 
         # If still None
+        if mutation_types is None:
+            print('\n--- There is a situation/problem: mutation_types is None.', file=log_out)
+        else:
+            print('\n--- mutation_types:%s' % mutation_types, file=log_out)
+
+        # If still None
         if sigprofiler_simulator_mutation_types_contexts is None:
             print('--- There is a situation/problem: sigprofiler_simulator_mutation_types_contexts is None.', file=log_out)
             print('--- sigprofiler_simulator_mutation_types_contexts has to be set before SigProfilerTopography run.', file=log_out)
@@ -1766,7 +1772,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     # Case1: Only samples are given
     # Call SPA for each matrix using cosmic_fit
     # cosmic_fit will assign the reference mutational signatures from COSMIC to our samples
-    # set probabilities files coming from SPA
+    # use probabilities files coming from SPA
     if ((mutation_types is not None) and (SBS in mutation_types) and
             (sbs_signatures is None) and (sbs_activities is None) and (sbs_probabilities is None)) :
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
@@ -1839,7 +1845,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
     # Case2 Samples and signatures are given
     # Call SPA for each matrix using cosmic_fit
-    # get probabilities files coming from SPA
+    # use probabilities files coming from SPA
     if ((mutation_types is not None) and (SBS in mutation_types) and
             (sbs_signatures is not None) and (sbs_activities is None) and (sbs_probabilities is None)):
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
@@ -1923,19 +1929,20 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             (sbs_signatures is not None) and (sbs_activities is not None) and (sbs_probabilities is None)):
         os.makedirs(os.path.join(outputDir, jobname, 'probabilities'), exist_ok=True)
         sbs_probabilities = os.path.join(outputDir, jobname, 'probabilities', 'SBS_Decomposed_MutationType_Probabilities.txt')
-        generate_probability_file(sbs_signatures, sbs_activities, sbs_probabilities)
+        generate_probabilities_file(sbs_signatures, sbs_activities, sbs_probabilities)
+        # generate_probability_file(sbs_signatures, sbs_activities, sbs_probabilities)
 
     if ((mutation_types is not None) and (DBS in mutation_types) and
             (dbs_signatures is not None) and (dbs_activities is not None) and (dbs_probabilities is None)):
         os.makedirs(os.path.join(outputDir, jobname, 'probabilities'), exist_ok=True)
         dbs_probabilities = os.path.join(outputDir, jobname, 'probabilities', 'DBS_Decomposed_MutationType_Probabilities.txt')
-        generate_probability_file(dbs_signatures, dbs_activities, dbs_probabilities)
+        generate_probabilities_file(dbs_signatures, dbs_activities, dbs_probabilities)
 
     if ((mutation_types is not None) and (ID in mutation_types) and
             (id_signatures is not None) and (id_activities is not None) and (id_probabilities is None)):
         os.makedirs(os.path.join(outputDir, jobname, 'probabilities'), exist_ok=True)
         id_probabilities = os.path.join(outputDir, jobname, 'probabilities', 'ID_Decomposed_MutationType_Probabilities.txt')
-        generate_probability_file(id_signatures, id_activities, id_probabilities)
+        generate_probabilities_file(id_signatures, id_activities, id_probabilities)
 
     # Case4 Samples are given and probabilities files are either given or calculated through Case1 & Case2 & Case3.
     # Rest of the code operates on probabilities files
