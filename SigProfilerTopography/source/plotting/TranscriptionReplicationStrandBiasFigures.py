@@ -28,8 +28,8 @@ matplotlib.use("Agg")
 
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 from SigProfilerTopography.source.commons.TopographyCommons import natural_key
-from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED_STRAND
-from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED_STRAND
+from SigProfilerTopography.source.commons.TopographyCommons import TRANSCRIBED
+from SigProfilerTopography.source.commons.TopographyCommons import UNTRANSCRIBED
 from SigProfilerTopography.source.commons.TopographyCommons import LAGGING
 from SigProfilerTopography.source.commons.TopographyCommons import LEADING
 
@@ -130,7 +130,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import getSample2Sub
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import Sample2DinucsSignature2NumberofMutationsDictFilename
 
-transcriptionStrands = [TRANSCRIBED_STRAND, UNTRANSCRIBED_STRAND]
+transcriptionStrands = [TRANSCRIBED, UNTRANSCRIBED]
 genicVersusIntergenicStrands = [GENIC, INTERGENIC]
 replicationStrands = [LAGGING, LEADING]
 
@@ -716,8 +716,8 @@ def plot_circle_plot_in_given_axis(ax,
         Line2D([0], [0], marker='o', color='white', label=LEADING, markerfacecolor='goldenrod', markersize=40)]
 
     transcription_legend_elements = [
-        Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue', markersize=40),
-        Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen', markersize=40)]
+        Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED, markerfacecolor='royalblue', markersize=40),
+        Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED, markerfacecolor='yellowgreen', markersize=40)]
 
     genic_vs_intergenic_legend_elements = [
         Line2D([0], [0], marker='o', color='white', label=GENIC, markerfacecolor='cyan', markersize=40),
@@ -872,7 +872,7 @@ def plot_circle_plot_in_given_axis(ax,
                     if signature_transcribed_versus_untranscribed_df[
                         (signature_transcribed_versus_untranscribed_df[SIGNATURE] == sbs_signature) &
                         (signature_transcribed_versus_untranscribed_df[MUTATION_TYPE] == mutation_type) &
-                        (signature_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == TRANSCRIBED_STRAND) &
+                        (signature_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == TRANSCRIBED) &
                         (signature_transcribed_versus_untranscribed_df[fold_change_string] == 1) &
                         (signature_transcribed_versus_untranscribed_df['transcribed_versus_untranscribed_q_value'] <= SIGNIFICANCE_LEVEL) &
                         (signature_transcribed_versus_untranscribed_df[ODDS_RATIO] >= odds_ratio_cutoff) &
@@ -882,7 +882,7 @@ def plot_circle_plot_in_given_axis(ax,
                     if signature_transcribed_versus_untranscribed_df[
                         (signature_transcribed_versus_untranscribed_df[SIGNATURE] == sbs_signature) &
                         (signature_transcribed_versus_untranscribed_df[MUTATION_TYPE] == mutation_type) &
-                        (signature_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED_STRAND) &
+                        (signature_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED) &
                         (signature_transcribed_versus_untranscribed_df[fold_change_string] == 1) &
                         (signature_transcribed_versus_untranscribed_df['transcribed_versus_untranscribed_q_value'] <= SIGNIFICANCE_LEVEL) &
                         (signature_transcribed_versus_untranscribed_df[ODDS_RATIO] >= odds_ratio_cutoff)  &
@@ -1173,6 +1173,7 @@ def plot_bar_plot_in_given_axis(axis,
         color2 = 'gray'
 
     groupby_df = signature_strand1_versus_strand2_df.groupby([SIGNATURE])
+
     if sbs_signature in groupby_df.groups:
         group_df = groupby_df.get_group(sbs_signature)
 
@@ -2115,10 +2116,10 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
             signature_transcribed_versus_untranscribed_df[fold_change_string] = None
             type_transcribed_versus_untranscribed_df[fold_change_string] = None
 
-        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
-        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
-        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED_STRAND
-        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED_STRAND
+        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED
+        signature_transcribed_versus_untranscribed_df.loc[(signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED
+        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = TRANSCRIBED
+        type_transcribed_versus_untranscribed_df.loc[(type_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > type_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT]), SIGNIFICANT_STRAND] = UNTRANSCRIBED
 
         # Calculate REAL_RATIO and SIMS_RATIO based on more or equal real mutations on Transcribed strand
         signature_transcribed_versus_untranscribed_df.loc[((signature_transcribed_versus_untranscribed_df[TRANSCRIBED_REAL_COUNT] >= signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT]) & (signature_transcribed_versus_untranscribed_df[UNTRANSCRIBED_REAL_COUNT] > 0)), REAL_RATIO] = \
@@ -2637,7 +2638,7 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
                     if type_transcribed_versus_untranscribed_df[
                         (type_transcribed_versus_untranscribed_df[TYPE] == row_signature) &
-                        (type_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == TRANSCRIBED_STRAND) &
+                        (type_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == TRANSCRIBED) &
                         (type_transcribed_versus_untranscribed_df[fold_change_string] == 1) &
                         (type_transcribed_versus_untranscribed_df[q_value_column] <= SIGNIFICANCE_LEVEL) &
                         (type_transcribed_versus_untranscribed_df[ODDS_RATIO] >= odds_ratio_cutoff)].values.size > 0:
@@ -2645,7 +2646,7 @@ def plot_dbs_and_id_signatures_circle_figures(signature_type,
 
                     if type_transcribed_versus_untranscribed_df[
                         (type_transcribed_versus_untranscribed_df[TYPE] == row_signature) &
-                        (type_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED_STRAND) &
+                        (type_transcribed_versus_untranscribed_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED) &
                         (type_transcribed_versus_untranscribed_df[fold_change_string] == 1) &
                         (type_transcribed_versus_untranscribed_df[q_value_column] <= SIGNIFICANCE_LEVEL) &
                         (type_transcribed_versus_untranscribed_df[ODDS_RATIO] >= odds_ratio_cutoff)].values.size > 0:
@@ -2798,8 +2799,8 @@ def plot_legend(strandbias_figures_outputDir):
 
         if strandbias==TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
-                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue' ,markersize=20),
-                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen',markersize=20)]
+                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED, markerfacecolor='royalblue' ,markersize=20),
+                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED, markerfacecolor='yellowgreen',markersize=20)]
         elif strandbias == GENIC_VERSUS_INTERGENIC:
             legend_elements = [
                 Line2D([0], [0], marker='o', color='white', label=GENIC, markerfacecolor='cyan',markersize=20),
@@ -2926,8 +2927,8 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
         # Put the legend
         if strand_bias == TRANSCRIBED_VERSUS_UNTRANSCRIBED:
             legend_elements = [
-                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED_STRAND, markerfacecolor='royalblue', markersize=40),
-                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED_STRAND, markerfacecolor='yellowgreen', markersize=40)]
+                Line2D([0], [0], marker='o', color='white', label=TRANSCRIBED, markerfacecolor='royalblue', markersize=40),
+                Line2D([0], [0], marker='o', color='white', label=UNTRANSCRIBED, markerfacecolor='yellowgreen', markersize=40)]
         elif strand_bias == GENIC_VERSUS_INTERGENIC:
                 legend_elements = [
                     Line2D([0], [0], marker='o', color='white', label=GENIC, markerfacecolor='cyan', markersize=40),
@@ -3044,7 +3045,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                         if signature_strand1_versus_strand2_df[
                             (signature_strand1_versus_strand2_df[SIGNATURE] == row_sbs_signature) &
                             (signature_strand1_versus_strand2_df[MUTATION_TYPE] == mutation_type) &
-                            (signature_strand1_versus_strand2_df[SIGNIFICANT_STRAND] == TRANSCRIBED_STRAND) &
+                            (signature_strand1_versus_strand2_df[SIGNIFICANT_STRAND] == TRANSCRIBED) &
                             (signature_strand1_versus_strand2_df[fold_change_string] == 1) &
                             (signature_strand1_versus_strand2_df[q_value_column] <= SIGNIFICANCE_LEVEL) &
                             (signature_strand1_versus_strand2_df[ODDS_RATIO] >= odds_ratio_cutoff) &
@@ -3054,7 +3055,7 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
                         if signature_strand1_versus_strand2_df[
                             (signature_strand1_versus_strand2_df[SIGNATURE] == row_sbs_signature) &
                             (signature_strand1_versus_strand2_df[MUTATION_TYPE] == mutation_type) &
-                            (signature_strand1_versus_strand2_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED_STRAND) &
+                            (signature_strand1_versus_strand2_df[SIGNIFICANT_STRAND] == UNTRANSCRIBED) &
                             (signature_strand1_versus_strand2_df[fold_change_string] == 1) &
                             (signature_strand1_versus_strand2_df[q_value_column] <= SIGNIFICANCE_LEVEL) &
                             (signature_strand1_versus_strand2_df[ODDS_RATIO] >= odds_ratio_cutoff) &
@@ -3095,4 +3096,3 @@ def plot_six_mutations_sbs_signatures_circle_figures(sbs_signatures,
             print(e)
         plot1.clear()
         plt.close(plot1)
-

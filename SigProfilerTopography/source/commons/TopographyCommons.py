@@ -46,15 +46,17 @@ WINDOWS = 'windows'
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
-LAGGING = 'Lagging'
-LEADING = 'Leading'
+LAGGING = 'Lagging' #0
+LEADING = 'Leading' #1
+
+BIDIRECTIONAL = 'Bidirectional' #0
+NONTRANSCRIBED = 'NonTranscribed' #1
+QUESTIONABLE =  'Questionable' #2
+TRANSCRIBED = 'Transcribed' #3
+UNTRANSCRIBED = 'UnTranscribed' #4
 
 GENIC = 'Genic'
 INTERGENIC = 'Intergenic'
-
-UNTRANSCRIBED_STRAND = 'UnTranscribed'
-TRANSCRIBED_STRAND = 'Transcribed'
-NONTRANSCRIBED_STRAND = 'NonTranscribed'
 
 LAGGING_VERSUS_LEADING = 'Lagging_Versus_Leading'
 TRANSCRIBED_VERSUS_UNTRANSCRIBED = 'Transcribed_Versus_Untranscribed'
@@ -409,7 +411,6 @@ ATAC_DNA_ELEMENT = 'ATAC'
 OPEN_CHROMATIN = 'Open\nChromatin'
 
 
-
 # Tables
 Table_AllCutoff_SubsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_SBS_Signature_NumberofMutations_AverageProbability.txt"
 Table_AllCutoff_IndelsSignature_NumberofMutations_AverageProbability_Filename = "Table_AllCutoffs_ID_Signature_NumberofMutations_AverageProbability.txt"
@@ -420,15 +421,6 @@ Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Tabl
 Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Cutoff_NumberofMutations_AverageProbability.txt"
 
-# # Tables Discreet mode with cutoffs
-# Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
-# Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
-# Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Discreet_Mode_Cutoff_NumberofMutations_AverageProbability.txt"
-
-# # Tables Probability mode without cutoffs considering all mutations
-# Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_SBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
-# Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_DBS_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
-# Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability_Filename = "Table_ID_Signature_Probability_Mode_NumberofMutations_AverageProbability.txt"
 
 # Table
 Table_SBS_NumberofMutations_NumberofSamples_SamplesList_Filename = 'Table_SBS_NumberofMutations_NumberofSamples_SamplesList.txt'
@@ -525,6 +517,46 @@ T2C = 'T>C'
 T2G = 'T>G'
 
 six_mutation_types = [C2A, C2G, C2T, T2A, T2C, T2G]
+
+SBS6_mutation_types_np_array = np.array([C2A, C2G, C2T, T2A, T2C, T2G])
+
+nucleotides = ['A', 'C', 'G', 'T']
+mutations = ['[C>A]', '[C>G]', '[C>T]', '[T>A]', '[T>C]', '[T>G]']
+SBS96_mutation_types_np_array = np.array([nucleotide_left + middle + nucleotide_right
+                                          for nucleotide_left in nucleotides
+                                          for nucleotide_right in nucleotides
+                                          for middle in mutations])
+
+DBS78_mutation_types_np_array = np.array(['AC>CA', 'AC>CG', 'AC>CT', 'AC>GA', 'AC>GG', 'AC>GT', 'AC>TA',
+                                          'AC>TG', 'AC>TT', 'AT>CA', 'AT>CC', 'AT>CG', 'AT>GA', 'AT>GC',
+                                          'AT>TA', 'CC>AA', 'CC>AG', 'CC>AT', 'CC>GA', 'CC>GG', 'CC>GT',
+                                          'CC>TA', 'CC>TG', 'CC>TT', 'CG>AT', 'CG>GC', 'CG>GT', 'CG>TA',
+                                          'CG>TC', 'CG>TT', 'CT>AA', 'CT>AC', 'CT>AG', 'CT>GA', 'CT>GC',
+                                          'CT>GG', 'CT>TA', 'CT>TC', 'CT>TG', 'GC>AA', 'GC>AG', 'GC>AT',
+                                          'GC>CA', 'GC>CG', 'GC>TA', 'TA>AT', 'TA>CG', 'TA>CT', 'TA>GC',
+                                          'TA>GG', 'TA>GT', 'TC>AA', 'TC>AG', 'TC>AT', 'TC>CA', 'TC>CG',
+                                          'TC>CT', 'TC>GA', 'TC>GG', 'TC>GT', 'TG>AA', 'TG>AC', 'TG>AT',
+                                          'TG>CA', 'TG>CC', 'TG>CT', 'TG>GA', 'TG>GC', 'TG>GT', 'TT>AA',
+                                          'TT>AC', 'TT>AG', 'TT>CA', 'TT>CC', 'TT>CG', 'TT>GA', 'TT>GC',
+                                          'TT>GG'])
+
+ID83_mutation_types_np_array = np.array(['1:Del:C:0', '1:Del:C:1', '1:Del:C:2', '1:Del:C:3', '1:Del:C:4',
+                                         '1:Del:C:5', '1:Del:T:0', '1:Del:T:1', '1:Del:T:2', '1:Del:T:3',
+                                         '1:Del:T:4', '1:Del:T:5', '1:Ins:C:0', '1:Ins:C:1', '1:Ins:C:2',
+                                         '1:Ins:C:3', '1:Ins:C:4', '1:Ins:C:5', '1:Ins:T:0', '1:Ins:T:1',
+                                         '1:Ins:T:2', '1:Ins:T:3', '1:Ins:T:4', '1:Ins:T:5', '2:Del:R:0',
+                                         '2:Del:R:1', '2:Del:R:2', '2:Del:R:3', '2:Del:R:4', '2:Del:R:5',
+                                         '3:Del:R:0', '3:Del:R:1', '3:Del:R:2', '3:Del:R:3', '3:Del:R:4',
+                                         '3:Del:R:5', '4:Del:R:0', '4:Del:R:1', '4:Del:R:2', '4:Del:R:3',
+                                         '4:Del:R:4', '4:Del:R:5', '5:Del:R:0', '5:Del:R:1', '5:Del:R:2',
+                                         '5:Del:R:3', '5:Del:R:4', '5:Del:R:5', '2:Ins:R:0', '2:Ins:R:1',
+                                         '2:Ins:R:2', '2:Ins:R:3', '2:Ins:R:4', '2:Ins:R:5', '3:Ins:R:0',
+                                         '3:Ins:R:1', '3:Ins:R:2', '3:Ins:R:3', '3:Ins:R:4', '3:Ins:R:5',
+                                         '4:Ins:R:0', '4:Ins:R:1', '4:Ins:R:2', '4:Ins:R:3', '4:Ins:R:4',
+                                         '4:Ins:R:5', '5:Ins:R:0', '5:Ins:R:1', '5:Ins:R:2', '5:Ins:R:3',
+                                         '5:Ins:R:4', '5:Ins:R:5', '2:Del:M:1', '3:Del:M:1', '3:Del:M:2',
+                                         '4:Del:M:1', '4:Del:M:2', '4:Del:M:3', '5:Del:M:1', '5:Del:M:2',
+                                         '5:Del:M:3', '5:Del:M:4', '5:Del:M:5'])
 
 COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL = 'COMPUTATION_CHROMOSOMES_SEQUENTIAL_ALL_SIMULATIONS_PARALLEL'
 USING_IMAP_UNORDERED='USING_IMAP_UNORDERED'
@@ -2487,90 +2519,698 @@ def writeDictionary(dictionary,outputDir,jobname,filename,subDirectory,customJSO
     with open(filePath, 'w') as file:
         file.write(json.dumps(dictionary, cls=customJSONEncoder))
 
+def write_sample_type_strand_bias_np_array_as_dataframe(output_dir,
+                    jobname,
+                    strand_bias,
+                    strands,
+                    samples_np_array,
+                    all_types_np_array,
+                    SBS6_mutation_types_np_array,
+                    SBS96_mutation_types_np_array,
+                    DBS78_mutation_types_np_array,
+                    ID83_mutation_types_np_array,
+                    ordered_sbs_signatures_np_array,
+                    ordered_dbs_signatures_np_array,
+                    ordered_id_signatures_np_array,
+                    all_sims_sample_mutation_type_strand_np_array,
+                    all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                    all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                    all_sims_sample_id_signature_mutation_type_strand_np_array
+                    ):
 
-# Lagging_Count Leading_Count
-# Transcribed_Count UnTranscribed_Count
-def write_sample_based_strand1_strand2_as_dataframe(output_dir,
-                                                    jobname,
-                                                    num_of_simulations,
-                                                    strand_bias,
-                                                    all_samples_np_array,
-                                                    all_types_np_array,
-                                                    all_sims_all_samples_all_types_strand1_np_array,
-                                                    all_sims_all_samples_all_types_strand2_np_array):
+    # Fill type2Strand2ListDict using all_sims_all_types_strand_np_arrays_list
+    sample2Type2Strand2ListDict = {}
 
-    if strand_bias==REPLICATIONSTRANDBIAS:
-        sample_type_strand1_strand2_ratio_file_name = 'Sample_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
-        strand1_column="lagging_count"
-        strand2_column="leading_count"
-    elif strand_bias==TRANSCRIPTIONSTRANDBIAS:
-        sample_type_strand1_strand2_ratio_file_name = 'Sample_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        strand1_column="transcribed_count"
-        strand2_column="untranscribed_count"
+    for strand_index, strand in enumerate(strands,0):
+        num_of_sims, num_of_samples, num_of_mutation_types, num_of_strands = all_sims_sample_mutation_type_strand_np_array.shape
+
+        for sim_index in range(0,num_of_sims):
+            for sample_index in range(0, num_of_samples):
+                sample = samples_np_array[sample_index]
+                for my_type in all_types_np_array:
+
+                    if sample in sample2Type2Strand2ListDict:
+                        if my_type in sample2Type2Strand2ListDict[sample]:
+                            if strand in sample2Type2Strand2ListDict[sample][my_type]:
+                                strand_list = sample2Type2Strand2ListDict[sample][my_type][strand]
+                                if (sim_index == 0):
+
+                                    # Set real_data
+                                    if my_type in SBS6_mutation_types_np_array:
+                                        indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+                                        strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, indices, strand_index])
+                                    elif my_type in SBS96_mutation_types_np_array:
+                                        my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+                                    elif my_type in DBS78_mutation_types_np_array:
+                                        my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+                                    elif my_type in ID83_mutation_types_np_array:
+                                        my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+                                    elif my_type in ordered_sbs_signatures_np_array:
+                                        signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+                                    elif my_type in ordered_dbs_signatures_np_array:
+                                        signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+                                    elif my_type in ordered_id_signatures_np_array:
+                                        signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+                                        strand_list[0] = np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+
+                                else:
+
+                                    # Append to sims_data_list
+                                    if my_type in SBS6_mutation_types_np_array:
+                                        indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+                                        strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, indices, strand_index]))
+                                    elif my_type in SBS96_mutation_types_np_array:
+                                        my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+                                    elif my_type in DBS78_mutation_types_np_array:
+                                        my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+                                    elif my_type in ID83_mutation_types_np_array:
+                                        my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+                                    elif my_type in ordered_sbs_signatures_np_array:
+                                        signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+                                    elif my_type in ordered_dbs_signatures_np_array:
+                                        signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+                                    elif my_type in ordered_id_signatures_np_array:
+                                        signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+                                        strand_list[1].append(np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+
+                            else:
+                                sample2Type2Strand2ListDict[sample][my_type][strand] = [0, []]
+                                fill_sample_type_2_strand_2_list_dict(sample,
+                                          my_type,
+                                          strand,
+                                          sample2Type2Strand2ListDict,
+                                          SBS6_mutation_types_np_array,
+                                          SBS96_mutation_types_np_array,
+                                          DBS78_mutation_types_np_array,
+                                          ID83_mutation_types_np_array,
+                                          ordered_sbs_signatures_np_array,
+                                          ordered_dbs_signatures_np_array,
+                                          ordered_id_signatures_np_array,
+                                          all_sims_sample_mutation_type_strand_np_array,
+                                          all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                          all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                          all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                          sim_index,
+                                          sample_index,
+                                          strand_index)
+
+
+                        else:
+                            sample2Type2Strand2ListDict[sample][my_type] = {}
+                            sample2Type2Strand2ListDict[sample][my_type][strand] = [0, []]
+                            fill_sample_type_2_strand_2_list_dict(sample,
+                                                                  my_type,
+                                                                  strand,
+                                                                  sample2Type2Strand2ListDict,
+                                                                  SBS6_mutation_types_np_array,
+                                                                  SBS96_mutation_types_np_array,
+                                                                  DBS78_mutation_types_np_array,
+                                                                  ID83_mutation_types_np_array,
+                                                                  ordered_sbs_signatures_np_array,
+                                                                  ordered_dbs_signatures_np_array,
+                                                                  ordered_id_signatures_np_array,
+                                                                  all_sims_sample_mutation_type_strand_np_array,
+                                                                  all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                                                  all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                                                  all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                                                  sim_index,
+                                                                  sample_index,
+                                                                  strand_index)
+
+
+                    else:
+                        sample2Type2Strand2ListDict[sample] = {}
+                        sample2Type2Strand2ListDict[sample][my_type] = {}
+                        sample2Type2Strand2ListDict[sample][my_type][strand] = [0, []]
+                        fill_sample_type_2_strand_2_list_dict(sample,
+                                                              my_type,
+                                                              strand,
+                                                              sample2Type2Strand2ListDict,
+                                                              SBS6_mutation_types_np_array,
+                                                              SBS96_mutation_types_np_array,
+                                                              DBS78_mutation_types_np_array,
+                                                              ID83_mutation_types_np_array,
+                                                              ordered_sbs_signatures_np_array,
+                                                              ordered_dbs_signatures_np_array,
+                                                              ordered_id_signatures_np_array,
+                                                              all_sims_sample_mutation_type_strand_np_array,
+                                                              all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                                              all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                                              all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                                              sim_index,
+                                                              sample_index,
+                                                              strand_index)
+
+
+    # In strand_list we have
+    # real_data
+    # sims_data_list
+    #Add these to information strand_list
+    # mean_sims_data
+    # min_sims_data
+    # max_sims_data
+    #strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
+    for sample in sample2Type2Strand2ListDict:
+        for my_type in sample2Type2Strand2ListDict[sample]:
+            for strand in sample2Type2Strand2ListDict[sample][my_type]:
+                sims_data_list = sample2Type2Strand2ListDict[sample][my_type][strand][1]
+                if sims_data_list is not None and len(sims_data_list) > 0:
+                    mean_sims = np.nanmean(sims_data_list)
+                    min_sims = np.min(sims_data_list)
+                    max_sims = np.max(sims_data_list)
+                else:
+                    mean_sims = np.nan
+                    min_sims = np.nan
+                    max_sims = np.nan
+                sample2Type2Strand2ListDict[sample][my_type][strand].append(mean_sims)
+                sample2Type2Strand2ListDict[sample][my_type][strand].append(min_sims)
+                sample2Type2Strand2ListDict[sample][my_type][strand].append(max_sims)
+
+    # Calculate p-value only
+    for sample in  sample2Type2Strand2ListDict:
+        for my_type in sample2Type2Strand2ListDict[sample]:
+            if strand_bias == REPLICATIONSTRANDBIAS:
+                lagging_strand = strands[0]
+                leading_strand = strands[1]
+
+                lagging_real_count = sample2Type2Strand2ListDict[sample][my_type][lagging_strand][0]
+                # lagging_sims_list=type2Strand2ListDict[my_type][lagging_strand][1]
+                lagging_sims_mean_count = sample2Type2Strand2ListDict[sample][my_type][lagging_strand][2]
+
+                leading_real_count = sample2Type2Strand2ListDict[sample][my_type][leading_strand][0]
+                # leading_sims_list=type2Strand2ListDict[my_type][leading_strand][1]
+                leading_sims_mean_count = sample2Type2Strand2ListDict[sample][my_type][leading_strand][2]
+
+                # Calculate p value
+                contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    lagging_versus_leading_p_value = np.nan
+
+                # Set p_value
+                sample2Type2Strand2ListDict[sample][my_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
+
+            elif strand_bias == TRANSCRIPTIONSTRANDBIAS:
+                transcribed_strand = strands[0]
+                untranscribed_strand = strands[1]
+                nontranscribed_strand = strands[2]
+
+                transcribed_real_count = sample2Type2Strand2ListDict[sample][my_type][transcribed_strand][0]
+                # transcribed_sims_list = type2Strand2ListDict[my_type][transcribed_strand][1]
+                transcribed_sims_mean_count = sample2Type2Strand2ListDict[sample][my_type][transcribed_strand][2]
+
+                untranscribed_real_count = sample2Type2Strand2ListDict[sample][my_type][untranscribed_strand][0]
+                # untranscribed_sims_list = type2Strand2ListDict[my_type][untranscribed_strand][1]
+                untranscribed_sims_mean_count = sample2Type2Strand2ListDict[sample][my_type][untranscribed_strand][2]
+
+                nontranscribed_real_count = sample2Type2Strand2ListDict[sample][my_type][nontranscribed_strand][0]
+                # nontranscribed_sims_list = type2Strand2ListDict[my_type][nontranscribed_strand][1]
+                nontranscribed_sims_mean_count = sample2Type2Strand2ListDict[sample][my_type][nontranscribed_strand][2]
+
+                # Calculate p value
+                contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    transcribed_versus_untranscribed_p_value = np.nan
+
+                genic_real_count = transcribed_real_count + untranscribed_real_count
+                genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
+
+                # Calculate p value (transcribed + untranscribed) versus nontranscribed
+                contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
+                if not np.isnan(contingency_table_array).any():
+                    oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+                else:
+                    genic_versus_intergenic_p_value = np.nan
+
+                # Set p_values
+                sample2Type2Strand2ListDict[sample][my_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
+                sample2Type2Strand2ListDict[sample][my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
     os.makedirs(os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED), exist_ok=True)
-    sample_type_strand1_strand2_ratio_file_path = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED,sample_type_strand1_strand2_ratio_file_name)
 
-    with open(sample_type_strand1_strand2_ratio_file_path, 'w') as f:
-        i, j, k = all_sims_all_samples_all_types_strand1_np_array.shape
-        f.write('sim_num\tsample\ttype\t%s\t%s\n' %(strand1_column,strand2_column))
+    # Calculate q-value and significant_strand will be done during plotting figures
+    if strand_bias == TRANSCRIPTIONSTRANDBIAS:
+        type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        write_sample_type_transcription_dataframe(strands, sample2Type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
 
-        for sim_index in range(num_of_simulations+1):
-            for sample_index in range(j):
-                for type_index in range(k):
-                    f.write('%d\t%s\t%s\t%d\t%d\n'% (sim_index,
-                                                     all_samples_np_array[sample_index],
-                                                     all_types_np_array[type_index],
-                                                     all_sims_all_samples_all_types_strand1_np_array[sim_index][sample_index][type_index],
-                                                     all_sims_all_samples_all_types_strand2_np_array[sim_index][sample_index][type_index]))
+        type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        write_sample_type_transcription_dataframe(strands, sample2Type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
+
+    elif strand_bias == REPLICATIONSTRANDBIAS:
+        type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        write_sample_type_replication_dataframe(strands, sample2Type2Strand2ListDict, jobname, type_strand_table_filepath)
 
 
 
-# Main function for type
-# Fills a dictionary and writes it as a dataframe
-def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_arrays_list,
-                                                all_types_np_array,
-                                                strand_bias,
-                                                strands,
-                                                outputDir,
-                                                jobname):
+def write_sample_signature_mutation_type_strand_np_array_as_dataframe(outputDir,
+                                                                      jobname,
+                                                                      strand_bias,
+                                                                      strands,
+                                                                      all_samples_np_array,
+                                                                      sample_based_zipped_arrays):
+
+    # Fill sample2signature2MutationType2Strand2ListDict using np_arrays_list
+    sample2Signature2MutationType2Strand2ListDict = {}
+
+    for all_sims_sample_signature_mutation_type_strand_np_array, mutation_types_np_array, ordered_signatures_np_array in sample_based_zipped_arrays:
+        for strand_index, strand in enumerate(strands,0):
+            num_of_sims, num_of_samples, num_of_signatures, num_of_mutation_types, num_of_strand_types = all_sims_sample_signature_mutation_type_strand_np_array.shape
+
+            for sim_index in range(0, num_of_sims):
+                for sample_index in range(0, num_of_samples):
+                    sample = all_samples_np_array[sample_index]
+                    for signature_index in range(0, num_of_signatures):
+                        signature = ordered_signatures_np_array[signature_index]
+                        # if mutation_types_np_array is SBS96_mutation_types_np_array, then extend them with SBS6_mutation_types_np_array
+                        # This is to compute p-value and q-value for SBS6_mutation_types_np_array
+                        if len(np.where(np.char.find(mutation_types_np_array, '[' + SBS6_mutation_types_np_array[0] + ']') != -1)[0]) > 0:
+                            extended_mutation_types_np_array = np.concatenate((mutation_types_np_array, SBS6_mutation_types_np_array), axis=None)
+                        else:
+                            extended_mutation_types_np_array = mutation_types_np_array
+                        for mutation_type in extended_mutation_types_np_array:
+                            indices = np.where(np.char.find(mutation_types_np_array, mutation_type) != -1)[0]
+
+                            if sample in sample2Signature2MutationType2Strand2ListDict:
+                                if signature in sample2Signature2MutationType2Strand2ListDict[sample]:
+                                    if mutation_type in sample2Signature2MutationType2Strand2ListDict[sample][signature]:
+                                        if strand in sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type]:
+                                            strand_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand]
+                                            if sim_index == 0:
+                                                strand_list[0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index])  # 0 lagging strand
+                                            else:
+                                                strand_list[1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index]))  # 0 lagging strand
+                                        else:
+                                            sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand] = [0, []]
+                                            if (sim_index == 0):
+                                                sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index])
+                                            else:
+                                                sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index]))
+                                    else:
+                                        sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type] = {}
+                                        sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand] = [0, []]
+                                        if (sim_index == 0):
+                                            sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index])
+                                        else:
+                                            sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index]))
+
+                                else:
+                                    sample2Signature2MutationType2Strand2ListDict[sample][signature] = {}
+                                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type] = {}
+                                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand] = [0, []]
+                                    if (sim_index == 0):
+                                        sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index])
+                                    else:
+                                        sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index]))
+
+                            else:
+                                sample2Signature2MutationType2Strand2ListDict[sample] = {}
+                                sample2Signature2MutationType2Strand2ListDict[sample][signature] = {}
+                                sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type] = {}
+                                sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand] = [0, []]
+                                if (sim_index == 0):
+                                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index])
+                                else:
+                                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, indices, strand_index]))
+
+    # In strand_list we have
+    # real_data
+    # sims_data_list
+    # Add these to information strand_list
+    # mean_sims_data
+    # min_sims_data
+    # max_sims_data
+    # strand_list=[real_data, sims_data_list, mean_sims_data, min_sims_data, max_sims_data]
+    for sample in sample2Signature2MutationType2Strand2ListDict:
+        for signature in sample2Signature2MutationType2Strand2ListDict[sample]:
+            for mutation_type in sample2Signature2MutationType2Strand2ListDict[sample][signature]:
+                for strand in sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type]:
+                    sims_data_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand][1]
+                    if sims_data_list is not None and len(sims_data_list) > 0:
+                        mean_sims = np.nanmean(sims_data_list)
+                        min_sims = np.nanmin(sims_data_list)
+                        max_sims = np.nanmax(sims_data_list)
+                    else:
+                        mean_sims = np.nan
+                        min_sims = np.nan
+                        max_sims = np.nan
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand].append(mean_sims)
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand].append(min_sims)
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][strand].append(max_sims)
+
+
+    # Calculate p-value only
+    for sample in sample2Signature2MutationType2Strand2ListDict:
+        for signature in sample2Signature2MutationType2Strand2ListDict[sample]:
+            for mutation_type in sample2Signature2MutationType2Strand2ListDict[sample][signature]:
+                if (strand_bias == REPLICATIONSTRANDBIAS):
+                    lagging_strand = strands[0]
+                    leading_strand = strands[1]
+
+                    lagging_real_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][lagging_strand][0]
+                    lagging_sims_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][lagging_strand][1]
+                    lagging_sims_mean_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][lagging_strand][2]
+
+                    leading_real_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][leading_strand][0]
+                    leading_sims_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][leading_strand][1]
+                    leading_sims_mean_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][leading_strand][2]
+
+                    # Calculate p value using Fisher's exact test
+                    contingency_table_array = [[lagging_real_count, lagging_sims_mean_count], [leading_real_count, leading_sims_mean_count]]
+
+                    if not np.isnan(contingency_table_array).any():
+                        oddsratio, lagging_versus_leading_p_value = stats.fisher_exact(contingency_table_array)
+                    else:
+                        lagging_versus_leading_p_value = np.nan
+
+                    # Set p_value
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
+
+                elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
+                    transcribed_strand = strands[0]
+                    untranscribed_strand = strands[1]
+                    nontranscribed_strand = strands[2]
+
+                    transcribed_real_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][transcribed_strand][0]
+                    transcribed_sims_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][transcribed_strand][1]
+                    transcribed_sims_mean_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][transcribed_strand][2]
+
+                    untranscribed_real_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][untranscribed_strand][0]
+                    untranscribed_sims_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][untranscribed_strand][1]
+                    untranscribed_sims_mean_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][untranscribed_strand][2]
+
+                    nontranscribed_real_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][nontranscribed_strand][0]
+                    nontranscribed_sims_list = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][nontranscribed_strand][1]
+                    nontranscribed_sims_mean_count = sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][nontranscribed_strand][2]
+
+                    # Calculate p value
+                    contingency_table_array = [[transcribed_real_count, transcribed_sims_mean_count],[untranscribed_real_count, untranscribed_sims_mean_count]]
+                    if not np.isnan(contingency_table_array).any():
+                        oddsratio, transcribed_versus_untranscribed_p_value = stats.fisher_exact(contingency_table_array)
+                    else:
+                        transcribed_versus_untranscribed_p_value = np.nan
+
+                    genic_real_count = transcribed_real_count + untranscribed_real_count
+                    genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
+
+                    # Calculate p value (transcribed + untranscribed) versus nontranscribed
+                    contingency_table_array = [[genic_real_count, genic_sims_mean_count],[nontranscribed_real_count, nontranscribed_sims_mean_count]]
+                    if not np.isnan(contingency_table_array).any():
+                        oddsratio, genic_versus_intergenic_p_value = stats.fisher_exact(contingency_table_array)
+                    else:
+                        genic_versus_intergenic_p_value = np.nan
+
+                    # Set p_values
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE] = transcribed_versus_untranscribed_p_value
+                    sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
+
+    os.makedirs(os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED), exist_ok=True)
+
+    if (strand_bias == REPLICATIONSTRANDBIAS):
+        signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_replication_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
+
+    elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
+        signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_transcription_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
+
+        signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_transcription_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+
+
+
+def fill_sample_type_2_strand_2_list_dict(sample,
+                                          my_type,
+                                          strand,
+                                          sample2Type2Strand2ListDict,
+                                          SBS6_mutation_types_np_array,
+                                          SBS96_mutation_types_np_array,
+                                          DBS78_mutation_types_np_array,
+                                          ID83_mutation_types_np_array,
+                                          ordered_sbs_signatures_np_array,
+                                          ordered_dbs_signatures_np_array,
+                                          ordered_id_signatures_np_array,
+                                          all_sims_sample_mutation_type_strand_np_array,
+                                          all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                          all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                          all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                          sim_index,
+                                          sample_index,
+                                          strand_index):
+
+    if (sim_index == 0):
+        # Set real_data
+        if my_type in SBS6_mutation_types_np_array:
+            indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, indices, strand_index])
+        elif my_type in SBS96_mutation_types_np_array:
+            my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+        elif my_type in DBS78_mutation_types_np_array:
+            my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+        elif my_type in ID83_mutation_types_np_array:
+            my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index])
+        elif my_type in ordered_sbs_signatures_np_array:
+            signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+        elif my_type in ordered_dbs_signatures_np_array:
+            signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+        elif my_type in ordered_id_signatures_np_array:
+            signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][0] = np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index])
+
+    else:
+        # Append to sims_data_list
+        if my_type in SBS6_mutation_types_np_array:
+            indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, indices, strand_index]))
+        elif my_type in SBS96_mutation_types_np_array:
+            my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+        elif my_type in DBS78_mutation_types_np_array:
+            my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+        elif my_type in ID83_mutation_types_np_array:
+            my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, sample_index, my_type_index, strand_index]))
+        elif my_type in ordered_sbs_signatures_np_array:
+            signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+        elif my_type in ordered_dbs_signatures_np_array:
+            signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+        elif my_type in ordered_id_signatures_np_array:
+            signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+            sample2Type2Strand2ListDict[sample][my_type][strand][1].append(np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, sample_index, signature_index, :, strand_index]))
+
+
+def fill_type_2_strand_2_list_dict(my_type,
+                                 strand,
+                                 type2Strand2ListDict,
+                                 SBS6_mutation_types_np_array,
+                                 SBS96_mutation_types_np_array,
+                                 DBS78_mutation_types_np_array,
+                                 ID83_mutation_types_np_array,
+                                 ordered_sbs_signatures_np_array,
+                                 ordered_dbs_signatures_np_array,
+                                 ordered_id_signatures_np_array,
+                                 all_sims_sample_mutation_type_strand_np_array,
+                                 all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                 all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                 all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                 sim_index,
+                                 strand_index):
+    if (sim_index == 0):
+        # type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
+        # Set real_data
+        if my_type in SBS6_mutation_types_np_array:
+            indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, indices, strand_index])
+        elif my_type in SBS96_mutation_types_np_array:
+            my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+        elif my_type in DBS78_mutation_types_np_array:
+            my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+        elif my_type in ID83_mutation_types_np_array:
+            my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+        elif my_type in ordered_sbs_signatures_np_array:
+            signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index])
+        elif my_type in ordered_dbs_signatures_np_array:
+            signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index])
+        elif my_type in ordered_id_signatures_np_array:
+            signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][0] = np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index])
+    else:
+        # type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
+        # Append to sims_data_list
+        if my_type in SBS6_mutation_types_np_array:
+            indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, indices, strand_index]))
+        elif my_type in SBS96_mutation_types_np_array:
+            my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index]))
+        elif my_type in DBS78_mutation_types_np_array:
+            my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index]))
+        elif my_type in ID83_mutation_types_np_array:
+            my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index]))
+        elif my_type in ordered_sbs_signatures_np_array:
+            signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index]))
+        elif my_type in ordered_dbs_signatures_np_array:
+            signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index]))
+        elif my_type in ordered_id_signatures_np_array:
+            signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+            type2Strand2ListDict[my_type][strand][1].append(np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, :, signature_index, :, strand_index]))
+
+
+def write_type_strand_bias_np_array_as_dataframe(all_sims_sample_mutation_type_strand_np_array,
+                                                       all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                                       all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                                       all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                                       SBS6_mutation_types_np_array,
+                                                       SBS96_mutation_types_np_array,
+                                                       ordered_sbs_signatures_np_array,
+                                                       ordered_dbs_signatures_np_array,
+                                                       ordered_id_signatures_np_array,
+                                                       all_types_np_array,
+                                                       strand_bias,
+                                                       strands,
+                                                       outputDir,
+                                                       jobname):
+
+    # all_types_np_array = np.concatenate((SBS6_mutation_types_np_array,
+    #                                       SBS96_mutation_types_np_array,
+    #                                       DBS78_mutation_types_np_array,
+    #                                       ID83_mutation_types_np_array,
+    #                                       ordered_sbs_signatures_np_array,
+    #                                       ordered_dbs_signatures_np_array,
+    #                                       ordered_id_signatures_np_array), axis=None)
 
     # Fill type2Strand2ListDict using all_sims_all_types_strand_np_arrays_list
     type2Strand2ListDict = {}
 
-
     for strand_index, strand in enumerate(strands,0):
-        all_sims_all_types_strand_np_array = all_sims_all_types_strand_np_arrays_list[strand_index]
-        num_of_sims, num_of_types = all_sims_all_types_strand_np_array.shape
+        num_of_sims, num_of_samples, num_of_mutation_types, num_of_strands = all_sims_sample_mutation_type_strand_np_array.shape
 
         for sim_index in range(0,num_of_sims):
-            for type_index in range(0,num_of_types):
-                my_type = all_types_np_array[type_index]
+            for my_type in all_types_np_array:
 
                 if my_type in type2Strand2ListDict:
                     if strand in type2Strand2ListDict[my_type]:
-                        strand_list=type2Strand2ListDict[my_type][strand]
-                        if (sim_index==0):
-                            #Set real_data
-                            strand_list[0]=all_sims_all_types_strand_np_array[sim_index, type_index]
+                        strand_list = type2Strand2ListDict[my_type][strand]
+                        if (sim_index == 0):
+                            # Set real_data
+                            if my_type in SBS6_mutation_types_np_array:
+                                indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+                                strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :,  indices, strand_index])
+                            elif my_type in SBS96_mutation_types_np_array:
+                                my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+                            elif my_type in DBS78_mutation_types_np_array:
+                                my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+                            elif my_type in ID83_mutation_types_np_array:
+                                my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :, my_type_index, strand_index])
+                            elif my_type in ordered_sbs_signatures_np_array:
+                                signature_index = np.where(ordered_sbs_signatures_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index])
+                            elif my_type in ordered_dbs_signatures_np_array:
+                                signature_index = np.where(ordered_dbs_signatures_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index])
+                            elif my_type in ordered_id_signatures_np_array:
+                                signature_index = np.where(ordered_id_signatures_np_array == my_type)[0][0]
+                                strand_list[0] = np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index])
+
                         else:
-                            #Append to sims_data_list
-                            strand_list[1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
+                            # Append to sims_data_list
+                            if my_type in SBS6_mutation_types_np_array:
+                                indices = np.where(np.char.find(SBS96_mutation_types_np_array, '[' + my_type + ']') != -1)[0]
+                                strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :,  indices, strand_index]))
+                            elif my_type in SBS96_mutation_types_np_array:
+                                my_type_index = np.where(SBS96_mutation_types_np_array == my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :,  my_type_index, strand_index]))
+                            elif my_type in DBS78_mutation_types_np_array:
+                                my_type_index = np.where(DBS78_mutation_types_np_array == my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :,  my_type_index, strand_index]))
+                            elif my_type in ID83_mutation_types_np_array:
+                                my_type_index = np.where(ID83_mutation_types_np_array == my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_mutation_type_strand_np_array[sim_index, :,  my_type_index, strand_index]))
+                            elif my_type in ordered_sbs_signatures_np_array:
+                                signature_index = np.where(ordered_sbs_signatures_np_array==my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index]))
+                            elif my_type in ordered_dbs_signatures_np_array:
+                                signature_index = np.where(ordered_dbs_signatures_np_array==my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_dbs_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index]))
+                            elif my_type in ordered_id_signatures_np_array:
+                                signature_index = np.where(ordered_id_signatures_np_array==my_type)[0][0]
+                                strand_list[1].append(np.sum(all_sims_sample_id_signature_mutation_type_strand_np_array[sim_index, :,  signature_index, :, strand_index]))
                     else:
-                        type2Strand2ListDict[my_type][strand]=[0,[]]
-                        if (sim_index==0):
-                            type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
-                        else:
-                            type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
+                        type2Strand2ListDict[my_type][strand] = [0,[]]
+                        fill_type_2_strand_2_list_dict(my_type,
+                                                       strand,
+                                                       type2Strand2ListDict,
+                                                       SBS6_mutation_types_np_array,
+                                                       SBS96_mutation_types_np_array,
+                                                       DBS78_mutation_types_np_array,
+                                                       ID83_mutation_types_np_array,
+                                                       ordered_sbs_signatures_np_array,
+                                                       ordered_dbs_signatures_np_array,
+                                                       ordered_id_signatures_np_array,
+                                                       all_sims_sample_mutation_type_strand_np_array,
+                                                       all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                                       all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                                       all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                                       sim_index,
+                                                       strand_index)
+
                 else:
-                    type2Strand2ListDict[my_type]={}
-                    type2Strand2ListDict[my_type][strand]=[0,[]]
-                    if (sim_index==0):
-                        type2Strand2ListDict[my_type][strand][0] = all_sims_all_types_strand_np_array[sim_index, type_index]
-                    else:
-                        type2Strand2ListDict[my_type][strand][1].append(all_sims_all_types_strand_np_array[sim_index, type_index])
-
-
+                    type2Strand2ListDict[my_type] = {}
+                    type2Strand2ListDict[my_type][strand] = [0,[]]
+                    fill_type_2_strand_2_list_dict(my_type,
+                                                   strand,
+                                                   type2Strand2ListDict,
+                                                   SBS6_mutation_types_np_array,
+                                                   SBS96_mutation_types_np_array,
+                                                   DBS78_mutation_types_np_array,
+                                                   ID83_mutation_types_np_array,
+                                                   ordered_sbs_signatures_np_array,
+                                                   ordered_dbs_signatures_np_array,
+                                                   ordered_id_signatures_np_array,
+                                                   all_sims_sample_mutation_type_strand_np_array,
+                                                   all_sims_sample_sbs_signature_mutation_type_strand_np_array,
+                                                   all_sims_sample_dbs_signature_mutation_type_strand_np_array,
+                                                   all_sims_sample_id_signature_mutation_type_strand_np_array,
+                                                   sim_index,
+                                                   strand_index)
 
     # In strand_list we have
     # real_data
@@ -2598,8 +3238,8 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
     # Calculate p-value only
     for my_type in type2Strand2ListDict:
         if strand_bias == REPLICATIONSTRANDBIAS:
-            lagging_strand=strands[0]
-            leading_strand=strands[1]
+            lagging_strand = strands[0]
+            leading_strand = strands[1]
 
             lagging_real_count=type2Strand2ListDict[my_type][lagging_strand][0]
             # lagging_sims_list=type2Strand2ListDict[my_type][lagging_strand][1]
@@ -2643,7 +3283,6 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             else:
                 transcribed_versus_untranscribed_p_value = np.nan
 
-
             genic_real_count = transcribed_real_count + untranscribed_real_count
             genic_sims_mean_count = transcribed_sims_mean_count + untranscribed_sims_mean_count
 
@@ -2659,7 +3298,6 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
             type2Strand2ListDict[my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
     # Calculate q-value and significant_strand will be done during plotting figures
-
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
@@ -2675,16 +3313,59 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_all_types_strand_np_ar
         write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
 
 
+# new function for sample_based
+def write_sample_type_replication_dataframe(strands, sample2Type2Strand2ListDict, cancer_type, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
+
+    # strand_list contains
+    # [ real_data, #0
+    # sims_data_list, #1
+    # mean_sims_data, #2
+    # min_sims_data, #3
+    # max_sims_data ] #4
+
+    strand1=strands[0]
+    strand2=strands[1]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    L = sorted([(cancer_type, sample, my_type,
+                 b[strand1][0], b[strand2][0],
+                 b[strand1][2], b[strand2][2],
+                 b[LAGGING_VERSUS_LEADING_P_VALUE],
+                 b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                 b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1])
+                for sample, a in sample2Type2Strand2ListDict.items()
+                 for my_type, b in a.items()])
+    df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'type',
+                                  strand1_real_data, strand2_real_data,
+                                  strand1_mean_sims_data, strand2_mean_sims_data,
+                                  LAGGING_VERSUS_LEADING_P_VALUE,
+                                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
+    df.to_csv(filepath, sep='\t', header=True, index=False)
+
+
 # subfunction for type
 def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type, filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
 
     # strand_list contains
-    # [ real_data,
-    # sims_data_list,
-    # mean_sims_data,
-    # min_sims_data,
-    # max_sims_data ]
+    # [ real_data, #0
+    # sims_data_list, #1
+    # mean_sims_data, #2
+    # min_sims_data, #3
+    # max_sims_data ] #4
 
     strand1=strands[0]
     strand2=strands[1]
@@ -2715,6 +3396,80 @@ def write_type_replication_dataframe(strands, type2Strand2ListDict, cancer_type,
                                   strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
                                   strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list])
     df.to_csv(filepath, sep='\t', header=True, index=False)
+
+
+# new function for sample_based
+def write_sample_type_transcription_dataframe(strands, sample2Type2Strand2ListDict, cancer_type, strand_bias_subtype, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    strand1_real_data="%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+        # Now writes Transcribed Untranscribed Nontranscribed
+        L = sorted([(cancer_type, sample, my_type,
+                     b[strand1][0], b[strand2][0], b[strand3][0],
+                     b[strand1][2], b[strand2][2], b[strand3][2],
+                     b[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
+                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
+                    for sample, a in sample2Type2Strand2ListDict.items()
+                     for my_type, b in a.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'type',
+                                      strand1_real_data, strand2_real_data, strand3_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data, strand3_mean_sims_data,
+                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    elif strand_bias_subtype==GENIC_VERSUS_INTERGENIC:
+        L = sorted([(cancer_type, sample, my_type,
+                     (b[strand1][0] + b[strand2][0]), b[strand3][0],
+                     (b[strand1][2] + b[strand2][2]), b[strand3][2],
+                     b[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     b[strand1][0], b[strand1][2], b[strand1][3], b[strand1][4], b[strand1][1],
+                     b[strand2][0], b[strand2][2], b[strand2][3], b[strand2][4], b[strand2][1],
+                     b[strand3][0], b[strand3][2], b[strand3][3], b[strand3][4], b[strand3][1])
+                    for sample, a in sample2Type2Strand2ListDict.items()
+                    for my_type, b in a.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'type',
+                                      'genic_real_count', 'intergenic_real_count',
+                                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                                      GENIC_VERSUS_INTERGENIC_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
 
 
 # subfunction for type
@@ -2789,34 +3544,8 @@ def write_type_transcription_dataframe(strands, type2Strand2ListDict, cancer_typ
         df.to_csv(filepath, sep='\t', header=True, index=False)
 
 
-# Write replication strand bias for real data for each signature
-def write_sbs_signature_sbs96_mutation_type_replication_strand_bias(subs_signature_SBS96_mutation_type_lagging_np_array,
-                                                                subs_signature_SBS96_mutation_type_leading_np_array,
-                                                                SBS96_mutation_types_np_array,
-                                                                ordered_sbs_signatures,
-                                                                strand_bias,
-                                                                outputDir,
-                                                                jobname):
 
-    # /restricted/alexandrov-group/burcak/SigProfilerTopographyRuns/Combined_PCAWG_nonPCAWG_4th_iteration/Liver-HCC/data/replication_strand_bias
-    for sbs_signature_idx, sbs_signature in enumerate(ordered_sbs_signatures):
-        file_name = "%s_%s_real_data.txt" %(sbs_signature, strand_bias)
-        with open(os.path.join(outputDir, jobname, DATA, strand_bias, file_name),'w') as writer:
-            writer.write('MutationType\tNumber_of_Mutations\n')
-            for SBS96_mutation_type_idx, SBS96_mutation_type in enumerate(SBS96_mutation_types_np_array):
-                lagging_count = subs_signature_SBS96_mutation_type_lagging_np_array[sbs_signature_idx][SBS96_mutation_type_idx]
-                leading_count = subs_signature_SBS96_mutation_type_leading_np_array[sbs_signature_idx][SBS96_mutation_type_idx]
-                writer.write('A:' + SBS96_mutation_type + '\t' + str(lagging_count) + '\n')
-                writer.write('E:' + SBS96_mutation_type + '\t' + str(leading_count) + '\n')
-        writer.close()
-
-
-
-# Main function for signature -- mutation type
-# Fills a dictionary and writes it as a dataframe
-def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_subs_signature_mutation_type_strand_np_arrays_list,
-                                                                    SBS6_mutation_types_np_array,
-                                                                    subs_signatures_np_array,
+def write_signature_mutation_type_strand_bias_np_array_as_dataframe(zipped_arrays,
                                                                     strand_bias,
                                                                     strands,
                                                                     outputDir,
@@ -2825,46 +3554,51 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
     # Fill signature2MutationType2Strand2ListDict using np_arrays_list
     signature2MutationType2Strand2ListDict = {}
 
-    for strand_index, strand in enumerate(strands,0):
-        all_sims_subs_signature_mutation_type_strand_np_array = all_sims_subs_signature_mutation_type_strand_np_arrays_list[strand_index]
-        num_of_sims, num_of_subs_signatures, num_of_mutation_types = all_sims_subs_signature_mutation_type_strand_np_array.shape
+    for all_sims_sample_signature_mutation_type_strand_np_array, mutation_types_np_array, ordered_signatures_np_array in zipped_arrays:
+        for strand_index, strand in enumerate(strands,0):
+            num_of_sims, num_of_samples, num_of_signatures, num_of_mutation_types, num_of_strand_types = all_sims_sample_signature_mutation_type_strand_np_array.shape
 
-        for sim_index in range(0,num_of_sims):
-            for subs_signature_index in range(0, num_of_subs_signatures):
-                signature = subs_signatures_np_array[subs_signature_index]
-                for mutation_type_index in range(0,num_of_mutation_types):
-                    mutation_type = SBS6_mutation_types_np_array[mutation_type_index]
-
-                    if signature in signature2MutationType2Strand2ListDict:
-                        if mutation_type in signature2MutationType2Strand2ListDict[signature]:
-                            if strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
-                                strand_list = signature2MutationType2Strand2ListDict[signature][mutation_type][strand]
-                                if sim_index == 0:
-                                    strand_list[0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
+            for sim_index in range(0, num_of_sims):
+                for signature_index in range(0, num_of_signatures):
+                    signature = ordered_signatures_np_array[signature_index]
+                    # if mutation_types_np_array is SBS96_mutation_types_np_array, then extend them with SBS6_mutation_types_np_array
+                    # This is to compute p-value for SBS6_mutation_types_np_array
+                    if len(np.where(np.char.find(mutation_types_np_array, '[' + SBS6_mutation_types_np_array[0] + ']') != -1)[0]) > 0:
+                        extended_mutation_types_np_array = np.concatenate((mutation_types_np_array, SBS6_mutation_types_np_array), axis=None)
+                    else:
+                        extended_mutation_types_np_array = mutation_types_np_array
+                    for mutation_type in extended_mutation_types_np_array:
+                        indices = np.where(np.char.find(mutation_types_np_array, mutation_type) != -1)[0]
+                        if signature in signature2MutationType2Strand2ListDict:
+                            if mutation_type in signature2MutationType2Strand2ListDict[signature]:
+                                if strand in signature2MutationType2Strand2ListDict[signature][mutation_type]:
+                                    strand_list = signature2MutationType2Strand2ListDict[signature][mutation_type][strand]
+                                    if sim_index == 0:
+                                        strand_list[0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index]) # 0 lagging strand
+                                    else:
+                                        strand_list[1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index])) # 0 lagging strand
                                 else:
-                                    strand_list[1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0,[]]
+                                    if (sim_index == 0):
+                                        signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index])
+                                    else:
+                                        signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index]))
                             else:
-                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0,[]]
+                                signature2MutationType2Strand2ListDict[signature][mutation_type]={}
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
                                 if (sim_index == 0):
-                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index])
                                 else:
-                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index])
+                                    signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index, :, signature_index, indices, strand_index]))
+
                         else:
-                            signature2MutationType2Strand2ListDict[signature][mutation_type]={}
+                            signature2MutationType2Strand2ListDict[signature] = {}
+                            signature2MutationType2Strand2ListDict[signature][mutation_type] = {}
                             signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
                             if (sim_index == 0):
-                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index, subs_signature_index, mutation_type_index]
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index,:, signature_index, indices, strand_index])
                             else:
-                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
-
-                    else:
-                        signature2MutationType2Strand2ListDict[signature] = {}
-                        signature2MutationType2Strand2ListDict[signature][mutation_type] = {}
-                        signature2MutationType2Strand2ListDict[signature][mutation_type][strand] = [0, []]
-                        if (sim_index == 0):
-                            signature2MutationType2Strand2ListDict[signature][mutation_type][strand][0] = all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index]
-                        else:
-                            signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(all_sims_subs_signature_mutation_type_strand_np_array[sim_index,subs_signature_index,mutation_type_index])
+                                signature2MutationType2Strand2ListDict[signature][mutation_type][strand][1].append(np.sum(all_sims_sample_signature_mutation_type_strand_np_array[sim_index,:, signature_index, indices, strand_index]))
 
 
     # In strand_list we have
@@ -2918,7 +3652,7 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                 # Set p_value
                 signature2MutationType2Strand2ListDict[signature][mutation_type][LAGGING_VERSUS_LEADING_P_VALUE] = lagging_versus_leading_p_value
 
-            elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
+            elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
                 transcribed_strand = strands[0]
                 untranscribed_strand = strands[1]
                 nontranscribed_strand = strands[2]
@@ -2952,24 +3686,98 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(all_sims_sub
                 else:
                     genic_versus_intergenic_p_value = np.nan
 
-                #Set p_values
+                # Set p_values
                 signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
                 signature2MutationType2Strand2ListDict[signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
 
-
-    if (strand_bias==REPLICATIONSTRANDBIAS):
+    if (strand_bias == REPLICATIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
-        write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict,jobname, signature_mutation_type_strand_table_filepath)
+        write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
 
-    elif (strand_bias==TRANSCRIPTIONSTRANDBIAS):
+    elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
-        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname,TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
+        write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
 
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
         signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
-        write_signature_mutation_type_transcription_dataframe(strands,signature2MutationType2Strand2ListDict,jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+        write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+
+
+
+# new function for sample based
+def write_sample_signature_mutation_type_transcription_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, cancer_type, strand_bias_subtype, filepath):
+    strand1=strands[0]
+    strand2=strands[1]
+    strand3=strands[2]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1_real_data = "%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data = "%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    strand3_real_data = "%s_real_count" %(strand3)
+    strand3_sims_data_list = "%s_sims_count_list" %(strand3)
+    strand3_mean_sims_data = "%s_mean_sims_count" %(strand3)
+    strand3_min_sims_data = "%s_min_sims_count" %(strand3)
+    strand3_max_sims_data = "%s_max_sims_count" %(strand3)
+
+    if (strand_bias_subtype==TRANSCRIBED_VERSUS_UNTRANSCRIBED):
+
+        # Now writes Transcribed UnTranscribed Nontranscribed
+        L = sorted([(cancer_type, sample, signature, mutation_type,
+                     c[strand1][0], c[strand2][0], c[strand3][0],
+                     c[strand1][2], c[strand2][2], c[strand3][2],
+                     c[TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE],
+                     c[strand1][0], c[strand1][2], c[strand1][3], c[strand1][4], c[strand1][1],
+                     c[strand2][0], c[strand2][2], c[strand2][3], c[strand2][4], c[strand2][1],
+                     c[strand3][0], c[strand3][2], c[strand3][3], c[strand3][4], c[strand3][1])
+                    for sample, a in sample2Signature2MutationType2Strand2ListDict.items()
+                        for signature, b in a.items()
+                            for mutation_type, c in b.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'signature', 'mutation_type',
+                                      strand1_real_data, strand2_real_data, strand3_real_data,
+                                      strand1_mean_sims_data, strand2_mean_sims_data, strand3_mean_sims_data,
+                                      TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
+
+    elif (strand_bias_subtype==GENIC_VERSUS_INTERGENIC):
+        L = sorted([(cancer_type, sample, signature, mutation_type,
+                     (c[strand1][0] + c[strand2][0]), c[strand3][0],
+                     (c[strand1][2] + c[strand2][2]), c[strand3][2],
+                     c[GENIC_VERSUS_INTERGENIC_P_VALUE],
+                     c[strand1][0], c[strand1][2], c[strand1][3], c[strand1][4], c[strand1][1],
+                     c[strand2][0], c[strand2][2], c[strand2][3], c[strand2][4], c[strand2][1],
+                     c[strand3][0], c[strand3][2], c[strand3][3], c[strand3][4], c[strand3][1])
+                    for sample, a in sample2Signature2MutationType2Strand2ListDict.items()
+                        for signature, b in a.items()
+                            for mutation_type, c in b.items()])
+        df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'signature', 'mutation_type',
+                                      'genic_real_count', 'intergenic_real_count',
+                                      'genic_mean_sims_count', 'intergenic_mean_sims_count',
+                                      GENIC_VERSUS_INTERGENIC_P_VALUE,
+                                      strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                      strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list,
+                                      strand3_real_data, strand3_mean_sims_data, strand3_min_sims_data, strand3_max_sims_data, strand3_sims_data_list])
+        df.to_csv(filepath, sep='\t', header=True, index=False)
 
 
 
@@ -3104,8 +3912,8 @@ def get_replication_signature_df(strands, signature_of_interest, signature2Mutat
     return df,column_names
 
 
-# sub function for signature -- mutation type
-def write_signature_mutation_type_replication_dataframe(strands,signature2MutationType2Strand2ListDict,cancer_type,filepath):
+# new function for sample based
+def write_sample_signature_mutation_type_replication_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, cancer_type, filepath):
     # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
 
     # strand_list contains
@@ -3115,10 +3923,57 @@ def write_signature_mutation_type_replication_dataframe(strands,signature2Mutati
     # min_sims_data,
     # max_sims_data ]
 
-    strand1=strands[0]
-    strand2=strands[1]
+    strand1 = strands[0]
+    strand2 = strands[1]
 
-    strand1_real_data="%s_real_count" %(strand1)
+    strand1_real_data = "%s_real_count" %(strand1)
+    strand1_sims_data_list = "%s_sims_count_list" % (strand1)
+    strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
+    strand1_min_sims_data = "%s_min_sims_count" % (strand1)
+    strand1_max_sims_data = "%s_max_sims_count" % (strand1)
+
+    strand2_real_data="%s_real_count" %(strand2)
+    strand2_sims_data_list = "%s_sims_count_list" % (strand2)
+    strand2_mean_sims_data = "%s_mean_sims_count" % (strand2)
+    strand2_min_sims_data = "%s_min_sims_count" % (strand2)
+    strand2_max_sims_data = "%s_max_sims_count" % (strand2)
+
+    L = sorted([(cancer_type, sample, signature, mutation_type,
+                 c[strand1][0], c[strand2][0],
+                 c[strand1][2], c[strand2][2],
+                 c[LAGGING_VERSUS_LEADING_P_VALUE],
+                 c[strand1][0], c[strand1][2], c[strand1][3], c[strand1][4], c[strand1][1],
+                 c[strand2][0], c[strand2][2], c[strand2][3], c[strand2][4], c[strand2][1])
+                for sample, a in sample2Signature2MutationType2Strand2ListDict.items()
+                    for signature, b in a.items()
+                        for mutation_type, c in b.items()])
+
+    df = pd.DataFrame(L, columns=['cancer_type', 'sample', 'signature', 'mutation_type',
+                                  strand1_real_data, strand2_real_data,
+                                  strand1_mean_sims_data, strand2_mean_sims_data,
+                                  LAGGING_VERSUS_LEADING_P_VALUE,
+                                  strand1_real_data, strand1_mean_sims_data, strand1_min_sims_data, strand1_max_sims_data, strand1_sims_data_list,
+                                  strand2_real_data, strand2_mean_sims_data, strand2_min_sims_data, strand2_max_sims_data, strand2_sims_data_list ])
+
+    df.to_csv(filepath, sep='\t', header=True, index=False)
+
+
+
+# sub function for signature -- mutation type
+def write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict, cancer_type, filepath):
+    # strand_list=[0:real_data, 1:sims_data_list, 2:mean_sims_data, 3:min_sims_data, 4:max_sims_data, 5:p_value]
+
+    # strand_list contains
+    # [ real_data,
+    # sims_data_list,
+    # mean_sims_data,
+    # min_sims_data,
+    # max_sims_data ]
+
+    strand1 = strands[0]
+    strand2 = strands[1]
+
+    strand1_real_data = "%s_real_count" %(strand1)
     strand1_sims_data_list = "%s_sims_count_list" % (strand1)
     strand1_mean_sims_data = "%s_mean_sims_count" % (strand1)
     strand1_min_sims_data = "%s_min_sims_count" % (strand1)

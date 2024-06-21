@@ -185,8 +185,8 @@ from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis_enhanced
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
-from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replicationStrandBiasAnalysis
-from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcriptionStrandBiasAnalysis
+from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replication_strand_bias_analysis
+from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcription_strand_bias_analysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
 
 from SigProfilerTopography.source.annotation.Mutation_Annotation_Integration import mutation_annotation_replication_timing_integration
@@ -920,12 +920,12 @@ def run_replication_strand_bias_analysis(outputDir,
                                      chromSizesDict,
                                      chromNamesList,
                                      computation_type,
-                                     ordered_sbs_signatures,
-                                     ordered_dbs_signatures,
-                                     ordered_id_signatures,
-                                     ordered_sbs_signatures_cutoffs,
-                                     ordered_dbs_signatures_cutoffs,
-                                     ordered_id_signatures_cutoffs,
+                                     ordered_sbs_signatures_np_array,
+                                     ordered_dbs_signatures_np_array,
+                                     ordered_id_signatures_np_array,
+                                     ordered_sbs_signatures_cutoffs_np_array,
+                                     ordered_dbs_signatures_cutoffs_np_array,
+                                     ordered_id_signatures_cutoffs_np_array,
                                      discreet_mode,
                                      default_cutoff,
                                      parallel_mode,
@@ -941,7 +941,7 @@ def run_replication_strand_bias_analysis(outputDir,
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    replicationStrandBiasAnalysis(outputDir,
+    replication_strand_bias_analysis(outputDir,
                                   jobname,
                                   numofSimulations,
                                   samples_of_interest,
@@ -954,12 +954,12 @@ def run_replication_strand_bias_analysis(outputDir,
                                   smoothedWaveletRepliseqDataFilename,
                                   valleysBEDFilename,
                                   peaksBEDFilename,
-                                  ordered_sbs_signatures,
-                                  ordered_dbs_signatures,
-                                  ordered_id_signatures,
-                                  ordered_sbs_signatures_cutoffs,
-                                  ordered_dbs_signatures_cutoffs,
-                                  ordered_id_signatures_cutoffs,
+                                  ordered_sbs_signatures_np_array,
+                                  ordered_dbs_signatures_np_array,
+                                  ordered_id_signatures_np_array,
+                                  ordered_sbs_signatures_cutoffs_np_array,
+                                  ordered_dbs_signatures_cutoffs_np_array,
+                                  ordered_id_signatures_cutoffs_np_array,
                                   discreet_mode,
                                   default_cutoff,
                                   parallel_mode,
@@ -976,12 +976,12 @@ def run_transcription_strand_bias_analysis(outputDir,
                                       all_samples_np_array,
                                       chromNamesList,
                                       computation_type,
-                                      ordered_sbs_signatures,
-                                      ordered_dbs_signatures,
-                                      ordered_id_signatures,
-                                      ordered_sbs_signatures_cutoffs,
-                                      ordered_dbs_signatures_cutoffs,
-                                      ordered_id_signatures_cutoffs,
+                                      ordered_sbs_signatures_np_array,
+                                      ordered_dbs_signatures_np_array,
+                                      ordered_id_signatures_np_array,
+                                      ordered_sbs_signatures_cutoffs_np_array,
+                                      ordered_dbs_signatures_cutoffs_np_array,
+                                      ordered_id_signatures_cutoffs_np_array,
                                       discreet_mode,
                                       default_cutoff,
                                       parallel_mode,
@@ -993,7 +993,7 @@ def run_transcription_strand_bias_analysis(outputDir,
     # Supported computation types
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    transcriptionStrandBiasAnalysis(outputDir,
+    transcription_strand_bias_analysis(outputDir,
                                     jobname,
                                     numofSimulations,
                                     samples_of_interest,
@@ -1002,12 +1002,12 @@ def run_transcription_strand_bias_analysis(outputDir,
                                     all_samples_np_array,
                                     computation_type,
                                     chromNamesList,
-                                    ordered_sbs_signatures,
-                                    ordered_dbs_signatures,
-                                    ordered_id_signatures,
-                                    ordered_sbs_signatures_cutoffs,
-                                    ordered_dbs_signatures_cutoffs,
-                                    ordered_id_signatures_cutoffs,
+                                    ordered_sbs_signatures_np_array,
+                                    ordered_dbs_signatures_np_array,
+                                    ordered_id_signatures_np_array,
+                                    ordered_sbs_signatures_cutoffs_np_array,
+                                    ordered_dbs_signatures_cutoffs_np_array,
+                                    ordered_id_signatures_cutoffs_np_array,
                                     discreet_mode,
                                     default_cutoff,
                                     parallel_mode,
@@ -1249,7 +1249,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     seqInfo = True # [boolean] this parameter is used by SPMG and SPS. SPMG and SPS output mutations into a text file that contains the classification for each mutation.
 
     # parameters that are not maintained anymore or finalized by SPT
-    sample_based = False
+    sample_based = True #legacy parameter False
     mutation_annotation_integration = False
     lncRNA = False
     plot_lncRNA = False
@@ -1711,7 +1711,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ###################################################################################################
     ######################### SigProfilerMatrixGenerator for original data starts #####################
     ###################################################################################################
-    if (step1_matgen_real_data):
+    if (step1_matgen_real_data | (mutation_types is None)): # if mutation_types is None, we will run SPMG and fill it based on matrices.keys() even though step1_matgen_real_data is False
 
         # Run MatrixGenerator for original data: this call prepares chrBased input files for original data with mutation contexts
         print('#################################################################################', file=log_out)
@@ -2423,7 +2423,6 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     sbs_chrLong2NumberofMutationsDict,
                     ordered_all_sbs_signatures_wrt_probabilities_file_array)
 
-
             else:
                 # Probability Mode
                 subsSignature_cutoff_numberofmutations_averageprobability_df = fill_signature_number_of_mutations_df(outputDir,
@@ -2629,7 +2628,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         log_out.close()
 
     else:
-        all_samples_list = []
+        all_samples = set()
 
         for mutation_type in mutation_types:
             if mutation_type == SBS:
@@ -2641,8 +2640,9 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
             samples_string = mutationtype_numberofmutations_numberofsamples_sampleslist_df[mutationtype_numberofmutations_numberofsamples_sampleslist_df['mutation_type']==mutation_type]['samples_list'].values[0]
             samples_list = eval(samples_string)
-            all_samples_list += samples_list
+            all_samples = all_samples.union(samples_list)
 
+        all_samples_list = list(all_samples)
         all_samples_list = sorted(all_samples_list, key=natural_key)
         all_samples_np_array = np.array(all_samples_list)
 
