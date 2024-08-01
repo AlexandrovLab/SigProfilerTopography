@@ -604,6 +604,7 @@ REF = 'Ref'
 ALT = 'Alt'
 PYRAMIDINESTRAND = 'PyramidineStrand'
 TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
+REPLICATIONSTRAND = 'ReplicationStrand'
 MUTATION = 'Mutation'
 MUTATIONLONG = 'MutationLong'
 MUTATIONS = 'Mutations'
@@ -1938,6 +1939,18 @@ def fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, type, 
     writeDictionaryUnderDataDirectory(new_sample2NumberofMutatiosDict,outputDir,jobname,Sample2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_signature2NumberofMutationsDict,outputDir,jobname,Signature2NumberofMutationsDictFilename)
     writeDictionaryUnderDataDirectory(new_sample2Signature2NumberofMutationsDict,outputDir,jobname,Sample2Signature2NumberofMutationsDictFilename)
+
+
+def write_chr_based_mutations_df(outputDir, jobname, chrLong, mutation_type, sim_num, chrBased_mutation_df):
+    filename = '%s_%s_for_topography.txt' %(chrLong, mutation_type)
+
+    if (sim_num == 0):
+        filepath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    else:
+        simulation = 'sim%s' % (sim_num)
+        filepath = os.path.join(outputDir, jobname, DATA, CHRBASED, simulation, filename)
+
+    chrBased_mutation_df.to_csv(filepath, sep='\t', header=True, index=False)
 
 
 # Used for all kinds of mutations SUBs and Dinucs and Indels

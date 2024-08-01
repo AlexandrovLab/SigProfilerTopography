@@ -42,6 +42,9 @@ from SigProfilerTopography.source.commons.TopographyCommons import INDELS
 from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
 
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATION
+from SigProfilerTopography.source.commons.TopographyCommons import REPLICATIONSTRAND
+from SigProfilerTopography.source.commons.TopographyCommons import SIMULATION_NUMBER
+
 from SigProfilerTopography.source.commons.TopographyCommons import MUTATIONLONG
 from SigProfilerTopography.source.commons.TopographyCommons import LENGTH
 
@@ -78,6 +81,11 @@ from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_
 
 from SigProfilerTopography.source.commons.TopographyCommons import isFileTypeBedGraph
 
+from SigProfilerTopography.source.commons.TopographyCommons import write_chr_based_mutations_df
+from SigProfilerTopography.source.commons.TopographyCommons import SBS
+from SigProfilerTopography.source.commons.TopographyCommons import DBS
+from SigProfilerTopography.source.commons.TopographyCommons import ID
+
 from SigProfilerTopography.source.commons.TopographyCommons import C2A
 from SigProfilerTopography.source.commons.TopographyCommons import C2G
 from SigProfilerTopography.source.commons.TopographyCommons import C2T
@@ -107,6 +115,7 @@ def check_for_consecutive_regions_with_same_signed_slope(chrLong,
                                                          end, # can be repli_seq_end or peak_midpoint or valley_midpoint
                                                          chrBased_repli_seq_signal_df,
                                                          info='No info'):
+
     transition_zone_list = []
 
     # Get the repli_seq signals within the given start and end
@@ -125,16 +134,20 @@ def check_for_consecutive_regions_with_same_signed_slope(chrLong,
     if all_nans:
         direction_sign = 0
         if info == 'up_to_peak':
-            direction_sign = +1
+            direction_sign = 1
         elif info == 'down_to_valley':
             direction_sign = -1
         # For the last one if there is no other sign it will be 0
-    elif np.all(signal_diff_arr>=0):
-        direction_sign = +1
-    elif np.all(signal_diff_arr<=0):
+    elif np.all(signal_diff_arr >= 0):
+        direction_sign = 1
+    elif np.all(signal_diff_arr <= 0):
         direction_sign = -1
+    else:
+        # full of negative and positive differences
+        direction_sign = 0
 
-    transition_zone_list.append((chrLong, start, end, direction_sign, end-start))
+    if direction_sign != 0:
+        transition_zone_list.append((chrLong, start, end, direction_sign, end-start))
 
     return transition_zone_list
 
@@ -170,7 +183,6 @@ def find_long_stretches_of_consistent_transition_zones(chrLong,
                                                                      peak_midpoint,
                                                                      chrBased_repli_seq_signal_df,
                                                                      info='up_to_peak')
-
                 transition_zones_list.extend(found_zone)
 
             start = peak_midpoint
@@ -190,6 +202,7 @@ def find_long_stretches_of_consistent_transition_zones(chrLong,
                                                                      info='down_to_valley')
 
                 transition_zones_list.extend(found_zone)
+
             start = valley_midpoint
 
             # # Old Way
@@ -244,6 +257,7 @@ def fill_replication_strand_array(replication_strand_row,chrBased_replication_ar
 #   if mutationPyramidineStrand and slope have the same sign increase LEADING STRAND count
 #   else mutationPyramidineStrand and slope have the opposite sign increase LAGGING STRAND count
 # sample_based for further usage
+# Jul 21, 2024, to be tested
 def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(
         mutation_row,
         my_type,
@@ -369,7 +383,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
     slicedArray = chrBasedReplicationArray[int(start):int(end)]
 
     if (np.any(slicedArray)):
-        #It must be full with at most -1 and +1
+        # It must be full with at most -1 and +1
         uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
 
         # I expect the value of 1 (LEADING on the positive strand) or -1 (LAGGING on the positive strand) so size must be one.
@@ -398,6 +412,9 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                         if id_signature_index is not None: # if not None
                             sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][1] += 1
 
+                        # return 1 indicates that there is a mutation in the replication strand of Leading
+                        return 1
+
                 # They have the opposite sign, multiplication(1,-1) (-1,1)  must be -1
                 elif (slope * pyramidine_strand < 0): # Lagging
 
@@ -416,9 +433,12 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                         if id_signature_index is not None:  # if not None
                             sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][0] += 1
 
+                        # return 0 indicates that there is a mutation in the replication strand of Lagging
+                        return 0
+
         elif ((uniqueValueArray.size == 2) and (pyramidine_strand != 0)):
             # Increment both LEADING and LAGGING
-            # TODO we can discard these mutations which contain both -1 and 1 as slopes.
+            # We can discard these mutations which contain both -1 and 1 as slopes.
             if sample_based:
                 sample_mutation_type_strand_np_array[sample_index][mutation_type_index][0] += 1
                 sample_mutation_type_strand_np_array[sample_index][mutation_type_index][1] += 1
@@ -438,16 +458,25 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                     sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][0] += 1
                     sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][1] += 1
 
+                # return 2 indicates that there is a mutation in the replication strands of both Leading and Lagging
+                return 2
+
             # This can be a case especially in indels. We can discard these mutations which contain both -1 and 1 as slopes.
-            print('DEBUGXXX', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidine_strand:', pyramidine_strand)
+            print('Information:', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidine_strand:', pyramidine_strand)
         elif (uniqueValueArray.size > 2):
             # This is not expected, uniqueValueArray holds the sign of the slopes which can be either -1 or 1.
             # Thus, uniqueValueArray must be of size 2.
-            print('DEBUGYYY', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidine_strand:', pyramidine_strand)
+            print('Unexpected:', 'mutation_row:', mutation_row, 'uniqueValueArray:', uniqueValueArray, 'pyramidine_strand:', pyramidine_strand)
+
+            # return 3 indicates that there is an unexpected situation
+            return 3
 
         # Do not consider the situation where pyramidineStrand is 0
         # Do not consider the situation where uniqueValueArray is greater than  2
-
+    else:
+        # return -1
+        # indicates that there is no overlap with chrBasedReplicationArray
+        return -1
 
 
 # For df split
@@ -625,6 +654,7 @@ def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repl
                                                                         repliseq_signal_df,
                                                                         valleys_df,
                                                                         peaks_df)
+
     return (chrLong, chrBased_replication_array)
 
 
@@ -650,6 +680,16 @@ def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_d
     # start the index from zero
     chrBased_valleys_peaks_df.reset_index(drop=True, inplace=True)
 
+    # # In case of debugging purposes uncomment starts
+    # os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED), exist_ok=True)
+    # chrBased_valleys_peaks_df_filename = '%s_valleys_peaks_df' % (chrLong)
+    # chrBased_repli_seq_signal_df_filename = '%s_repli_seq_signal_df' % (chrLong)
+    # chrBased_valleys_peaks_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_valleys_peaks_df_filename)
+    # chrBased_repli_seq_signal_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_repli_seq_signal_df_filename)
+    # chrBased_valleys_peaks_df.to_csv(chrBased_valleys_peaks_df_filepath, sep='\t', index=False)
+    # chrBased_repli_seq_signal_df.to_csv(chrBased_repli_seq_signal_df_filepath, sep='\t', index=False)
+    # # In case of debugging purposes uncomment ends
+
     if ((chrBased_repli_seq_signal_df is not None) and
             (not chrBased_repli_seq_signal_df.empty) and
             (check_for_validness(chrBased_valleys_peaks_df))):
@@ -659,6 +699,7 @@ def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_d
                                                                              chrBased_valleys_peaks_df)
 
         return chrBased_replication_array
+
     else:
         return None
 
@@ -668,6 +709,10 @@ def fill_chr_based_replication_strand_array(chrLong,
                                             chromSize,
                                             chrBased_repli_seq_signal_df,
                                             chrBased_valleys_peaks_df):
+
+    # Sort w.r.t. Start column in ascending order
+    chrBased_repli_seq_signal_df.sort_values(START, ascending=True, inplace=True)
+
     # +1 means leading strand, -1 means lagging strand
     # we will fill this array using smoothedSignal, peaks and valleys for each chromosome
     chrBased_replication_array = np.zeros(chromSize, dtype=np.int8)
@@ -736,44 +781,44 @@ def find_repli_seq_peaks_valleys_using_scipy(repli_seq_df):
     return all_peaks_df, all_valleys_df
 
 
-def read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
-                             valleysBEDFilename,
-                             peaksBEDFilename,
+def read_repliseq_dataframes(replication_time_file,
+                             replication_time_valley_file,
+                             replication_time_peak_file,
                              chromNamesList,
                              log_file):
 
     # Read the Smoothed Wavelet Replication Time Signal
-    file_extension = os.path.splitext(os.path.basename(smoothedWaveletRepliseqDataFilename))[1]
+    file_extension = os.path.splitext(os.path.basename(replication_time_file))[1]
     if (file_extension.lower() == '.wig'):
-        filetype_BEDGRAPH = isFileTypeBedGraph(smoothedWaveletRepliseqDataFilename)
+        filetype_BEDGRAPH = isFileTypeBedGraph(replication_time_file)
         if filetype_BEDGRAPH:
-            repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+            repliseq_wavelet_signal_df = pd.read_csv(replication_time_file, sep='\t', comment='#',
                                                      header=None, names=[CHROM, START, END, SIGNAL])
         else:
-            repliseq_wavelet_signal_df = readWig_with_fixedStep_variableStep(smoothedWaveletRepliseqDataFilename)
+            repliseq_wavelet_signal_df = readWig_with_fixedStep_variableStep(replication_time_file)
     elif (file_extension.lower() == '.bedgraph'):
-        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+        repliseq_wavelet_signal_df = pd.read_csv(replication_time_file, sep='\t', comment='#',
                                                  header=None, names=[CHROM, START, END, SIGNAL])
     elif (file_extension.lower() == '.bed'):
-        repliseq_wavelet_signal_df = pd.read_csv(smoothedWaveletRepliseqDataFilename, sep='\t', comment='#',
+        repliseq_wavelet_signal_df = pd.read_csv(replication_time_file, sep='\t', comment='#',
                                                  header=None, names=[CHROM, START, END, SIGNAL])
 
     # Remove rows with chromosomes that are not in chromNamesList
     repliseq_wavelet_signal_df = repliseq_wavelet_signal_df[repliseq_wavelet_signal_df[CHROM].isin(chromNamesList)]
 
-    if valleysBEDFilename is not None:
+    if replication_time_valley_file is not None:
         # Read the Valleys
         discard_signal = True
-        valleys_df = readFileInBEDFormat(valleysBEDFilename, discard_signal, log_file)
+        valleys_df = readFileInBEDFormat(replication_time_valley_file, discard_signal, log_file)
         valleys_df[END] = valleys_df[END] - 1
 
-    if peaksBEDFilename is not None:
+    if replication_time_peak_file is not None:
         # Read the Peaks
         discard_signal = True
-        peaks_df = readFileInBEDFormat(peaksBEDFilename, discard_signal, log_file)
+        peaks_df = readFileInBEDFormat(replication_time_peak_file, discard_signal, log_file)
         peaks_df[END] = peaks_df[END] - 1
 
-    if (valleysBEDFilename is None) and (peaksBEDFilename is None):
+    if (replication_time_valley_file is None) and (replication_time_peak_file is None):
         peaks_df, valleys_df = find_repli_seq_peaks_valleys_using_scipy(repliseq_wavelet_signal_df)
 
     # Remove rows with chromosomes that are not in chromNamesList
@@ -897,6 +942,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             chrBased_simBased_dinucs_df,
                                             chrBased_simBased_indels_df,
                                             chrBased_replication_array,
+                                            chrLong,
                                             sim_num,
                                             SBS96_mutation_types_np_array,
                                             DBS78_mutation_types_np_array,
@@ -919,6 +965,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                             log_file,
                                             verbose):
 
+    chrBased_simBased_subs_replication_strands_list = None
+    chrBased_simBased_doublets_replication_strands_list = None
+    chrBased_simBased_indels_replication_strands_list = None
+
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
         if verbose:
@@ -933,7 +983,8 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
-        [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
+        # Jul 21, 2024
+        chrBased_simBased_subs_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             SUBS,
                                                                             chrBased_replication_array,
                                                                             ordered_sbs_signatures_cutoffs,
@@ -969,7 +1020,8 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
-        [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
+        # July 21, 2024
+        chrBased_simBased_doublets_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                                               DINUCS,
                                                                                               chrBased_replication_array,
                                                                                               ordered_dbs_signatures_cutoffs,
@@ -1005,7 +1057,8 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
-        [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
+        # July 21, 2024
+        chrBased_simBased_indels_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                                               INDELS,
                                                                                               chrBased_replication_array,
                                                                                               ordered_id_signatures_cutoffs,
@@ -1032,11 +1085,63 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
             print('\tVerbose Worker pid %s SBS searchMutationOnReplicationStrandArray_simulations_integrated ends %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
             log_out.close()
 
-    return(sim_num, #0
-           sample_mutation_type_strand_np_array, #1
-           sample_sbs_signature_mutation_type_strand_np_array, #2
-           sample_dbs_signature_mutation_type_strand_np_array, #3
-           sample_id_signature_mutation_type_strand_np_array) #4
+    chrBased_simBased_subs_replication_strands_array = np.array(chrBased_simBased_subs_replication_strands_list)
+    chrBased_simBased_doublets_replication_strands_array = np.array(chrBased_simBased_doublets_replication_strands_list)
+    chrBased_simBased_indels_replication_strands_array = np.array(chrBased_simBased_indels_replication_strands_list)
+
+    mapping = {0: 'A', 1: 'E', 2: 'B', 3: 'X', -1: 'U'}
+
+    if chrBased_simBased_subs_df is not None:
+        chrBased_simBased_subs_df['ReplicationStrand'] = chrBased_simBased_subs_replication_strands_array
+
+        # Insert ReplicationStrand column just before Mutation column
+        columns = chrBased_simBased_subs_df.columns.tolist()
+        mutation_index = columns.index(MUTATION)
+        replication_strand_index = columns.index(REPLICATIONSTRAND)
+        if replication_strand_index > mutation_index:
+            columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+        columns.pop(columns.index(SIMULATION_NUMBER))
+        chrBased_simBased_subs_df = chrBased_simBased_subs_df[columns]
+
+        chrBased_simBased_subs_df[REPLICATIONSTRAND] = chrBased_simBased_subs_df[REPLICATIONSTRAND].map(mapping)
+
+    if chrBased_simBased_dinucs_df is not None:
+        chrBased_simBased_dinucs_df['ReplicationStrand'] = chrBased_simBased_doublets_replication_strands_array
+
+        # Insert ReplicationStrand column just before Mutation column
+        columns = chrBased_simBased_dinucs_df.columns.tolist()
+        mutation_index = columns.index(MUTATION)
+        replication_strand_index = columns.index(REPLICATIONSTRAND)
+        if replication_strand_index > mutation_index:
+            columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+        columns.pop(columns.index(SIMULATION_NUMBER))
+        chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[columns]
+
+        chrBased_simBased_dinucs_df[REPLICATIONSTRAND] = chrBased_simBased_dinucs_df[REPLICATIONSTRAND].map(mapping)
+
+    if chrBased_simBased_indels_df is not None:
+        chrBased_simBased_indels_df['ReplicationStrand'] = chrBased_simBased_indels_replication_strands_array
+
+        # Insert ReplicationStrand column just before Mutation column
+        columns = chrBased_simBased_indels_df.columns.tolist()
+        mutation_index = columns.index(MUTATION)
+        replication_strand_index = columns.index(REPLICATIONSTRAND)
+        if replication_strand_index > mutation_index:
+            columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+        columns.pop(columns.index(SIMULATION_NUMBER))
+        chrBased_simBased_indels_df = chrBased_simBased_indels_df[columns]
+
+        chrBased_simBased_indels_df[REPLICATIONSTRAND] = chrBased_simBased_indels_df[REPLICATIONSTRAND].map(mapping)
+
+    return(chrLong, # 0
+           sim_num, # 1
+           chrBased_simBased_subs_df, # 2
+           chrBased_simBased_dinucs_df, # 3
+           chrBased_simBased_indels_df, # 4
+           sample_mutation_type_strand_np_array, # 5
+           sample_sbs_signature_mutation_type_strand_np_array, # 6
+           sample_dbs_signature_mutation_type_strand_np_array, # 7
+           sample_id_signature_mutation_type_strand_np_array) # 8
 
 
 def searchAllMutationsOnReplicationStrandArray_simbased_chrombased_splitbased(outputDir,
@@ -1125,7 +1230,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                                    verbose):
 
     chr_based_replication_time_file_name = '%s_replication_time.npy' % (chrLong)
-    chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED,chr_based_replication_time_file_name)
+    chr_based_replication_time_file_path = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chr_based_replication_time_file_name)
 
     number_of_sbs_signatures = ordered_sbs_signatures_np_array.size
     number_of_dbs_signatures = ordered_dbs_signatures_np_array.size
@@ -1166,6 +1271,7 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           chrBased_simBased_dinucs_df,
                                                           chrBased_simBased_indels_df,
                                                           chrBased_replication_array,
+                                                          chrLong,
                                                           simNum,
                                                           SBS96_mutation_types_np_array,
                                                           DBS78_mutation_types_np_array,
@@ -1188,26 +1294,30 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           log_file,
                                                           verbose)
     else:
-        return (simNum, #0
-                sample_mutation_type_strand_np_array, #1
-                sample_sbs_signature_mutation_type_strand_np_array, #2
-                sample_dbs_signature_mutation_type_strand_np_array, #3
-                sample_id_signature_mutation_type_strand_np_array) #4
+        return (chrLong, # 0
+                simNum, # 1
+                None,  # 2
+                None,  # 3
+                None,  # 4
+                sample_mutation_type_strand_np_array, # 5
+                sample_sbs_signature_mutation_type_strand_np_array, # 6
+                sample_dbs_signature_mutation_type_strand_np_array, # 7
+                sample_id_signature_mutation_type_strand_np_array) # 8
 
 
 def read_create_write_replication_time_array_in_parallel(outputDir,
                                                          jobname,
                                                          chromNamesList,
                                                          chromSizesDict,
-                                                         smoothedWaveletRepliseqDataFilename,
-                                                         valleysBEDFilename,
-                                                         peaksBEDFilename,
+                                                         replication_time_file,
+                                                         replication_time_valley_file,
+                                                         replication_time_peak_file,
                                                          verbose,
                                                          log_file):
 
-    repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(smoothedWaveletRepliseqDataFilename,
-                                                                        valleysBEDFilename,
-                                                                        peaksBEDFilename,
+    repliseq_signal_df, valleys_df, peaks_df = read_repliseq_dataframes(replication_time_file,
+                                                                        replication_time_valley_file,
+                                                                        replication_time_peak_file,
                                                                         chromNamesList,
                                                                         log_file)
 
@@ -1220,7 +1330,6 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
             chr_based_replication_time_file_name = '%s_replication_time' %(chrLong)
             chr_based_replication_time_file_path = os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS,LIB,CHRBASED,chr_based_replication_time_file_name)
             np.save(chr_based_replication_time_file_path, chrBased_replication_array)
-
 
     numofProcesses = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=numofProcesses)
@@ -1276,9 +1385,9 @@ def replication_strand_bias_analysis(outputDir,
                                   chromSizesDict,
                                   chromNamesList,
                                   computation_type,
-                                  smoothedWaveletRepliseqDataFilename,
-                                  valleysBEDFilename,
-                                  peaksBEDFilename,
+                                  replication_time_file,
+                                  replication_time_valley_file,
+                                  replication_time_peak_file,
                                   ordered_sbs_signatures_np_array,
                                   ordered_dbs_signatures_np_array,
                                   ordered_id_signatures_np_array,
@@ -1300,9 +1409,9 @@ def replication_strand_bias_analysis(outputDir,
                                                          jobname,
                                                          chromNamesList,
                                                          chromSizesDict,
-                                                         smoothedWaveletRepliseqDataFilename,
-                                                         valleysBEDFilename,
-                                                         peaksBEDFilename,
+                                                         replication_time_file,
+                                                         replication_time_valley_file,
+                                                         replication_time_peak_file,
                                                          verbose,
                                                          log_file)
 
@@ -1356,14 +1465,29 @@ def replication_strand_bias_analysis(outputDir,
 
     # Accumulate Numpy Arrays
     def accumulate_np_arrays(result_tuple):
-        sim_num = result_tuple[0]
+        chrLong = result_tuple[0]
+        sim_num = result_tuple[1]
+        chrBased_simBased_subs_df = result_tuple[2]
+        chrBased_simBased_dinucs_df = result_tuple[3]
+        chrBased_simBased_indels_df = result_tuple[4]
+
+        # save chrom based sim based files
+        if chrBased_simBased_subs_df is not None:
+            write_chr_based_mutations_df(outputDir, jobname, chrLong, SBS, sim_num, chrBased_simBased_subs_df)
+
+        if chrBased_simBased_dinucs_df is not None:
+            write_chr_based_mutations_df(outputDir, jobname, chrLong, DBS, sim_num, chrBased_simBased_dinucs_df)
+
+        if chrBased_simBased_indels_df is not None:
+            write_chr_based_mutations_df(outputDir, jobname, chrLong, ID, sim_num, chrBased_simBased_indels_df)
+
         # print('MONITOR ACCUMULATE', flush=True)
 
         if sample_based:
-            sample_mutation_type_strand_np_array = result_tuple[1]
-            sample_sbs_signature_mutation_type_strand_np_array = result_tuple[2]
-            sample_dbs_signature_mutation_type_strand_np_array = result_tuple[3]
-            sample_id_signature_mutation_type_strand_np_array = result_tuple[4]
+            sample_mutation_type_strand_np_array = result_tuple[5]
+            sample_sbs_signature_mutation_type_strand_np_array = result_tuple[6]
+            sample_dbs_signature_mutation_type_strand_np_array = result_tuple[7]
+            sample_id_signature_mutation_type_strand_np_array = result_tuple[8]
 
             all_sims_sample_mutation_type_strand_np_array[sim_num] += sample_mutation_type_strand_np_array
             all_sims_sample_sbs_signature_mutation_type_strand_np_array[sim_num] += sample_sbs_signature_mutation_type_strand_np_array

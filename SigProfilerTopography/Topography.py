@@ -217,7 +217,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import md5_read_in_c
 
 MATRIX_GENERATOR_PATH = matrix_generator.__path__[0]
 
-# Called for real mutations and for simulated mutations
+# Called for real mutations and simulated mutations
 # Read chr based mutations (provided by SigProfilerMatrixGenerator) and merge with probabilities files (provided by SPE or SPA)
 def prepare_mutations_data_dfter_matrixeneration_and_extractor_for_topography(chromShortNamesList,
                                                                        inputDir,
@@ -914,9 +914,9 @@ def run_replication_strand_bias_analysis(outputDir,
                                      job_tuples,
                                      sample_based,
                                      all_samples_np_array,
-                                     replicationTimeFilename,
-                                     replicationTimeValleyFilename,
-                                     replicationTimePeakFilename,
+                                     replication_time_file,
+                                     replication_time_valley_file,
+                                     replication_time_peak_file,
                                      chromSizesDict,
                                      chromNamesList,
                                      computation_type,
@@ -934,10 +934,6 @@ def run_replication_strand_bias_analysis(outputDir,
 
     os.makedirs(os.path.join(outputDir,jobname,DATA,REPLICATIONSTRANDBIAS), exist_ok=True)
 
-    smoothedWaveletRepliseqDataFilename = replicationTimeFilename
-    valleysBEDFilename = replicationTimeValleyFilename
-    peaksBEDFilename = replicationTimePeakFilename
-
     # Supported computation types
     # computation_type= USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type =USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
@@ -951,9 +947,9 @@ def run_replication_strand_bias_analysis(outputDir,
                                   chromSizesDict,
                                   chromNamesList,
                                   computation_type,
-                                  smoothedWaveletRepliseqDataFilename,
-                                  valleysBEDFilename,
-                                  peaksBEDFilename,
+                                  replication_time_file,
+                                  replication_time_valley_file,
+                                  replication_time_peak_file,
                                   ordered_sbs_signatures_np_array,
                                   ordered_dbs_signatures_np_array,
                                   ordered_id_signatures_np_array,
@@ -2374,6 +2370,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     dbs_chrlong_numberofmutations_df = pd.DataFrame()
     id_chrlong_numberofmutations_df = pd.DataFrame()
 
+    # We assume that in chrom based mutation files after the column named 'Mutation' there are the signature columns in
+    # tab separated way both for discreet and probability mode
     if (step5_gen_tables):
 
         log_out = open(log_file, 'a')
