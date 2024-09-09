@@ -650,7 +650,17 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
                                   sep='\t')
 
         elif (ncols <= 3 and (not discard_signal)):
-            print('--- There are %d columns in this bed file' %(ncols), file=log_out)
+            # print('--- There are %d columns in this bed file' %(ncols), file=log_out)
+            file_df = pd.read_csv(file_with_path,
+                                  header=None,
+                                  usecols=[0, 1, 2],
+                                  names=[CHROM, START, END],
+                                  dtype={0: 'string', 1: np.int32, 2: np.int32}, # legacy category
+                                  sep='\t')
+            # dummy value of 1 is set for signal calculations
+            file_df[SIGNAL] = 1
+
+
         elif (ncols == 4 and (not discard_signal)):
             print('--- SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header', file=log_out)
             file_df = pd.read_csv(file_with_path,
@@ -741,7 +751,7 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWit
             file_df, max_signal, min_signal = readFileInBEDFormat(BEDFileWithPath, discard_signal, log_file)
 
             # Outlier elimination starts
-            if ((remove_outliers==True) and (quantileValue < 1.0)):
+            if ((remove_outliers == True) and (quantileValue < 1.0)):
                 # remove the outliers
                 q = file_df[SIGNAL].quantile(quantileValue)
                 log_out = open(log_file, 'a')

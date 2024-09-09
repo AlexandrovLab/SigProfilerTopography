@@ -1894,7 +1894,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     # Nucleosome Signatures
     # Nucleosome All Mutations (SUBS, INDELS, DINUCS)
     # complete_list
-    #[jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
+    # [jobname, signature, biosample, dna_element, avg_real_signal, avg_sim_signal, fold_change, min_sim_signal,
     #  max_sim_signal, pvalue, num_of_sims, num_of_sims_with_not_nan_avgs, real_data_avg_count, sim_avg_count,
     #  list(simulationsHorizontalMeans)]
     step1_p_value_df, step1_signature2Biosample2DNAElement2PValueDict = step1_calculate_p_value(fold_change_window_size,
@@ -2150,23 +2150,23 @@ def calculate_fold_change_real_over_sim(center,
     end = center + plusorMinus + 1
 
     # SBS1_sim1_ENCFF330CCJ_osteoblast_H3K79me2-human_AverageSignalArray.txt
-    if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
-        real_data_avg_signal_array = readData(None, None, signature, output_dir, jobname, occupancy_type, dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
+    if (signature == AGGREGATEDSUBSTITUTIONS) or (signature == AGGREGATEDDINUCS) or (signature == AGGREGATEDINDELS):
+        real_data_avg_signal_array = readData(None, None, signature, output_dir, jobname, occupancy_type, dna_element_to_be_read, AVERAGE_SIGNAL_ARRAY)
     else:
-        real_data_avg_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, jobname, occupancy_type, dna_element_to_be_read,AVERAGE_SIGNAL_ARRAY)
+        real_data_avg_signal_array = readData(None, signature, SIGNATUREBASED, output_dir, jobname, occupancy_type, dna_element_to_be_read, AVERAGE_SIGNAL_ARRAY)
 
     if real_data_avg_signal_array is not None and (len(real_data_avg_signal_array) > 0) and (not np.isnan(real_data_avg_signal_array[start:end]).all()):
-        #If there is nan in the list np.mean returns nan.
+        # If there is nan in the list np.mean returns nan.
         avg_real_signal = np.nanmean(real_data_avg_signal_array[start:end])
 
     # Read accumulated_count_array
-    if (signature==AGGREGATEDSUBSTITUTIONS) or (signature==AGGREGATEDDINUCS) or (signature==AGGREGATEDINDELS):
+    if (signature == AGGREGATEDSUBSTITUTIONS) or (signature == AGGREGATEDDINUCS) or (signature == AGGREGATEDINDELS):
         real_data_accumulated_count_array = readData(None, None, signature, output_dir, jobname, occupancy_type, dna_element_to_be_read,ACCUMULATED_COUNT_ARRAY)
     else:
         real_data_accumulated_count_array = readData(None, signature, SIGNATUREBASED, output_dir, jobname, occupancy_type, dna_element_to_be_read,ACCUMULATED_COUNT_ARRAY)
 
     if real_data_accumulated_count_array is not None and (len(real_data_accumulated_count_array) > 0) and (not np.isnan(real_data_accumulated_count_array[start:end]).all()):
-        #If there is nan in the list np.mean returns nan.
+        # If there is nan in the list np.mean returns nan.
         real_data_avg_count = np.nanmean(real_data_accumulated_count_array[start:end])
 
 
@@ -2210,7 +2210,7 @@ def calculate_fold_change_real_over_sim(center,
             # print('After')
             # print('simulationsHorizontalMeans.shape')
             # print(simulationsHorizontalMeans.shape)
-            num_of_sims_with_not_nan_avgs=simulationsHorizontalMeans.shape[0]
+            num_of_sims_with_not_nan_avgs = simulationsHorizontalMeans.shape[0]
             # print('number of not nan simulations:%d' %num_of_sims_with_not_nan_avgs)
             # print('%s %s %s Number of nans in simulationsHorizontalMeans: %d' %(signature, jobname, dna_element,len(np.argwhere(np.isnan(simulationsHorizontalMeans)))))
             # print(np.argwhere(np.isnan(simulationsHorizontalMeans)))
@@ -2228,13 +2228,13 @@ def calculate_fold_change_real_over_sim(center,
             stackedSimulationsSignatureBased = np.vstack(listofSimulationsSignatureBased)
             (rows, cols) = stackedSimulationsSignatureBased.shape
 
-            #One sample way
+            # One sample way
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased[:,start:end]
 
-            #Get rid of rows with all nans
+            # Get rid of rows with all nans
             stackedSimulationsSignatureBased_of_interest=stackedSimulationsSignatureBased_of_interest[~np.isnan(stackedSimulationsSignatureBased_of_interest).all(axis=1)]
 
-            #Take mean row-wise
+            # Take mean row-wise
             simulationsHorizontalCountMeans = np.nanmean(stackedSimulationsSignatureBased_of_interest, axis=1)
             sim_avg_count = np.nanmean(simulationsHorizontalCountMeans)
 
@@ -2391,8 +2391,19 @@ def step1_calculate_p_value(fold_change_window_size,
         occupancy_type = EPIGENOMICSOCCUPANCY
         for epigenomics_file_memo in epigenomics_files_memos:
             pool.apply_async(calculate_fold_change_real_over_sim,
-                             args=(epigenomics_center,plusorMinus,output_dir,jobname,numberofSimulations,signature,nucleosome_file,nucleosome_biosample,epigenomics_file_memo,epigenomics_biosamples,occupancy_type,),
+                             args=(epigenomics_center,
+                                   plusorMinus,
+                                   output_dir,
+                                   jobname,
+                                   numberofSimulations,
+                                   signature,
+                                   nucleosome_file,
+                                   nucleosome_biosample,
+                                   epigenomics_file_memo,
+                                   epigenomics_biosamples,
+                                   occupancy_type,),
                              callback=update_dictionary)
+
         # Nucleosome
         # if data files are ready it returns otherwise it returns None
         occupancy_type = NUCLEOSOMEOCCUPANCY

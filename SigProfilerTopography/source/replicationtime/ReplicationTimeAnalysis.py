@@ -147,7 +147,7 @@ tsb_ref = {
 
 # Higher the replication time signal earlier the replication is
 # Regions with high values indicate domains of early replication where initiaion occurs earlier in S-phase or early in a higher proportion of cells.
-def readRepliSeqTimeData(genome, chromNamesList, repliseqDataFilename, matrix_generator_path, verbose, log_file):
+def read_repli_seq_time_data(genome, chromNamesList, repliseqDataFilename, matrix_generator_path, verbose, log_file):
 
     ###################################################################
     ############### Read RepliSeq Time data starts ####################
@@ -2552,7 +2552,7 @@ def replicationTimeAnalysis_enhanced(computationType,
 
 
 # main function
-def replicationTimeAnalysis(computationType,
+def replication_time_analysis(computationType,
                             sample_based,
                             genome,
                             chromSizesDict,
@@ -2563,7 +2563,7 @@ def replicationTimeAnalysis(computationType,
                             samples_of_interest,
                             all_samples_list,
                             job_tuples,
-                            repliseqDataFilename,
+                            repli_seq_data_file_name,
                             ordered_sbs_signatures_with_cutoffs,
                             ordered_dbs_signatures_with_cutoffs,
                             ordered_id_signatures_with_cutoffs,
@@ -2616,9 +2616,9 @@ def replicationTimeAnalysis(computationType,
     # decile_df_list is a list, each decile_df is a dataframe
     # first decile_df with index=1 contains the intervals that are replicated the earliest
     # tenth (last) decile_df with index=10 contains the intervals that are replicated the latest
-    chrNamesInReplicationTimeDataArray, decile_df_list = readRepliSeqTimeData(genome,
+    chrNamesInReplicationTimeDataArray, decile_df_list = read_repli_seq_time_data(genome,
                                                                               chromNamesList,
-                                                                              repliseqDataFilename,
+                                                                              repli_seq_data_file_name,
                                                                               matrix_generator_path,
                                                                               verbose,
                                                                               log_file)
@@ -2683,34 +2683,36 @@ def replicationTimeAnalysis(computationType,
             default_cutoff,
             parallel_mode)
 
-        log_out = open(log_file, 'a')
-        print('\n#################################################################################', file=log_out)
-        print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array.shape:',
-              all_sims_samples_subs_signature_decile_index_accumulated_np_array.shape, file=log_out)
+        # log_out = open(log_file, 'a')
 
-        for sample_index in range(all_sims_samples_subs_signature_decile_index_accumulated_np_array[0].shape[0]):
-            print(sample_index, sample_index_2_sample_dict[sample_index], all_sims_samples_subs_signature_decile_index_accumulated_np_array[0][sample_index], file=log_out)
+        # print('\n#################################################################################', file=log_out)
+        # print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array.shape:',
+        #       all_sims_samples_subs_signature_decile_index_accumulated_np_array.shape, file=log_out)
 
-        print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array:',
-              all_sims_samples_subs_signature_decile_index_accumulated_np_array, file=log_out)
+        # for sample_index in range(all_sims_samples_subs_signature_decile_index_accumulated_np_array[0].shape[0]):
+        #     print(sample_index, sample_index_2_sample_dict[sample_index], all_sims_samples_subs_signature_decile_index_accumulated_np_array[0][sample_index], file=log_out)
 
-        print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array[0]',
-              all_sims_samples_subs_signature_decile_index_accumulated_np_array[0], file=log_out)
+        # print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array:',
+        #       all_sims_samples_subs_signature_decile_index_accumulated_np_array, file=log_out)
+
+        # print('--- all_sims_samples_subs_signature_decile_index_accumulated_np_array[0]',
+        #       all_sims_samples_subs_signature_decile_index_accumulated_np_array[0], file=log_out)
 
         # Sum across all samples
         all_sims_subs_signature_decile_index_accumulated_np_array = np.sum(all_sims_samples_subs_signature_decile_index_accumulated_np_array, axis=1)
         all_sims_dinucs_signature_decile_index_accumulated_np_array = np.sum(all_sims_samples_dinucs_signature_decile_index_accumulated_np_array, axis=1)
         all_sims_indels_signature_decile_index_accumulated_np_array = np.sum(all_sims_samples_indels_signature_decile_index_accumulated_np_array, axis=1)
 
-        print('--- all_sims_subs_signature_decile_index_accumulated_np_array.shape:',
-              all_sims_subs_signature_decile_index_accumulated_np_array.shape, file=log_out)
+        # print('--- all_sims_subs_signature_decile_index_accumulated_np_array.shape:',
+        #       all_sims_subs_signature_decile_index_accumulated_np_array.shape, file=log_out)
 
-        print('--- all_sims_subs_signature_decile_index_accumulated_np_array:',
-              all_sims_subs_signature_decile_index_accumulated_np_array, file=log_out)
+        # print('--- all_sims_subs_signature_decile_index_accumulated_np_array:',
+        #       all_sims_subs_signature_decile_index_accumulated_np_array, file=log_out)
 
-        print('--- all_sims_subs_signature_decile_index_accumulated_np_array[0]:',
-              all_sims_subs_signature_decile_index_accumulated_np_array[0], file=log_out)
-        log_out.close()
+        # print('--- all_sims_subs_signature_decile_index_accumulated_np_array[0]:',
+        #       all_sims_subs_signature_decile_index_accumulated_np_array[0], file=log_out)
+
+        # log_out.close()
 
     else:
         # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns

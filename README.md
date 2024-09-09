@@ -1,4 +1,4 @@
-﻿[![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+[![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.io/5unby/wiki/home/)
  [![Build Status](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography.svg?branch=master)](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography)
 [![Uptime Robot status](https://img.shields.io/uptimerobot/status/m795312784-02766a79f207f67626cef289)](https://stats.uptimerobot.com/jjqW4Ulymx)
@@ -247,7 +247,7 @@ View the table below for the full list of `runAnalyses` parameters.
 **SigProfilerTopography Output**
 To learn about the output, please visit https://osf.io/5unby/wiki/home/
   
-<!---
+
 
 **Replication Time Biosamples**
  For GRCh37 and GRCh38, SigProfilerTopography provides Repli-seq files of the biosamples listed in the table below, which are the valid parameter values for `replication_time_biosample`.
@@ -269,9 +269,18 @@ To learn about the output, please visit https://osf.io/5unby/wiki/home/
 | **GM06990** | human | blood | B-Lymphocyte | Unknown |
 | **GM12801** | human | blood |  B-Lymphocyte | Unknown |
 | **GM12812** | human | blood | B-Lymphocyte | Unknown |
-| **GM12813** | human | blood |  B-Lymphocyte | Unknown |
+| **GM12813** | human | blood | B-Lymphocyte | Unknown |
+| **HEK293** | human | kidney | embryonic kidney cells | Normal |
+| **HCT116** | human | colon | colorectal carcinoma cell | Cancer |
+| **A549** | human | lung | epithelial cell | Cancer |
+| **CAKI2** | human | kidney |  papillary renal cell carcinoma cell | Cancer |
+| **G401** | human | kidney |  epithelial kidney cells | Cancer |
+| **T47D** | human | breast; mammary gland | epithelial cell | Cancer |
+| **SKNMC** | human | brain | peripheral primitive neuroectodermal | Cancer (Askin tumor) |
+| **NCIH460** | human | lung | lung carcinoma cell | Cancer |
 | | | | | |
 
+<!---
 **INPUT FILE FORMAT**
 
 SigProfilerTopography uses formats (maf, vcf, simple text file, and ICGC) that are supported by SigProfilerMatrixGenerator. The user must provide input files under inputDir.
@@ -334,7 +343,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		````
 		>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')	
 		````
-
+-->
 
 + **REPLICATION TIMING** and **REPLICATION STRAND ASYMMETRY**
 
@@ -356,6 +365,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 	+ SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest which requires ~20-100 MB of storage.
 
                     
+<!---
 
 **USER PROVIDED LIBRARY FILES**
 + **EPIGENOMICS OCCUPANCY**

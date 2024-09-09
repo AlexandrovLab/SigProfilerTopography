@@ -44,6 +44,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import CIRCLE_BAR_PL
 from SigProfilerTopography.source.commons.TopographyCommons import SAMPLES
 from SigProfilerTopography.source.commons.TopographyCommons import EXCEL_FILES
 from SigProfilerTopography.source.commons.TopographyCommons import TEXT_FILES
+from SigProfilerTopography.source.commons.TopographyCommons import TEXT_FILES_WITH_P_VALUES_ONLY
 
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS_STRAND_BIAS_NUMBER_OF_MUTATIONS_THRESHOLD
 
@@ -110,6 +111,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import clear_plottin
 
 SIGNATURE = 'signature'
 CANCER_TYPE = 'cancer_type'
+SAMPLE = 'sample'
 MUTATION_TYPE = 'mutation_type'
 TYPE = 'type'
 SIGNIFICANT_STRAND = 'significant_strand'
@@ -1742,8 +1744,9 @@ def plotBarPlotsUsingDataframes(outputDir,
 
 
 
+
 # main function
-def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
+def transcription_replication_strand_bias_figures_using_dataframes(outputDir,
                                                              jobname,
                                                              numberofSimulations,
                                                              mutation_types,
@@ -1802,31 +1805,48 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         # Replication Strand Asymmetry
         signature_mutation_type_lagging_versus_leading_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
-        signature_mutation_type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, signature_mutation_type_lagging_versus_leading_table_file_name)
+        signature_mutation_type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA,
+                                                                                     REPLICATIONSTRANDBIAS,
+                                                                                     TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                                     signature_mutation_type_lagging_versus_leading_table_file_name)
         signature_lagging_versus_leading_df = pd.read_csv(signature_mutation_type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
         type_lagging_versus_leading_table_file_name = 'Type_%s_Strand_Table.txt' % (LAGGING_VERSUS_LEADING)
-        type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS,type_lagging_versus_leading_table_file_name)
+        type_lagging_versus_leading_table_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS,
+                                                                  TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                  type_lagging_versus_leading_table_file_name)
         type_lagging_versus_leading_df = pd.read_csv(type_lagging_versus_leading_table_filepath, header=0, sep='\t')
 
     if TRANSCRIBED_VERSUS_UNTRANSCRIBED in strand_bias_list:
         # Transcription Strand Asymmetry
         signature_mutation_type_transcribed_versus_untranscribed_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_mutation_type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_transcribed_versus_untranscribed_table_file_name)
+        signature_mutation_type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA,
+                                                                                               TRANSCRIPTIONSTRANDBIAS,
+                                                                                               TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                                               signature_mutation_type_transcribed_versus_untranscribed_table_file_name)
         signature_transcribed_versus_untranscribed_df = pd.read_csv(signature_mutation_type_transcribed_versus_untranscribed_table_filepath, header=0, sep='\t')
 
         type_transcribed_versus_untranscribed_table_file_name = 'Type_%s_Strand_Table.txt' % (TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, type_transcribed_versus_untranscribed_table_file_name)
+        type_transcribed_versus_untranscribed_table_filepath = os.path.join(outputDir, jobname, DATA,
+                                                                            TRANSCRIPTIONSTRANDBIAS,
+                                                                            TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                            type_transcribed_versus_untranscribed_table_file_name)
         type_transcribed_versus_untranscribed_df = pd.read_csv(type_transcribed_versus_untranscribed_table_filepath, header=0, sep='\t')
 
     if GENIC_VERSUS_INTERGENIC in strand_bias_list:
         # Transcription Strand Asymmetry
         signature_mutation_type_genic_versus_intergenic_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-        signature_mutation_type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, signature_mutation_type_genic_versus_intergenic_table_file_name)
+        signature_mutation_type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA,
+                                                                                      TRANSCRIPTIONSTRANDBIAS,
+                                                                                      TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                                      signature_mutation_type_genic_versus_intergenic_table_file_name)
         signature_genic_versus_intergenic_df = pd.read_csv(signature_mutation_type_genic_versus_intergenic_table_filepath, header=0, sep='\t')
 
         type_genic_versus_intergenic_table_file_name = 'Type_%s_Strand_Table.txt' % (GENIC_VERSUS_INTERGENIC)
-        type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA, TRANSCRIPTIONSTRANDBIAS, type_genic_versus_intergenic_table_file_name)
+        type_genic_versus_intergenic_table_filepath = os.path.join(outputDir, jobname, DATA,
+                                                                   TRANSCRIPTIONSTRANDBIAS,
+                                                                   TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                   type_genic_versus_intergenic_table_file_name)
         type_genic_versus_intergenic_df = pd.read_csv(type_genic_versus_intergenic_table_filepath, header=0, sep='\t')
 
     # Step2 Compute q_value
@@ -1901,7 +1921,11 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         p_values_list.extend(p_values_list_genic_vs_intergenic_asymmetry)
 
     if ((p_values_list is not None) and p_values_list):
-        rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list, alpha=0.05, method='fdr_bh', is_sorted=False, returnsorted=False)
+        rejected, all_FDR_BH_adjusted_p_values, alphacSidak, alphacBonf = statsmodels.stats.multitest.multipletests(p_values_list,
+                                                                                                                    alpha=0.05,
+                                                                                                                    method='fdr_bh',
+                                                                                                                    is_sorted=False,
+                                                                                                                    returnsorted=False)
 
         # Add None q_values
         if LAGGING_VERSUS_LEADING in strand_bias_list:
@@ -2051,6 +2075,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
     # Add Significant Strand
     # Set significant strands
     # Set fold changes and odds ratios
+    # Write text files with p and q values
     if LAGGING_VERSUS_LEADING in strand_bias_list:
         signature_lagging_versus_leading_df[SIGNIFICANT_STRAND] = None
         type_lagging_versus_leading_df[SIGNIFICANT_STRAND] = None
@@ -2102,7 +2127,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
 
         signature_filename = 'Signature_Mutation_Type_%s.txt' % (LAGGING_VERSUS_LEADING)
         signature_filepath = os.path.join(replication_strand_bias_figures_text_files_outputDir, signature_filename)
-        signature_lagging_versus_leading_df.to_csv(signature_filepath, sep='\t', header=True,index=False)
+        signature_lagging_versus_leading_df.to_csv(signature_filepath, sep='\t', header=True, index=False)
 
         type_filename = 'Type_%s.txt' % (LAGGING_VERSUS_LEADING)
         type_filepath = os.path.join(replication_strand_bias_figures_text_files_outputDir, type_filename)
@@ -2222,7 +2247,7 @@ def transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir,
         type_filepath = os.path.join(transcription_strand_bias_figures_text_files_outputDir, type_filename)
         type_genic_versus_intergenic_df.to_csv(type_filepath, sep='\t', header=True, index=False)
 
-    # Write Excel Files
+    # Write excel files with p and q values
     sheet_list = ['p_values_q_values_ratios']
     for strand1_versus_strand2 in strand_bias_list:
         if strand1_versus_strand2 == LAGGING_VERSUS_LEADING:

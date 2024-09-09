@@ -628,14 +628,14 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
         # Do not consider the situation where uniqueValueArray is greater than  2
 
 # This code checks whether valleys and peaks are one after another, not two consecutive elements are both valley and peak.
-def check_for_validness(chrBased_valleys_peaks_df):
+def check_for_validness(chrBased_valleys_peaks_df, chrLong):
     former_row_type = None
 
     for index, row in chrBased_valleys_peaks_df.iterrows():
         if former_row_type is None:
             former_row_type = row['type']
         elif (row['type'] == former_row_type):
-            print('There is a problem/situation in repli-seq valleys and peaks.')
+            print(chrLong, 'There is a problem/situation in repli-seq valleys and peaks.', 'row:', row)
             return False
         else:
             former_row_type = row['type']
@@ -643,13 +643,15 @@ def check_for_validness(chrBased_valleys_peaks_df):
     return True
 
 
-def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
+def get_chr_based_replication_strand_array_for_callback(outputDir, jobname, chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
     # global THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH
     # most_frequent_length = (repliseq_signal_df[END] - repliseq_signal_df[START]).value_counts().idxmax()
     # THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH = most_frequent_length * 10
     # print('DEBUG most_frequent_length:', most_frequent_length, 'THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH:', THRESHOLD_CONSECUTIVE_LONG_STRETCH_LENGTH)
 
-    chrBased_replication_array = get_chr_based_replication_strand_array(chrLong,
+    chrBased_replication_array = get_chr_based_replication_strand_array(outputDir,
+                                                                        jobname,
+                                                                        chrLong,
                                                                         chromSize,
                                                                         repliseq_signal_df,
                                                                         valleys_df,
@@ -658,7 +660,7 @@ def get_chr_based_replication_strand_array_for_callback(chrLong, chromSize, repl
     return (chrLong, chrBased_replication_array)
 
 
-def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
+def get_chr_based_replication_strand_array(outputDir, jobname, chrLong, chromSize, repliseq_signal_df, valleys_df, peaks_df):
 
     # Read chrBased_repli_seq_signal_df
     chrBased_repli_seq_signal_df = repliseq_signal_df[repliseq_signal_df[CHROM] == chrLong]
@@ -680,19 +682,19 @@ def get_chr_based_replication_strand_array(chrLong, chromSize, repliseq_signal_d
     # start the index from zero
     chrBased_valleys_peaks_df.reset_index(drop=True, inplace=True)
 
-    # # In case of debugging purposes uncomment starts
-    # os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED), exist_ok=True)
-    # chrBased_valleys_peaks_df_filename = '%s_valleys_peaks_df' % (chrLong)
-    # chrBased_repli_seq_signal_df_filename = '%s_repli_seq_signal_df' % (chrLong)
-    # chrBased_valleys_peaks_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_valleys_peaks_df_filename)
-    # chrBased_repli_seq_signal_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_repli_seq_signal_df_filename)
-    # chrBased_valleys_peaks_df.to_csv(chrBased_valleys_peaks_df_filepath, sep='\t', index=False)
-    # chrBased_repli_seq_signal_df.to_csv(chrBased_repli_seq_signal_df_filepath, sep='\t', index=False)
-    # # In case of debugging purposes uncomment ends
+    # In case of debugging purposes uncomment starts
+    os.makedirs(os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED), exist_ok=True)
+    chrBased_valleys_peaks_df_filename = '%s_valleys_peaks_df' % (chrLong)
+    chrBased_repli_seq_signal_df_filename = '%s_repli_seq_signal_df' % (chrLong)
+    chrBased_valleys_peaks_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_valleys_peaks_df_filename)
+    chrBased_repli_seq_signal_df_filepath = os.path.join(outputDir, jobname, DATA, REPLICATIONSTRANDBIAS, LIB, CHRBASED, chrBased_repli_seq_signal_df_filename)
+    chrBased_valleys_peaks_df.to_csv(chrBased_valleys_peaks_df_filepath, sep='\t', index=False)
+    chrBased_repli_seq_signal_df.to_csv(chrBased_repli_seq_signal_df_filepath, sep='\t', index=False)
+    # In case of debugging purposes uncomment ends
 
     if ((chrBased_repli_seq_signal_df is not None) and
             (not chrBased_repli_seq_signal_df.empty) and
-            (check_for_validness(chrBased_valleys_peaks_df))):
+            (check_for_validness(chrBased_valleys_peaks_df, chrLong))):
         chrBased_replication_array = fill_chr_based_replication_strand_array(chrLong,
                                                                              chromSize,
                                                                              chrBased_repli_seq_signal_df,
@@ -759,6 +761,13 @@ def find_repli_seq_peaks_valleys_using_scipy(repli_seq_df):
 
         # reset_index
         chrBased_replicationtimedata_df = chrBased_replicationtimedata_df.reset_index()
+
+        # Filter out rows with the same 'chr' and 'start' but different 'end'
+        # Keep only those combinations that have a unique 'end'
+        chrBased_replicationtimedata_df = chrBased_replicationtimedata_df.groupby([CHROM, START]).filter(lambda x: x[END].nunique() == 1)
+
+        # Group by 'chr', 'start', and 'end', and calculate the average signal
+        chrBased_replicationtimedata_df = chrBased_replicationtimedata_df.groupby([CHROM, START, END], as_index=False)[SIGNAL].mean()
 
         # Find local minima and maxima using peak detection
         maxima_indices, _ = find_peaks(chrBased_replicationtimedata_df[SIGNAL], prominence=0) # 0
@@ -1339,7 +1348,9 @@ def read_create_write_replication_time_array_in_parallel(outputDir,
     for chrLong in chromNamesList:
         chromSize = chromSizesDict[chrLong]
         jobs.append(pool.apply_async(get_chr_based_replication_strand_array_for_callback,
-                                 args=(chrLong,
+                                 args=(outputDir,
+                                       jobname,
+                                       chrLong,
                                        chromSize,
                                        repliseq_signal_df,
                                        valleys_df,

@@ -64,7 +64,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import GRCh37
 from SigProfilerTopography.source.commons.TopographyCommons import GRCh38
 
 from SigProfilerTopography.source.commons.TopographyCommons import getNucleosomeFile
-from SigProfilerTopography.source.commons.TopographyCommons import getReplicationTimeFiles
+from SigProfilerTopography.source.commons.TopographyCommons import get_replication_time_files
 
 from SigProfilerTopography.source.commons.TopographyCommons import available_nucleosome_biosamples
 
@@ -184,7 +184,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUT
 from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import annotated_region_analysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis_enhanced
-from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis
+from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replication_time_analysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replication_strand_bias_analysis
 from SigProfilerTopography.source.transcriptionstrandbias.TranscriptionStrandBiasAnalysis import transcription_strand_bias_analysis
 from SigProfilerTopography.source.processivity.ProcessivityAnalysis import processivityAnalysis
@@ -195,7 +195,8 @@ from SigProfilerTopography.source.annotation.Mutation_Annotation_Integration imp
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import occupancyAverageSignalFigures
 from SigProfilerTopography.source.plotting.OccupancyAverageSignalFigures import compute_fold_change_with_p_values_plot_heatmaps
 from SigProfilerTopography.source.plotting.ReplicationTimeNormalizedMutationDensityFigures import replicationTimeNormalizedMutationDensityFigures
-from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcriptionReplicationStrandBiasFiguresUsingDataframes
+from SigProfilerTopography.source.plotting.TranscriptionReplicationStrandBiasFigures import transcription_replication_strand_bias_figures_using_dataframes
+
 from SigProfilerTopography.source.plotting.ProcessivityFigures import processivityFigures
 from SigProfilerTopography.source.plotting.AnnotatedRegionFigures import  annotated_regions_figures
 
@@ -360,7 +361,6 @@ def prepare_mutations_data_dfter_matrixeneration_and_extractor_for_topography(ch
 
     return df_columns_contain_ordered_signatures
 
-
 def check_download_replication_time_files(replication_time_signal_file,
                                           replication_time_valley_file,
                                           replication_time_peak_file):
@@ -368,21 +368,27 @@ def check_download_replication_time_files(replication_time_signal_file,
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
 
     # These are currently full path, therefore convert them to filename
-    replication_time_signal_file = os.path.basename(replication_time_signal_file)
-    replication_time_valley_file = os.path.basename(replication_time_valley_file)
-    replication_time_peak_file = os.path.basename(replication_time_peak_file)
+    if replication_time_signal_file:
+        replication_time_signal_file = os.path.basename(replication_time_signal_file)
+    if replication_time_valley_file:
+        replication_time_valley_file = os.path.basename(replication_time_valley_file)
+    if replication_time_peak_file:
+        replication_time_peak_file = os.path.basename(replication_time_peak_file)
 
-    os.makedirs(os.path.join(current_abs_path,'lib','replication'),exist_ok=True)
-    lib_replication_path = os.path.join(current_abs_path,'lib','replication')
+    os.makedirs(os.path.join(current_abs_path, 'lib', 'replication'), exist_ok=True)
+    lib_replication_path = os.path.join(current_abs_path, 'lib', 'replication')
 
     if os.path.isabs(lib_replication_path):
         os.chdir(lib_replication_path)
 
-        replication_time_signal_file_path = os.path.join(lib_replication_path, replication_time_signal_file)
-        replication_time_valley_file_path = os.path.join(lib_replication_path, replication_time_valley_file)
-        replication_time_peak_file_path = os.path.join(lib_replication_path, replication_time_peak_file)
+        if replication_time_signal_file:
+            replication_time_signal_file_path = os.path.join(lib_replication_path, replication_time_signal_file)
+        if replication_time_valley_file:
+            replication_time_valley_file_path = os.path.join(lib_replication_path, replication_time_valley_file)
+        if replication_time_peak_file:
+            replication_time_peak_file_path = os.path.join(lib_replication_path, replication_time_peak_file)
 
-        if not os.path.exists(replication_time_signal_file_path):
+        if replication_time_signal_file and not os.path.exists(replication_time_signal_file_path):
             print('Does not exists: %s' %replication_time_signal_file_path)
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
@@ -397,7 +403,7 @@ def check_download_replication_time_files(replication_time_signal_file,
                 # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                 print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
 
-        if not os.path.exists(replication_time_valley_file_path):
+        if replication_time_valley_file and not os.path.exists(replication_time_valley_file_path):
             print('Does not exists: %s' %replication_time_valley_file_path)
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
@@ -412,7 +418,7 @@ def check_download_replication_time_files(replication_time_signal_file,
                 # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                 print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
 
-        if not os.path.exists(replication_time_peak_file_path):
+        if replication_time_peak_file and not os.path.exists(replication_time_peak_file_path):
             print('Does not exists: %s' %replication_time_peak_file_path)
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
@@ -711,24 +717,24 @@ def install_repli_seq(genome, biosample=None):
             replication_time_biosample = ENDODERM
             replication_time_signal_file, \
             replication_time_valley_file, \
-            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
 
         elif genome == GRCh37:
             replication_time_biosample = MCF7
             replication_time_signal_file, \
             replication_time_valley_file, \
-            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
 
         elif genome == GRCh38:
             replication_time_biosample = IMR90
             replication_time_signal_file, \
             replication_time_valley_file, \
-            replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
 
     elif biosample is not None:
         replication_time_signal_file, \
         replication_time_valley_file, \
-        replication_time_peak_file = getReplicationTimeFiles(genome, biosample)
+        replication_time_peak_file = get_replication_time_files(genome, biosample)
 
     check_download_replication_time_files(replication_time_signal_file,
                                           replication_time_valley_file,
@@ -860,7 +866,7 @@ def run_replication_time_analysis(genome,
                                all_samples_list,
                                job_tuples,
                                sample_based,
-                               replicationTimeFilename,
+                               replication_time_file_name,
                                chromSizesDict,
                                chromNamesList,
                                computation_type,
@@ -881,7 +887,7 @@ def run_replication_time_analysis(genome,
     # Supported computation types
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM
     # computation_type = USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT
-    replicationTimeAnalysis(computation_type,
+    replication_time_analysis(computation_type,
                             sample_based,
                             genome,
                             chromSizesDict,
@@ -892,7 +898,7 @@ def run_replication_time_analysis(genome,
                             samples_of_interest,
                             all_samples_list,
                             job_tuples,
-                            replicationTimeFilename,
+                            replication_time_file_name,
                             ordered_sbs_signatures_with_cutoffs,
                             ordered_dbs_signatures_with_cutoffs,
                             ordered_id_signatures_with_cutoffs,
@@ -1494,11 +1500,11 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
     # Replication Timing
     if genome == MM10:
-        # Case1: Files are not set, Biosample is not set. Use defualt files.
+        # Case1: Files are not set, Biosample is not set. All are None. Use defualt files.
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = ENDODERM
-            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file,
@@ -1514,23 +1520,23 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
     elif genome == GRCh37:
         # We need full path of the library files
-        # By default replication_time_biosample=MCF7 and signal, valley, peak files are None
-        # Case1: Files are not set, Biosample is not set. Use defualt files.
+        # By default replication_time_biosample = MCF7 and signal, valley, peak files are None
+        # Case1: Files are not set, Biosample is not set. All are None. Use defualt files.
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = MCF7
-            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file,
                                                       replication_time_valley_file,
                                                       replication_time_peak_file)
 
-        # Case2: Files are None, biosample is not None and available.
+        # Case2: Files are None, but biosample is not None and available.
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in GRCh37_available_replication_time_biosamples):
-                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
                 if (replication_time or replication_strand_bias):
                     # For using SigProfilerTopography Provided Replication Time Files
                     check_download_replication_time_files(replication_time_signal_file,
@@ -1543,33 +1549,26 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
               (replication_time_peak_file is not None)):
             if (replication_time_biosample is None):
                 replication_time_biosample = UNDECLARED
-
-        # Case5 Replication timing signal file is not None, Replication timing valleys and peaks are None.
-        elif (replication_time_signal_file is not None):
-            if (replication_time_biosample is None):
-                replication_time_biosample = UNDECLARED
-
 
     elif genome == GRCh38:
         # We need full path of the library files
         # By default replication_time_biosample = IMR90 and signal, valley, peak files are None
-        # Case1: Files are not set, Biosample is not set
+        # Case1: Files are not set, Biosample is not set. All are None. Use defualt files.
         if (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is None):
             replication_time_biosample = IMR90
-            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+            replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
             if (replication_time or replication_strand_bias):
                 # For using SigProfilerTopography Provided Replication Time Files
                 check_download_replication_time_files(replication_time_signal_file,
                                                       replication_time_valley_file,
                                                       replication_time_peak_file)
 
-        # Case2: Replication timing files are given with fullpath (User provided). Biosample is not set.
         # Case2: Files are None, biosample is not None and available.
         elif (replication_time_signal_file is None) and (replication_time_valley_file is None) and \
                 (replication_time_peak_file is None) and (replication_time_biosample is not None):
             if (replication_time_biosample in GRCh38_available_replication_time_biosamples):
-                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = getReplicationTimeFiles(genome, replication_time_biosample)
+                replication_time_signal_file, replication_time_valley_file, replication_time_peak_file = get_replication_time_files(genome, replication_time_biosample)
                 if (replication_time or replication_strand_bias):
                     # For using SigProfilerTopography Provided Replication Time Files
                     check_download_replication_time_files(replication_time_signal_file,
@@ -1581,11 +1580,6 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # Case4: Replication timing files are given with fullpath (User provided). Biosample is set. Do nothing.
         elif ((replication_time_signal_file is not None) or (replication_time_valley_file is not None) or
               (replication_time_peak_file is not None)):
-            if (replication_time_biosample is None):
-                replication_time_biosample = UNDECLARED
-
-        # Case5 Replication timing signal file is not None, Replication timing valleys and peaks are None.
-        elif (replication_time_signal_file is not None):
             if (replication_time_biosample is None):
                 replication_time_biosample = UNDECLARED
 
@@ -3289,12 +3283,13 @@ def plot_topography_figures(genome,
         if delete_old:
             deleteOldFigures(outputDir, jobname, STRANDBIAS)
         strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED,GENIC_VERSUS_INTERGENIC,LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
+        transcription_replication_strand_bias_figures_using_dataframes(outputDir, jobname,
                                                                  numberofSimulations, mutation_types,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,
                                                                  percentage_of_real_mutations_cutoff,
                                                                  ylim_multiplier)
+
 
         log_out = open(log_file, 'a')
         print("--- Plot strand asymmetry figures ends", file=log_out)
@@ -3303,7 +3298,7 @@ def plot_topography_figures(genome,
     elif (replication_strand_bias or plot_replication_strand_bias):
         print("\n--- Plot strand asymmetry figures")
         strand_bias_list = [LAGGING_VERSUS_LEADING]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
+        transcription_replication_strand_bias_figures_using_dataframes(outputDir, jobname,
                                                                  numberofSimulations, mutation_types,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,
@@ -3317,7 +3312,7 @@ def plot_topography_figures(genome,
     elif (transcription_strand_bias or plot_transcription_strand_bias):
         print("\n--- Plot strand asymmetry figures")
         strand_bias_list = [TRANSCRIBED_VERSUS_UNTRANSCRIBED, GENIC_VERSUS_INTERGENIC]
-        transcriptionReplicationStrandBiasFiguresUsingDataframes(outputDir, jobname,
+        transcription_replication_strand_bias_figures_using_dataframes(outputDir, jobname,
                                                                  numberofSimulations, mutation_types,
                                                                  strand_bias_list, plot_mode,
                                                                  odds_ratio_cutoff,

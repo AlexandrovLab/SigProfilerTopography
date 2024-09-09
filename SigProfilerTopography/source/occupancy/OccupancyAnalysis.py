@@ -45,7 +45,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import getDictionary
 
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2SubsSignature2NumberofMutationsDict
 from SigProfilerTopography.source.commons.TopographyCommons import getSample2IndelsSignature2NumberofMutationsDict
-from SigProfilerTopography.source.commons.TopographyCommons import writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray
+from SigProfilerTopography.source.commons.TopographyCommons import writeSimulationBasedAverageOccupancyUsingNumpyArray
 
 from SigProfilerTopography.source.commons.TopographyCommons import TYPE
 from SigProfilerTopography.source.commons.TopographyCommons import SUBS
@@ -171,7 +171,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 
     # Downloaded or created runtime
     if (os.path.exists(chrBasedSignalFile)):
-        #Can this cause to deep sleep of processes?
+        # Can this cause to deep sleep of processes?
         # chrBasedSignalArray = np.load(chrBasedSignalFile, mmap_mode='r')
         chrBasedSignalArray = np.load(chrBasedSignalFile)
 
@@ -281,7 +281,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
                 df_columns,
                 occupancy_calculation_type) for row in chrBased_simBased_subs_df[df_columns].values]
 
-        # For Dinusc
+        # For Dinucs
         if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
 
             # df_columns is a numpy array
@@ -809,16 +809,16 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):maximum_chrom_size]
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        elif (library_file_type==BIGWIG):
-            #Important: The bigWig format does not support overlapping intervals.
+        elif (library_file_type == BIGWIG):
+            # Important: The bigWig format does not support overlapping intervals.
             window_array = library_file_opened_by_pyBigWig.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
             # How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        elif (library_file_type==BIGBED):
-            # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
+        elif (library_file_type == BIGBED):
+            # print('Case2 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
             if ((mutation_row_start-plusOrMinus)<maximum_chrom_size):
                 list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
                 if list_of_entries is not None:
@@ -831,15 +831,15 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
 
-        elif (library_file_type==BIGWIG):
-            #Important: You have to go over intervals if there are overlapping intervals.
+        elif (library_file_type == BIGWIG):
+            # Important: You have to go over intervals if there are overlapping intervals.
             window_array = library_file_opened_by_pyBigWig.values(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1),numpy=True)
-            #How do you handle outliers?
+            # How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
 
-        elif (library_file_type==BIGBED):
-            # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
+        elif (library_file_type == BIGBED):
+            # print('Case3 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
             if ((mutation_row_start+plusOrMinus+1)<=maximum_chrom_size):
                 list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
                 if list_of_entries is not None:
@@ -852,8 +852,8 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
     # sample = mutation_row_sample
     # simulationNumber= mutation_row_simulation_number
 
-    # September 18, 2020 NO SIGNAL caseis added
-    # Vectorize July 25, 2020
+    # NO SIGNAL case is added
+    # Vectorize
     # Fill numpy arrays using window_array
     if (window_array is not None) and (np.any(window_array)):
         probabilities = row[signatures_mask_array]
@@ -878,7 +878,7 @@ def fillSignalArrayAndCountArray_using_list_comp_for_df_split(
         accumulated_signal_np_array += to_be_accumulated_signal_array
 
         # count is prob * 1 case otherwise y-axis range becomes quite low
-        to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001 > 0).astype(int)
+        to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001 > 0).astype(int) # legacy code
 
         # default
         if occupancy_calculation_type == MISSING_SIGNAL:
@@ -900,8 +900,8 @@ def get_window_array(mutation_row_start,
                      my_upperBound,
                      maximum_chrom_size):
 
-    window_array=None
-    windowSize=plusOrMinus*2+1
+    window_array = None
+    windowSize = plusOrMinus*2+1
 
     # df_columns 'numpy.ndarray'
     # df_columns: ['Sample', 'Chrom', 'Start', 'MutationLong', 'PyramidineStrand', 'TranscriptionStrand', 'Mutation',
@@ -917,14 +917,14 @@ def get_window_array(mutation_row_start,
 
     #Get or fill window_array using Case1, Case2, and Case3
     # Case 1: start is very close to the chromosome start
-    if (mutation_row_start<plusOrMinus):
+    if (mutation_row_start < plusOrMinus):
         # print('Case 1: start is very close to the chromosome start --- mutation[Start]:%d' %(mutation_row_start))
         #Faster
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[0:(mutation_row_start + plusOrMinus + 1)]
             window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant', constant_values=(0, 0))
 
-        elif (library_file_type==BIGWIG):
+        elif (library_file_type == BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
             window_array=library_file_opened_by_pyBigWig.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
             # How do you handle outliers?
@@ -932,7 +932,7 @@ def get_window_array(mutation_row_start,
             window_array[window_array>my_upperBound]=my_upperBound
             window_array = np.pad(window_array, (plusOrMinus - mutation_row_start, 0), 'constant',constant_values=(0, 0))
 
-        elif (library_file_type==BIGBED):
+        elif (library_file_type == BIGBED):
             #We assume that in the 7th column there is signal data
             list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
             if list_of_entries is not None:
@@ -955,7 +955,7 @@ def get_window_array(mutation_row_start,
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):maximum_chrom_size]
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        elif (library_file_type==BIGWIG):
+        elif (library_file_type == BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
             window_array = library_file_opened_by_pyBigWig.values(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size,numpy=True)
             # How do you handle outliers?
@@ -963,8 +963,8 @@ def get_window_array(mutation_row_start,
             window_array[window_array>my_upperBound]=my_upperBound
             window_array = np.pad(window_array, (0,mutation_row_start+plusOrMinus-maximum_chrom_size+1),'constant',constant_values=(0,0))
 
-        elif (library_file_type==BIGBED):
-            # print('Case2 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
+        elif (library_file_type == BIGBED):
+            # print('Case2 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
             if ((mutation_row_start-plusOrMinus)<maximum_chrom_size):
                 list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
                 if list_of_entries is not None:
@@ -972,20 +972,20 @@ def get_window_array(mutation_row_start,
                     # We did not handle outliers for BigBed files.
                     [(func_addSignal(window_array, entry[0], entry[1], np.float32(entry[2].split()[signal_index]),mutation_row_start,plusOrMinus) if len(entry) >= 3 else (func_addSignal(window_array, entry[0], entry[1],1, mutation_row_start,plusOrMinus))) for entry in list_of_entries]
 
-    #Case 3: No problem
+    # Case 3: No problem
     else:
         if (chrBasedSignalArray is not None):
             window_array = chrBasedSignalArray[(mutation_row_start-plusOrMinus):(mutation_row_start+plusOrMinus+1)]
 
-        elif (library_file_type==BIGWIG):
+        elif (library_file_type == BIGWIG):
             #Important: You have to go over intervals if there are overlapping intervals.
             window_array = library_file_opened_by_pyBigWig.values(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1),numpy=True)
             #How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
 
-        elif (library_file_type==BIGBED):
-            # print('Case3 Debug Sep 5, 2019 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
+        elif (library_file_type == BIGBED):
+            # print('Case3 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
             if ((mutation_row_start+plusOrMinus+1)<=maximum_chrom_size):
                 list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
                 if list_of_entries is not None:
@@ -1034,13 +1034,23 @@ def accumulate_arrays(row,
         to_be_accumulated_signal_array = mask_array_1xnumofsignatures.T * window_array_1x2001
         accumulated_signal_np_array += to_be_accumulated_signal_array
 
-        # question: Is count 1 if signal > 0 or count is prob * 1  if signal > 0 ?
+        # question: if signal > 0, is count 1 or prob * 1 ?
         # count is prob * 1 case otherwise y-axis range becomes quite low
-        to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001>0).astype(int)
+        to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001 > 0).astype(int)
 
         # Default
         if occupancy_calculation_type == MISSING_SIGNAL:
             accumulated_count_np_array += to_be_accumulated_count_array
+            # For debugging uncomment the following line
+            # print('to_be_accumulated_signal_array:', to_be_accumulated_signal_array,
+            #       'to_be_accumulated_signal_array.shape:', to_be_accumulated_signal_array.shape,
+            #       'np.sum(to_be_accumulated_signal_array):', np.sum(to_be_accumulated_signal_array),
+            #       'np.count_nonzero(to_be_accumulated_signal_array):', np.count_nonzero(to_be_accumulated_signal_array),
+            #       'to_be_accumulated_count_array:', to_be_accumulated_count_array,
+            #       'to_be_accumulated_count_array.shape:', to_be_accumulated_count_array.shape,
+            #       'np.sum(to_be_accumulated_count_array):', np.sum(to_be_accumulated_count_array),
+            #       'np.count_nonzero(to_be_accumulated_count_array):', np.count_nonzero(to_be_accumulated_count_array),
+            #       'equal:', np.array_equal(to_be_accumulated_signal_array, to_be_accumulated_count_array))
         else:
             accumulated_count_np_array += 1
 
@@ -1087,6 +1097,7 @@ def fillSignalArrayAndCountArray_using_list_comp(
                       accumulated_count_np_array,
                       discreet_mode,
                       default_cutoff)
+
 
 
 
@@ -1171,7 +1182,6 @@ def occupancyAnalysis(genome,
                         parallel_mode,
                         log_file,
                         verbose):
-
 
     log_out = open(log_file, 'a')
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES) and (not os.path.exists(library_file_with_path)):
@@ -1389,8 +1399,8 @@ def occupancyAnalysis(genome,
             accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList)
 
 
-    # Same for parallel_mode or sequential run
-    writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
+    # Same for parallel or sequential run
+    writeSimulationBasedAverageOccupancyUsingNumpyArray(occupancy_type,
                                                    sample_based,
                                                    plusorMinus,
                                                    subsSignatures,

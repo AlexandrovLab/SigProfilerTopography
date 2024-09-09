@@ -182,6 +182,14 @@ GM12801 = 'GM12801'
 GM12812 = 'GM12812'
 GM12813 = 'GM12813'
 HEK293 = 'HEK293'
+HCT116 = 'HCT116'
+
+A549 = 'A549'
+CAKI2 = 'CAKI2'
+G401 = 'G401'
+T47D = 'T47D'
+SKNMC = 'SKNMC'
+NCIH460 = 'NCIH460'
 
 MEF = "MEF"
 ESC = "ESC"
@@ -294,6 +302,15 @@ GM12813_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqGm12813WaveSignalRep1.
 GM12813_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqGm12813ValleysRep1.bed'
 GM12813_REPLICATION_TIME_PEAK_FILE = 'wgEncodeUwRepliSeqGm12813PkRep1.bed'
 
+HEK293_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg19.bedgraph'
+HCT116_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'GSE182107_HCT_repli.hg19.log2EL.R1R2.50000.zscore.bedGraph'
+A549_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'A549_GRCh37_ENCFF797GYT.bedGraph'
+CAKI2_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'Caki2_GRCh37_ENCFF417PET.bedGraph'
+G401_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'G401_GRCh37_ENCFF993XAU.bedGraph'
+T47D_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'T47D_GRCh37_ENCFF440QFG.bedGraph'
+SKNMC_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'SKNMC_GRCh37_ENCFF708QCM.bedGraph'
+NCIH460_GRCh37_REPLICATION_TIME_SIGNAL_FILE = 'NCIH460_GRCh37_ENCFF085YSK.bedGraph'
+
 # GRCh38 Replication Timing Files
 MCF7_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'wgEncodeUwRepliSeqMcf7WaveSignalRep1_GRCh38.bed'
 MCF7_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'wgEncodeUwRepliSeqMcf7WaveSignalRep1_GRCh38_Valleys.bed'
@@ -359,6 +376,14 @@ HEK293_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'RT_HEK293_Embryonic_Kidney_Int5738
 HEK293_GRCh38_REPLICATION_TIME_VALLEY_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg38_Valleys.bed'
 HEK293_GRCh38_REPLICATION_TIME_PEAK_FILE = 'RT_HEK293_Embryonic_Kidney_Int57383924_hg38_Pk.bed'
 
+HCT116_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'GSE182107_HCT_repli.hg38.log2EL.R1R2.50000.zscore.bedGraph'
+A549_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'A549_GRCh38_ENCFF797GYT.bedGraph'
+CAKI2_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'Caki2_GRCh38_ENCFF417PET.bedGraph'
+G401_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'G401_GRCh38_ENCFF993XAU.bedGraph'
+T47D_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'T47D_GRCh38_ENCFF440QFG.bedGraph'
+SKNMC_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'SKNMC_GRCh38_ENCFF708QCM.bedGraph'
+NCIH460_GRCh38_REPLICATION_TIME_SIGNAL_FILE = 'NCIH460_GRCh38_ENCFF085YSK.bedGraph'
+
 # mm10 Replication Timing Files
 MEF_REPLICATION_TIME_SIGNAL_FILE = 'ENCFF001JVQ_mm10_embryonic_fibroblast_wavelet_smoothed_signal.wig'
 
@@ -370,11 +395,13 @@ available_nucleosome_biosamples = [GM12878, K562, ESC, MEF]
 
 # Update when new biosample is provided
 GRCh37_available_replication_time_biosamples = [GM12878, K562, MCF7, HEPG2, HELAS3, SKNSH, IMR90, NHEK,
-                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813]
+                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813,
+                                                HEK293, HCT116, A549, CAKI2, G401, T47D, SKNMC, NCIH460]
 
 # Update when new biosample is provided
 GRCh38_available_replication_time_biosamples = [GM12878, K562, MCF7, HEPG2, HELAS3, SKNSH, IMR90, NHEK,
-                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813, HEK293]
+                                                BJ, HUVEC, BG02ES, GM06990, GM12801, GM12812, GM12813,
+                                                HEK293, HCT116, A549, CAKI2, G401, T47D, SKNMC, NCIH460]
 
 HG19_CHROM_SIZES = 'hg19.chrom.sizes.txt'
 HG38_CHROM_SIZES = 'hg38.chrom.sizes.txt'
@@ -404,8 +431,11 @@ NUCLEOSOME_BIOSAMPLE = "K562"
 OCCUPANCY_PLOTS = 'occupancy_plots'
 TABLES = 'tables'
 DETAILED = 'detailed'
-EXCEL_FILES = 'excel_files'
-TEXT_FILES = 'text_files'
+
+EXCEL_FILES = 'excel_files_with_p_and_q_values'
+TEXT_FILES = 'text_files_with_p_and_q_values'
+TEXT_FILES_WITH_P_VALUES_ONLY = 'text_files_with_p_values_only'
+
 NUCLEOSOME_DNA_ELEMENT = 'Nucleosome'
 ATAC_DNA_ELEMENT = 'ATAC'
 OPEN_CHROMATIN = 'Open\nChromatin'
@@ -463,10 +493,7 @@ INDELBASED = 'indelbased'
 SIGNATUREBASED = 'signaturebased'
 SAMPLEBASED = 'samplebased'
 
-SAMPLE_BASED = 'sample_based'
-
 SAMPLEBASED_SIGNATUREBASED = 'samplebased_signaturebased'
-
 SAMPLEBASED_AGGREGATEDSUBSTITUTIONS = 'samplebased_aggregatedsubstitutions'
 SAMPLEBASED_AGGREGATEDINDELS = 'samplebased_aggregatedindels'
 SAMPLEBASED_AGGREGATEDDINUCS = 'samplebased_aggregateddinucs'
@@ -1180,7 +1207,7 @@ def getNucleosomeFile(genome, nucleosome_biosample):
 
     return nucleosome_file
 
-def getReplicationTimeFiles(genome, replication_time_biosample):
+def get_replication_time_files(genome, replication_time_biosample):
     replication_time_signal_file = None
     replication_time_valley_file = None
     replication_time_peak_file = None
@@ -1226,12 +1253,12 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BJ_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BJ_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh37 and replication_time_biosample == HUVEC):
-            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,HUVEC_REPLICATION_TIME_SIGNAL_FILE)
-            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,HUVEC_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HUVEC_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh37 and replication_time_biosample == BG02ES):
-            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_SIGNAL_FILE)
-            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,BG02ES_REPLICATION_TIME_VALLEY_FILE)
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_REPLICATION_TIME_SIGNAL_FILE)
+            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, BG02ES_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh37 and replication_time_biosample == GM12878):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION,GM12878_REPLICATION_TIME_SIGNAL_FILE)
@@ -1253,6 +1280,22 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_SIGNAL_FILE)
             replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_VALLEY_FILE)
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == HEK293):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == HCT116):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HCT116_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == A549):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, A549_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == CAKI2):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, CAKI2_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == G401):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, G401_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == T47D):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, T47D_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == SKNMC):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, SKNMC_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh37 and replication_time_biosample == NCIH460):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, NCIH460_GRCh37_REPLICATION_TIME_SIGNAL_FILE)
 
         # GRCh38
         elif (genome == GRCh38 and replication_time_biosample == MCF7):
@@ -1317,8 +1360,22 @@ def getReplicationTimeFiles(genome, replication_time_biosample):
             replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, GM12813_GRCh38_REPLICATION_TIME_PEAK_FILE)
         elif (genome == GRCh38 and replication_time_biosample == HEK293):
             replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
-            replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_VALLEY_FILE)
-            replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_PEAK_FILE)
+            # replication_time_valley_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_VALLEY_FILE)
+            # replication_time_peak_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HEK293_GRCh38_REPLICATION_TIME_PEAK_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == HCT116):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, HCT116_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == A549):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, A549_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == CAKI2):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, CAKI2_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == G401):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, G401_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == T47D):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, T47D_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == SKNMC):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, SKNMC_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
+        elif (genome == GRCh38 and replication_time_biosample == NCIH460):
+            replication_time_signal_file = os.path.join(current_abs_path, ONE_DIRECTORY_UP, ONE_DIRECTORY_UP, LIB, REPLICATION, NCIH460_GRCh38_REPLICATION_TIME_SIGNAL_FILE)
 
     return replication_time_signal_file, replication_time_valley_file, replication_time_peak_file
 
@@ -2044,28 +2101,27 @@ def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_
     window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1]+=entry_signal
 
 
-def computeAverageNucleosomeOccupancyArray(plusorMinus,signalArray,countArray):
-    windowSize=plusorMinus*2+1
-    averageArray =  np.zeros(windowSize)
+def computeAverageNucleosomeOccupancyArray(plusorMinus, signalArray, countArray):
+    windowSize = plusorMinus*2+1
+    averageArray = np.zeros(windowSize)
 
     np.seterr(divide='ignore', invalid='ignore')
     if (np.any(countArray)):
         averageArray = np.divide(signalArray,countArray)
     np.seterr(divide='raise', invalid='ignore')
 
-    #October 27, 2019
-    #Assume that there is no signal 0
-    #Assume that there is no count 0
-    #Then average signal must be 0
-    #If we want to know that there is no signal there we can still keep nan values.
+    # Assume that there is no signal 0
+    # Assume that there is no count 0
+    # Then average signal must be 0
+    # If we want to know that there is no signal there we can still keep nan values.
     # We can discard nans by np.nanmean()
-    #Since later on, conversion of nans into zeros may lead to unrealistic fold changes between original data and simulations
+    # Since later on, conversion of nans into zeros may lead to unrealistic fold changes between original data and simulations
     # averageArray[np.isnan(averageArray)] = 0
 
     return averageArray
 
 
-def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type,
+def writeSimulationBasedAverageOccupancyUsingNumpyArray(occupancy_type,
                                                    sample_based,
                                                    plusorMinus,
                                                    subsSignatures,
@@ -2095,16 +2151,16 @@ def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type
         indelsSignature_accumulated_count_np_array = allSims_indelsSignature_accumulated_count_np_array[simNum]
 
         # Last row contains AGGREGATEDSUBSTITUTIONS
-        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,subsSignature_accumulated_signal_np_array[-1],subsSignature_accumulated_count_np_array[-1],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
+        writeAverageOccupancyFiles(occupancy_type,plusorMinus,subsSignature_accumulated_signal_np_array[-1],subsSignature_accumulated_count_np_array[-1],outputDir, jobname,library_file_memo, AGGREGATEDSUBSTITUTIONS,simNum)
 
         # Last row contains AGGREGATEDDINUCS
-        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,dinucsSignature_accumulated_signal_np_array[-1],dinucsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
+        writeAverageOccupancyFiles(occupancy_type,plusorMinus,dinucsSignature_accumulated_signal_np_array[-1],dinucsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDDINUCS,simNum)
 
         # Last row contains AGGREGATEDINDELS
-        writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,indelsSignature_accumulated_signal_np_array[-1],indelsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
+        writeAverageOccupancyFiles(occupancy_type,plusorMinus,indelsSignature_accumulated_signal_np_array[-1],indelsSignature_accumulated_count_np_array[-1], outputDir,jobname,library_file_memo, AGGREGATEDINDELS,simNum)
 
         # Signatures
-        writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
+        writeSignatureBasedAverageOccupancyFilesUsingNumpyArray(occupancy_type,
                                                            plusorMinus,
                                                            subsSignatures,
                                                            dinucsSignatures,
@@ -2124,12 +2180,23 @@ def writeSimulationBasedAverageNucleosomeOccupancyUsingNumpyArray(occupancy_type
 # Both "all single point mutations" and "all indels" use this function
 # simulationNumber == 0 means original data
 # simulationNumber > 0 means simulation data
-def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutationsAccumulatedAllChromsSignalArray,allMutationsAccumulatedAllChromsCountArray,outputDir,jobname,library_file_memo,nucleosomeOccupancyAnalysisType,simulationNumber):
+def writeAverageOccupancyFiles(occupancy_type,
+                               plusorMinus,
+                               allMutationsAccumulatedAllChromsSignalArray,
+                               allMutationsAccumulatedAllChromsCountArray,
+                               outputDir,
+                               jobname,
+                               library_file_memo,
+                               nucleosomeOccupancyAnalysisType,
+                               simulationNumber):
 
     os.makedirs(os.path.join(outputDir, jobname, DATA, occupancy_type, nucleosomeOccupancyAnalysisType),exist_ok=True)
-    averageNucleosomeSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,allMutationsAccumulatedAllChromsSignalArray, allMutationsAccumulatedAllChromsCountArray)
+    averageSignalArray = computeAverageNucleosomeOccupancyArray(plusorMinus,
+                                                                          allMutationsAccumulatedAllChromsSignalArray,
+                                                                          allMutationsAccumulatedAllChromsCountArray)
 
-    if (simulationNumber==0):
+
+    if (simulationNumber == 0):
         if library_file_memo is not None:
             accumulatedSignalFilename = '%s_%s_AccumulatedSignalArray.txt' % (jobname,library_file_memo)
             accumulatedCountFilename = '%s_%s_AccumulatedCountArray.txt' % (jobname,library_file_memo)
@@ -2155,10 +2222,10 @@ def writeAverageNucleosomeOccupancyFiles(occupancy_type,plusorMinus,allMutations
 
     allMutationsAccumulatedAllChromsSignalArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
     allMutationsAccumulatedAllChromsCountArray.tofile(file=accumulatedCountFilePath, sep="\t", format="%s")
-    averageNucleosomeSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
+    averageSignalArray.tofile(file=averageNucleosomeSignalFilePath, sep="\t", format="%s")
 
 
-def writeSignatureBasedAverageNucleosomeOccupancyFilesUsingNumpyArray(occupancy_type,
+def writeSignatureBasedAverageOccupancyFilesUsingNumpyArray(occupancy_type,
                                                            plusorMinus,
                                                            subsSignatures,
                                                            dinucsSignatures,
@@ -2772,21 +2839,21 @@ def write_sample_type_strand_bias_np_array_as_dataframe(output_dir,
                 sample2Type2Strand2ListDict[sample][my_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
                 sample2Type2Strand2ListDict[sample][my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
-    os.makedirs(os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY), exist_ok=True)
 
-    # Calculate q-value and significant_strand will be done during plotting figures
+    # Calculation of q_value and significant_strand will be done during plotting figures
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_sample_type_transcription_dataframe(strands, sample2Type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
 
         type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
-        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_sample_type_transcription_dataframe(strands, sample2Type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
 
     elif strand_bias == REPLICATIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Sample_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
-        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, SAMPLE_BASED, type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(output_dir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_sample_type_replication_dataframe(strands, sample2Type2Strand2ListDict, jobname, type_strand_table_filepath)
 
 
@@ -2952,21 +3019,32 @@ def write_sample_signature_mutation_type_strand_np_array_as_dataframe(outputDir,
                     sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE] = transcribed_versus_untranscribed_p_value
                     sample2Signature2MutationType2Strand2ListDict[sample][signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
 
-    os.makedirs(os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED), exist_ok=True)
+    os.makedirs(os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY), exist_ok=True)
 
     if (strand_bias == REPLICATIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
-        write_sample_signature_mutation_type_replication_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_replication_dataframe(strands,
+                                                                   sample2Signature2MutationType2Strand2ListDict,
+                                                                   jobname,
+                                                                   signature_mutation_type_strand_table_filepath)
 
     elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
-        write_sample_signature_mutation_type_transcription_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_transcription_dataframe(strands,
+                                                                     sample2Signature2MutationType2Strand2ListDict,
+                                                                     jobname,
+                                                                     TRANSCRIBED_VERSUS_UNTRANSCRIBED,
+                                                                     signature_mutation_type_strand_table_filepath)
 
         signature_mutation_type_strand_count_table_file_name = 'Sample_Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, SAMPLE_BASED, signature_mutation_type_strand_count_table_file_name)
-        write_sample_signature_mutation_type_transcription_dataframe(strands, sample2Signature2MutationType2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, signature_mutation_type_strand_count_table_file_name)
+        write_sample_signature_mutation_type_transcription_dataframe(strands,
+                                                                     sample2Signature2MutationType2Strand2ListDict,
+                                                                     jobname,
+                                                                     GENIC_VERSUS_INTERGENIC,
+                                                                     signature_mutation_type_strand_table_filepath)
 
 
 
@@ -3310,19 +3388,21 @@ def write_type_strand_bias_np_array_as_dataframe(all_sims_sample_mutation_type_s
             type2Strand2ListDict[my_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
             type2Strand2ListDict[my_type][GENIC_VERSUS_INTERGENIC_P_VALUE]= genic_versus_intergenic_p_value
 
+    os.makedirs(os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY), exist_ok=True)
+
     # Calculate q-value and significant_strand will be done during plotting figures
     if strand_bias == TRANSCRIPTIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname , TRANSCRIBED_VERSUS_UNTRANSCRIBED, type_strand_table_filepath)
 
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
-        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_type_transcription_dataframe(strands, type2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC, type_strand_table_filepath)
 
     elif strand_bias == REPLICATIONSTRANDBIAS:
         type_strand_count_table_file_name = 'Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
-        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,type_strand_count_table_file_name)
+        type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY, type_strand_count_table_file_name)
         write_type_replication_dataframe(strands, type2Strand2ListDict, jobname, type_strand_table_filepath)
 
 
@@ -3703,18 +3783,26 @@ def write_signature_mutation_type_strand_bias_np_array_as_dataframe(zipped_array
                 signature2MutationType2Strand2ListDict[signature][mutation_type][TRANSCRIBED_VERSUS_UNTRANSCRIBED_P_VALUE]=transcribed_versus_untranscribed_p_value
                 signature2MutationType2Strand2ListDict[signature][mutation_type][GENIC_VERSUS_INTERGENIC_P_VALUE]=genic_versus_intergenic_p_value
 
+    os.makedirs(os.path.join(outputDir, jobname, DATA, strand_bias, TEXT_FILES_WITH_P_VALUES_ONLY), exist_ok=True)
+
     if (strand_bias == REPLICATIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(LAGGING_VERSUS_LEADING)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,
+                                                                     TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                     signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_replication_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, signature_mutation_type_strand_table_filepath)
 
     elif (strand_bias == TRANSCRIPTIONSTRANDBIAS):
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(TRANSCRIBED_VERSUS_UNTRANSCRIBED)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,
+                                                                     TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                     signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, TRANSCRIBED_VERSUS_UNTRANSCRIBED, signature_mutation_type_strand_table_filepath)
 
         signature_mutation_type_strand_count_table_file_name = 'Signature_Mutation_Type_%s_Strand_Table.txt' %(GENIC_VERSUS_INTERGENIC)
-        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,signature_mutation_type_strand_count_table_file_name)
+        signature_mutation_type_strand_table_filepath = os.path.join(outputDir, jobname, DATA, strand_bias,
+                                                                     TEXT_FILES_WITH_P_VALUES_ONLY,
+                                                                     signature_mutation_type_strand_count_table_file_name)
         write_signature_mutation_type_transcription_dataframe(strands, signature2MutationType2Strand2ListDict, jobname, GENIC_VERSUS_INTERGENIC,signature_mutation_type_strand_table_filepath)
 
 
