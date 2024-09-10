@@ -229,6 +229,7 @@ View the table below for the full list of `runAnalyses` parameters.
 | | **ylim_multiplier** | Float | Multiply the y-axis view limits with `ylim_multiplier` in strand asymmetry bar plots. By default, set to 1.25. |
 | | **processivity_inter_<br>mutational_distance** | Integer | Consecutive mutations with distance <= `processivity_inter_mutational_distance` are considered for the strand-coordinated mutagenesis. By default, set to 10000. |
 | | **processivity_significance_level** | Float | Corrected p-values <= `processivity_significance_level` are considered statistically significant for strand coordinated mutagenesis. By default, this is set to 0.05. |
+| | **delete_chrbased_files** | Boolean | To reduce the disk space usage of the tool, SigProfilerTopography deletes the chrbased files under `outputDir/jobname/data/chrbased`. By default, set to True. |
 | | **exome** | Boolean | SigProfilerSimulator simulates on the exome of the reference genome. By default, set to None. |
 | | **updating** | Boolean | SigProfilerSimulator updates the chromosome with each mutation. By default, set to False. |
 | | **bed_file** | String | SigProfilerSimulator simulates on custom regions of the genome. Requires the full path to the BED file. By default, set to None. |
