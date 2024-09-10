@@ -340,6 +340,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ Then you have to include `nucleosome_biosample='GM12878'` in the `runAnalyses` call as follows:
 
+
 		````
 		>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,nucleosome_biosample='GM12878')	
 		````
@@ -349,20 +350,45 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 	+ By default, SigProfilerTopography carries out replication timing and replication strand asymmetry analyses using Repli-seq of MCF7 and IMR90 cell line for GRCh37 and GRCh38, respectively.
 
-	+ If you want to run SigProfilerTopography with Repli-seq of HELAS3 cell line, you need to first install replication timing data for the genome of interest e.g.: GRCh38 as follows:
+	+ If you want to run SigProfilerTopography with Repli-seq of e.g., **HELAS3** cell line, you may first install replication timing data for the genome of interest e.g.: GRCh37 as follows:
 		````
 		$ python
 		>> from SigProfilerTopography import Topography as topography
-		>> topography.install_repli_seq('GRCh38', 'HELAS3')
+		>> topography.install_repli_seq('GRCh37', 'HELAS3')
+		
 		````
 	
 	+ Then you have to include `replication_time_biosample='HELAS3'` in the `runAnalyses` call as follows:
 		            
+		````python
+		>>> from SigProfilerTopography import Topography as topography
+		
+		>>> genome = "GRCh37"
+		>>> inputDir = "path/to/21BRCA_vcfs"
+		>>> outputDir = "path/to/results"
+		>>> jobname = "21BRCA_SPT_with_probability_matrices"
+		>>> numofSimulations = 5
+		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
+		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
+		
+		>>> topography.runAnalyses(genome,
+		                        inputDir,
+		                        outputDir,
+		                        jobname,
+		                        numofSimulations,
+		                        sbs_probabilities = sbs_probability_file, 
+		                        dbs_probabilities = dbs_probability_file, 
+		                        replication_time_biosample='HELAS3',
+		                        epigenomics=True,
+		                        nucleosome=True, 
+		                        replication_time=True, 
+		                        strand_bias=True, 
+		                        processivity=True)
+		
 		````
-		>>>topography.runAnalyses(genome,inputDir,outputDir,jobname,numofSimulations,sbs_probabilities=sbs_probabilities_file_path,dbs_probabilities=dbs_probabilities_file_path,id_probabilities=id_probabilities_file_path,epigenomics=True,nucleosome=True,replication_time=True,strand_bias=True,processivity=True,replication_time_biosample='HELAS3')
-		````
+
 		                    
-	+ SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest which requires ~20-100 MB of storage.
+	+ If you do not install replication timing file before the run, SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest during runtime which requires ~20-100 MB of storage.
 
                     
 <!---
