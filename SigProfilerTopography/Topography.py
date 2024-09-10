@@ -1049,7 +1049,7 @@ def run_processivity_analysis(mutation_types_contexts,
 
 
 
-def delete_unnecessary_files_after_SPT_run(outputDir, jobname):
+def delete_chrbased_files_after_SPT_run(outputDir, jobname):
     # delete unnecessary files
     # delete .../data/chrbased
     data_chrbased_path = os.path.join(outputDir,jobname,DATA,CHRBASED)
@@ -1199,7 +1199,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 ylim_multiplier = 1.25, # [Float] Multiply the y-axis view limits with ylim_multiplier in strand asymmetry bar plots.
                 processivity_inter_mutational_distance = 10000, # [Integer] Consecutive mutations with distance <= processivity_inter_mutational_distance are considered for the strand-coordinated mutagenesis.
                 processivity_significance_level = 0.05,  # [Float] Corrected p-values <= processivity_significance_level are considered statistically significant for strand coordinated mutagenesis.
-                delete_unnecessary_files = True, # [Boolean] Deletes unnecessary files under data/chrbased after SPT run
+                delete_chrbased_files = True, # [Boolean] Deletes unnecessary files under data/chrbased after SPT run
                 exome = None, # [Boolean] SigProfilerSimulator simulates on the exome of the reference genome.
                 updating = False, # [Boolean] SigProfilerSimulator updates the chromosome with each mutation.
                 bed_file = None, # [String] SigProfilerSimulator simulates on custom regions of the genome. Requires the full path to the BED file.
@@ -3084,8 +3084,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                         cancer_type=jobname)
 
     # delete unnecesary files (chrbased) after SPT Run
-    if delete_unnecessary_files:
-        delete_unnecessary_files_after_SPT_run(outputDir, jobname)
+    if delete_chrbased_files:
+        delete_chrbased_files_after_SPT_run(outputDir, jobname)
 
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################

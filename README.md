@@ -389,6 +389,79 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 		                    
 	+ If you do not install replication timing file before the run, SigProfilerTopography downloads replication timing files from **ftp://alexandrovlab-ftp.ucsd.edu/**  under *.../SigProfilerTopography/lib/replication/*  for the `replication_time_biosample` of interest during runtime which requires ~20-100 MB of storage.
+	
+	+ If you have a replication timing file, you can set the `replication_time_signal_file` and run replication timing and replication strand asymmetry analyses using your own replication timing file. 
+	
+		We require a tab-separated file with four columns for `replication_time_signal_file`. No header line is required. The columns should contain the following information:
+		1.  Chromosome (e.g., chr1)
+		2. Start position (e.g., 10000)
+		3.  End position (e.g., 15000)
+		4.  Signal value (e.g., 1.0343)
+		
+		Then you have to set `replication_time_signal_file` in the `runAnalyses` call as follows:
+
+		````python
+		>>> from SigProfilerTopography import Topography as topography
+		
+		>>> genome = "GRCh37"
+		>>> inputDir = "path/to/21BRCA_vcfs"
+		>>> outputDir = "path/to/results"
+		>>> jobname = "21BRCA_SPT_with_probability_matrices"
+		>>> numofSimulations = 5
+		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
+		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
+		
+		>>> topography.runAnalyses(genome,
+		                        inputDir,
+		                        outputDir,
+		                        jobname,
+		                        numofSimulations,
+		                        sbs_probabilities = sbs_probability_file, 
+		                        dbs_probabilities = dbs_probability_file, 
+		                        replication_time_signal_file="path/to/replication_timing_file",
+		                        epigenomics=True,
+		                        nucleosome=True, 
+		                        replication_time=True, 
+		                        strand_bias=True, 
+		                        processivity=True)
+		
+		````
+
+	+ SigProfilerTopography, annotates each mutation with its replication strand. Replication strand  can be one of the below:
+		A: Lagging  
+		E: Leading  
+		U: Unknown  
+		B: Bidirectional (Both lagging and leading can happen for long indels).
+		 
+		 You can reach them under   `outputDir/jobname/data/chrbased`, if you set `delete_chrbased_files=False` as follows. 
+	
+		
+		````python
+		>>> from SigProfilerTopography import Topography as topography
+
+		>>> genome = "GRCh37"
+		>>> inputDir = "path/to/21BRCA_vcfs"
+		>>> outputDir = "path/to/results"
+		>>> jobname = "21BRCA_SPT_with_probability_matrices"
+		>>> numofSimulations = 5
+		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
+		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
+		
+		>>> topography.runAnalyses(genome,
+		                        inputDir,
+		                        outputDir,
+		                        jobname,
+		                        numofSimulations,
+		                        sbs_probabilities = sbs_probability_file, 
+		                        dbs_probabilities = dbs_probability_file, 
+		                        replication_time_biosample="T47D",
+		                        epigenomics=True,
+		                        nucleosome=True, 
+		                        replication_time=True, 
+		                        strand_bias=True, 
+		                        processivity=True,
+		                        delete_chrbased_files=False)
+		````
 
                     
 <!---
