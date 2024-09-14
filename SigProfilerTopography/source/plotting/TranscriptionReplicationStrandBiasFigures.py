@@ -1755,6 +1755,14 @@ def transcription_replication_strand_bias_figures_using_dataframes(outputDir,
                                                              odds_ratio_cutoff,
                                                              percentage_of_real_mutations_cutoff,
                                                              ylim_multiplier):
+    signature_lagging_versus_leading_df = None
+    type_lagging_versus_leading_df = None
+
+    signature_transcribed_versus_untranscribed_df = None
+    type_transcribed_versus_untranscribed_df = None
+
+    signature_genic_versus_intergenic_df = None
+    type_genic_versus_intergenic_df = None
 
     # Initialize these dataframes as empty dataframe
     # We will read these dataframes if there is the corresponding data

@@ -113,7 +113,8 @@ This section will guide you through the minimum steps required to run SigProfile
 	>>> jobname = "21BRCA_SPT"
 	>>> numofSimulations = 5
 
-	>>> topography.runAnalyses(genome, 
+	>>> if __name__ == "__main__":
+			topography.runAnalyses(genome, 
 	                   inputDir, 
 	                   outputDir, 
 	                   jobname, 
@@ -140,7 +141,8 @@ This section will guide you through the minimum steps required to run SigProfile
 	>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
 	>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
 
-	>>> topography.runAnalyses(genome, 
+	>>> if __name__ == "__main__":
+			topography.runAnalyses(genome, 
 	                   inputDir, 
 	                   outputDir, 
 	                   jobname, 
@@ -372,7 +374,8 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
 		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
 		
-		>>> topography.runAnalyses(genome,
+		>>> if __name__ == "__main__":
+					topography.runAnalyses(genome,
 		                        inputDir,
 		                        outputDir,
 		                        jobname,
@@ -412,7 +415,8 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
 		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
 		
-		>>> topography.runAnalyses(genome,
+		>>> if __name__ == "__main__":
+					topography.runAnalyses(genome,
 		                        inputDir,
 		                        outputDir,
 		                        jobname,
@@ -429,6 +433,7 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		````
 
 	+ SigProfilerTopography, annotates each mutation with its replication strand. Replication strand  can be one of the below:
+	
 		A: Lagging  
 		E: Leading  
 		U: Unknown  
@@ -448,7 +453,8 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 		>>> sbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_SBS96_Decomposed_Mutation_Probabilities.txt"
 		>>> dbs_probability_file = "path/to/21BRCA_probabilities/COSMIC_DBS78_Decomposed_Mutation_Probabilities.txt"
 		
-		>>> topography.runAnalyses(genome,
+		>>> if __name__ == "__main__":
+					topography.runAnalyses(genome,
 		                        inputDir,
 		                        outputDir,
 		                        jobname,

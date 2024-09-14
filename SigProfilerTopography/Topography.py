@@ -610,7 +610,7 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList, fn
     os.chdir(current_abs_path)
 
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
-# We are using this function if user is using our available nucleosome data for GM12878 adnd K562 cell lines
+# We are using this function if user is using our available nucleosome data for GM12878 and K562 cell lines
 def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList, fname_2_md5_dict):
     current_abs_path = os.path.dirname(os.path.abspath(__file__))
     # print(current_abs_path)
@@ -1251,7 +1251,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     seqInfo = True # [boolean] this parameter is used by SPMG and SPS. SPMG and SPS output mutations into a text file that contains the classification for each mutation.
 
     # parameters that are not maintained anymore or finalized by SPT
-    sample_based = True #legacy parameter False
+    sample_based = True # keep results for each sample
+    plot_sample_based = False # plot figures for each sample, this is not fully implemenyed and tested, therefore False
     mutation_annotation_integration = False
     lncRNA = False
     plot_lncRNA = False
@@ -3104,7 +3105,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     jobname,
                     numofSimulations,
                     mutation_types,
-                    sample_based,
+                    plot_sample_based,
                     epigenomics_files,
                     epigenomics_files_memos,
                     epigenomics_biosamples,
@@ -3177,13 +3178,13 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
 
 
-# Plot figures for the attainded data after SigProfilerTopography Analyses
+# Plot figures for the attained data after SigProfilerTopography analyses
 def plot_topography_figures(genome,
                 outputDir,
                 jobname,
                 numberofSimulations,
                 mutation_types,
-                sample_based,
+                plot_sample_based,
                 epigenomics_files,
                 epigenomics_files_memos,
                 epigenomics_biosamples,
@@ -3231,7 +3232,7 @@ def plot_topography_figures(genome,
                                       jobname,
                                       numberofSimulations,
                                       mutation_types,
-                                      sample_based,
+                                      plot_sample_based,
                                       nucleosome_file_basename,
                                       None,
                                       occupancy_type,
@@ -3272,7 +3273,7 @@ def plot_topography_figures(genome,
                                                         jobname,
                                                         numberofSimulations,
                                                         mutation_types,
-                                                        sample_based,
+                                                        plot_sample_based,
                                                         plot_mode)
         log_out = open(log_file, 'a')
         print("--- Plot replication time ends", file=log_out)
@@ -3365,7 +3366,7 @@ def plot_topography_figures(genome,
                                                jobname,
                                                numberofSimulations,
                                                mutation_types,
-                                               sample_based,
+                                               plot_sample_based,
                                                epigenomics_file_basename,
                                                epigenomics_file_memo,
                                                occupancy_type,

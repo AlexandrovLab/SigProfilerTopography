@@ -506,7 +506,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                                                     jobname,
                                                     numberofSimulations,
                                                     mutation_types,
-                                                    sample_based,
+                                                    plot_sample_based,
                                                     plot_mode):
 
     # Initialize these dataframes as empty dataframe
@@ -528,7 +528,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
     if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
         indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
-    if sample_based:
+    if plot_sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
         sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir, jobname)
         sample2NumberofDinucsDict = getDictionary(outputDir, jobname, Sample2NumberofDinucsDictFilename)
@@ -553,28 +553,28 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
     # Plot aggregated mutations figures
     if SBS in mutation_types:
         plotAllMutationTypesFigures('Aggregated Substitutions', 'royalblue', 'lightblue', AGGREGATEDSUBSTITUTIONS, None,
-                                outputDir, jobname, numberofSimulations, sample_based, sample2NumberofSubsDict,
+                                outputDir, jobname, numberofSimulations, plot_sample_based, sample2NumberofSubsDict,
                                 subsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2SubsSignature2NumberofMutationsDict, plot_mode)
 
     if DBS in mutation_types:
         plotAllMutationTypesFigures('Aggregated Doublets', 'crimson', 'lightpink', AGGREGATEDDINUCS, None, outputDir, jobname,
-                                numberofSimulations, sample_based, sample2NumberofDinucsDict,
+                                numberofSimulations, plot_sample_based, sample2NumberofDinucsDict,
                                 dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2DinucsSignature2NumberofMutationsDict, plot_mode)
     if ID in mutation_types:
         plotAllMutationTypesFigures('Aggregated Indels', 'yellowgreen', 'lightgreen', AGGREGATEDINDELS, None, outputDir,
-                                jobname, numberofSimulations, sample_based, sample2NumberofIndelsDict,
+                                jobname, numberofSimulations, plot_sample_based, sample2NumberofIndelsDict,
                                 indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2IndelsSignature2NumberofMutationsDict, plot_mode)
 
     plotAllMutationTypesFigures(MICROHOMOLOGY, 'yellowgreen', 'lightgreen', INDELBASED, MICROHOMOLOGY, outputDir,
-                                jobname, numberofSimulations, sample_based, sample2NumberofIndelsDict,
+                                jobname, numberofSimulations, plot_sample_based, sample2NumberofIndelsDict,
                                 indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2IndelsSignature2NumberofMutationsDict, plot_mode)
 
     plotAllMutationTypesFigures(REPEAT, 'yellowgreen', 'lightgreen', INDELBASED, REPEAT, outputDir, jobname,
-                                numberofSimulations, sample_based, sample2NumberofIndelsDict,
+                                numberofSimulations, plot_sample_based, sample2NumberofIndelsDict,
                                 indelsSignature_cutoff_numberofmutations_averageprobability_df,
                                 sample2IndelsSignature2NumberofMutationsDict, plot_mode)
 
@@ -589,7 +589,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                              outputDir,
                              jobname,
                              numberofSimulations,
-                             sample_based,
+                             plot_sample_based,
                              sample2NumberofSubsDict,
                              subsSignature_cutoff_numberofmutations_averageprobability_df,
                              sample2SubsSignature2NumberofMutationsDict,
@@ -602,7 +602,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                              outputDir,
                              jobname,
                              numberofSimulations,
-                             sample_based,
+                             plot_sample_based,
                              sample2NumberofDinucsDict,
                              dinucsSignature_cutoff_numberofmutations_averageprobability_df,
                              sample2DinucsSignature2NumberofMutationsDict,
@@ -615,7 +615,7 @@ def replicationTimeNormalizedMutationDensityFigures(outputDir,
                              outputDir,
                              jobname,
                              numberofSimulations,
-                             sample_based,
+                             plot_sample_based,
                              sample2NumberofIndelsDict,
                              indelsSignature_cutoff_numberofmutations_averageprobability_df,
                              sample2IndelsSignature2NumberofMutationsDict,

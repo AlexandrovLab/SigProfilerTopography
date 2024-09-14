@@ -2792,7 +2792,7 @@ def occupancyAverageSignalFigures(outputDir,
                                   jobname,
                                   numberofSimulations,
                                   mutation_types,
-                                  sample_based,
+                                  plot_sample_based,
                                   libraryFilename,
                                   libraryFilenameMemo,
                                   occupancy_type,
@@ -2848,7 +2848,7 @@ def occupancyAverageSignalFigures(outputDir,
     if (ID in mutation_types) and os.path.exists(indelsSignature_cutoff_numberofmutations_averageprobability_path):
         indelsSignature_cutoff_numberofmutations_averageprobability_df = pd.read_csv(indelsSignature_cutoff_numberofmutations_averageprobability_path,sep='\t', header=0,dtype={'cutoff': np.float32, 'signature': str,'number_of_mutations': np.int32,'average_probability': np.float32})
 
-    if sample_based:
+    if plot_sample_based:
         sample2NumberofSubsDict = getSample2NumberofSubsDict(outputDir, jobname)
         sample2NumberofIndelsDict = getSample2NumberofIndelsDict(outputDir, jobname)
         sample2NumberofDinucsDict = getDictionary(outputDir, jobname, Sample2NumberofDinucsDictFilename)
@@ -2977,7 +2977,7 @@ def occupancyAverageSignalFigures(outputDir,
                                       verbose,
                                       plot_mode)
 
-    if sample_based:
+    if plot_sample_based:
         # ALL SAMPLES IN ONE
         # Plot "all samples pooled" and "sample based" signature based in one figure
         if (SBS in mutation_types) and (not subsSignature_cutoff_numberofmutations_averageprobability_df.empty):
@@ -3007,4 +3007,4 @@ def occupancyAverageSignalFigures(outputDir,
                 plotAllMutationsPooledWithSimulations('Interval around variant (bp)', ylabel, sample, outputDir,
                                                       jobname, numberofSubs, numberofIndels, numberofDinucs,
                                                       numberofSimulations, mutation_type, libraryFilename,
-                                                      libraryFilenameMemo, occupancy_type, plusOrMinus)
+                                                      libraryFilenameMemo, occupancy_type, plusOrMinus, plot_mode)
