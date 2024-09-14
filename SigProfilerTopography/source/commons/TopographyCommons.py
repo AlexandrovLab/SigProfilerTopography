@@ -1496,7 +1496,7 @@ def getSample2SubsSignature2NumberofMutationsDict(outputDir,jobname):
 
 ########################################################################################
 def getSample2NumberofSubsDict(outputDir,jobname):
-    #Load samplesWithAtLeast10KMutations2NumberofMutationsDict
+    # Load samplesWithAtLeast10KMutations2NumberofMutationsDict
     sample2NumberofSubsDict = {}
 
     Sample2NumberofSubsDictFilePath = os.path.join(outputDir,jobname,DATA,Sample2NumberofSubsDictFilename)

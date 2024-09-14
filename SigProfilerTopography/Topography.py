@@ -2592,27 +2592,28 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 chrlong_numberofmutations_df.to_csv(filePath, sep='\t', header=True, index=False)
 
         # We are reading original data again to fill the mutationType based, sample based and signature based dictionaries
-        # This part is deprecated
-        if sample_based:
-            # Using original data
-            if any(mutation_type_context in sigprofiler_simulator_mutation_types_contexts for mutation_type_context in SBS_CONTEXTS):
-                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SBS,
-                                                  subsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                  num_of_sbs_required, num_of_id_required,
-                                                  num_of_dbs_required)
-            if (DBS in sigprofiler_simulator_mutation_types_contexts):
-                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DBS,
-                                                  dinucsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                  num_of_sbs_required,
-                                                  num_of_id_required,
-                                                  num_of_dbs_required)
-
-            if (ID in sigprofiler_simulator_mutation_types_contexts):
-                fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, ID,
-                                                  indelsSignature_cutoff_numberofmutations_averageprobability_df,
-                                                  num_of_sbs_required,
-                                                  num_of_id_required,
-                                                  num_of_dbs_required)
+        # This part is used when sample based figures are plotted (plot_sample_based=True)
+        # These sample based numbers can be read and stored in the first place, no need to read again.
+        # if sample_based:
+        #     # Using original data
+        #     if any(mutation_type_context in sigprofiler_simulator_mutation_types_contexts for mutation_type_context in SBS_CONTEXTS):
+        #         fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, SBS,
+        #                                           subsSignature_cutoff_numberofmutations_averageprobability_df,
+        #                                           num_of_sbs_required, num_of_id_required,
+        #                                           num_of_dbs_required)
+        #     if (DBS in sigprofiler_simulator_mutation_types_contexts):
+        #         fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, DBS,
+        #                                           dinucsSignature_cutoff_numberofmutations_averageprobability_df,
+        #                                           num_of_sbs_required,
+        #                                           num_of_id_required,
+        #                                           num_of_dbs_required)
+        #
+        #     if (ID in sigprofiler_simulator_mutation_types_contexts):
+        #         fill_mutations_dictionaries_write(outputDir, jobname, chromNamesList, ID,
+        #                                           indelsSignature_cutoff_numberofmutations_averageprobability_df,
+        #                                           num_of_sbs_required,
+        #                                           num_of_id_required,
+        #                                           num_of_dbs_required)
 
         print("--- Fill tables/dictionaries using real mutations: %s seconds" % (time.time() - start_time), file=log_out)
         print("--- Fill tables/dictionaries using real mutations: %f minutes" % (float((time.time() - start_time) / 60)), file=log_out)
