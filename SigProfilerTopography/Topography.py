@@ -1712,20 +1712,20 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
         print('For original data inputDir:%s' % (inputDir), file=log_out)
         matrices = matGen.SigProfilerMatrixGeneratorFunc(jobname, genome, inputDir, plot=False, seqInfo=seqInfo)
-        print('Generated matrices keys:', matrices.keys(), file=log_out)
 
         # if the user hasn't specified mutation_types then we will fill it based on matrices.keys()
         if mutation_types is None:
             mutation_types = []
-            if any(mutation_type_contenxt in matrices.keys() for mutation_type_contenxt in SBS_CONTEXTS):
+
+            if any((mutation_type_context in matrices.keys() and matrices[mutation_type_context] is not None) for mutation_type_context in SBS_CONTEXTS):
                 mutation_types.append('SBS')
                 sigprofiler_simulator_sbs_mutation_context = SBS_96
                 sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_sbs_mutation_context)
-            if 'DINUC' in matrices.keys():
+            if 'DINUC' in matrices.keys() and matrices['DINUC'] is not None:
                 mutation_types.append('DBS')
                 sigprofiler_simulator_dbs_mutation_context = DBS
                 sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_dbs_mutation_context)
-            if 'ID' in matrices.keys():
+            if 'ID' in matrices.keys() and matrices['ID'] is not None:
                 mutation_types.append('ID')
                 sigprofiler_simulator_id_mutation_context = ID
                 sigprofiler_simulator_mutation_types_contexts.append(sigprofiler_simulator_id_mutation_context)
