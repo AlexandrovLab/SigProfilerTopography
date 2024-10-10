@@ -1191,7 +1191,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 plus_minus_nucleosome = 1000, # [Integer] The number of bases considered before and after mutation start for nucleosome occupancy analysis.
                 epigenomics_heatmap_significance_level = 0.05, # [Float] Corrected p-values <= epigenomics_heatmap_significance_level are considered statistically significant.
                 fold_change_window_size = 100, # [Integer] In epigenomics analysis, fold change of real versus simulated mutations is calculated for the window size centered at the mutation start.
-                num_of_avg_overlap = 100, # [Integer] The minimum required average number of overlaps between the mutations and the regions outlined in the epigenomics files.
+                num_of_avg_overlap_required = 100, # [Integer] The minimum required average number of overlaps between the mutations and the regions outlined in the epigenomics files.
                 plot_detailed_epigemomics_heatmaps = False, # [Boolean] Plot detailed epigenomics heatmaps when True.
                 remove_dna_elements_with_all_nans_in_epigemomics_heatmaps = True, # [Boolean] Remove the DNA elements from the epigenomics heatmap if no result exists.
                 odds_ratio_cutoff = 1.1, # [Float] Strand asymmetries with odd ratio >= odds_ratio_cutoff are shown in the strand asymmetry circle plots.
@@ -3137,7 +3137,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     plot_mode,
                     combine_p_values_method,
                     fold_change_window_size,
-                    num_of_avg_overlap,
+                    num_of_avg_overlap_required,
                     plot_detailed_epigemomics_heatmaps,
                     remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                     odds_ratio_cutoff,
@@ -3216,7 +3216,7 @@ def plot_topography_figures(genome,
                 plot_mode,
                 combine_p_values_method,
                 fold_change_window_size,
-                num_of_avg_overlap,
+                num_of_avg_overlap_required,
                 plot_detailed_epigemomics_heatmaps,
                 remove_dna_elements_with_all_nans_in_epigemomics_heatmaps,
                 odds_ratio_cutoff,
@@ -3407,7 +3407,7 @@ def plot_topography_figures(genome,
         print("\n--- Plot epigenomics heatmaps")
         compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                               fold_change_window_size,
-                                              num_of_avg_overlap,
+                                              num_of_avg_overlap_required,
                                               outputDir,
                                               jobname,
                                               numberofSimulations,

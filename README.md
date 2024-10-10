@@ -1,3 +1,4 @@
+
 [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.io/5unby/wiki/home/)
  [![Build Status](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography.svg?branch=master)](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography)
@@ -223,7 +224,7 @@ View the table below for the full list of `runAnalyses` parameters.
 | | **plusorMinus_nucleosome** | Integer | The number of bases considered before and after  mutation start for nucleosome occupancy analysis. |
 | | **epigenomics_heatmap_<br>significance_level** | Float | Corrected p-values <= `epigenomics_heatmap_significance_level` are considered statistically significant. By default, this is set to 0.05. |
 | | **fold_change_window_size** | Integer | In epigenomics analysis, fold change of real versus simulated mutations is calculated for the window size centered at the mutation start. E.g., for window size of 100 bases, ± 50 bases are considered before and after mutation start. By default, this is set to 100. |
-| | **num_of_avg_overlap** | Integer | The minimum required average number of overlaps between the mutations and the regions outlined in the epigenomics files. By default, set to 100.|
+| | **num_of_avg_overlap_required** | Integer | The minimum required average number of overlaps between the mutations and the regions outlined in the epigenomics files. By default, set to 100.|
 | | **plot_detailed_epigemomics_<br>heatmaps** | Boolean | Plot detailed epigenomics heatmaps when True. By default, set to False. |
 | | **remove_dna_elements_with_all_<br>nans_in_epigemomics_heatmaps** | Boolean | Remove the DNA elements from the epigenomics heatmap if no result exists. By default, set to True. |
 | | **odds_ratio_cutoff** | Float | Strand asymmetries with odd ratio >= `odds_ratio_cutoff` are shown in the strand asymmetry circle plots. By default, set to 1.1. |

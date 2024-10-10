@@ -1761,7 +1761,7 @@ def accumulate(signature,
 
 def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
                                           fold_change_window_size,
-                                          num_of_avg_overlap,
+                                          num_of_avg_overlap_required,
                                           outputDir,
                                           jobname,
                                           numberofSimulations,
@@ -1835,7 +1835,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
         # Combined p value and plot heatmaps
         compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_method,
                                                     fold_change_window_size,
-                                                    num_of_avg_overlap,
+                                                    num_of_avg_overlap_required,
                                                     plusOrMinus_epigenomics,
                                                     plusOrMinus_nucleosome,
                                                     epigenomics_heatmap_significance_level,
@@ -1857,7 +1857,7 @@ def compute_fold_change_with_p_values_plot_heatmaps(combine_p_values_method,
 
 def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_method,
                                                     fold_change_window_size,
-                                                    num_of_avg_overlap,
+                                                    num_of_avg_overlap_required,
                                                     epigenomics_center,
                                                     nucleosome_center,
                                                     epigenomics_heatmap_significance_level,
@@ -1918,7 +1918,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     step2_combined_p_value_df, step2_signature2biosample2dna_element2combined_p_value_list_dict, step2_signature2biosample2dna_element2avg_fold_change_dict = step2_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
                                                                                                                                                          heatmaps_data_dir,
                                                                                                                                                          combine_p_values_method,
-                                                                                                                                                         num_of_avg_overlap,
+                                                                                                                                                         num_of_avg_overlap_required,
                                                                                                                                                          nucleosome_file,
                                                                                                                                                          epigenomics_dna_elements,
                                                                                                                                                          log_file)
@@ -1931,7 +1931,7 @@ def compute_fold_change_with_combined_p_values_plot_heatmaps(combine_p_values_me
     step3_combined_p_value_df, step3_signature2dna_element2combined_p_value_list_dict, step3_signature2dna_element2avg_fold_change_dict = step3_combine_p_value(step1_signature2Biosample2DNAElement2PValueDict,
                           heatmaps_data_dir,
                           combine_p_values_method,
-                          num_of_avg_overlap,
+                          num_of_avg_overlap_required,
                           nucleosome_file,
                           epigenomics_dna_elements,
                           log_file)
@@ -2441,7 +2441,7 @@ def step1_calculate_p_value(fold_change_window_size,
 def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           heatmaps_data_dir,
                           combine_p_values_method,
-                          num_of_avg_overlap,
+                          num_of_avg_overlap_required,
                           nucleosome_file,
                           epigenomics_dna_elements,
                           log_file):
@@ -2485,7 +2485,7 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 
                 if ((fold_change is not None) and (not np.isnan(np.array([fold_change], dtype=float)).any()) and (str(fold_change) != 'nan')) and \
                         ((p_value is not None) and (not np.isnan(np.array([p_value], dtype=float)).any()) and (str(p_value) != 'nan')) and \
-                        ((real_data_avg_count >= num_of_avg_overlap) or (sim_data_avg_count >= num_of_avg_overlap)):
+                        ((real_data_avg_count >= num_of_avg_overlap_required) or (sim_data_avg_count >= num_of_avg_overlap_required)):
 
                     if signature in signature2biosample2pooled_dna_element2combined_p_value_list_dict:
                         if biosample in signature2biosample2pooled_dna_element2combined_p_value_list_dict[signature]:
@@ -2566,7 +2566,7 @@ def step2_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
                           heatmaps_data_dir,
                           combine_p_values_method,
-                          num_of_avg_overlap,
+                          num_of_avg_overlap_required,
                           nucleosome_file,
                           epigenomics_dna_elements,
                           log_file):
@@ -2610,7 +2610,7 @@ def step3_combine_p_value(signature2Biosample2DNAElement2PValueDict,
 
                 if ((fold_change is not None) and (not np.isnan(np.array([fold_change], dtype=float)).any()) and (str(fold_change) != 'nan')) and \
                         ((p_value is not None) and (not np.isnan(np.array([p_value], dtype=float)).any()) and (str(p_value) != 'nan')) and \
-                        (real_data_avg_count >= num_of_avg_overlap or sim_data_avg_count >= num_of_avg_overlap):
+                        (real_data_avg_count >= num_of_avg_overlap_required or sim_data_avg_count >= num_of_avg_overlap_required):
 
                     if signature in signature2dna_element2combined_p_value_list_dict:
                         if dna_element in signature2dna_element2combined_p_value_list_dict[signature]:
