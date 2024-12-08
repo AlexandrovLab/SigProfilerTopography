@@ -46,6 +46,8 @@ WINDOWS = 'windows'
 
 current_abs_path = os.path.dirname(os.path.realpath(__file__))
 
+QUESTIONABLE = 'Questionable'
+
 LAGGING = 'Lagging' #0
 LEADING = 'Leading' #1
 
@@ -511,12 +513,15 @@ TRANSCRIPTIONFACTOROCCUPANCY='tf_occupancy'
 REPLICATIONTIME = 'replication_time'
 PROCESSIVITY = 'processivity'
 STRANDBIAS = 'strand_bias'
+MULTILEVEL = 'multilevel'
 SCATTER_PLOTS= 'scatter_plots'
 BAR_PLOTS= 'bar_plots'
 CIRCLE_PLOTS= 'circle_plots'
 CIRCLE_BAR_PLOTS = 'circle_bar_plots'
 HEATMAPS='heatmaps'
 PLOTTING = 'plotting'
+
+GENICINTERGENICBIAS = 'genic_intergenic_bias'
 TRANSCRIPTIONSTRANDBIAS = 'transcription_strand_bias'
 REPLICATIONSTRANDBIAS = 'replication_strand_bias'
 
@@ -632,6 +637,7 @@ ALT = 'Alt'
 PYRAMIDINESTRAND = 'PyramidineStrand'
 TRANSCRIPTIONSTRAND = 'TranscriptionStrand'
 REPLICATIONSTRAND = 'ReplicationStrand'
+REPLICATIONTIMECOLUMN = 'ReplicationTime'
 MUTATION = 'Mutation'
 MUTATIONLONG = 'MutationLong'
 MUTATIONS = 'Mutations'
@@ -690,11 +696,19 @@ SBS_6144 = '6144' # SBS_1536 * (4) transcriptional bias categories = 6124 e.g.: 
 
 #These 3 (SNV,ID,DBS) are used for matrixgenerator created directories
 SNV ='SNV'
-ID = 'ID'
-DBS = 'DBS'
 
 SBS = 'SBS'
 SBS_CONTEXTS = [SBS_6, SBS_24, SBS_96, SBS_192, SBS_288, SBS_384, SBS_1536, SBS_6144]
+
+DBS = 'DBS' # DBS78
+DBS_186 = 'DBS186'
+DBS_1248 = 'DBS1248'
+DBS_CONTEXTS = [DBS, DBS_186, DBS_1248]
+
+ID_28 = 'ID28'
+ID = 'ID' # ID83
+ID_415 = 'ID415'
+ID_CONTEXTS = [ID_28, ID, ID_415]
 
 # Used for dictionaries
 # MutationType2NumberofMutationsDict keys
@@ -738,7 +752,7 @@ def md5_read_in_chunks(file_name):
 
 # uses SPA tool decompose_subroutines.py
 # signatures_file (W): rows_mutation_types_columns_signatures_cells_probabilities_file (column-wise sum must be 1
-# activities_file (H): rows_samples_columns_signatures_cells_activities_file
+# activities_file (H): rows_samples_columns_signatures_cells_activities_file (cells: number of mutations for each sample and signature)
 # original matrix Genomes = W * H.T
 # probabilities_file (P): rows_samples_mutation_types_columns_signatures_cells_probabilities_file (row-wise sum must be 1)
 def generate_probabilities_file(signatures_file, activities_file, probabilities_file):
@@ -914,6 +928,385 @@ def write_excel_file(df_list, sheet_list, file_name):
     for dataframe, sheet in zip(df_list, sheet_list):
         dataframe.to_excel(writer, sheet_name=sheet, startrow=0 , startcol=0, index=False)
     writer.close()
+
+
+# Consider all mutations
+def fill_all_mutations_strand_np_array(mutation_type,
+                             chrBased_simBased_df,
+                             signature_mutationtype_strand_replicationtime_accumulated_np_array,
+                             mutation_mapping,
+                             strand_mapping,
+                             replication_time_mapping,
+                             strand_of_interest):
+
+    if chrBased_simBased_df is not None:
+        # discard the ones with -1 replication time
+        chrBased_simBased_df = chrBased_simBased_df[chrBased_simBased_df['ReplicationTime'] != -1]
+
+        if 'MutationLong' in chrBased_simBased_df.columns.values:
+            if mutation_type == SBS:
+                # N:TG[C>G]TT  --> G[C>G]T
+                # SBS6144 --> SBS96
+                chrBased_simBased_df['Mutation'] = \
+                    chrBased_simBased_df['MutationLong'].str[3:10]
+            elif mutation_type == DBS:
+                # T:T[TC>GA]T --> TC>GA
+                # DBS6144 --> DBS78
+                chrBased_simBased_df['Mutation'] = \
+                    chrBased_simBased_df['MutationLong'].str[4:9]
+            elif mutation_type == ID:
+                # N:1:Ins:T:5 --> 1:Ins:T:5
+                # ID415 --> ID83
+                chrBased_simBased_df['Mutation'] = \
+                    chrBased_simBased_df['MutationLong'].str[2:]
+
+        if 'MutationLong' in chrBased_simBased_df.columns.values:
+            chrBased_simBased_df.drop(columns=['MutationLong'], axis=1, inplace=True)
+
+        # Mutation TranscriptionStrand ReplicationTime MutationCount
+        df = chrBased_simBased_df.groupby(['Mutation', strand_of_interest, 'ReplicationTime']).size().reset_index(name='MutationCount')
+
+        df['Mutation_mapped'] = df['Mutation'].map(mutation_mapping)
+        df['Strand_mapped'] = df[strand_of_interest].map(strand_mapping)
+        df['ReplicationTime_mapped'] = df['ReplicationTime'].map(replication_time_mapping)
+
+        # there is no MutationCount
+        np.add.at(signature_mutationtype_strand_replicationtime_accumulated_np_array,
+                  (-1,
+                   df['Mutation_mapped'],
+                   df['Strand_mapped'],
+                   df['ReplicationTime_mapped']),
+                  df['MutationCount'])
+
+
+
+def fill_strand_np_array(mutation_type,
+                         signature,
+                         signature_cutoff,
+                         signature_index,
+                         chrBased_simBased_df,
+                         signature_mutationtype_strand_replicationtime_accumulated_np_array,
+                         mutation_mapping,
+                         strand_mapping,
+                         replication_time_mapping,
+                         strand_of_interest # can be 'TranscriptionStrand' or 'ReplicationStrand'
+                         ):
+
+    if chrBased_simBased_df is not None:
+
+        # Filter signature specific mutations and discard the ones with -1 replication time
+        signature_based_mutationlong_strand_replicationtime_mutationcount_df = chrBased_simBased_df[
+            (chrBased_simBased_df[signature] >= signature_cutoff) & (chrBased_simBased_df['ReplicationTime']!=-1)].groupby(
+            ['MutationLong', strand_of_interest, 'ReplicationTime']).size().reset_index(name='MutationCount')
+
+        if mutation_type == SBS:
+            # N:TG[C>G]TT  --> G[C>G]T
+            # SBS6144 --> SBS96
+            signature_based_mutationlong_strand_replicationtime_mutationcount_df['Mutation'] = \
+                signature_based_mutationlong_strand_replicationtime_mutationcount_df['MutationLong'].str[3:10]
+        elif mutation_type == DBS:
+            # T:T[TC>GA]T --> TC>GA
+            # DBS6144 --> DBS78
+            signature_based_mutationlong_strand_replicationtime_mutationcount_df['Mutation'] = \
+                signature_based_mutationlong_strand_replicationtime_mutationcount_df['MutationLong'].str[4:9]
+        elif mutation_type == ID:
+            # N:1:Ins:T:5 --> 1:Ins:T:5
+            # ID415 --> ID83
+            signature_based_mutationlong_strand_replicationtime_mutationcount_df['Mutation'] = \
+                signature_based_mutationlong_strand_replicationtime_mutationcount_df['MutationLong'].str[2:]
+
+        signature_based_mutationlong_strand_replicationtime_mutationcount_df.drop(columns=['MutationLong'],
+                                                                                               axis=1,
+                                                                                               inplace=True)
+
+        # Mutation Strand ReplicationTime MutationCount
+        df = signature_based_mutationlong_strand_replicationtime_mutationcount_df.groupby(
+            ['Mutation', strand_of_interest, 'ReplicationTime'], as_index=False).sum()
+
+        df['Mutation_mapped'] = df['Mutation'].map(mutation_mapping)
+        df['Strand_mapped'] = df[strand_of_interest].map(strand_mapping)
+        df['ReplicationTime_mapped'] = df['ReplicationTime'].map(replication_time_mapping)
+        df['ReplicationTime_mapped'] = df['ReplicationTime_mapped'].astype(int)
+
+        np.add.at(signature_mutationtype_strand_replicationtime_accumulated_np_array,
+                  (signature_index,
+                   df['Mutation_mapped'],
+                   df['Strand_mapped'],
+                   df['ReplicationTime_mapped']),
+                  df['MutationCount'])
+
+
+def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
+                                                             sim_num,
+                                                             asymmetry_types,
+                                                             chrBased_simBased_subs_df,
+                                                             chrBased_simBased_dinucs_df,
+                                                             chrBased_simBased_indels_df,
+                                                             ordered_sbs_signatures_with_cutoffs,
+                                                             ordered_dbs_signatures_with_cutoffs,
+                                                             ordered_id_signatures_with_cutoffs,
+                                                             ordered_sbs_signatures_cutoffs,
+                                                             ordered_dbs_signatures_cutoffs,
+                                                             ordered_id_signatures_cutoffs,
+                                                             ordered_SBS96_substitution_types,
+                                                             ordered_DBS78_doublet_types,
+                                                             ordered_ID83_indel_types,
+                                                             transcription_strand_mapping,
+                                                             replication_strand_mapping,
+                                                             replication_time_mapping,
+                                                             SBS96_mutation_mapping,
+                                                             DBS78_mutation_mapping,
+                                                             ID83_mutation_mapping):
+
+
+    sbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_sbs_signatures_with_cutoffs)+1,
+                                                                                                   np.size(ordered_SBS96_substitution_types),
+                                                                                             5, # transcribed, untranscribed, nontranscribed, bidirectional, questionable
+                                                                                                   10)) # Replication time
+
+    dbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_dbs_signatures_with_cutoffs)+1,
+                                                                                                   np.size(ordered_DBS78_doublet_types),
+                                                                                             5, # transcribed, untranscribed, nontranscribed, bidirectional, questionable
+                                                                                                   10)) # Replication time
+
+    id_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_id_signatures_with_cutoffs)+1,
+                                                                                                  np.size(ordered_ID83_indel_types),
+                                                                                            5, # transcribed, untranscribed, nontranscribed, bidirectional, questionable
+                                                                                                  10)) # Replication time
+
+    sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_sbs_signatures_with_cutoffs)+1,
+                                                                                                 np.size(ordered_SBS96_substitution_types),
+                                                                                                 5, # Leading, Lagging, bidirectional, questionable
+                                                                                                 10)) # Replication time
+
+    dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_dbs_signatures_with_cutoffs)+1,
+                                                                                                 np.size(ordered_DBS78_doublet_types),
+                                                                                                 5, # Leading, Lagging, bidirectional, questionable
+                                                                                                 10)) # Replication time
+
+    id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array = np.zeros((np.size(ordered_id_signatures_with_cutoffs)+1,
+                                                                                                np.size(ordered_ID83_indel_types),
+                                                                                                5, # Leading, Lagging, bidirectional, questionable
+                                                                                                10)) # Replication time
+
+
+
+    # SBS Signatures
+    for sbs_signature_index, (sbs_signature, sbs_signature_cutoff) in enumerate(zip(ordered_sbs_signatures_with_cutoffs, ordered_sbs_signatures_cutoffs)):
+
+        if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
+
+            # SBS Transcription
+            fill_strand_np_array(SBS,
+                                 sbs_signature,
+                                 sbs_signature_cutoff,
+                                 sbs_signature_index,
+                                 chrBased_simBased_subs_df,
+                                 sbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                                 SBS96_mutation_mapping,
+                                 transcription_strand_mapping,
+                                 replication_time_mapping,
+                                 TRANSCRIPTIONSTRAND)
+
+        if REPLICATIONSTRANDBIAS in asymmetry_types:
+
+            # SBS Replication
+            fill_strand_np_array(SBS,
+                                 sbs_signature,
+                                 sbs_signature_cutoff,
+                                 sbs_signature_index,
+                                 chrBased_simBased_subs_df,
+                                 sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                 SBS96_mutation_mapping,
+                                 replication_strand_mapping,
+                                 replication_time_mapping,
+                                 REPLICATIONSTRAND)
+
+
+
+    # DBS Signatures
+    for dbs_signature_index, (dbs_signature, dbs_signature_cutoff) in enumerate(zip(ordered_dbs_signatures_with_cutoffs, ordered_dbs_signatures_cutoffs)):
+
+        if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
+
+            # DBS Transcription
+            fill_strand_np_array(DBS,
+                                 dbs_signature,
+                                 dbs_signature_cutoff,
+                                 dbs_signature_index,
+                                 chrBased_simBased_dinucs_df,
+                                 dbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                                 DBS78_mutation_mapping,
+                                 transcription_strand_mapping,
+                                 replication_time_mapping,
+                                 TRANSCRIPTIONSTRAND)
+
+        if REPLICATIONSTRANDBIAS in asymmetry_types:
+
+            # DBS Replication
+            fill_strand_np_array(DBS,
+                                 dbs_signature,
+                                 dbs_signature_cutoff,
+                                 dbs_signature_index,
+                                 chrBased_simBased_dinucs_df,
+                                 dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                 DBS78_mutation_mapping,
+                                 replication_strand_mapping,
+                                 replication_time_mapping,
+                                 REPLICATIONSTRAND)
+
+
+    # ID signatures
+    for id_signature_index, (id_signature, id_signature_cutoff) in enumerate(zip(ordered_id_signatures_with_cutoffs, ordered_id_signatures_cutoffs)):
+
+        if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
+
+            # ID Transcription
+            fill_strand_np_array(ID,
+                                 id_signature,
+                                 id_signature_cutoff,
+                                 id_signature_index,
+                                 chrBased_simBased_indels_df,
+                                 id_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                                 ID83_mutation_mapping,
+                                 transcription_strand_mapping,
+                                 replication_time_mapping,
+                                 TRANSCRIPTIONSTRAND)
+
+        if REPLICATIONSTRANDBIAS in asymmetry_types:
+
+            # ID Replication
+            fill_strand_np_array(ID,
+                                 id_signature,
+                                 id_signature_cutoff,
+                                 id_signature_index,
+                                 chrBased_simBased_indels_df,
+                                 id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                 ID83_mutation_mapping,
+                                 replication_strand_mapping,
+                                 replication_time_mapping,
+                                 REPLICATIONSTRAND)
+
+    # For all subs, doublets and indels
+    if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
+
+        # For all substitutions
+        fill_all_mutations_strand_np_array(SBS,
+                             chrBased_simBased_subs_df,
+                             sbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                             SBS96_mutation_mapping,
+                             transcription_strand_mapping,
+                             replication_time_mapping,
+                             TRANSCRIPTIONSTRAND)
+
+        # For all doublets
+        fill_all_mutations_strand_np_array(DBS,
+                             chrBased_simBased_dinucs_df,
+                             dbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                             DBS78_mutation_mapping,
+                             transcription_strand_mapping,
+                             replication_time_mapping,
+                             TRANSCRIPTIONSTRAND)
+
+        # For all indels
+        fill_all_mutations_strand_np_array(ID,
+                             chrBased_simBased_indels_df,
+                             id_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array,
+                             ID83_mutation_mapping,
+                             transcription_strand_mapping,
+                             replication_time_mapping,
+                             TRANSCRIPTIONSTRAND)
+
+
+
+    if REPLICATIONSTRANDBIAS in asymmetry_types:
+
+        # For all substitutions
+        fill_all_mutations_strand_np_array(SBS,
+                                           chrBased_simBased_subs_df,
+                                           sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                           SBS96_mutation_mapping,
+                                           replication_strand_mapping,
+                                           replication_time_mapping,
+                                           REPLICATIONSTRAND)
+
+        # For all doublets
+        fill_all_mutations_strand_np_array(DBS,
+                                           chrBased_simBased_dinucs_df,
+                                           dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                           DBS78_mutation_mapping,
+                                           replication_strand_mapping,
+                                           replication_time_mapping,
+                                           REPLICATIONSTRAND)
+
+        # For all indels
+        fill_all_mutations_strand_np_array(ID,
+                                           chrBased_simBased_indels_df,
+                                           id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                           ID83_mutation_mapping,
+                                           replication_strand_mapping,
+                                           replication_time_mapping,
+                                           REPLICATIONSTRAND)
+
+
+    return chrLong,\
+        sim_num,\
+        sbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array, \
+        dbs_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array, \
+        id_signature_mutationtype_transcriptionstrand_replicationtime_accumulated_np_array, \
+        sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array, \
+        dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array, \
+        id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array
+
+
+def fill_signature_mutationtype_strand_replicationtime_arrays(outputDir,
+                                                              jobname,
+                                                              chrLong,
+                                                              sim_num,
+                                                              asymmetry_types,
+                                                              ordered_sbs_signatures_with_cutoffs,
+                                                              ordered_dbs_signatures_with_cutoffs,
+                                                              ordered_id_signatures_with_cutoffs,
+                                                              ordered_sbs_signatures_cutoffs,
+                                                              ordered_dbs_signatures_cutoffs,
+                                                              ordered_id_signatures_cutoffs,
+                                                              ordered_SBS96_substitution_types,
+                                                              ordered_DBS78_doublet_types,
+                                                              ordered_ID83_indel_types,
+                                                              transcription_strand_mapping,
+                                                              replication_strand_mapping,
+                                                              replication_time_mapping,
+                                                              SBS96_mutation_mapping,
+                                                              DBS78_mutation_mapping,
+                                                              ID83_mutation_mapping):
+
+
+    chrBased_simBased_subs_df, \
+    chrBased_simBased_dinucs_df, \
+    chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, sim_num)
+
+    return get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
+                                                                    sim_num,
+                                                                    asymmetry_types,
+                                                                    chrBased_simBased_subs_df,
+                                                                    chrBased_simBased_dinucs_df,
+                                                                    chrBased_simBased_indels_df,
+                                                                    ordered_sbs_signatures_with_cutoffs,
+                                                                    ordered_dbs_signatures_with_cutoffs,
+                                                                    ordered_id_signatures_with_cutoffs,
+                                                                    ordered_sbs_signatures_cutoffs,
+                                                                    ordered_dbs_signatures_cutoffs,
+                                                                    ordered_id_signatures_cutoffs,
+                                                                    ordered_SBS96_substitution_types,
+                                                                    ordered_DBS78_doublet_types,
+                                                                    ordered_ID83_indel_types,
+                                                                    transcription_strand_mapping,
+                                                                    replication_strand_mapping,
+                                                                    replication_time_mapping,
+                                                                    SBS96_mutation_mapping,
+                                                                    DBS78_mutation_mapping,
+                                                                    ID83_mutation_mapping)
+
 
 
 def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
@@ -2755,7 +3148,7 @@ def write_sample_type_strand_bias_np_array_as_dataframe(output_dir,
     # In strand_list we have
     # real_data
     # sims_data_list
-    #Add these to information strand_list
+    # Add these to information strand_list
     # mean_sims_data
     # min_sims_data
     # max_sims_data
@@ -4169,7 +4562,7 @@ def readChrBasedMutations(chr_based_mutation_filepath,
             mutations_with_genomic_positions_df = pd.DataFrame()
 
         if (len(mutations_with_genomic_positions_df.index) > 0):
-            if (sigprofiler_simulator_mutation_context == DBS):
+            if (sigprofiler_simulator_mutation_context in DBS_CONTEXTS):
                 # For DBS MatrixGenerator provides
                 # UAD-US_SP50263 10      110099884       Q:T[GC>AG]C     0
                 # For DBS Extractor has
@@ -4185,9 +4578,24 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                 # MatrixGenerator generates Q:A[AC>TT]A
                 # PCAWG_Matlab dbs probabilities has  AT>GC
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
-                mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
 
-            elif (sigprofiler_simulator_mutation_context == ID):
+                # sigprofiler_extractor_mutation_context designates the resolution at probability files
+                if (sigprofiler_extractor_mutation_context == DBS): # DBS78
+                    # MatrixGenerator generates Q:A[AC>TT]A
+                    # SigProfilerExtractor AC>TT
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
+                elif (sigprofiler_extractor_mutation_context == DBS_186):
+                    # MatrixGenerator generates Q:A[AC>TT]A
+                    # SigProfilerExtractor Q:AC>TT
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[:2] + mutations_with_genomic_positions_df[MUTATIONLONG].str[4:9]
+                elif (sigprofiler_extractor_mutation_context == DBS_1248):
+                    # By taking one base on the 5′ end and one base on the 3′ end of the dinucleotide
+                    # mutation, we establish the DBS-1248 context.
+                    # MatrixGenerator generates Q:A[AC>TT]A
+                    # SigProfilerExtractor A[AC>TT]A
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[2:]
+
+            elif (sigprofiler_simulator_mutation_context in ID_CONTEXTS):
                 # For ID MatrixGenerator provides
                 # LUAD-US_SP50263 10      8045169 U:2:Ins:R:5     T       TTC     1
                 # For ID Extractor has
@@ -4204,8 +4612,22 @@ def readChrBasedMutations(chr_based_mutation_filepath,
                 # PCAWG_Matlab id probabilities has 1:Ins:T:1
                 mutations_with_genomic_positions_df[LENGTH] = mutations_with_genomic_positions_df[REF].apply(len)
                 mutations_with_genomic_positions_df[TRANSCRIPTIONSTRAND] = mutations_with_genomic_positions_df[MUTATIONLONG].str[0]
-                mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[2:]
-                #order the columns make CONTEXT at the end.
+
+                # Fill MUTATION in mutations_with_genomic_positions_df to merge with SigProfilerExtractor probabilities file
+                # sigprofiler_extractor_mutation_context designates the resolution at probability files
+                if (sigprofiler_extractor_mutation_context == ID): # ID83
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always ID_415 T:1:Ins:T:5
+                    # SigProfilerExtractor MUTATION column ID_83 1:Ins:T:5
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG].str[2:]
+
+                elif (sigprofiler_extractor_mutation_context == ID_415):
+                    # SigProfilerMatrixGenerator MUTATIONLONG column always ID_415 T:1:Ins:T:5
+                    # SigProfilerExtractor MUTATION column ID_415 T:1:Ins:T:5
+                    # Set SigProfilerMatrixGenerator MUTATION column to match SigProfilerExtractor MUTATION column
+                    mutations_with_genomic_positions_df[MUTATION] = mutations_with_genomic_positions_df[MUTATIONLONG]
+
+                # order the columns make CONTEXT at the end.
                 ordered_column_names = [SAMPLE,CHROM,START,MUTATIONLONG,REF,ALT,LENGTH,PYRAMIDINESTRAND,TRANSCRIPTIONSTRAND,MUTATION]
                 mutations_with_genomic_positions_df = mutations_with_genomic_positions_df[ordered_column_names]
 
@@ -4367,9 +4789,9 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
         if ((merged_df is not None) and (not merged_df.empty)):
             if (sigprofiler_simulator_mutation_context in SBS_CONTEXTS):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, SBS) # SUBS
-            elif (sigprofiler_simulator_mutation_context == DBS):
+            elif (sigprofiler_simulator_mutation_context in DBS_CONTEXTS):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, DBS) # DINUCS
-            elif (sigprofiler_simulator_mutation_context == ID):
+            elif (sigprofiler_simulator_mutation_context in ID_CONTEXTS):
                 chrBasedMergedMutationsFileName = 'chr%s_%s_for_topography.txt' %(chrShort, ID) # INDELS
 
             if (simNum == 0):

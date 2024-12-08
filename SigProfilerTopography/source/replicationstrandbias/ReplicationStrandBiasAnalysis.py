@@ -327,6 +327,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             sbs_signature_index = np.where(sbs_signatures_np_array == sbs_signature)[0][0]
 
     elif (my_type == DINUCS):
+
         end = start + 2
 
         index_of_mutation_long = np.where(df_columns == MUTATIONLONG)[0][0]
@@ -382,7 +383,18 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
     # if there is overlap with chrBasedReplicationArray
     slicedArray = chrBasedReplicationArray[int(start):int(end)]
 
-    if (np.any(slicedArray)):
+    # TODO decide what to do with the situation where pyramidineStrand is 0
+    # newly added
+    # If we do not consider the situation where pyramidineStrand is 0 then we lose the doublets and indels with mixed with purines and pyrimidines
+    # To consider such cases we need to consider the situation where pyramidineStrand is 0
+    # For this purpose, SPT assumes that such mutations are on the positive strand by setting pyramidineStrand to 1.
+    # if pyramidine_strand == 0:
+    #     pyramidine_strand = 1  # if 0 set pyrimidine strand to reference strand which is the positive strand
+
+    if pyramidine_strand == 0:
+        return 4 # QUESTIONABLE mixed with pyrimidine and purine bases and have pyrimidine_strand 0
+
+    elif (np.any(slicedArray)):
         # It must be full with at most -1 and +1
         uniqueValueArray = np.unique(slicedArray[np.nonzero(slicedArray)])
 
@@ -395,7 +407,8 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             for uniqueValue in np.nditer(uniqueValueArray):
                 # type(decileIndex) is numpy.ndarray
                 slope = int(uniqueValue)
-                #They have the same sign, multiplication (1,1) (-1,-1) must be 1
+                # They have the same sign, multiplication (1,1) (-1,-1) must be 1
+
                 if (slope * pyramidine_strand > 0): # Leading
                     if sample_based:
                         sample_mutation_type_strand_np_array[sample_index][mutation_type_index][1] += 1
@@ -436,7 +449,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                         # return 0 indicates that there is a mutation in the replication strand of Lagging
                         return 0
 
-        elif ((uniqueValueArray.size == 2) and (pyramidine_strand != 0)):
+        elif (uniqueValueArray.size == 2):
             # Increment both LEADING and LAGGING
             # We can discard these mutations which contain both -1 and 1 as slopes.
             if sample_based:
@@ -458,7 +471,7 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
                     sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][0] += 1
                     sample_id_signature_mutation_type_strand_np_array[sample_index][id_signature_index][ID83_mutation_type_index][1] += 1
 
-                # return 2 indicates that there is a mutation in the replication strands of both Leading and Lagging
+                # return 2 indicates that there is a mutation on the replication strands of both Leading and Lagging
                 return 2
 
             # This can be a case especially in indels. We can discard these mutations which contain both -1 and 1 as slopes.
@@ -471,11 +484,8 @@ def searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_num
             # return 3 indicates that there is an unexpected situation
             return 3
 
-        # Do not consider the situation where pyramidineStrand is 0
-        # Do not consider the situation where uniqueValueArray is greater than  2
     else:
-        # return -1
-        # indicates that there is no overlap with chrBasedReplicationArray
+        # return -1 indicates that there is no overlap with chrBasedReplicationArray
         return -1
 
 
@@ -980,6 +990,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
 
     # SUBS
     if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
+
         if verbose:
             log_out = open(log_file, 'a')
             print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
@@ -989,10 +1000,9 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         df_columns = chrBased_simBased_subs_df.columns.values
         df_columns_subs_signatures_mask_array = np.isin(df_columns, ordered_sbs_signatures_np_array)
 
-        # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
+        # In list comprehension, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
-        # Therefore, list comprehesion is adopted.
-        # Jul 21, 2024
+        # Therefore, list comprehension is adopted.
         chrBased_simBased_subs_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                             SUBS,
                                                                             chrBased_replication_array,
@@ -1017,6 +1027,7 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
 
     # DINUCS
     if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
+
         if verbose:
             log_out = open(log_file, 'a')
             print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
@@ -1029,7 +1040,6 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
         # Therefore, list comprehesion is adopted.
-        # July 21, 2024
         chrBased_simBased_doublets_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                                               DINUCS,
                                                                                               chrBased_replication_array,
@@ -1052,8 +1062,10 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
                                                                                               default_cutoff,
                                                                                               df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
+
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
+
         if verbose:
             log_out = open(log_file, 'a')
             print('\tVerbose Worker pid %s SBS searchMutationd_comOnReplicationStrandArray_simulations_integrated starts %s MB' % (str(os.getpid()), memory_usage()), file=log_out)
@@ -1063,10 +1075,9 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
         df_columns = chrBased_simBased_indels_df.columns.values
         df_columns_indels_signatures_mask_array = np.isin(df_columns, ordered_id_signatures_np_array)
 
-        # In list comprehesion, mutation_row becomes <class 'numpy.ndarray'>
+        # In list comprehension, mutation_row becomes <class 'numpy.ndarray'>
         # In apply, mutation_row becomes <class 'pandas.core.series.Series'>
-        # Therefore, list comprehesion is adopted.
-        # July 21, 2024
+        # Therefore, list comprehension is adopted.
         chrBased_simBased_indels_replication_strands_list = [searchAllMutationOnReplicationStrandArray_using_list_comprehension_using_numpy_array(mutation_row,
                                                                                               INDELS,
                                                                                               chrBased_replication_array,
@@ -1098,7 +1109,14 @@ def searchAllMutationsOnReplicationStrandArray(chrBased_simBased_subs_df,
     chrBased_simBased_doublets_replication_strands_array = np.array(chrBased_simBased_doublets_replication_strands_list)
     chrBased_simBased_indels_replication_strands_array = np.array(chrBased_simBased_indels_replication_strands_list)
 
-    mapping = {0: 'A', 1: 'E', 2: 'B', 3: 'X', -1: 'U'}
+    mapping = {0: 'A', 1: 'E', 2: 'B', 3: 'X', 4:'Q', -1: 'U'}
+    # 0 --> A indicates that there is a mutation in the replication strand of Lagging
+    # 1 --> E indicates that there is a mutation in the replication strand of Leading
+    # 2 --> B indicates that there is a mutation in the replication strands of both Leading and Lagging
+    # 3 --> X indicates that there is an unexpected situation
+    # 4 --> Q indicates that there is a mutation with pyrimidine and purine bases and have pyrimidine_strand 0,
+    # therefore slope*pyrimidine_strand = 0 and their replication strand can not be calculated, Questionable.
+    # -1 --> U indicates that there is no overlap with chrBasedReplicationArray
 
     if chrBased_simBased_subs_df is not None:
         chrBased_simBased_subs_df['ReplicationStrand'] = chrBased_simBased_subs_replication_strands_array
@@ -1261,8 +1279,13 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
     else:
         chrBased_replication_array = None
 
+    chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(
+        outputDir,
+        jobname,
+        chrLong,
+        simNum)
+
     if chrBased_replication_array is not None:
-        chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
 
         # filter chrbased_df for samples_of_interest
         if samples_of_interest is not None:
@@ -1303,15 +1326,66 @@ def searchAllMutationsOnReplicationStrandArray_simbased_chrombased(outputDir,
                                                           log_file,
                                                           verbose)
     else:
+        # if chrBased_replication_array is None then fill the ReplicationStrand with U
+        # this might happen when SPT makes use of Repli-seq assay coming from female biosample.
+        # e.g., Repli-seq MCF7 has no chrY
+
+        mapping = {0: 'A', 1: 'E', 2: 'B', 3: 'X', 4: 'Q', -1: 'U'}
+        # 0 indicates that there is a mutation in the replication strand of Lagging
+        # 1 indicates that there is a mutation in the replication strand of Leading
+        # 2 indicates that there is a mutation in the replication strands of both Leading and Lagging
+        # 3 indicates that there is an unexpected situation
+        # -1 indicates that there is no overlap with chrBasedReplicationArray
+
+        if chrBased_simBased_subs_df is not None:
+            chrBased_simBased_subs_df['ReplicationStrand'] = -1
+
+            # Insert ReplicationStrand column just before Mutation column
+            columns = chrBased_simBased_subs_df.columns.tolist()
+            mutation_index = columns.index(MUTATION)
+            replication_strand_index = columns.index(REPLICATIONSTRAND)
+            if replication_strand_index > mutation_index:
+                columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+            columns.pop(columns.index(SIMULATION_NUMBER))
+            chrBased_simBased_subs_df = chrBased_simBased_subs_df[columns]
+            chrBased_simBased_subs_df[REPLICATIONSTRAND] = chrBased_simBased_subs_df[REPLICATIONSTRAND].map(mapping)
+
+        if chrBased_simBased_dinucs_df is not None:
+            chrBased_simBased_dinucs_df['ReplicationStrand'] = -1
+
+            # Insert ReplicationStrand column just before Mutation column
+            columns = chrBased_simBased_dinucs_df.columns.tolist()
+            mutation_index = columns.index(MUTATION)
+            replication_strand_index = columns.index(REPLICATIONSTRAND)
+            if replication_strand_index > mutation_index:
+                columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+            columns.pop(columns.index(SIMULATION_NUMBER))
+            chrBased_simBased_dinucs_df = chrBased_simBased_dinucs_df[columns]
+            chrBased_simBased_dinucs_df[REPLICATIONSTRAND] = chrBased_simBased_dinucs_df[REPLICATIONSTRAND].map(mapping)
+
+        if chrBased_simBased_indels_df is not None:
+            chrBased_simBased_indels_df['ReplicationStrand'] = -1
+
+            # Insert ReplicationStrand column just before Mutation column
+            columns = chrBased_simBased_indels_df.columns.tolist()
+            mutation_index = columns.index(MUTATION)
+            replication_strand_index = columns.index(REPLICATIONSTRAND)
+            if replication_strand_index > mutation_index:
+                columns.insert(mutation_index, columns.pop(columns.index(REPLICATIONSTRAND)))
+            columns.pop(columns.index(SIMULATION_NUMBER))
+            chrBased_simBased_indels_df = chrBased_simBased_indels_df[columns]
+            chrBased_simBased_indels_df[REPLICATIONSTRAND] = chrBased_simBased_indels_df[REPLICATIONSTRAND].map(mapping)
+
         return (chrLong, # 0
                 simNum, # 1
-                None,  # 2
-                None,  # 3
-                None,  # 4
+                chrBased_simBased_subs_df,  # 2 chrBased_simBased_subs_df
+                chrBased_simBased_dinucs_df,  # 3 chrBased_simBased_dinucs_df
+                chrBased_simBased_indels_df,  # 4 chrBased_simBased_indels_df
                 sample_mutation_type_strand_np_array, # 5
                 sample_sbs_signature_mutation_type_strand_np_array, # 6
                 sample_dbs_signature_mutation_type_strand_np_array, # 7
                 sample_id_signature_mutation_type_strand_np_array) # 8
+
 
 
 def read_create_write_replication_time_array_in_parallel(outputDir,

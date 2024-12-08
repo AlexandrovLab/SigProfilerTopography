@@ -545,25 +545,25 @@ def searchAllMutations(chrBased_simBased_subs_df,
 
         # Search for each row using Numpy Array
         [search_all_mutations_on_transcription_strand_array_using_list_comprehension_using_numpy_array(mutation_row,
-                                                                                              DINUCS,
-                                                                                              sample_based,
-                                                                                              all_samples_np_array,
-                                                                                              ordered_dbs_signatures_cutoffs,
-                                                                                              df_columns_dinucs_signatures_mask_array,
-                                                                                            ordered_sbs_signatures_np_array,
-                                                                                            ordered_dbs_signatures_np_array,
-                                                                                            ordered_id_signatures_np_array,
-                                                                                            SBS96_mutation_types_np_array,
-                                                                                            DBS78_mutation_types_np_array,
-                                                                                            ID83_mutation_types_np_array,
-                                                                                            all_mutation_types_np_array,
-                                                                                            sample_mutation_type_strand_np_array,
-                                                                                            sample_sbs_signature_mutation_type_strand_np_array,
-                                                                                            sample_dbs_signature_mutation_type_strand_np_array,
-                                                                                            sample_id_signature_mutation_type_strand_np_array,
-                                                                                              discreet_mode,
-                                                                                              default_cutoff,
-                                                                                              df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
+                                                                                                        DINUCS,
+                                                                                                        sample_based,
+                                                                                                        all_samples_np_array,
+                                                                                                        ordered_dbs_signatures_cutoffs,
+                                                                                                        df_columns_dinucs_signatures_mask_array,
+                                                                                                        ordered_sbs_signatures_np_array,
+                                                                                                        ordered_dbs_signatures_np_array,
+                                                                                                        ordered_id_signatures_np_array,
+                                                                                                        SBS96_mutation_types_np_array,
+                                                                                                        DBS78_mutation_types_np_array,
+                                                                                                        ID83_mutation_types_np_array,
+                                                                                                        all_mutation_types_np_array,
+                                                                                                        sample_mutation_type_strand_np_array,
+                                                                                                        sample_sbs_signature_mutation_type_strand_np_array,
+                                                                                                        sample_dbs_signature_mutation_type_strand_np_array,
+                                                                                                        sample_id_signature_mutation_type_strand_np_array,
+                                                                                                        discreet_mode,
+                                                                                                        default_cutoff,
+                                                                                                        df_columns) for mutation_row in chrBased_simBased_dinucs_df.values]
 
     # INDELS
     if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
@@ -714,29 +714,29 @@ def searchAllMutations_simbased_chrombased(outputDir,
             chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
 
     return searchAllMutations(chrBased_simBased_subs_df,
-                               chrBased_simBased_dinucs_df,
-                               chrBased_simBased_indels_df,
-                               simNum,
-                              SBS96_mutation_types_np_array,
-                              DBS78_mutation_types_np_array,
-                              ID83_mutation_types_np_array,
-                              all_mutation_types_np_array,
-                              sample_based,
-                               all_samples_np_array,
-                               ordered_sbs_signatures_np_array,
-                               ordered_dbs_signatures_np_array,
-                               ordered_id_signatures_np_array,
-                               ordered_sbs_signatures_cutoffs_np_array,
-                               ordered_dbs_signatures_cutoffs_np_array,
-                               ordered_id_signatures_cutoffs_np_array,
-                              sample_mutation_type_strand_np_array,
-                              sample_sbs_signature_mutation_type_strand_np_array,
-                              sample_dbs_signature_mutation_type_strand_np_array,
-                              sample_id_signature_mutation_type_strand_np_array,
-                               discreet_mode,
-                               default_cutoff,
-                               log_file,
-                               verbose)
+                            chrBased_simBased_dinucs_df,
+                            chrBased_simBased_indels_df,
+                            simNum,
+                            SBS96_mutation_types_np_array,
+                            DBS78_mutation_types_np_array,
+                            ID83_mutation_types_np_array,
+                            all_mutation_types_np_array,
+                            sample_based,
+                            all_samples_np_array,
+                            ordered_sbs_signatures_np_array,
+                            ordered_dbs_signatures_np_array,
+                            ordered_id_signatures_np_array,
+                            ordered_sbs_signatures_cutoffs_np_array,
+                            ordered_dbs_signatures_cutoffs_np_array,
+                            ordered_id_signatures_cutoffs_np_array,
+                            sample_mutation_type_strand_np_array,
+                            sample_sbs_signature_mutation_type_strand_np_array,
+                            sample_dbs_signature_mutation_type_strand_np_array,
+                            sample_id_signature_mutation_type_strand_np_array,
+                            discreet_mode,
+                            default_cutoff,
+                            log_file,
+                            verbose)
 
 
 # main function
@@ -846,7 +846,7 @@ def transcription_strand_bias_analysis(outputDir,
         jobs = []
 
         # Read the chrom based sim based mutations data in the worker process
-        if (computationType==USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
+        if (computationType == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM):
 
             numofProcesses = multiprocessing.cpu_count()
             pool = multiprocessing.Pool(processes=numofProcesses)

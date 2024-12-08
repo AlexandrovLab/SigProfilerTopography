@@ -1225,7 +1225,7 @@ def occupancyAnalysis(genome,
     allSims_dinucsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_dbs_signatures + 1, plusorMinus * 2 + 1))
     allSims_indelsSignature_accumulated_count_np_array = np.zeros((numofSimulations+1, number_of_id_signatures+1, plusorMinus * 2 + 1))
 
-    # This code reads the file abd preaore chrbased signal files
+    # This code reads the file and prepare chrbased signal files
     # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
     # No need for preparing here
     library_file_type = None
@@ -1240,7 +1240,7 @@ def occupancyAnalysis(genome,
             # if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigWig file opened by pyBigWig to fill windowArray
         elif ((file_extension.lower() == '.bigbed') or (file_extension.lower() == '.bb')):
             library_file_type = BIGBED
-            #if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
+            # if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
         elif (file_extension.lower() == '.bed'):
             library_file_type = BED
             readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type, quantileValue, remove_outliers, log_file)

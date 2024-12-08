@@ -660,7 +660,6 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
             # dummy value of 1 is set for signal calculations
             file_df[SIGNAL] = 1
 
-
         elif (ncols == 4 and (not discard_signal)):
             print('--- SigProfilerTopography assumes that score column is in the 4th column of this bed file and there is no header', file=log_out)
             file_df = pd.read_csv(file_with_path,
@@ -699,7 +698,7 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
                                   dtype={0: 'string', 1: np.int32, 2: np.int32}, sep='\t') # legacy category
 
         elif (ncols >= 5):
-            print('--- SigProfilerTopography assumes that score column is in the 5th column of this bed file and there is no header', file=log_out)
+            print('--- SigProfilerTopography assumes that signal column is in the 5th column of this bed file and there is no header', file=log_out)
             file_df = pd.read_csv(file_with_path,header=None, usecols=[0, 1, 2, 4],
                                   names = [CHROM, START, END, SIGNAL],
                                   dtype={0: 'string', 1: np.int32, 2: np.int32, 4: np.float32},sep='\t') # legacy category
@@ -725,6 +724,10 @@ def readFileInBEDFormat(file_with_path, discard_signal, log_file):
             log_out.close()
             return file_df, max_signal, min_signal
         else:
+            if not discard_signal:
+                # dummy value of 1 is set for signal calculations
+                file_df[SIGNAL] = 1
+
             log_out.close()
             return file_df
 
