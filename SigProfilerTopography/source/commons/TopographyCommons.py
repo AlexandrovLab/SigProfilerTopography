@@ -1089,8 +1089,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
                                                                                                 5, # Leading, Lagging, bidirectional, questionable
                                                                                                 10)) # Replication time
 
-
-
     # SBS Signatures
     for sbs_signature_index, (sbs_signature, sbs_signature_cutoff) in enumerate(zip(ordered_sbs_signatures_with_cutoffs, ordered_sbs_signatures_cutoffs)):
 
@@ -1128,7 +1126,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
     for dbs_signature_index, (dbs_signature, dbs_signature_cutoff) in enumerate(zip(ordered_dbs_signatures_with_cutoffs, ordered_dbs_signatures_cutoffs)):
 
         if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
-
             # DBS Transcription
             fill_strand_np_array(DBS,
                                  dbs_signature,
@@ -1142,7 +1139,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
                                  TRANSCRIPTIONSTRAND)
 
         if REPLICATIONSTRANDBIAS in asymmetry_types:
-
             # DBS Replication
             fill_strand_np_array(DBS,
                                  dbs_signature,
@@ -1160,7 +1156,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
     for id_signature_index, (id_signature, id_signature_cutoff) in enumerate(zip(ordered_id_signatures_with_cutoffs, ordered_id_signatures_cutoffs)):
 
         if TRANSCRIPTIONSTRANDBIAS in asymmetry_types:
-
             # ID Transcription
             fill_strand_np_array(ID,
                                  id_signature,
@@ -1174,7 +1169,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
                                  TRANSCRIPTIONSTRAND)
 
         if REPLICATIONSTRANDBIAS in asymmetry_types:
-
             # ID Replication
             fill_strand_np_array(ID,
                                  id_signature,
@@ -1247,7 +1241,6 @@ def get_signature_mutationtype_strand_replicationtime_arrays(chrLong,
                                            replication_strand_mapping,
                                            replication_time_mapping,
                                            REPLICATIONSTRAND)
-
 
     return chrLong,\
         sim_num,\

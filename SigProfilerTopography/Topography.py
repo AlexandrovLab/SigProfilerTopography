@@ -617,10 +617,10 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList, fn
 
 
     else:
-        #It has to be an absolute path
+        # It has to be an absolute path
         print('%s is not an absolute path.' %chrombased_npy_path)
 
-    #go back
+    # go back
     os.chdir(current_abs_path)
 
 # Download nucleosome occupancy chr based npy files from ftp alexandrovlab if they do not exists
@@ -1282,6 +1282,14 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     current_minute = datetime.datetime.now().minute
     current_second = datetime.datetime.now().second
 
+    # User may not give absolute path for inputDir
+    if not os.path.isabs(inputDir):
+        inputDir = os.path.abspath(inputDir)
+
+    # User may not give absolute path for outputDir
+    if not os.path.isabs(outputDir):
+        outputDir = os.path.abspath(outputDir)
+
     error_file = os.path.join(outputDir, jobname , 'logs', 'SigProfilerTopography_' + jobname + '_' + genome + '_' +
                               str(time_stamp) + '_' +
                               str(current_hour) + '-' + str(current_minute) + '-' + str(current_second) + '.err')
@@ -1773,6 +1781,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         print("--- SigProfilerMatrixGenerator for original data: %s seconds ---" % (time.time() - start_time), file=log_out)
         print("--- SigProfilerMatrixGenerator for original data: %f minutess ---" % float((time.time() - start_time) / 60), file=log_out)
         print('#################################################################################\n', file=log_out)
+
     ###################################################################################################
     ######################### SigProfilerMatrixGenerator for original data ends #######################
     ###################################################################################################
@@ -1788,71 +1797,88 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             (sbs_signatures is None) and (sbs_activities is None) and (sbs_probabilities is None)) :
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
-        # Generated matrices keys: dict_keys(['6144', '384', '1536', '96', '6', '24', '4608', '288', '18', 'DINUC', 'ID'])
-        # if (matrices is not None) and (matrices.keys()):
-        #     if '96' in matrices.keys():
         path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-        print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
-        Analyze.cosmic_fit(path_to_sbs96_matrix,
-                           SPA_output_dir,
-                           genome_build=genome,
-                           make_plots=True)
+        path_to_sbs96_chr1_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all.chr1')
 
-        # get the probabilities from SPA
-        # copy this file under probabilities because each SPA run will overwrite it.
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt'))
-        sbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_sbs96_matrix) or os.path.exists(path_to_sbs96_chr1_matrix):
+            if os.path.exists(path_to_sbs96_matrix):
+                path_to_matrix = path_to_sbs96_matrix
+            elif os.path.exists(path_to_sbs96_chr1_matrix):
+                path_to_matrix = path_to_sbs96_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build=genome,
+                               make_plots=True)
+
+            # get the probabilities from SPA
+            # copy this file under probabilities because each SPA run will overwrite it.
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt'))
+            sbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt')
 
     if ((mutation_types is not None) and (DBS in mutation_types) and
             (dbs_signatures is None) and (dbs_activities is None) and (dbs_probabilities is None)) :
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
-        # if (matrices is not None) and (matrices.keys()):
-        #     if 'DINUC' in matrices.keys():
         path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-        print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
-        Analyze.cosmic_fit(path_to_dbs78_matrix,
-                           SPA_output_dir,
-                           genome_build = genome,
-                           collapse_to_SBS96 = False,
-                           make_plots = True)
+        path_to_dbs78_chr1_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all.chr1')
 
-        # get the probabilities from SPA
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt'))
-        dbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_dbs78_matrix) or os.path.exists(path_to_dbs78_chr1_matrix):
+            if os.path.exists(path_to_dbs78_matrix):
+                path_to_matrix = path_to_dbs78_matrix
+            elif os.path.exists(path_to_dbs78_chr1_matrix):
+                path_to_matrix = path_to_dbs78_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build = genome,
+                               collapse_to_SBS96 = False,
+                               make_plots = True)
+
+            # get the probabilities from SPA
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt'))
+            dbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt')
 
     if ((mutation_types is not None) and (ID in mutation_types) and
             (id_signatures is None) and (id_activities is None) and (id_probabilities is None)):
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
-        # if (matrices is not None) and (matrices.keys()):
-        #     if 'ID' in matrices.keys():
         path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-        print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
-        Analyze.cosmic_fit(path_to_id83_matrix,
-                           SPA_output_dir,
-                           genome_build=genome,
-                           collapse_to_SBS96=False,
-                           make_plots=True)
+        path_to_id83_chr1_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all.chr1')
 
-        # set the probabilities from SPA
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt'))
-        id_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_id83_matrix) or os.path.exists(path_to_id83_chr1_matrix):
+            if os.path.exists(path_to_id83_matrix):
+                path_to_matrix = path_to_id83_matrix
+            elif os.path.exists(path_to_id83_chr1_matrix):
+                path_to_matrix = path_to_id83_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build=genome,
+                               collapse_to_SBS96=False,
+                               make_plots=True)
+
+            # set the probabilities from SPA
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt'))
+            id_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt')
 
     # Case2 Samples and signatures are given
     # Call SPA for each matrix using cosmic_fit
@@ -1865,22 +1891,30 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and  matrices.keys():
         #     if '96' in matrices.keys():
         path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-        print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
-        Analyze.cosmic_fit(path_to_sbs96_matrix,
-                           SPA_output_dir,
-                           genome_build=genome,
-                           make_plots=True,
-                           signature_database=sbs_signatures)
+        path_to_sbs96_chr1_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all.chr1')
 
-        # set the probabilities from SPA
-        # copy this file under probabilities because each SPA run will overwrite it.
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt'))
-        sbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_sbs96_matrix) or os.path.exists(path_to_sbs96_chr1_matrix):
+            if os.path.exists(path_to_sbs96_matrix):
+                path_to_matrix = path_to_sbs96_matrix
+            elif os.path.exists(path_to_sbs96_chr1_matrix):
+                path_to_matrix = path_to_sbs96_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build=genome,
+                               make_plots=True,
+                               signature_database=sbs_signatures)
+
+            # set the probabilities from SPA
+            # copy this file under probabilities because each SPA run will overwrite it.
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt'))
+            sbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'SBS_Decomposed_MutationType_Probabilities.txt')
 
     if ((mutation_types is not None) and (DBS in mutation_types) and
             (dbs_signatures is not None) and (dbs_activities is None) and (dbs_probabilities is None)):
@@ -1889,22 +1923,30 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and matrices.keys():
         #     if 'DINUC' in matrices.keys():
         path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-        print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
-        Analyze.cosmic_fit(path_to_dbs78_matrix,
-                           SPA_output_dir,
-                           genome_build=genome,
-                           collapse_to_SBS96=False,
-                           make_plots=True,
-                           signature_database=dbs_signatures)
+        path_to_dbs78_chr1_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all.chr1')
 
-        # set the probabilities from SPA
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt'))
-        dbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_dbs78_matrix) or os.path.exists(path_to_dbs78_chr1_matrix):
+            if os.path.exists(path_to_dbs78_matrix):
+                path_to_matrix = path_to_dbs78_matrix
+            elif os.path.exists(path_to_dbs78_chr1_matrix):
+                path_to_matrix = path_to_dbs78_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build=genome,
+                               collapse_to_SBS96=False,
+                               make_plots=True,
+                               signature_database=dbs_signatures)
+
+            # set the probabilities from SPA
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt'))
+            dbs_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'DBS_Decomposed_MutationType_Probabilities.txt')
 
     if ((mutation_types is not None) and (ID in mutation_types) and
             (id_signatures is not None) and (id_activities is None) and (id_probabilities is None)):
@@ -1913,22 +1955,30 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and matrices.keys():
         #     if 'ID' in matrices.keys():
         path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-        print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
-        Analyze.cosmic_fit(path_to_id83_matrix,
-                           SPA_output_dir,
-                           genome_build=genome,
-                           collapse_to_SBS96=False,
-                           make_plots=True,
-                           signature_database=id_signatures)
+        path_to_id83_chr1_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all.chr1')
 
-        # set the probabilities from SPA
-        os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
-        probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
-        copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
-        shutil.copy(probabilities_file_path, copy_2_dir)
-        os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
-                  os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt'))
-        id_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt')
+        if os.path.exists(path_to_id83_matrix) or os.path.exists(path_to_id83_chr1_matrix):
+            if os.path.exists(path_to_id83_matrix):
+                path_to_matrix = path_to_id83_matrix
+            elif os.path.exists(path_to_id83_chr1_matrix):
+                path_to_matrix = path_to_id83_chr1_matrix
+
+            print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
+            Analyze.cosmic_fit(path_to_matrix,
+                               SPA_output_dir,
+                               genome_build=genome,
+                               collapse_to_SBS96=False,
+                               make_plots=True,
+                               signature_database=id_signatures)
+
+            # set the probabilities from SPA
+            os.makedirs(os.path.join(SPA_output_dir, PROBABILITIES), exist_ok=True)
+            probabilities_file_path = os.path.join(SPA_output_dir, 'Assignment_Solution', 'Activities', 'Decomposed_MutationType_Probabilities.txt')
+            copy_2_dir = os.path.join(SPA_output_dir, PROBABILITIES)
+            shutil.copy(probabilities_file_path, copy_2_dir)
+            os.rename(os.path.join(SPA_output_dir, PROBABILITIES, 'Decomposed_MutationType_Probabilities.txt'),
+                      os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt'))
+            id_probabilities = os.path.join(SPA_output_dir, PROBABILITIES, 'ID_Decomposed_MutationType_Probabilities.txt')
     ###################################################################################################################
     ##################################### SigProfilerAssignment ends ##################################################
     ###################################################################################################################
@@ -3170,9 +3220,6 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                         subsSignature_cutoff_numberofmutations_averageprobability_df,
                                                         cancer_type=jobname)
 
-    # delete unnecesary files (chrbased) after SPT Run
-    if delete_chrbased_files:
-        delete_chrbased_files_after_SPT_run(outputDir, jobname)
 
     ####################################################################################################################
     ############################################ Plot figures starts ###################################################
@@ -3193,6 +3240,9 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     numofSimulations,
                     mutation_types,
                     chromNamesList,
+                    num_of_sbs_required,
+                    num_of_dbs_required,
+                    num_of_id_required,
                     ordered_sbs_signatures_with_cutoffs,
                     ordered_dbs_signatures_with_cutoffs,
                     ordered_id_signatures_with_cutoffs,
@@ -3251,6 +3301,11 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ############################################ Plot figures ends #####################################################
     ####################################################################################################################
 
+    # delete chrbased files after SPT Run
+    # chrbased files keeps annotated mutations for each chromosome
+    if delete_chrbased_files:
+        delete_chrbased_files_after_SPT_run(outputDir, jobname)
+
     log_out = open(log_file, 'a')
     print('#################################################################################', file=log_out)
     print("--- SigProfilerTopography ended successfully", file=log_out)
@@ -3281,6 +3336,9 @@ def plot_topography_figures(genome,
                 numberofSimulations,
                 mutation_types,
                 chromNamesList,
+                num_of_sbs_required,
+                num_of_dbs_required,
+                num_of_id_required,
                 ordered_sbs_signatures_with_cutoffs,
                 ordered_dbs_signatures_with_cutoffs,
                 ordered_id_signatures_with_cutoffs,
@@ -3367,27 +3425,6 @@ def plot_topography_figures(genome,
         print("--- Plot annotated regions ends", file=log_out)
         log_out.close()
 
-    # # SA versus RT figures
-    if ((replication_time or plot_replication_time) and
-        (replication_strand_bias or plot_replication_strand_bias) and
-        (transcription_strand_bias or plot_transcription_strand_bias)):
-
-        asymmetry_types = [REPLICATIONSTRANDBIAS, TRANSCRIPTIONSTRANDBIAS, GENICINTERGENICBIAS]
-
-        nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp(inputDir,
-                                                                                     outputDir,
-                                                                                     jobname,
-                                                                                     numberofSimulations,
-                                                                                     chromNamesList,
-                                                                                     mutation_types,
-                                                                                     asymmetry_types,
-                                                                                     ordered_sbs_signatures_with_cutoffs,
-                                                                                     ordered_dbs_signatures_with_cutoffs,
-                                                                                     ordered_id_signatures_with_cutoffs,
-                                                                                     ordered_sbs_signatures_cutoffs,
-                                                                                     ordered_dbs_signatures_cutoffs,
-                                                                                     ordered_id_signatures_cutoffs,
-                                                                                     parallel_mode)
 
     if (replication_time or plot_replication_time):
         print("\n--- Plot replication timing figures")
@@ -3448,6 +3485,35 @@ def plot_topography_figures(genome,
 
         log_out = open(log_file, 'a')
         print("--- Plot strand asymmetry ends", file=log_out)
+        log_out.close()
+
+    # Strand Asymmetry versus Replication Timing figures
+    if ((replication_time or plot_replication_time) and
+        (replication_strand_bias or plot_replication_strand_bias) and
+        (transcription_strand_bias or plot_transcription_strand_bias)):
+        print("\n--- Plot strand asymmetry versus replication timing figures")
+        asymmetry_types = [REPLICATIONSTRANDBIAS, TRANSCRIPTIONSTRANDBIAS, GENICINTERGENICBIAS]
+
+        nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp(inputDir,
+                                                                                     outputDir,
+                                                                                     jobname,
+                                                                                     numberofSimulations,
+                                                                                     chromNamesList,
+                                                                                     mutation_types,
+                                                                                     asymmetry_types,
+                                                                                     num_of_sbs_required,
+                                                                                     num_of_dbs_required,
+                                                                                     num_of_id_required,
+                                                                                     ordered_sbs_signatures_with_cutoffs,
+                                                                                     ordered_dbs_signatures_with_cutoffs,
+                                                                                     ordered_id_signatures_with_cutoffs,
+                                                                                     ordered_sbs_signatures_cutoffs,
+                                                                                     ordered_dbs_signatures_cutoffs,
+                                                                                     ordered_id_signatures_cutoffs,
+                                                                                     parallel_mode)
+
+        log_out = open(log_file, 'a')
+        print("--- Plot strand asymmetry versus replication timing ends", file=log_out)
         log_out.close()
 
     if (processivity or plot_processivity):

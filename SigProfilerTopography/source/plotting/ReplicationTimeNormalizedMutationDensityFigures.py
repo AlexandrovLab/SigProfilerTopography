@@ -2647,6 +2647,9 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                                         SBS96_mutation_mapping,
                                                         DBS78_mutation_mapping,
                                                         ID83_mutation_mapping,
+                                                        num_of_sbs_required,
+                                                        num_of_dbs_required,
+                                                        num_of_id_required,
                                                         ordered_sbs_signatures_with_cutoffs,
                                                         ordered_dbs_signatures_with_cutoffs,
                                                         ordered_id_signatures_with_cutoffs,
@@ -2674,23 +2677,31 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
     # Create a complete index of ReplicationTime from 1 to 10
     complete_index = pd.Series(range(1, 11))
 
+    num_of_substitutions = 0
+    num_of_doublets = 0
+    num_of_indels = 0
+
     for asymmetry_type in asymmetry_types:
         for mutation_main_type in mutation_types:
 
             # Set mutation subtypes
             # These mutation subtypes are shown in the mutation profile plots at the top
             if mutation_main_type == SBS:
+                num_of_substitutions = max(np.sum(simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array[0][-1]),
+                                           np.sum(simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array[0][-1]))
                 mutation_sub_types = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
                 ordered_signatures_with_cutoffs = ordered_sbs_signatures_with_cutoffs
 
             elif mutation_main_type == DBS:
-                mutation_sub_types = ['AC>NN', 'AT>NN', 'CC>NN', 'CG>NN', 'CT>NN', 'GC>NN', 'TA>NN', 'TC>NN', 'TG>NN',
-                                      'TT>NN']
+                num_of_doublets = max(np.sum(simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array[0][-1]),
+                                      np.sum(simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array[0][-1]))
+                mutation_sub_types = ['AC>NN', 'AT>NN', 'CC>NN', 'CG>NN', 'CT>NN', 'GC>NN', 'TA>NN', 'TC>NN', 'TG>NN', 'TT>NN']
                 ordered_signatures_with_cutoffs = ordered_dbs_signatures_with_cutoffs
 
             elif mutation_main_type == ID:
-                mutation_sub_types = ['1bp Deletion', '1bp Insertion', '>1bp Deletion', '>1bp Insertion',
-                                      'Microhomology']
+                num_of_indels = max(np.sum(simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array[0][-1]),
+                                    np.sum(simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array[0][-1]))
+                mutation_sub_types = ['1bp Deletion', '1bp Insertion', '>1bp Deletion', '>1bp Insertion', 'Microhomology']
                 ordered_signatures_with_cutoffs = ordered_id_signatures_with_cutoffs
 
             if asymmetry_type == TRANSCRIPTIONSTRANDBIAS:
@@ -2733,255 +2744,132 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                 # Q: Questionable. This category is used to classify any mutations that are a mix of purines and pyrimidines and
                 # thus can't be classified into one of the above 4 categories.
 
-            with PdfPages(os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, filename)) as pdf:
+            if (mutation_main_type == SBS and num_of_substitutions >= num_of_sbs_required*(len(ordered_sbs_signatures_with_cutoffs)+1)) or \
+                    (mutation_main_type == DBS and num_of_doublets >= num_of_dbs_required*(len(ordered_dbs_signatures_with_cutoffs)+1)) or \
+                    (mutation_main_type == ID and num_of_indels >= num_of_id_required*(len(ordered_id_signatures_with_cutoffs)+1)):
 
-                # Plot mutational profile and mutational profile with strand asymmetry for real mutations only using pivoted_df
-                # pivoted_df columns e.g.: Mutation Leading  Lagging  Questionable
-                # pivoted_df rows: SBS96, DBS78 or ID83 mutation types
-                # pivoted_df values: MutationCount
-                # pivoted_df is based on mutation_long_combined_df and mutation_long_df
-                # mutation_long is converted into SBS96, DBS78 or ID83 mutation types
+                with PdfPages(os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, filename)) as pdf:
 
-                strand1_values, \
-                strand2_values, \
-                strand3_values = get_strand_mutation_count_values(asymmetry_type,
-                                mutation_main_type,
-                                simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+                    # Plot mutational profile and mutational profile with strand asymmetry for real mutations only using pivoted_df
+                    # pivoted_df columns e.g.: Mutation Leading  Lagging  Questionable
+                    # pivoted_df rows: SBS96, DBS78 or ID83 mutation types
+                    # pivoted_df values: MutationCount
+                    # pivoted_df is based on mutation_long_combined_df and mutation_long_df
+                    # mutation_long is converted into SBS96, DBS78 or ID83 mutation types
 
-                if mutation_main_type == SBS:
-                    matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.SBS96.all')
-                    alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
-                                                           jobname + '.all_samples.SBS96.all')
-                    spmg_df = pd.read_csv(matrix_path, sep='\t')
-                    spmg_df[jobname] = spmg_df.sum(axis=1)
-                    spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                    output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
-                    # original spp mutational profile plot
-                    spplt.plotSBS(alternative_matrix_path,
-                                  output_path,
-                                  jobname,
-                                  "96",
-                                  percentage=True,
-                                  savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                    strand1_values, \
+                    strand2_values, \
+                    strand3_values = get_strand_mutation_count_values(asymmetry_type,
+                                    mutation_main_type,
+                                    simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                    simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                    simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                    simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                    simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                    simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
 
-                    plotSBS_modified_from_spp(alternative_matrix_path,
-                                              output_path,
-                                              jobname,
-                                              "96",
-                                              # pivoted_df,
-                                              strand1_values,
-                                              strand2_values,
-                                              asymmetry_type,
-                                              percentage=True,
-                                              savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                    if mutation_main_type == SBS:
+                        matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.SBS96.all')
+                        alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
+                                                               jobname + '.all_samples.SBS96.all')
+                        spmg_df = pd.read_csv(matrix_path, sep='\t')
+                        spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
+                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        # original spp mutational profile plot
+                        spplt.plotSBS(alternative_matrix_path,
+                                      output_path,
+                                      jobname,
+                                      "96",
+                                      percentage=True,
+                                      savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-                elif mutation_main_type == DBS:
-                    matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.DBS78.all')
-                    alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
-                                                           jobname + '.all_samples.DBS78.all')
-                    spmg_df = pd.read_csv(matrix_path, sep='\t')
-                    spmg_df[jobname] = spmg_df.sum(axis=1)
-                    spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                    output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
-                    # original spp mutational profile plot
-                    spplt.plotDBS(alternative_matrix_path, output_path, jobname, "78", percentage=True,
-                                  savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                        plotSBS_modified_from_spp(alternative_matrix_path,
+                                                  output_path,
+                                                  jobname,
+                                                  "96",
+                                                  # pivoted_df,
+                                                  strand1_values,
+                                                  strand2_values,
+                                                  asymmetry_type,
+                                                  percentage=True,
+                                                  savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-                    plotDBS_modified_from_spp(alternative_matrix_path,
-                                              output_path,
-                                              jobname,
-                                              "78",
-                                              # pivoted_df,
-                                              strand1_values,
-                                              strand2_values,
-                                              strand3_values,
-                                              asymmetry_type,
-                                              percentage=True,
-                                              savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                    elif mutation_main_type == DBS:
+                        matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.DBS78.all')
+                        alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
+                                                               jobname + '.all_samples.DBS78.all')
+                        spmg_df = pd.read_csv(matrix_path, sep='\t')
+                        spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
+                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        # original spp mutational profile plot
+                        spplt.plotDBS(alternative_matrix_path, output_path, jobname, "78", percentage=True,
+                                      savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-                elif mutation_main_type == ID:
-                    matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.ID83.all')
-                    alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
-                                                           jobname + '.all_samples.ID83.all')
-                    spmg_df = pd.read_csv(matrix_path, sep='\t')
+                        plotDBS_modified_from_spp(alternative_matrix_path,
+                                                  output_path,
+                                                  jobname,
+                                                  "78",
+                                                  # pivoted_df,
+                                                  strand1_values,
+                                                  strand2_values,
+                                                  strand3_values,
+                                                  asymmetry_type,
+                                                  percentage=True,
+                                                  savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-                    spmg_df[jobname] = spmg_df.sum(axis=1)
-                    spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                    output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
-                    # original spp mutational profile plot
-                    spplt.plotID(alternative_matrix_path,
-                                 output_path,
-                                 jobname,
-                                 "83",
-                                 percentage=True,
-                                 savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                    elif mutation_main_type == ID:
+                        matrix_path = os.path.join(inputDir, 'output', mutation_main_type, jobname + '.ID83.all')
+                        alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
+                                                               jobname + '.all_samples.ID83.all')
+                        spmg_df = pd.read_csv(matrix_path, sep='\t')
 
-                    plotID_modified_from_spp(alternative_matrix_path,
-                                             output_path,
-                                             jobname,
-                                             "83",
-                                             # pivoted_df,
-                                             strand1_values,
-                                             strand2_values,
-                                             strand3_values,
-                                             asymmetry_type,
-                                             percentage=True,
-                                             savefig_format='png')
-                    pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                        spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
+                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        # original spp mutational profile plot
+                        spplt.plotID(alternative_matrix_path,
+                                     output_path,
+                                     jobname,
+                                     "83",
+                                     percentage=True,
+                                     savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-                # # For real mutations
-                all_normalized_mutation_density, \
-                strand1_normalized_mutation_density,\
-                strand2_normalized_mutation_density, \
-                strand3_questionable_normalized_mutation_density, \
-                strand4_nontranscribed_normalized_mutation_density, \
-                genic_normalized_mutation_density = get_normalized_mutation_density_from_np_array(asymmetry_type,
-                                                                                                mutation_main_type,
-                                                                                                number_of_attributable_bases_array,
-                                                                                                simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                                                                                simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                                                                                simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+                        plotID_modified_from_spp(alternative_matrix_path,
+                                                 output_path,
+                                                 jobname,
+                                                 "83",
+                                                 # pivoted_df,
+                                                 strand1_values,
+                                                 strand2_values,
+                                                 strand3_values,
+                                                 asymmetry_type,
+                                                 percentage=True,
+                                                 savefig_format='png')
+                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
-
-                # For simulated mutations
-                all_sims_normalized_mutation_density, \
-                strand1_sims_normalized_mutation_density, \
-                strand2_sims_normalized_mutation_density, \
-                strand3_questionable_sims_normalized_mutation_density, \
-                strand4_nontranscribed_sims_normalized_mutation_density, \
-                genic_sims_normalized_mutation_density = get_sims_normalized_mutation_density_from_np_array(asymmetry_type,
-                                                                                                                 mutation_main_type,
-                                                                                                                 number_of_attributable_bases_array,
-                                                                                                                 number_of_sims,
-                                                                                                                 simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                                 simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                                 simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                                                                                                                 simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                                                                                                 simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                                                                                                                 simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
-
-                plot_in_pdf(outputDir,
-                            jobname,
-                            mutation_main_type,
-                            None,
-                            asymmetry_type,
-                            strand1,
-                            strand2,
-                            strand4,
-                            all_normalized_mutation_density,
-                            all_sims_normalized_mutation_density,
-                            strand1_normalized_mutation_density,
-                            strand1_sims_normalized_mutation_density,
-                            strand2_normalized_mutation_density,
-                            strand2_sims_normalized_mutation_density,
-                            strand3_questionable_normalized_mutation_density,
-                            strand3_questionable_sims_normalized_mutation_density,
-                            strand4_nontranscribed_normalized_mutation_density,
-                            strand4_nontranscribed_sims_normalized_mutation_density,
-                            genic_normalized_mutation_density,
-                            genic_sims_normalized_mutation_density,
-                            pdf)
-
-                # Signature specific
-                for signature_index, signature in  enumerate(ordered_signatures_with_cutoffs):
-
+                    # # For real mutations
                     all_normalized_mutation_density, \
-                        strand1_normalized_mutation_density, \
-                        strand2_normalized_mutation_density, \
-                        strand3_questionable_normalized_mutation_density, \
-                        strand4_nontranscribed_normalized_mutation_density, \
-                        genic_normalized_mutation_density = get_signature_specific_normalized_mutation_density_from_np_array(
-                        asymmetry_type,
-                        mutation_main_type,
-                        signature_index,
-                        number_of_attributable_bases_array,
-                        simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
-
-                    # For simulated mutations
-                    all_sims_normalized_mutation_density, \
-                        strand1_sims_normalized_mutation_density, \
-                        strand2_sims_normalized_mutation_density, \
-                        strand3_questionable_sims_normalized_mutation_density, \
-                        strand4_nontranscribed_sims_normalized_mutation_density, \
-                        genic_sims_normalized_mutation_density = get_signature_specific_sims_normalized_mutation_density_from_np_array(
-                        asymmetry_type,
-                        mutation_main_type,
-                        signature_index,
-                        number_of_attributable_bases_array,
-                        number_of_sims,
-                        simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
-
-                    plot_in_pdf(outputDir,
-                                jobname,
-                                mutation_main_type,
-                                signature,
-                                asymmetry_type,
-                                strand1,
-                                strand2,
-                                strand4,
-                                all_normalized_mutation_density,
-                                all_sims_normalized_mutation_density,
-                                strand1_normalized_mutation_density,
-                                strand1_sims_normalized_mutation_density,
-                                strand2_normalized_mutation_density,
-                                strand2_sims_normalized_mutation_density,
-                                strand3_questionable_normalized_mutation_density,
-                                strand3_questionable_sims_normalized_mutation_density,
-                                strand4_nontranscribed_normalized_mutation_density,
-                                strand4_nontranscribed_sims_normalized_mutation_density,
-                                genic_normalized_mutation_density,
-                                genic_sims_normalized_mutation_density,
-                                pdf)
-
-                # Mutation subtype specific
-                for mutation_sub_type in mutation_sub_types:
-
-                    # For real mutations
-                    all_normalized_mutation_density, \
-                    strand1_normalized_mutation_density, \
+                    strand1_normalized_mutation_density,\
                     strand2_normalized_mutation_density, \
                     strand3_questionable_normalized_mutation_density, \
                     strand4_nontranscribed_normalized_mutation_density, \
-                    genic_normalized_mutation_density = get_mutation_specific_normalized_mutation_density_from_np_array(
-                        asymmetry_type,
-                        mutation_main_type,
-                        mutation_sub_type,
-                        ordered_SBS96_substitution_types,
-                        ordered_DBS78_doublet_types,
-                        ordered_ID83_indel_types,
-                        SBS96_mutation_mapping,
-                        DBS78_mutation_mapping,
-                        ID83_mutation_mapping,
-                        number_of_attributable_bases_array,
-                        simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+                    genic_normalized_mutation_density = get_normalized_mutation_density_from_np_array(asymmetry_type,
+                                                                                                    mutation_main_type,
+                                                                                                    number_of_attributable_bases_array,
+                                                                                                    simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                    simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                    simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                    simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                                                                                    simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                                                                                    simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+
 
                     # For simulated mutations
                     all_sims_normalized_mutation_density, \
@@ -2989,29 +2877,21 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                     strand2_sims_normalized_mutation_density, \
                     strand3_questionable_sims_normalized_mutation_density, \
                     strand4_nontranscribed_sims_normalized_mutation_density, \
-                    genic_sims_normalized_mutation_density = get_mutation_specific_sims_normalized_mutation_density_from_np_array(
-                        asymmetry_type,
-                        mutation_main_type,
-                        mutation_sub_type,
-                        ordered_SBS96_substitution_types,
-                        ordered_DBS78_doublet_types,
-                        ordered_ID83_indel_types,
-                        SBS96_mutation_mapping,
-                        DBS78_mutation_mapping,
-                        ID83_mutation_mapping,
-                        number_of_attributable_bases_array,
-                        number_of_sims,
-                        simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
-                        simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
-                        simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+                    genic_sims_normalized_mutation_density = get_sims_normalized_mutation_density_from_np_array(asymmetry_type,
+                                                                                                                     mutation_main_type,
+                                                                                                                     number_of_attributable_bases_array,
+                                                                                                                     number_of_sims,
+                                                                                                                     simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                                     simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                                     simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                                                                                                                     simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                                                                                                     simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                                                                                                                     simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
 
                     plot_in_pdf(outputDir,
                                 jobname,
                                 mutation_main_type,
-                                mutation_sub_type,
+                                None,
                                 asymmetry_type,
                                 strand1,
                                 strand2,
@@ -3029,6 +2909,141 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                 genic_normalized_mutation_density,
                                 genic_sims_normalized_mutation_density,
                                 pdf)
+
+                    # Signature specific
+                    for signature_index, signature in  enumerate(ordered_signatures_with_cutoffs):
+
+                        all_normalized_mutation_density, \
+                            strand1_normalized_mutation_density, \
+                            strand2_normalized_mutation_density, \
+                            strand3_questionable_normalized_mutation_density, \
+                            strand4_nontranscribed_normalized_mutation_density, \
+                            genic_normalized_mutation_density = get_signature_specific_normalized_mutation_density_from_np_array(
+                            asymmetry_type,
+                            mutation_main_type,
+                            signature_index,
+                            number_of_attributable_bases_array,
+                            simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+
+                        # For simulated mutations
+                        all_sims_normalized_mutation_density, \
+                            strand1_sims_normalized_mutation_density, \
+                            strand2_sims_normalized_mutation_density, \
+                            strand3_questionable_sims_normalized_mutation_density, \
+                            strand4_nontranscribed_sims_normalized_mutation_density, \
+                            genic_sims_normalized_mutation_density = get_signature_specific_sims_normalized_mutation_density_from_np_array(
+                            asymmetry_type,
+                            mutation_main_type,
+                            signature_index,
+                            number_of_attributable_bases_array,
+                            number_of_sims,
+                            simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+
+                        plot_in_pdf(outputDir,
+                                    jobname,
+                                    mutation_main_type,
+                                    signature,
+                                    asymmetry_type,
+                                    strand1,
+                                    strand2,
+                                    strand4,
+                                    all_normalized_mutation_density,
+                                    all_sims_normalized_mutation_density,
+                                    strand1_normalized_mutation_density,
+                                    strand1_sims_normalized_mutation_density,
+                                    strand2_normalized_mutation_density,
+                                    strand2_sims_normalized_mutation_density,
+                                    strand3_questionable_normalized_mutation_density,
+                                    strand3_questionable_sims_normalized_mutation_density,
+                                    strand4_nontranscribed_normalized_mutation_density,
+                                    strand4_nontranscribed_sims_normalized_mutation_density,
+                                    genic_normalized_mutation_density,
+                                    genic_sims_normalized_mutation_density,
+                                    pdf)
+
+                    # Mutation subtype specific
+                    for mutation_sub_type in mutation_sub_types:
+
+                        # For real mutations
+                        all_normalized_mutation_density, \
+                        strand1_normalized_mutation_density, \
+                        strand2_normalized_mutation_density, \
+                        strand3_questionable_normalized_mutation_density, \
+                        strand4_nontranscribed_normalized_mutation_density, \
+                        genic_normalized_mutation_density = get_mutation_specific_normalized_mutation_density_from_np_array(
+                            asymmetry_type,
+                            mutation_main_type,
+                            mutation_sub_type,
+                            ordered_SBS96_substitution_types,
+                            ordered_DBS78_doublet_types,
+                            ordered_ID83_indel_types,
+                            SBS96_mutation_mapping,
+                            DBS78_mutation_mapping,
+                            ID83_mutation_mapping,
+                            number_of_attributable_bases_array,
+                            simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+
+                        # For simulated mutations
+                        all_sims_normalized_mutation_density, \
+                        strand1_sims_normalized_mutation_density, \
+                        strand2_sims_normalized_mutation_density, \
+                        strand3_questionable_sims_normalized_mutation_density, \
+                        strand4_nontranscribed_sims_normalized_mutation_density, \
+                        genic_sims_normalized_mutation_density = get_mutation_specific_sims_normalized_mutation_density_from_np_array(
+                            asymmetry_type,
+                            mutation_main_type,
+                            mutation_sub_type,
+                            ordered_SBS96_substitution_types,
+                            ordered_DBS78_doublet_types,
+                            ordered_ID83_indel_types,
+                            SBS96_mutation_mapping,
+                            DBS78_mutation_mapping,
+                            ID83_mutation_mapping,
+                            number_of_attributable_bases_array,
+                            number_of_sims,
+                            simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array,
+                            simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array,
+                            simnum_id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array)
+
+                        plot_in_pdf(outputDir,
+                                    jobname,
+                                    mutation_main_type,
+                                    mutation_sub_type,
+                                    asymmetry_type,
+                                    strand1,
+                                    strand2,
+                                    strand4,
+                                    all_normalized_mutation_density,
+                                    all_sims_normalized_mutation_density,
+                                    strand1_normalized_mutation_density,
+                                    strand1_sims_normalized_mutation_density,
+                                    strand2_normalized_mutation_density,
+                                    strand2_sims_normalized_mutation_density,
+                                    strand3_questionable_normalized_mutation_density,
+                                    strand3_questionable_sims_normalized_mutation_density,
+                                    strand4_nontranscribed_normalized_mutation_density,
+                                    strand4_nontranscribed_sims_normalized_mutation_density,
+                                    genic_normalized_mutation_density,
+                                    genic_sims_normalized_mutation_density,
+                                    pdf)
 
 
 def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp(inputDir,
@@ -3038,6 +3053,9 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
                                                                                  chromNamesList,
                                                                                  mutation_types,
                                                                                  asymmetry_types,
+                                                                                 num_of_sbs_required,
+                                                                                 num_of_dbs_required,
+                                                                                 num_of_id_required,
                                                                                  ordered_sbs_signatures_with_cutoffs,
                                                                                  ordered_dbs_signatures_with_cutoffs,
                                                                                  ordered_id_signatures_with_cutoffs,
@@ -3116,7 +3134,7 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
         dbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array = result_tuple[6]
         id_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array = result_tuple[7]
 
-        print('MONITOR ACCUMULATE sim_num:', sim_num,  chrLong, flush=True)
+        # print('MONITOR ACCUMULATE sim_num:', sim_num,  chrLong, flush=True)
 
         # accumulate
         simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array[sim_num] += sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array
@@ -3191,7 +3209,6 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
 
             accumulate_np_arrays(result_tuple)
 
-
     plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                                         outputDir,
                                                         jobname,
@@ -3204,6 +3221,9 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
                                                         SBS96_mutation_mapping,
                                                         DBS78_mutation_mapping,
                                                         ID83_mutation_mapping,
+                                                        num_of_sbs_required,
+                                                        num_of_dbs_required,
+                                                        num_of_id_required,
                                                         ordered_sbs_signatures_with_cutoffs,
                                                         ordered_dbs_signatures_with_cutoffs,
                                                         ordered_id_signatures_with_cutoffs,

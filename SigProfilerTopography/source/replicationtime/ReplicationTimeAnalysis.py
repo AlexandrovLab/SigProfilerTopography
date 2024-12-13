@@ -2641,11 +2641,11 @@ def replication_time_analysis(computationType,
         sample_2_sample_index_dict = {sample: ind for ind, sample in enumerate(all_samples_list, 0)}
         sample_index_2_sample_dict = {ind: sample for ind, sample in enumerate(all_samples_list, 0)}
 
-        log_out = open(log_file, 'a')
-        print('\n#################################################################################', file=log_out)
-        print('--- sample_2_sample_index_dict:', sample_2_sample_index_dict, file=log_out)
-        print('--- sample_index_2_sample_dict:', sample_index_2_sample_dict, file=log_out)
-        log_out.close()
+        # log_out = open(log_file, 'a')
+        # print('\n#################################################################################', file=log_out)
+        # print('--- sample_2_sample_index_dict:', sample_2_sample_index_dict, file=log_out)
+        # print('--- sample_index_2_sample_dict:', sample_index_2_sample_dict, file=log_out)
+        # log_out.close()
 
         # Ordered signatures will only have signatures since later on, they are used in filtering mutation row columns
         all_sims_samples_subs_signature_decile_index_accumulated_np_array, \
