@@ -2,12 +2,11 @@ dist: xenial
 language: python
 
 python:
-  - '3.8'
+  - '3.9'
 
 before_install:
-  if ! [ -f ./src/GRCh37.tar.gz ]; then
-    wget ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tar.gz -P ./src/;
-  fi
+  - pip install --upgrade pip setuptools packaging
+  - if ! [ -f ./src/GRCh37.tar.gz ]; then wget ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tar.gz -P ./src/; fi
 
 install:
   - pip install .
