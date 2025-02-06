@@ -189,6 +189,8 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUT
 
 from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import annotated_region_analysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
+from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancy_analysis_using_pyranges
+
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis_enhanced
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replication_time_analysis
 from SigProfilerTopography.source.replicationstrandbias.ReplicationStrandBiasAnalysis import replication_strand_bias_analysis
@@ -401,47 +403,50 @@ def check_download_replication_time_files(replication_time_signal_file,
         if replication_time_peak_file:
             replication_time_peak_file_path = os.path.join(lib_replication_path, replication_time_peak_file)
 
-        if replication_time_signal_file and not os.path.exists(replication_time_signal_file_path):
-            print('Does not exists: %s' %replication_time_signal_file_path)
+        if replication_time_signal_file:
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
                 print('Downloading %s under %s' % (replication_time_signal_file, lib_replication_path))
 
-                #wget -c Continue getting a partially-downloaded file
-                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_signal_file + "'"
+                # -r: Enables recursive downloading.
+                # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                # --no-parent: Prevents wget from ascending to parent directories.
+                # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + replication_time_signal_file + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/" + replication_time_signal_file + "'"
                 os.system(cmd)
             except:
                 # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                 print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
 
-        if replication_time_valley_file and not os.path.exists(replication_time_valley_file_path):
-            print('Does not exists: %s' %replication_time_valley_file_path)
+        if replication_time_valley_file:
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
                 print('Downloading %s under %s' % (replication_time_valley_file, lib_replication_path))
 
-                #wget -c Continue getting a partially-downloaded file
-                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_valley_file + "'"
+                # -r: Enables recursive downloading.
+                # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                # --no-parent: Prevents wget from ascending to parent directories.
+                # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + replication_time_valley_file + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/" + replication_time_valley_file + "'"
                 os.system(cmd)
             except:
                 # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
                 print("The ftp://alexandrovlab-ftp.ucsd.edu site is not responding...")
 
-        if replication_time_peak_file and not os.path.exists(replication_time_peak_file_path):
-            print('Does not exists: %s' %replication_time_peak_file_path)
+        if replication_time_peak_file:
             try:
                 # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
                 print('Downloading %s under %s' % (replication_time_peak_file, lib_replication_path))
 
-                #wget -c Continue getting a partially-downloaded file
-                #wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/' + replication_time_peak_file + "'"
-                # print(cmd)
+                # -r: Enables recursive downloading.
+                # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                # --no-parent: Prevents wget from ascending to parent directories.
+                # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + replication_time_peak_file + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/replication/" + replication_time_peak_file + "'"
+
                 os.system(cmd)
             except:
                 # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
@@ -467,23 +472,17 @@ def check_download_sample_probability_files():
         os.chdir(sample_probability_files_path)
 
         for probability_filename in probability_files:
-            probability_file_path = os.path.join(sample_probability_files_path, probability_filename)
-            if not os.path.exists(probability_file_path):
-                print('Does not exists: %s' %probability_file_path)
+
             try:
                 print('Downloading %s under %s' % (probability_filename, sample_probability_files_path))
 
-                # wget -c Continue getting a partially-downloaded file
-                # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                # -r: Enables recursive downloading.
+                # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                # --no-parent: Prevents wget from ascending to parent directories.
+                # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + probability_filename + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_probability_files/" + probability_filename + "'"
 
-                # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
-                # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
-                # -c option to resume a download
-                # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
-                # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
-                # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
-                cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_probability_files/' + probability_filename + "'"
                 print("cmd: %s" % cmd)
                 os.system(cmd)
             except:
@@ -497,28 +496,22 @@ def check_download_sample_probability_files():
 
 def check_download_example_data():
     current_path = os.getcwd()
-    # os.makedirs(os.path.join(current_path), exist_ok=True)
-    # download_path = os.path.join(current_path)
+
+    filename = "21BRCA.zip"
 
     if os.path.isabs(current_path):
         os.chdir(current_path)
 
-        if not os.path.exists(current_path):
-            print('Does not exists: %s' %current_path)
         try:
             print('Downloading under %s' %current_path)
 
-            # wget -c Continue getting a partially-downloaded file
-            # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-            # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+            # -r: Enables recursive downloading.
+            # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+            # --no-parent: Prevents wget from ascending to parent directories.
+            # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+            # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+            cmd = "bash -c 'wget -r -l1 --no-parent -nd -O" + filename +  " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/Example_data/" + filename +  "'"
 
-            # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
-            # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
-            # -c option to resume a download
-            # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
-            # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
-            # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
-            cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/Example_data/' + "'"
             print("cmd: %s" % cmd)
             os.system(cmd)
         except:
@@ -546,22 +539,17 @@ def check_download_sample_vcf_files():
 
         for vcf_filename in vcf_files:
             vcf_file_path = os.path.join(sample_vcf_files_path, vcf_filename)
-            if not os.path.exists(vcf_file_path):
-                print('Does not exists: %s' %vcf_file_path)
+
             try:
                 print('Downloading %s under %s' % (vcf_filename, sample_vcf_files_path))
 
-                # wget -c Continue getting a partially-downloaded file
-                # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                # -r: Enables recursive downloading.
+                # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                # --no-parent: Prevents wget from ascending to parent directories.
+                # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + vcf_filename + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_vcf_files/" + vcf_filename + "'"
 
-                # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
-                # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
-                # -c option to resume a download
-                # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
-                # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
-                # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
-                cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/sample_vcf_files/' + vcf_filename + "'"
                 print("cmd: %s" % cmd)
                 os.system(cmd)
             except:
@@ -592,21 +580,17 @@ def check_download_chrbased_npy_atac_seq_files(atac_seq_file, chromNamesList, fn
             if (not os.path.exists(chrbased_npy_array_path)) or \
                     (os.path.exists(chrbased_npy_array_path) and (filename in fname_2_md5_dict) and
                      (md5_read_in_chunks(chrbased_npy_array_path) != fname_2_md5_dict[filename])):
-                print('Does not exists: %s' %chrbased_npy_array_path)
+                print('Does not exists or file is corrupted: %s' %chrbased_npy_array_path)
                 try:
                     print('Downloading %s under %s' % (filename, chrbased_npy_array_path))
 
-                    # wget -c Continue getting a partially-downloaded file
-                    # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                    # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
+                    # -r: Enables recursive downloading.
+                    # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                    # --no-parent: Prevents wget from ascending to parent directories.
+                    # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                    # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                    cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + filename + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/epigenomics/chrbased/" + filename + "'"
 
-                    # -r When included, the wget will recursively traverse subdirectories in order to obtain all content.
-                    # -l1 Limit recursion depth to a specific number of levels, by setting the <#> variable to the desired number.
-                    # -c option to resume a download
-                    # -nc, --no-clobber If a file is downloaded more than once in the same directory, Wget's behavior depends on a few options, including -nc.  In certain cases, the local file will be clobbered, or overwritten, upon repeated download.  In other cases it will be preserved.
-                    # -np, --no-parent Do not ever ascend to the parent directory when retrieving recursively.  This is a useful option, since it guarantees that only the files below a certain hierarchy will be downloaded.
-                    # -nd, --no-directories When included, directories will not be created. All files captured in the wget will be copied directly in to the active directory
-                    cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/epigenomics/chrbased/' + filename + "'"
                     print("cmd: %s" %cmd)
                     os.system(cmd)
                 except:
@@ -646,19 +630,23 @@ def check_download_chrbased_npy_nuclesome_files(nucleosome_file, chromNamesList,
                 filename = '%s_signal_%s.npy' % (chrLong, nucleosome_filename_wo_extension)
 
                 chrbased_npy_array_path = os.path.join(chrombased_npy_path, filename)
+
                 if (not os.path.exists(chrbased_npy_array_path)) or \
                         (os.path.exists(chrbased_npy_array_path) and (filename in fname_2_md5_dict) and md5_read_in_chunks(chrbased_npy_array_path) != fname_2_md5_dict[filename]):
-                    print('Does not exists: %s' %chrbased_npy_array_path)
+
+                    print('Does not exists or file is corrupted: %s' %chrbased_npy_array_path)
+
                     try:
                         # print('Downloading %s_signal_wgEncodeSydhNsome_%sSig.npy under %s' %(chrLong,cell_line,chrbased_npy_array_path))
                         print('Downloading %s_signal_%s.npy under %s' % (
                         chrLong, nucleosome_filename_wo_extension, chrbased_npy_array_path))
 
-                        # wget -c Continue getting a partially-downloaded file
-                        # wget -nc  If a file is downloaded more than once in the same directory, the local file will be clobbered, or overwritten
-                        # cmd="bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd -P ' + chrombased_npy_path + ' ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                        cmd = "bash -c '" + 'wget -r -l1 -c -nc --no-parent -nd ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/' + filename + "'"
-                        # print(cmd)
+                        # -r: Enables recursive downloading.
+                        # -l1: Sets the recursion depth to 1, meaning it will only download files in the specified directory.
+                        # --no-parent: Prevents wget from ascending to parent directories.
+                        # -nd: Tells wget to save all downloaded files in the current directory without creating subdirectories.
+                        # -O " + filename + ": Specifies that the downloaded file should be saved with the name contained in the variable filename. This will overwrite any existing file with that name.
+                        cmd = "bash -c 'wget -r -l1 --no-parent -nd -O " + filename + " ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/nucleosome/chrbased/" + filename + "'"
                         os.system(cmd)
                     except:
                         # print("The UCSD ftp site is not responding...pulling from sanger ftp now.")
@@ -871,6 +859,67 @@ def run_occupancy_analyses(genome,
                       parallel_mode,
                       log_file,
                       verbose)
+
+
+def run_occupancy_analyses_using_pyranges(genome,
+                                      outputDir,
+                                      jobname,
+                                      numofSimulations,
+                                      samples_of_interest,
+                                      job_tuples,
+                                      sample_based,
+                                      epigenomics_file,
+                                      epigenomics_file_memo,
+                                      chromSizesDict,
+                                      chromNamesList,
+                                      ordered_sbs_signatures_with_cutoffs,
+                                      ordered_dbs_signatures_with_cutoffs,
+                                      ordered_id_signatures_with_cutoffs,
+                                      ordered_sbs_signatures_cutoffs,
+                                      ordered_dbs_signatures_cutoffs,
+                                      ordered_id_signatures_cutoffs,
+                                      computation_type,
+                                      occupancy_type,
+                                      occupancy_calculation_type,
+                                      plus_minus_epigenomics,
+                                      remove_outliers,
+                                      quantile_value,
+                                      discreet_mode,
+                                      default_cutoff,
+                                      parallel_mode,
+                                      log_file,
+                                      verbose):
+
+    occupancy_analysis_using_pyranges(genome,
+                      computation_type,
+                      occupancy_type,
+                      occupancy_calculation_type,
+                      sample_based,
+                      plus_minus_epigenomics,
+                      chromSizesDict,
+                      chromNamesList,
+                      outputDir,
+                      jobname,
+                      numofSimulations,
+                      samples_of_interest,
+                      job_tuples,
+                      epigenomics_file,
+                      epigenomics_file_memo,
+                      ordered_sbs_signatures_with_cutoffs,
+                      ordered_dbs_signatures_with_cutoffs,
+                      ordered_id_signatures_with_cutoffs,
+                      ordered_sbs_signatures_cutoffs,
+                      ordered_dbs_signatures_cutoffs,
+                      ordered_id_signatures_cutoffs,
+                      remove_outliers,
+                      quantile_value,
+                      discreet_mode,
+                      default_cutoff,
+                      parallel_mode,
+                      log_file,
+                      verbose)
+
+
 
 def run_replication_time_analysis(genome,
                                outputDir,
@@ -1171,6 +1220,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                 # Python dictionary where key is a mutational signature and value is an average probability.
                                                 # Exceptional signatures are included in the topography analyses
                                                 # if they satisfy num_of_sbs_required, num_of_dbs_required, and num_of_id_required constraints with average_probability >= given average probability.
+                                                # Exceptional signatures requires step5_gen_tables=True.
                 default_cutoff = 0.5, # [Float] The default_cutoff applies for all signatures when discreet_mode is False.
                                       # Mutations satisfying mutation_signature_probability >= default_cutoff are considered in the topography analyses with their probability.
                 show_all_signatures = True, # [Boolean] The show_all_signatures applies when discreet_mode is False.
@@ -2079,6 +2129,10 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             mutation_type_context_for_simulator.append(mutation_type_context)
             # Please notice that Simulator reverse the given input mutationTypes_for_simulator
             print('--- SigProfilerSimulator is running for %s' %(mutation_type_context), file=log_out)
+
+            # # Delete later to simulate from a  bed file
+            # if bed_file is not None:
+            #     chrom_based = False
 
             simulator.SigProfilerSimulator(jobname,
                                            inputDir,
@@ -3124,6 +3178,39 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             else:
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
 
+            # start_time = time.time()
+            # run_occupancy_analyses_using_pyranges(genome,
+            #                      outputDir,
+            #                      jobname,
+            #                      numofSimulations,
+            #                      samples_of_interest,
+            #                      job_tuples,
+            #                      sample_based,
+            #                      epigenomics_file,
+            #                      epigenomics_file_memo,
+            #                      chromSizesDict,
+            #                      chromNamesList,
+            #                      ordered_sbs_signatures_with_cutoffs,
+            #                      ordered_dbs_signatures_with_cutoffs,
+            #                      ordered_id_signatures_with_cutoffs,
+            #                      ordered_sbs_signatures_cutoffs,
+            #                      ordered_dbs_signatures_cutoffs,
+            #                      ordered_id_signatures_cutoffs,
+            #                      computation_type,
+            #                      occupancy_type,
+            #                      occupancy_calculation_type,
+            #                      plus_minus_epigenomics,
+            #                      remove_outliers,
+            #                      quantile_value,
+            #                      discreet_mode,
+            #                      default_cutoff,
+            #                      parallel_mode,
+            #                      log_file,
+            #                      verbose)
+            # end_time = time.time()
+            # print('Execution time using pyranges:', end_time-start_time, 'seconds for', epigenomics_file)
+
+            # start_time = time.time()
             run_occupancy_analyses(genome,
                                  outputDir,
                                  jobname,
@@ -3152,6 +3239,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                  parallel_mode,
                                  log_file,
                                  verbose)
+            # end_time = time.time()
+            # print('Execution time using old way:', end_time-start_time, 'seconds for', epigenomics_file)
 
             log_out = open(log_file, 'a')
             print('#################################################################################', file=log_out)
