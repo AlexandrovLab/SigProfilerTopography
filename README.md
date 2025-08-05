@@ -1,4 +1,5 @@
 
+
 [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.io/5unby/wiki/home/)
  [![Build Status](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography.svg?branch=master)](https://app.travis-ci.com/AlexandrovLab/SigProfilerTopography)
@@ -527,9 +528,10 @@ SigProfilerTopography uses ENCODE provided files for topography analyses such as
 
 
 ## <a name="citation"></a> Citation
-Otlu B, Alexandrov LB: Evaluating topography of mutational signatures with SigProfilerTopography. __BioRxiv 2024__, [https://doi.org/10.1101/2024.01.08.574683](https://doi.org/10.1101/2024.01.08.574683).
+Otlu, B., Alexandrov, L.B. Evaluating topography of mutational signatures with SigProfilerTopography. __Genome Biol__  26, 134 (2025). https://doi.org/10.1186/s13059-025-03612-8.
 
-Otlu B, Diaz-Gay M, Vermes I, Bergstrom EN, Zhivagui M, Barnes M, Alexandrov LB: Topography of mutational signatures in human cancer. __Cell Rep 2023__,  [https://doi.org/10.1016/j.celrep.2023.112930](https://doi.org/10.1016/j.celrep.2023.112930).
+Otlu B, Díaz-Gay M, Vermes I, Bergstrom EN, Zhivagui M, Barnes M, Alexandrov LB. Topography of mutational signatures in human cancer. __Cell Rep.__ 2023 Aug 29;42(8):112930. https://doi.org/10.1016/j.celrep.2023.112930.
+
 
 
 ## <a name="copyright"></a> Copyright

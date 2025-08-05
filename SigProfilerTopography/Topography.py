@@ -3178,69 +3178,76 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             else:
                 epigenomics_file_memo = os.path.splitext(os.path.basename(epigenomics_file))[0]
 
-            # start_time = time.time()
-            # run_occupancy_analyses_using_pyranges(genome,
-            #                      outputDir,
-            #                      jobname,
-            #                      numofSimulations,
-            #                      samples_of_interest,
-            #                      job_tuples,
-            #                      sample_based,
-            #                      epigenomics_file,
-            #                      epigenomics_file_memo,
-            #                      chromSizesDict,
-            #                      chromNamesList,
-            #                      ordered_sbs_signatures_with_cutoffs,
-            #                      ordered_dbs_signatures_with_cutoffs,
-            #                      ordered_id_signatures_with_cutoffs,
-            #                      ordered_sbs_signatures_cutoffs,
-            #                      ordered_dbs_signatures_cutoffs,
-            #                      ordered_id_signatures_cutoffs,
-            #                      computation_type,
-            #                      occupancy_type,
-            #                      occupancy_calculation_type,
-            #                      plus_minus_epigenomics,
-            #                      remove_outliers,
-            #                      quantile_value,
-            #                      discreet_mode,
-            #                      default_cutoff,
-            #                      parallel_mode,
-            #                      log_file,
-            #                      verbose)
-            # end_time = time.time()
-            # print('Execution time using pyranges:', end_time-start_time, 'seconds for', epigenomics_file)
+            file_extension = os.path.splitext(os.path.basename(epigenomics_file))[1]
 
-            # start_time = time.time()
-            run_occupancy_analyses(genome,
-                                 outputDir,
-                                 jobname,
-                                 numofSimulations,
-                                 samples_of_interest,
-                                 job_tuples,
-                                 sample_based,
-                                 epigenomics_file,
-                                 epigenomics_file_memo,
-                                 chromSizesDict,
-                                 chromNamesList,
-                                 ordered_sbs_signatures_with_cutoffs,
-                                 ordered_dbs_signatures_with_cutoffs,
-                                 ordered_id_signatures_with_cutoffs,
-                                 ordered_sbs_signatures_cutoffs,
-                                 ordered_dbs_signatures_cutoffs,
-                                 ordered_id_signatures_cutoffs,
-                                 computation_type,
-                                 occupancy_type,
-                                 occupancy_calculation_type,
-                                 plus_minus_epigenomics,
-                                 remove_outliers,
-                                 quantile_value,
-                                 discreet_mode,
-                                 default_cutoff,
-                                 parallel_mode,
-                                 log_file,
-                                 verbose)
-            # end_time = time.time()
-            # print('Execution time using old way:', end_time-start_time, 'seconds for', epigenomics_file)
+            if ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
+            # if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
+            # if (file_extension.lower() == '.bed'):
+
+                start_time = time.time()
+                run_occupancy_analyses_using_pyranges(genome,
+                                     outputDir,
+                                     jobname,
+                                     numofSimulations,
+                                     samples_of_interest,
+                                     job_tuples,
+                                     sample_based,
+                                     epigenomics_file,
+                                     epigenomics_file_memo,
+                                     chromSizesDict,
+                                     chromNamesList,
+                                     ordered_sbs_signatures_with_cutoffs,
+                                     ordered_dbs_signatures_with_cutoffs,
+                                     ordered_id_signatures_with_cutoffs,
+                                     ordered_sbs_signatures_cutoffs,
+                                     ordered_dbs_signatures_cutoffs,
+                                     ordered_id_signatures_cutoffs,
+                                     computation_type,
+                                     occupancy_type,
+                                     occupancy_calculation_type,
+                                     plus_minus_epigenomics,
+                                     remove_outliers,
+                                     quantile_value,
+                                     discreet_mode,
+                                     default_cutoff,
+                                     parallel_mode,
+                                     log_file,
+                                     verbose)
+                end_time = time.time()
+                print('Execution time using pyranges:', end_time-start_time, 'seconds for', epigenomics_file)
+
+            else:
+                start_time = time.time()
+                run_occupancy_analyses(genome,
+                                     outputDir,
+                                     jobname,
+                                     numofSimulations,
+                                     samples_of_interest,
+                                     job_tuples,
+                                     sample_based,
+                                     epigenomics_file,
+                                     epigenomics_file_memo,
+                                     chromSizesDict,
+                                     chromNamesList,
+                                     ordered_sbs_signatures_with_cutoffs,
+                                     ordered_dbs_signatures_with_cutoffs,
+                                     ordered_id_signatures_with_cutoffs,
+                                     ordered_sbs_signatures_cutoffs,
+                                     ordered_dbs_signatures_cutoffs,
+                                     ordered_id_signatures_cutoffs,
+                                     computation_type,
+                                     occupancy_type,
+                                     occupancy_calculation_type,
+                                     plus_minus_epigenomics,
+                                     remove_outliers,
+                                     quantile_value,
+                                     discreet_mode,
+                                     default_cutoff,
+                                     parallel_mode,
+                                     log_file,
+                                     verbose)
+                end_time = time.time()
+                print('Execution time using old way:', end_time-start_time, 'seconds for', epigenomics_file)
 
             log_out = open(log_file, 'a')
             print('#################################################################################', file=log_out)

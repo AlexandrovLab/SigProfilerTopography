@@ -36,6 +36,7 @@ import pandas as pd
 import numpy as np
 import math
 import traceback
+import pyBigWig
 
 from SigProfilerTopography.source.commons.TopographyCommons import memory_usage
 from SigProfilerTopography.source.commons.TopographyCommons import readChrBasedMutationsDF
@@ -126,15 +127,13 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
                                                              chrBased_simBased_indels_df,
                                                              chromSizesDict,
                                                              chrBased_library_df,
-                                                             library_file_with_path,
-                                                             library_file_type,
                                                              ordered_sbs_signatures,
                                                              ordered_dbs_signatures,
                                                              ordered_id_signatures,
                                                              ordered_sbs_signatures_cutoffs,
                                                              ordered_dbs_signatures_cutoffs,
                                                              ordered_id_signatures_cutoffs,
-                                                             plusorMinus,
+                                                             plus_minus,
                                                              discreet_mode,
                                                              default_cutoff,
                                                              log_file,
@@ -152,7 +151,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
     # pyranges requires dataframe to have all the columns Chromosome, Start and End.
     # chrBased_library_df.columns.values: ['Chrom' 'Start' 'End' 'Signal']
-    chrBased_library_df.rename(columns={'Chrom':'Chromosome'}, inplace=True)
+    if chrBased_library_df is not None:
+        chrBased_library_df.rename(columns={'Chrom':'Chromosome'}, inplace=True)
 
     # # CHROM, START, END, SIGNAL
     # library_intervals_pr = pr.PyRanges(chromosomes = chrBased_library_df[CHROM],
@@ -180,22 +180,23 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
     ################################ Initialization ###############################
     ###############################################################################
     # Add one more row for the aggregated analysis
-    subsSignature_accumulated_signal_np_array = np.zeros((number_of_sbs_signatures + 1, plusorMinus * 2 + 1)) # dtype=float
-    dinucsSignature_accumulated_signal_np_array = np.zeros((number_of_dbs_signatures + 1, plusorMinus * 2 + 1)) # dtype=float
-    indelsSignature_accumulated_signal_np_array = np.zeros((number_of_id_signatures + 1, plusorMinus * 2 + 1)) # dtype=float
+    subsSignature_accumulated_signal_np_array = np.zeros((number_of_sbs_signatures + 1, plus_minus * 2 + 1)) # dtype=float
+    dinucsSignature_accumulated_signal_np_array = np.zeros((number_of_dbs_signatures + 1, plus_minus * 2 + 1)) # dtype=float
+    indelsSignature_accumulated_signal_np_array = np.zeros((number_of_id_signatures + 1, plus_minus * 2 + 1)) # dtype=float
 
     # Add one more row for the aggregated analysis
-    subsSignature_accumulated_count_np_array = np.zeros((number_of_sbs_signatures + 1, plusorMinus * 2 + 1))
-    dinucsSignature_accumulated_count_np_array = np.zeros((number_of_dbs_signatures + 1, plusorMinus * 2 + 1))
-    indelsSignature_accumulated_count_np_array = np.zeros((number_of_id_signatures + 1, plusorMinus * 2 + 1))
+    subsSignature_accumulated_count_np_array = np.zeros((number_of_sbs_signatures + 1, plus_minus * 2 + 1))
+    dinucsSignature_accumulated_count_np_array = np.zeros((number_of_dbs_signatures + 1, plus_minus * 2 + 1))
+    indelsSignature_accumulated_count_np_array = np.zeros((number_of_id_signatures + 1, plus_minus * 2 + 1))
     ###############################################################################
     ################################ Initialization ###############################
     ###############################################################################
 
     if ((library_intervals_pr is not None) or ((library_file_opened_by_pyBigWig is not None) and (chrLong in library_file_opened_by_pyBigWig.chroms()))):
-        ######################################################## #######################
+        ######################################################## ######################
         ################### Fill signal and count array starts ########################
         ###############################################################################
+
         if verbose:
             log_out = open(log_file, 'a')
             print('\tVerbose %s Worker pid %s memory_usage in %.2f MB Check2_1 Start chrLong:%s simNum:%d' % (occupancy_type,str(os.getpid()), memory_usage(), chrLong, simNum), file=log_out)
@@ -207,6 +208,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
             # df_columns is a numpy array
             df_columns = chrBased_simBased_subs_df.columns.values
 
+            # subsSignatures_mask_array is a boolean array
+            # ordered_sbs_signatures is the names of the signatures we are interested in which do not necesaarily contain all of the signatures
             subsSignatures_mask_array = np.isin(df_columns, ordered_sbs_signatures)
 
             # df_columns: ['Sample' 'Chrom' 'Start' 'MutationLong' 'PyramidineStrand'
@@ -218,23 +221,53 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             mutations_df = chrBased_simBased_subs_df[[CHROM, START]]
             mutations_df[CHROM] = "chr" + mutations_df[CHROM]
-            mutations_df[END] = mutations_df[START] + plusorMinus
-            mutations_df[START] = mutations_df[START] - plusorMinus
+            mutations_df[END] = mutations_df[START] + plus_minus
+            mutations_df[START] = mutations_df[START] - plus_minus
 
+            # probabilities rows: num_of_mutations, columns: num_of_signatures_of_interest, cells: probabilities
             probabilities = chrBased_simBased_subs_df[df_columns[subsSignatures_mask_array]]
+            print('#############################################################')
+            print('DEBUG', chrLong, 'sim:', simNum, 'chrBased_simBased_subs_df:', chrBased_simBased_subs_df, 'chrBased_simBased_subs_df.shape:', chrBased_simBased_subs_df.shape)
+            print('DEBUG', chrLong, 'sim:', simNum, 'ordered_sbs_signatures:', ordered_sbs_signatures)
+            print('DEBUG', chrLong, 'sim:', simNum, 'probabilities:', probabilities, 'probabilities.shape:', probabilities.shape, 'probabilities.size:', probabilities.size)
+            print('DEBUG', chrLong, 'sim:', simNum, 'ordered_sbs_signatures_cutoffs:', ordered_sbs_signatures_cutoffs)
 
             if discreet_mode:
                 # Discreet way 1 or 0
                 # Convert True into 1, and False into 0
+                # threshold_mask_array rows: num_of_mutations, columns: num_of_signatures_of_interest, cells: True or False
                 threshold_mask_array = np.greater_equal(probabilities, ordered_sbs_signatures_cutoffs)
+                # mask_array rows: num_of_mutations, columns: num_of_signatures_of_interest, cells: 1 or 0
+                # if a mutation is assigned to a signature, then corresponding cell is set to 1, otherwise 0
+                # if a mutation is not assigned to any signature, then all cells in that row is set to 0
+                # only one cell in a row can be set to 1 otherwise all cells set to zero
                 mask_array = threshold_mask_array.astype(int)  # num_of_mutations * num_of_signatures_of_interest
             else:
                 probabilities[probabilities < default_cutoff] = 0
                 mask_array = np.array(probabilities).astype(float)
 
+            print('DEBUG1', chrLong, 'sim:', simNum, 'mask_array:', mask_array)
+            if mask_array.size == 0:
+                print('DEBUG2', chrLong, 'sim:', simNum, 'mask_array.size == 0')
+                if probabilities.shape[0] > 0:
+                    print('DEBUG3', chrLong, 'sim:', simNum, 'probabilities.size:', probabilities.size, 'probabilities.shape:', probabilities.shape)
+                    mask_array = np.zeros((probabilities.shape[0],1), dtype=float)
+                    print('DEBUG4', chrLong, 'sim:', simNum, 'mask_array:', mask_array)
+            else:
+                mask_array = mask_array.to_numpy()
+
+            print('DEBUG5', chrLong, 'sim:', simNum, 'mask_array:', mask_array)
+
             # Get the indices of the maximum values for each row
-            mask_array = mask_array.to_numpy()
+            # axis=1 refers to the rows (finding the maximum value in each row).
             max_indices = np.argmax(mask_array, axis=1)
+            print('DEBUG6', chrLong, 'sim:', simNum, 'max_indices:', max_indices)
+
+            # if there is no signature assigned then assign -1
+            # All zeros in row, means that there is no signature assu=igned
+            # Assigning 0 will be misleading meaning it is assigned to the first signature in ordered_signatures
+            max_indices[np.all(mask_array == 0, axis=1)] = -1
+            print('DEBUG7', chrLong, 'sim:', simNum, 'max_indices:', max_indices)
 
             # add Signature column to mutations_df
             mutations_df['Signature'] = max_indices
@@ -244,24 +277,92 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             mutations_pr = pr.PyRanges(mutations_df)
 
+            # combine information from two PyRanges objects based on overlapping intervals, by default inner
             joined = mutations_pr.join(library_intervals_pr)
 
-            starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
-            ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
-            signals = joined.df['Signal'].values
-            signatures = joined.df['Signature'].values
+            # Start and End holds the mutation positions as mutation_start - 1000 and mutation_start + 1000
+            # Start_b and End_b holds the library positions
+            # therefore we substract Start
 
-            # fill arrays
-            # np.add.at will be tried and compared
-            for start, end, signal, signature in zip(starts, ends, signals, signatures):
-                subsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
-                subsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+            if len(joined) > 0:
+                starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
+                ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
+                signals = joined.df['Signal'].values
+                signatures = joined.df['Signature'].values
 
-                # we may need to handle probability case, instead if 1, we may consider probability
-                # or we may leave as it is, since probabilities are considered in mask array
-                subsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
-                subsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+                print('DEBUG8', chrLong, 'sim:', simNum, 'starts:', starts)
+                print('DEBUG9', chrLong, 'sim:', simNum, 'ends:', ends)
 
+                # 1st way
+                # Part1, for mutations that are not assigned to any signature
+                # update aggregated signal and count arrays
+                mask = signatures == -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
+
+                for start, end, signal in zip(current_starts, current_ends, current_signals):
+                    # subsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                    subsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+
+                    # we may need to handle probability case, instead if 1, we may consider probability
+                    # or we may leave as it is, since probabilities are considered in mask array
+                    # subsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+                    subsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # Part2, for mutations that are assigned to a signature
+                # update signature and aggregated signal and count arrays
+                mask = signatures != -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
+                current_signatures = signatures[mask]
+
+                # fill arrays
+                # np.add.at can be tried and compared
+                for start, end, signal, signature in zip(current_starts, current_ends, current_signals, current_signatures):
+                    # subsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
+                    # subsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+
+                    subsSignature_accumulated_signal_np_array[signature, start:end ] += signal
+                    subsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+
+                    # we may need to handle probability case, instead if 1, we may consider probability
+                    # or we may leave as it is, since probabilities are considered in mask array
+                    # subsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
+                    # subsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+
+                    subsSignature_accumulated_count_np_array[signature, start:end ] += 1
+                    subsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # # 2nd way
+                # # Ensure starts, ends, signals, and signatures are NumPy arrays)
+                #
+                # # Pre-calculate the maximum end position to avoid repeated calls to max()
+                # max_end = plus_minus * 2
+                #
+                # # Optimized accumulation for each signature:
+                # for signature in np.unique(signatures):
+                #     mask = signatures == signature
+                #     current_starts = starts[mask]
+                #     current_ends = ends[mask]
+                #     current_signals = signals[mask]
+                #
+                #     # Create a temporary array to store the updates for this signature
+                #     updates_signal = np.zeros((max_end + 1,), dtype=subsSignature_accumulated_signal_np_array.dtype)
+                #     updates_count = np.zeros((max_end + 1,), dtype=subsSignature_accumulated_count_np_array.dtype)
+                #
+                #     for start, end, signal in zip(current_starts, current_ends, current_signals):
+                #         updates_signal[start:end + 1] += signal
+                #         updates_count[start:end + 1] += 1
+                #
+                #     subsSignature_accumulated_signal_np_array[signature, :max_end + 1] += updates_signal
+                #     subsSignature_accumulated_count_np_array[signature, :max_end + 1] += updates_count
+                #
+                #     # here might be problematic since we consider only mutations that are assigned to a signature
+                #     # what about mutations that are not assigned to any signature?
+                #     subsSignature_accumulated_signal_np_array[-1, :max_end + 1] += updates_signal  # Aggregate
+                #     subsSignature_accumulated_count_np_array[-1, :max_end + 1] += updates_count  # Aggregate
 
         # For Dinucs
         if ((chrBased_simBased_dinucs_df is not None) and (not chrBased_simBased_dinucs_df.empty)):
@@ -273,8 +374,8 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             mutations_df = chrBased_simBased_dinucs_df[[CHROM, START]]
             mutations_df[CHROM] = "chr" + mutations_df[CHROM]
-            mutations_df[END] = mutations_df[START] + plusorMinus
-            mutations_df[START] = mutations_df[START] - plusorMinus
+            mutations_df[END] = mutations_df[START] + plus_minus
+            mutations_df[START] = mutations_df[START] - plus_minus
 
             probabilities = chrBased_simBased_dinucs_df[df_columns[dinucsSignatures_mask_array]]
 
@@ -287,9 +388,15 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
                 probabilities[probabilities < default_cutoff] = 0
                 mask_array = np.array(probabilities).astype(float)
 
+            if mask_array.size == 0:
+                if probabilities.shape[0] > 0:
+                    mask_array = np.zeros((probabilities.shape[0],1), dtype=float)
+            else:
+                mask_array = mask_array.to_numpy()
+
             # Get the indices of the maximum values for each row
-            mask_array = mask_array.to_numpy()
             max_indices = np.argmax(mask_array, axis=1)
+            max_indices[np.all(mask_array == 0, axis=1)] = -1
 
             # add Signature column to mutations_df
             mutations_df['Signature'] = max_indices
@@ -301,19 +408,74 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             joined = mutations_pr.join(library_intervals_pr)
 
-            starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
-            ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
-            signals = joined.df['Signal'].values
-            signatures = joined.df['Signature'].values
+            if len(joined) > 0:
+                starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
+                ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
+                signals = joined.df['Signal'].values
+                signatures = joined.df['Signature'].values
 
-            # fill arrays
-            for start, end, signal, signature in zip(starts, ends, signals, signatures):
-                dinucsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
-                dinucsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                # 1st way
+                # Part1, for mutations that are not assigned to any signature
+                # update aggregated signal and count arrays
+                mask = signatures == -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
 
-                dinucsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
-                dinucsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+                for start, end, signal in zip(current_starts, current_ends, current_signals):
+                    # dinucsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                    # dinucsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
 
+                    dinucsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+                    dinucsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # Part2, for mutations that are assigned to a signature
+                # update signature and aggregated signal and count arrays
+                mask = signatures != -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
+                current_signatures = signatures[mask]
+
+                for start, end, signal, signature in zip(current_starts, current_ends, current_signals, current_signatures):
+                    # dinucsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
+                    # dinucsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+
+                    dinucsSignature_accumulated_signal_np_array[signature, start:end ] += signal
+                    dinucsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+
+                    # dinucsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
+                    # dinucsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+
+                    dinucsSignature_accumulated_count_np_array[signature, start:end ] += 1
+                    dinucsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # # 2nd way
+                # # Ensure starts, ends, signals, and signatures are NumPy arrays)
+                #
+                # # Pre-calculate the maximum end position to avoid repeated calls to max()
+                # max_end = plus_minus * 2
+                #
+                # # Optimized accumulation for each signature:
+                # for signature in np.unique(signatures):
+                #     mask = signatures == signature
+                #     current_starts = starts[mask]
+                #     current_ends = ends[mask]
+                #     current_signals = signals[mask]
+                #
+                #     # Create a temporary array to store the updates for this signature
+                #     updates_signal = np.zeros((max_end + 1,), dtype=dinucsSignature_accumulated_signal_np_array.dtype)
+                #     updates_count = np.zeros((max_end + 1,), dtype=dinucsSignature_accumulated_count_np_array.dtype)
+                #
+                #     for start, end, signal in zip(current_starts, current_ends, current_signals):
+                #         updates_signal[start:end + 1] += signal
+                #         updates_count[start:end + 1] += 1
+                #
+                #     dinucsSignature_accumulated_signal_np_array[signature, :max_end + 1] += updates_signal
+                #     dinucsSignature_accumulated_count_np_array[signature, :max_end + 1] += updates_count
+                #
+                #     dinucsSignature_accumulated_signal_np_array[-1, :max_end + 1] += updates_signal  # Aggregate
+                #     dinucsSignature_accumulated_count_np_array[-1, :max_end + 1] += updates_count  # Aggregate
 
         # For Indels
         if ((chrBased_simBased_indels_df is not None) and (not chrBased_simBased_indels_df.empty)):
@@ -325,10 +487,13 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             mutations_df = chrBased_simBased_indels_df[[CHROM, START]]
             mutations_df[CHROM] = "chr" + mutations_df[CHROM]
-            mutations_df[END] = mutations_df[START] + plusorMinus
-            mutations_df[START] = mutations_df[START] - plusorMinus
+            mutations_df[END] = mutations_df[START] + plus_minus
+            mutations_df[START] = mutations_df[START] - plus_minus
 
             probabilities = chrBased_simBased_indels_df[df_columns[indelsSignatures_mask_array]]
+
+            print('DEBUG', chrLong, 'sim:', simNum, 'probabilities:', probabilities)
+            print('DEBUG', chrLong, 'sim:', simNum, 'ordered_id_signatures_cutoffs:', ordered_id_signatures_cutoffs)
 
             if discreet_mode:
                 # Discreet way 1 or 0
@@ -339,9 +504,18 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
                 probabilities[probabilities < default_cutoff] = 0
                 mask_array = np.array(probabilities).astype(float)
 
+            if mask_array.size == 0:
+                if probabilities.shape[0] > 0:
+                    mask_array = np.zeros((probabilities.shape[0],1), dtype=float)
+            else:
+                mask_array = mask_array.to_numpy()
+
+            print('DEBUG', chrLong, 'sim:', simNum, 'threshold_mask_array:', threshold_mask_array)
+            print('DEBUG', chrLong, 'sim:', simNum, 'mask_array:', mask_array)
+
             # Get the indices of the maximum values for each row
-            mask_array = mask_array.to_numpy()
             max_indices = np.argmax(mask_array, axis=1)
+            max_indices[np.all(mask_array == 0, axis=1)] = -1
 
             # add Signature column to mutations_df
             mutations_df['Signature'] = max_indices
@@ -353,19 +527,74 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_using_pyranges(occu
 
             joined = mutations_pr.join(library_intervals_pr)
 
-            starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
-            ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
-            signals = joined.df['Signal'].values
-            signatures = joined.df['Signature'].values
+            if len(joined) > 0:
+                starts = joined.df[['Start', 'Start_b']].max(axis=1).values - joined.df['Start'].values
+                ends = joined.df[['End', 'End_b']].min(axis=1).values -  joined.df['Start'].values
+                signals = joined.df['Signal'].values
+                signatures = joined.df['Signature'].values
 
-            # fill arrays
-            for start, end, signal, signature in zip(starts, ends, signals, signatures):
-                indelsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
-                indelsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                # 1st way
+                # Part1, for mutations that are not assigned to any signature
+                # update aggregated signal and count arrays
+                mask = signatures == -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
 
-                indelsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
-                indelsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+                for start, end, signal in zip(current_starts, current_ends, current_signals):
+                    # indelsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                    # indelsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
 
+                    indelsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+                    indelsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # Part2, for mutations that are assigned to a signature
+                # update signature and aggregated signal and count arrays
+                mask = signatures != -1
+                current_starts = starts[mask]
+                current_ends = ends[mask]
+                current_signals = signals[mask]
+                current_signatures = signatures[mask]
+
+                for start, end, signal, signature in zip(current_starts, current_ends, current_signals, current_signatures):
+                    # indelsSignature_accumulated_signal_np_array[signature, start:end + 1] += signal
+                    # indelsSignature_accumulated_signal_np_array[-1, start:end + 1] += signal # for aggregated
+                    #
+                    # indelsSignature_accumulated_count_np_array[signature, start:end + 1] += 1
+                    # indelsSignature_accumulated_count_np_array[-1, start:end + 1] += 1  # for aggregated
+
+                    indelsSignature_accumulated_signal_np_array[signature, start:end ] += signal
+                    indelsSignature_accumulated_signal_np_array[-1, start:end ] += signal # for aggregated
+
+                    indelsSignature_accumulated_count_np_array[signature, start:end ] += 1
+                    indelsSignature_accumulated_count_np_array[-1, start:end ] += 1  # for aggregated
+
+                # # 2nd way
+                # # Ensure starts, ends, signals, and signatures are NumPy arrays)
+                #
+                # # Pre-calculate the maximum end position to avoid repeated calls to max()
+                # max_end = plus_minus * 2
+                #
+                # # Optimized accumulation for each signature:
+                # for signature in np.unique(signatures):
+                #     mask = signatures == signature
+                #     current_starts = starts[mask]
+                #     current_ends = ends[mask]
+                #     current_signals = signals[mask]
+                #
+                #     # Create a temporary array to store the updates for this signature
+                #     updates_signal = np.zeros((max_end + 1,), dtype=indelsSignature_accumulated_signal_np_array.dtype)
+                #     updates_count = np.zeros((max_end + 1,), dtype=indelsSignature_accumulated_count_np_array.dtype)
+                #
+                #     for start, end, signal in zip(current_starts, current_ends, current_signals):
+                #         updates_signal[start:end + 1] += signal
+                #         updates_count[start:end + 1] += 1
+                #
+                #     indelsSignature_accumulated_signal_np_array[signature, :max_end + 1] += updates_signal
+                #     indelsSignature_accumulated_count_np_array[signature, :max_end + 1] += updates_count
+                #
+                #     indelsSignature_accumulated_signal_np_array[-1, :max_end + 1] += updates_signal  # Aggregate
+                #     indelsSignature_accumulated_count_np_array[-1, :max_end + 1] += updates_count  # Aggregate
 
         if verbose:
             log_out = open(log_file, 'a')
@@ -474,7 +703,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
         # Comment below to make it run in windows
         if (library_file_type == BIGWIG):
             try:
-                import pyBigWig
                 library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
                 if chrLong in library_file_opened_by_pyBigWig.chroms():
                     maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
@@ -496,7 +724,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 
         elif (library_file_type == BIGBED):
             try:
-                import pyBigWig
                 library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
                 if BED_6PLUS4 in str(library_file_opened_by_pyBigWig.SQL()):
                     signal_index = 3
@@ -658,6 +885,50 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations(occupancy_type,
 
     return SignalArrayAndCountArrayList
 
+def read_chrom_based_bigwig_file(library_file_with_path, library_file_type, chrLong):
+
+    chrBased_library_df = None
+
+    if os.path.exists(library_file_with_path):
+        bw = pyBigWig.open(library_file_with_path)
+        try:
+            if chrLong in bw.chroms():
+                chrom_length = bw.chroms(chrLong)
+
+                if library_file_type == BIGBED:
+                    values_list = bw.entries(chrLong, 0, chrom_length) # test for bigBed files
+
+                elif library_file_type == BIGWIG:
+                    # Get all values at once.
+                    values_list = bw.intervals(chrLong, 0, chrom_length) # works for bigWig files
+
+                if values_list is not None:
+                    # Convert the list of tuples to numpy arrays.
+                    starts = np.array([start for start, end, value in values_list])
+                    ends = np.array([end for start, end, value in values_list])
+
+                    if library_file_type == BIGWIG:
+                        signals = np.array([value for start, end, value in values_list])
+                    elif library_file_type == BIGBED:
+                        signals = np.array([value.split("\t")[3] for start, end, value in values_list])
+
+                    chromosomes = np.full(len(starts), chrLong, dtype='<U10')
+
+                    # Create pandas dataframe.
+                    chrBased_library_df = pd.DataFrame({'Chromosome': chromosomes,
+                                                        'Start': starts,
+                                                        'End': ends,
+                                                        'Signal': signals})
+
+        except KeyError:
+            print(f"Chromosome '{chrLong}' not found in the BigWig file.")
+        except RuntimeError as e:
+            print(f"Error processing {chrLong}: {e}")
+        finally:
+            bw.close()
+
+    return chrBased_library_df
+
 
 def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_using_pyranges(occupancy_type,
         occupancy_calculation_type,
@@ -668,6 +939,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_usin
         samples_of_interest,
         chromSizesDict,
         library_grouped_df,
+        chrBased_library_df,
         library_file_with_path,
         library_file_type,
         ordered_sbs_signatures,
@@ -685,7 +957,14 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_usin
     try:
         chrBased_simBased_subs_df, chrBased_simBased_dinucs_df, chrBased_simBased_indels_df = get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum)
 
-        chrBased_library_df = library_grouped_df.get_group(chrLong)
+        if library_grouped_df is not None:
+            chrBased_library_df = library_grouped_df.get_group(chrLong)
+
+        if (library_file_type == BIGWIG) or (library_file_type == BIGBED):
+            # read the bigwig file
+            chrBased_library_df = read_chrom_based_bigwig_file(library_file_with_path, library_file_type, chrLong)
+            print("DEBUG: chrBased_library_df.shape", chrBased_library_df.shape, chrLong)
+            print("DEBUG: chrBased_library_df.head", chrBased_library_df.head(), chrLong)
 
         # filter chrbased_df for samples_of_interest
         if samples_of_interest is not None:
@@ -709,8 +988,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_usin
                                                                         chrBased_simBased_indels_df,
                                                                         chromSizesDict,
                                                                         chrBased_library_df,
-                                                                        library_file_with_path,
-                                                                        library_file_type,
                                                                         ordered_sbs_signatures,
                                                                         ordered_dbs_signatures,
                                                                         ordered_id_signatures,
@@ -724,7 +1001,7 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_usin
                                                                         verbose)
     except Exception as e:
         log_out = open(log_file, 'a')
-        print("Exception: %s" % (e), file=log_out)
+        print("There is exception: %s --- chromosome: %s simulation_number: %s" % (e, chrLong, simNum), file=log_out)
         log_out.close()
 
 
@@ -922,7 +1199,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
         # Comment below to make it run in windows
         if (library_file_type == BIGWIG):
             try:
-                import pyBigWig
                 library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
                 if chrLong in library_file_opened_by_pyBigWig.chroms():
                     maximum_chrom_size = library_file_opened_by_pyBigWig.chroms()[chrLong]
@@ -944,7 +1220,6 @@ def chrbased_data_fill_signal_count_arrays_for_all_mutations_for_df_split(occupa
 
         elif (library_file_type == BIGBED):
             try:
-                import pyBigWig
                 library_file_opened_by_pyBigWig = pyBigWig.open(library_file_with_path)
                 if BED_6PLUS4 in str(library_file_opened_by_pyBigWig.SQL()):
                     signal_index = 3
@@ -1286,7 +1561,7 @@ def get_window_array(mutation_row_start,
 
         elif (library_file_type == BIGWIG):
             #Important: The bigWig format does not support overlapping intervals.
-            window_array=library_file_opened_by_pyBigWig.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
+            window_array = library_file_opened_by_pyBigWig.values(chrLong,0,(mutation_row_start+plusOrMinus+1),numpy=True)
             # How do you handle outliers?
             window_array[np.isnan(window_array)] = 0
             window_array[window_array>my_upperBound]=my_upperBound
@@ -1294,7 +1569,7 @@ def get_window_array(mutation_row_start,
 
         elif (library_file_type == BIGBED):
             #We assume that in the 7th column there is signal data
-            list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
+            list_of_entries = library_file_opened_by_pyBigWig.entries(chrLong,0,(mutation_row_start+plusOrMinus+1))
             if list_of_entries is not None:
                 window_array = np.zeros((windowSize,),dtype=np.float32)
                 # We did not handle outliers for BigBed files.
@@ -1326,7 +1601,7 @@ def get_window_array(mutation_row_start,
         elif (library_file_type == BIGBED):
             # print('Case2 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d maximum_chrom_size:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,maximum_chrom_size))
             if ((mutation_row_start-plusOrMinus)<maximum_chrom_size):
-                list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
+                list_of_entries = library_file_opened_by_pyBigWig.entries(chrLong,(mutation_row_start-plusOrMinus),maximum_chrom_size)
                 if list_of_entries is not None:
                     window_array = np.zeros((windowSize,),dtype=np.float32)
                     # We did not handle outliers for BigBed files.
@@ -1347,7 +1622,7 @@ def get_window_array(mutation_row_start,
         elif (library_file_type == BIGBED):
             # print('Case3 %s mutation_row[START]:%d mutation_row[START]-plusOrMinus:%d mutation_row[START]+plusOrMinus+1:%d' %(chrLong,mutation_row[START],mutation_row[START]-plusOrMinus,mutation_row[START]+plusOrMinus+1))
             if ((mutation_row_start+plusOrMinus+1)<=maximum_chrom_size):
-                list_of_entries=library_file_opened_by_pyBigWig.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
+                list_of_entries = library_file_opened_by_pyBigWig.entries(chrLong, (mutation_row_start-plusOrMinus), (mutation_row_start+plusOrMinus+1))
                 if list_of_entries is not None:
                     window_array = np.zeros((windowSize,),dtype=np.float32)
                     # We did not handle outliers for BigBed files.
@@ -1391,11 +1666,12 @@ def accumulate_arrays(row,
         # Add one more dimension to window_array: (2001,) --> (1, 2001)
         window_array_1x2001 = np.expand_dims(window_array, axis=0)
 
+        # to_be_accumulated_signal_array: (num_of_signatures, 1) * (1,2001) = (num_of_signatures, 2001)
         to_be_accumulated_signal_array = mask_array_1xnumofsignatures.T * window_array_1x2001
         accumulated_signal_np_array += to_be_accumulated_signal_array
 
         # question: if signal > 0, is count 1 or prob * 1 ?
-        # count is prob * 1 case otherwise y-axis range becomes quite low
+        # count is taken 1, otherwise with prob * 1, y-axis range becomes quite low
         to_be_accumulated_count_array = mask_array_1xnumofsignatures.T * (window_array_1x2001 > 0).astype(int)
 
         # Default
@@ -1412,6 +1688,7 @@ def accumulate_arrays(row,
             #       'np.count_nonzero(to_be_accumulated_count_array):', np.count_nonzero(to_be_accumulated_count_array),
             #       'equal:', np.array_equal(to_be_accumulated_signal_array, to_be_accumulated_count_array))
         else:
+            # this part is not tested
             accumulated_count_np_array += 1
 
 
@@ -1568,6 +1845,9 @@ def occupancy_analysis_using_pyranges(genome,
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
 
+    # at index=0 we have the first signature of the ordered_XX_signatures
+    # at index=1 we have the second signature of the ordered_XX_signatures
+    # at index=-1 we have the aggregated mutations
     subsSignatures = np.append(ordered_sbs_signatures, AGGREGATEDSUBSTITUTIONS)
     dinucsSignatures = np.append(ordered_dbs_signatures, AGGREGATEDDINUCS)
     indelsSignatures = np.append(ordered_id_signatures, AGGREGATEDINDELS)
@@ -1586,6 +1866,8 @@ def occupancy_analysis_using_pyranges(genome,
     # If file is in default files,chr based signal files are downloaded from ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerTopography/lib/
     # No need for preparing here
     library_file_type = None
+    chrBased_library_df = None
+    library_grouped_df = None
 
     if (os.path.basename(library_file_with_path) not in SIGPROFILERTOPOGRAPHY_DEFAULT_FILES):
         # What is the type of the signal_file_with_path?
@@ -1600,8 +1882,6 @@ def occupancy_analysis_using_pyranges(genome,
             # if chrBasedSignalArrays does not exist we will use pyBigWig if installed and we will not create chrBasedSignalArrays but use BigBed file opened by pyBigWig to fill windowArray
         elif (file_extension.lower() == '.bed'):
             library_file_type = BED
-
-            # readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, library_file_with_path, occupancy_type, quantile_value, remove_outliers, log_file)
 
             if os.path.exists(library_file_with_path):
                 bedfilename, bedfile_extention = os.path.splitext(os.path.basename(library_file_with_path))
@@ -1658,24 +1938,25 @@ def occupancy_analysis_using_pyranges(genome,
 
     def accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList):
         try:
-            chrLong = simulatonBased_SignalArrayAndCountArrayList[0]
-            simNum = simulatonBased_SignalArrayAndCountArrayList[1]
-            subsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[2]
-            dinucsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[3]
-            indelsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[4]
-            subsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[5]
-            dinucsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[6]
-            indelsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[7]
+            if simulatonBased_SignalArrayAndCountArrayList is not None:
+                chrLong = simulatonBased_SignalArrayAndCountArrayList[0]
+                simNum = simulatonBased_SignalArrayAndCountArrayList[1]
+                subsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[2]
+                dinucsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[3]
+                indelsSignature_accumulated_signal_np_array = simulatonBased_SignalArrayAndCountArrayList[4]
+                subsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[5]
+                dinucsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[6]
+                indelsSignature_accumulated_count_np_array = simulatonBased_SignalArrayAndCountArrayList[7]
 
-            # Accumulation
-            allSims_subsSignature_accumulated_signal_np_array[simNum] += subsSignature_accumulated_signal_np_array
-            allSims_dinucsSignature_accumulated_signal_np_array[simNum] += dinucsSignature_accumulated_signal_np_array
-            allSims_indelsSignature_accumulated_signal_np_array[simNum] += indelsSignature_accumulated_signal_np_array
+                # Accumulation
+                allSims_subsSignature_accumulated_signal_np_array[simNum] += subsSignature_accumulated_signal_np_array
+                allSims_dinucsSignature_accumulated_signal_np_array[simNum] += dinucsSignature_accumulated_signal_np_array
+                allSims_indelsSignature_accumulated_signal_np_array[simNum] += indelsSignature_accumulated_signal_np_array
 
-            allSims_subsSignature_accumulated_count_np_array[simNum] += subsSignature_accumulated_count_np_array
-            allSims_dinucsSignature_accumulated_count_np_array[simNum] += dinucsSignature_accumulated_count_np_array
-            allSims_indelsSignature_accumulated_count_np_array[simNum] += indelsSignature_accumulated_count_np_array
-            # print('ACCUMULATION chrLong:%s simNum:%d ENDS' %(chrLong,simNum))
+                allSims_subsSignature_accumulated_count_np_array[simNum] += subsSignature_accumulated_count_np_array
+                allSims_dinucsSignature_accumulated_count_np_array[simNum] += dinucsSignature_accumulated_count_np_array
+                allSims_indelsSignature_accumulated_count_np_array[simNum] += indelsSignature_accumulated_count_np_array
+                # print('ACCUMULATION chrLong:%s simNum:%d ENDS' %(chrLong,simNum))
 
         except Exception as e:
             print("Exception in accumulate_apply_async_result_vectorization function: %s" % (e))
@@ -1701,6 +1982,7 @@ def occupancy_analysis_using_pyranges(genome,
                                                    samples_of_interest,
                                                    chromSizesDict,
                                                    library_grouped_df,
+                                                   chrBased_library_df,
                                                    library_file_with_path,
                                                    library_file_type,
                                                    ordered_sbs_signatures,
@@ -1719,38 +2001,6 @@ def occupancy_analysis_using_pyranges(genome,
             pool.close()
             pool.join()
 
-        elif (computation_type == USING_APPLY_ASYNC_FOR_EACH_CHROM_AND_SIM_SPLIT):
-            numofProcesses = multiprocessing.cpu_count()
-            pool = multiprocessing.Pool(processes=numofProcesses)
-
-            for chrLong, simNum, splitIndex in job_tuples:
-                jobs.append(
-                    pool.apply_async(chrbased_data_fill_signal_count_arrays_for_all_mutations_read_mutations_split,
-                                     args=(occupancy_type,
-                                           occupancy_calculation_type,
-                                           outputDir,
-                                           jobname,
-                                           chrLong,
-                                           simNum,
-                                           splitIndex,
-                                           chromSizesDict,
-                                           library_file_with_path,
-                                           library_file_type,
-                                           ordered_sbs_signatures,
-                                           ordered_dbs_signatures,
-                                           ordered_id_signatures,
-                                           ordered_sbs_signatures_cutoffs,
-                                           ordered_dbs_signatures_cutoffs,
-                                           ordered_id_signatures_cutoffs,
-                                           plus_minus_epigenomics,
-                                           discreet_mode,
-                                           default_cutoff,
-                                           log_file,
-                                           verbose,),
-                                     callback=accumulate_apply_async_result_vectorization))
-            pool.close()
-            pool.join()
-
     else:
         # Sequential mode for profiling, debugging and testing purposes
         for simNum, chrLong in sim_num_chr_tuples:
@@ -1763,6 +2013,7 @@ def occupancy_analysis_using_pyranges(genome,
                                                    samples_of_interest,
                                                    chromSizesDict,
                                                    library_grouped_df,
+                                                   chrBased_library_df,
                                                    library_file_with_path,
                                                    library_file_type,
                                                    ordered_sbs_signatures,
