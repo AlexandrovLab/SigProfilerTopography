@@ -3180,7 +3180,10 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
             file_extension = os.path.splitext(os.path.basename(epigenomics_file))[1]
 
-            if ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
+            using_pyranges = False
+
+            if using_pyranges:
+            # if ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
             # if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
             # if (file_extension.lower() == '.bed'):
 
@@ -3247,7 +3250,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                      log_file,
                                      verbose)
                 end_time = time.time()
-                print('Execution time using old way:', end_time-start_time, 'seconds for', epigenomics_file)
+                print('Execution time:', end_time-start_time, 'seconds for', epigenomics_file)
 
             log_out = open(log_file, 'a')
             print('#################################################################################', file=log_out)
