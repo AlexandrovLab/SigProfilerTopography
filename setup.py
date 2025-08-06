@@ -10,7 +10,7 @@ def readme():
 	with open('README.rst') as f:
 		return(f.read())
 
-VERSION = '1.0.103'
+VERSION = '1.0.104'
 
 def write_version_py(filename='SigProfilerTopography/version.py'):
 	# Copied from numpy setup.py
@@ -39,9 +39,10 @@ setup(name="SigProfilerTopography",
 	"SigProfilerSimulator>=1.1.2",
 	"SigProfilerAssignment>=0.1.0",
 	"XlsxWriter>=1.3.7",
-        "pandas>=1.1.5",
-        "numpy>=1.20.1",
-        "matplotlib>=2.2.2",
+        "numpy>=2.0.0",
+        "pandas>=2.0.0",
+        "python>=3.9",
+        "matplotlib>=3.4.3",
         "scipy>=1.1.0",
         "statsmodels>=0.9.0",
         "fastrand>=1.2",
