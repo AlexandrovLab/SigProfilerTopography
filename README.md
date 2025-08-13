@@ -535,7 +535,10 @@ Otlu B, Díaz-Gay M, Vermes I, Bergstrom EN, Zhivagui M, Barnes M, Alexandrov LB
 
 
 ## <a name="copyright"></a> Copyright
-This software and its documentation are copyright 2018 as a part of the SigProfiler project. The SigProfilerTopography framework is free software and is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+This project is licensed under the BSD 2-Clause (“Simplified BSD”) License.  
+See [LICENSE.txt](./LICENSE.txt) for the full text.
+
 
 
 ## <a name="contact"></a> Contact Information
