@@ -10,7 +10,7 @@ def readme():
 	with open('README.rst') as f:
 		return(f.read())
 
-VERSION = '1.0.105'
+VERSION = '1.0.107'
 
 def write_version_py(filename='SigProfilerTopography/version.py'):
 	# Copied from numpy setup.py
@@ -34,6 +34,7 @@ setup(name="SigProfilerTopography",
     url="https://github.com/AlexandrovLab/SigProfilerTopography",
     license='UCSD',
     packages=find_packages(),
+    python_requires=">=3.9",
     install_requires=[
 	"SigProfilerMatrixGenerator>=1.1.27",
 	"SigProfilerSimulator>=1.1.2",
@@ -41,7 +42,6 @@ setup(name="SigProfilerTopography",
 	"XlsxWriter>=1.3.7",
         "numpy>=2.0.0",
         "pandas>=2.0.0",
-        "python>=3.9",
         "matplotlib>=3.4.3",
         "scipy>=1.1.0",
         "statsmodels>=0.9.0",

@@ -3591,6 +3591,7 @@ def plot_topography_figures(genome,
         (replication_strand_bias or plot_replication_strand_bias) and
         (transcription_strand_bias or plot_transcription_strand_bias)):
         print("\n--- Plot strand asymmetry versus replication timing figures")
+
         asymmetry_types = [REPLICATIONSTRANDBIAS, TRANSCRIPTIONSTRANDBIAS, GENICINTERGENICBIAS]
 
         nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp(inputDir,
@@ -3611,12 +3612,12 @@ def plot_topography_figures(genome,
                                                                                      ordered_id_signatures_cutoffs,
                                                                                      parallel_mode)
 
+
         log_out = open(log_file, 'a')
         print("--- Plot strand asymmetry versus replication timing ends", file=log_out)
         log_out.close()
 
     if (processivity or plot_processivity):
-
         if SBS in mutation_types:
             print("\n--- Plot strand-coordinated mutagenesis figures")
             if delete_old:
@@ -3632,6 +3633,7 @@ def plot_topography_figures(genome,
             log_out = open(log_file, 'a')
             print("--- Plot Strand-coordinated mutagenesis ends", file=log_out)
             log_out.close()
+
 
     if (epigenomics or plot_epigenomics):
         print("\n--- Plot epigenomics occupancy figures")

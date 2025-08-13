@@ -2689,6 +2689,7 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
             if mutation_main_type == SBS:
                 num_of_substitutions = max(np.sum(simnum_sbs_signature_mutationtype_transctiptionstrand_replicationtime_accumulated_np_array[0][-1]),
                                            np.sum(simnum_sbs_signature_mutationtype_replicationstrand_replicationtime_accumulated_np_array[0][-1]))
+
                 mutation_sub_types = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
                 ordered_signatures_with_cutoffs = ordered_sbs_signatures_with_cutoffs
 
@@ -2744,6 +2745,7 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                 # Q: Questionable. This category is used to classify any mutations that are a mix of purines and pyrimidines and
                 # thus can't be classified into one of the above 4 categories.
 
+
             if (mutation_main_type == SBS and num_of_substitutions >= num_of_sbs_required*(len(ordered_sbs_signatures_with_cutoffs)+1)) or \
                     (mutation_main_type == DBS and num_of_doublets >= num_of_dbs_required*(len(ordered_dbs_signatures_with_cutoffs)+1)) or \
                     (mutation_main_type == ID and num_of_indels >= num_of_id_required*(len(ordered_id_signatures_with_cutoffs)+1)):
@@ -2773,17 +2775,24 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                         alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
                                                                jobname + '.all_samples.SBS96.all')
                         spmg_df = pd.read_csv(matrix_path, sep='\t')
-                        spmg_df[jobname] = spmg_df.sum(axis=1)
+
+                        # spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[jobname] = spmg_df.drop('MutationType', axis=1).sum(axis=1)
+
                         spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+
+                        # output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        output_path = f"{os.path.join(outputDir, jobname, FIGURE, MULTILEVEL)}{os.sep}"
+
                         # original spp mutational profile plot
                         spplt.plotSBS(alternative_matrix_path,
                                       output_path,
                                       jobname,
                                       "96",
                                       percentage=True,
-                                      savefig_format='png')
-                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                                      savefig_format='pdf')
+                                      # savefig_format='png')
+                        # pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
                         plotSBS_modified_from_spp(alternative_matrix_path,
                                                   output_path,
@@ -2802,13 +2811,24 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                         alternative_matrix_path = os.path.join(inputDir, 'output', mutation_main_type,
                                                                jobname + '.all_samples.DBS78.all')
                         spmg_df = pd.read_csv(matrix_path, sep='\t')
-                        spmg_df[jobname] = spmg_df.sum(axis=1)
+
+                        # spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[jobname] = spmg_df.drop('MutationType', axis=1).sum(axis=1)
+
                         spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+
+                        # output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        output_path = f"{os.path.join(outputDir, jobname, FIGURE, MULTILEVEL)}{os.sep}"
+
                         # original spp mutational profile plot
-                        spplt.plotDBS(alternative_matrix_path, output_path, jobname, "78", percentage=True,
-                                      savefig_format='png')
-                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                        spplt.plotDBS(alternative_matrix_path,
+                                      output_path,
+                                      jobname,
+                                      "78",
+                                      percentage=True,
+                                      # savefig_format='png')
+                                      savefig_format = 'pdf')
+                        # pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
                         plotDBS_modified_from_spp(alternative_matrix_path,
                                                   output_path,
@@ -2829,17 +2849,23 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                                                jobname + '.all_samples.ID83.all')
                         spmg_df = pd.read_csv(matrix_path, sep='\t')
 
-                        spmg_df[jobname] = spmg_df.sum(axis=1)
+                        # spmg_df[jobname] = spmg_df.sum(axis=1)
+                        spmg_df[jobname] = spmg_df.drop('MutationType', axis=1).sum(axis=1)
+
                         spmg_df[['MutationType', jobname]].to_csv(alternative_matrix_path, sep='\t', index=False)
-                        output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+
+                        # output_path = os.path.join(outputDir, jobname, FIGURE, MULTILEVEL, os.sep)
+                        output_path = f"{os.path.join(outputDir, jobname, FIGURE, MULTILEVEL)}{os.sep}"
+
                         # original spp mutational profile plot
                         spplt.plotID(alternative_matrix_path,
                                      output_path,
                                      jobname,
                                      "83",
                                      percentage=True,
-                                     savefig_format='png')
-                        pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
+                                     # savefig_format='png')
+                                     savefig_format = 'pdf')
+                        # pdf.savefig(bbox_inches='tight')  # Save the current figure into the PDF
 
                         plotID_modified_from_spp(alternative_matrix_path,
                                                  output_path,
@@ -3046,6 +3072,7 @@ def plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                     pdf)
 
 
+
 def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp(inputDir,
                                                                                  outputDir,
                                                                                  jobname,
@@ -3063,7 +3090,6 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
                                                                                  ordered_dbs_signatures_cutoffs,
                                                                                  ordered_id_signatures_cutoffs,
                                                                                  parallel_mode):
-
     transcription_strand_mapping = {'T': 0, 'U': 1, 'N': 2, 'Q': 3, 'B':4}  # Map all possible strands
 
     replication_strand_mapping = {'E': 0, 'A': 1, 'Q': 2, 'U': -1, 'B':4}  # Map all possible strands
@@ -3208,6 +3234,7 @@ def nested_analyses_plot_strand_asymmetry_vs_replication_timing_figures_using_mp
                 ID83_mutation_mapping)
 
             accumulate_np_arrays(result_tuple)
+
 
     plot_strand_asymmetry_vs_replication_timing_figures(inputDir,
                                                         outputDir,

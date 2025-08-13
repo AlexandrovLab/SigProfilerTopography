@@ -1015,6 +1015,7 @@ def fill_strand_np_array(mutation_type,
             signature_based_mutationlong_strand_replicationtime_mutationcount_df['Mutation'] = \
                 signature_based_mutationlong_strand_replicationtime_mutationcount_df['MutationLong'].str[2:]
 
+
         signature_based_mutationlong_strand_replicationtime_mutationcount_df.drop(columns=['MutationLong'],
                                                                                                axis=1,
                                                                                                inplace=True)
@@ -1303,6 +1304,7 @@ def fill_signature_mutationtype_strand_replicationtime_arrays(outputDir,
 
 
 def get_chrBased_simBased_dfs(outputDir, jobname, chrLong, simNum):
+
     # Simulation number is added as the last column
     chrBased_simBased_subs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, SBS, simNum) # SUBS
     chrBased_simBased_dinucs_df = readChrBasedMutationsDF(outputDir, jobname, chrLong, DBS, simNum) # DINUCS
