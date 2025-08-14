@@ -47,7 +47,9 @@ setup(name="SigProfilerTopography",
         "statsmodels>=0.9.0",
         "fastrand>=1.2",
         "psutil>=5.6.3",
-        "pyranges>=0.1.1",
-        "intervaltree>=3.1.0"],
+	    "pyranges>=0.1.1",
+        "intervaltree>=3.1.0",
+		"pyBigWig>=0.3.24"
+	],
     include_package_data=True,
 	zip_safe=False)
