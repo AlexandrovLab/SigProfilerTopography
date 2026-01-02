@@ -743,7 +743,7 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWit
 
     # To reduce memory footprint
     # Delete old chr based epigenomics files
-    chrBasedNpyFilesPath=os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
+    chrBasedNpyFilesPath = os.path.join(outputDir,jobname,DATA,occupancy_type,LIB,CHRBASED)
     deleteChrBasedNpyFiles(chrBasedNpyFilesPath)
 
     if os.path.exists(BEDFileWithPath):
@@ -754,7 +754,7 @@ def readBEDandWriteChromBasedSignalArrays(outputDir, jobname, genome, BEDFileWit
             file_df, max_signal, min_signal = readFileInBEDFormat(BEDFileWithPath, discard_signal, log_file)
 
             # Outlier elimination starts
-            if ((remove_outliers == True) and (quantileValue < 1.0)):
+            if (remove_outliers and (quantileValue < 1.0)):
                 # remove the outliers
                 q = file_df[SIGNAL].quantile(quantileValue)
                 log_out = open(log_file, 'a')

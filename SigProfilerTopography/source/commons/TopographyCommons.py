@@ -160,7 +160,7 @@ REPLICATION = 'replication'
 UCSCGENOME = 'ucscgenome'
 
 LNCRNA = 'lncRNA'
-MIRNA = 'miRNA'
+MIRNA = 'cost_transpan_juansainz'
 
 HISTONE_MODIFICATION = "histone modification"
 TRANSCRIPTION_FACTOR = "transcription factor"
@@ -2410,6 +2410,7 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
 
     chrBased_mutation_df = None
 
+
     if (os.path.exists(chrBasedMutationDFFilePath)):
         try:
          only_header_chrBased_mutation_df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t', comment='#', nrows=1)
@@ -2483,10 +2484,10 @@ def readChrBasedMutationsDF(outputDir, jobname, chrLong, mutation_type, simulati
 
 # window_array is of size 2*plusOrMinus
 # mutation_row_start will be at position=plusOrMinus of the window_array
-def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_row_start,plusOrMinus):
-    max_start=max(entry_start,mutation_row_start-plusOrMinus)
-    min_end=min(entry_end,mutation_row_start+plusOrMinus)
-    window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1]+=entry_signal
+def func_addSignal(window_array, entry_start, entry_end, entry_signal, mutation_row_start, plusOrMinus):
+    max_start = max(entry_start,mutation_row_start-plusOrMinus)
+    min_end = min(entry_end,mutation_row_start+plusOrMinus)
+    window_array[max_start-(mutation_row_start-plusOrMinus):min_end-(mutation_row_start-plusOrMinus)+1] += entry_signal
 
 
 def computeAverageNucleosomeOccupancyArray(plusorMinus, signalArray, countArray):
@@ -4768,6 +4769,7 @@ def readChrBasedMutationsMergeWithProbabilitiesAndWrite(inputList):
             samples_not_merged = set(chr_based_mutation_df[SAMPLE].unique()).difference(set(merged_df[SAMPLE].unique()))
             print('Which samples are not merged?: %s' %(samples_not_merged), file=log_out)
             print('Number of samples not merged: %d' %(len(samples_not_merged)), file=log_out)
+            print('mutations_probabilities_df.head():', mutations_probabilities_df.head(), file=log_out)
             temp_df = pd.merge(chr_based_mutation_df, mutations_probabilities_df, how='outer',left_on=[SAMPLE, MUTATION], right_on=[SAMPLE, MUTATION], indicator=True)
             print('which rows of chr_based_mutation_df are not merged?', file=log_out)
             print(temp_df[temp_df['_merge']=='left_only'], file=log_out)

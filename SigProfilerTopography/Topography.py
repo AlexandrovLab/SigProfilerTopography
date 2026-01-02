@@ -121,6 +121,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import DBS
 from SigProfilerTopography.source.commons.TopographyCommons import ID
 
 from SigProfilerTopography.source.commons.TopographyCommons import LNCRNA
+from SigProfilerTopography.source.commons.TopographyCommons import MIRNA
 
 from SigProfilerTopography.source.commons.TopographyCommons import UNDECLARED
 
@@ -190,6 +191,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import NUMBER_OF_MUT
 from SigProfilerTopography.source.annotatedregion.AnnotatedRegionAnalysis import annotated_region_analysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancyAnalysis
 from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancy_analysis_using_pyranges
+from SigProfilerTopography.source.occupancy.OccupancyAnalysis import occupancy_analysis_memory_efficient
 
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replicationTimeAnalysis_enhanced
 from SigProfilerTopography.source.replicationtime.ReplicationTimeAnalysis import replication_time_analysis
@@ -764,6 +766,7 @@ def run_region_analysis(genome,
                         jobname,
                         numofSimulations,
                         region_type,
+                        region_file_path,
                         chromNamesList,
                         samples_of_interest,
                         ordered_sbs_signatures_with_cutoffs_array,
@@ -783,6 +786,7 @@ def run_region_analysis(genome,
                             jobname,
                             numofSimulations,
                             region_type,
+                            region_file_path,
                             chromNamesList,
                             samples_of_interest,
                             ordered_sbs_signatures_with_cutoffs_array,
@@ -861,12 +865,68 @@ def run_occupancy_analyses(genome,
                       verbose)
 
 
+def run_occupancy_analysis_memory_efficient(genome,
+                                      outputDir,
+                                      jobname,
+                                      numofSimulations,
+                                      samples_of_interest,
+                                      sample_based,
+                                      epigenomics_file,
+                                      epigenomics_file_memo,
+                                      chromSizesDict,
+                                      chromNamesList,
+                                      ordered_sbs_signatures_with_cutoffs,
+                                      ordered_dbs_signatures_with_cutoffs,
+                                      ordered_id_signatures_with_cutoffs,
+                                      ordered_sbs_signatures_cutoffs,
+                                      ordered_dbs_signatures_cutoffs,
+                                      ordered_id_signatures_cutoffs,
+                                      computation_type,
+                                      occupancy_type,
+                                      occupancy_calculation_type,
+                                      plus_minus_epigenomics,
+                                      remove_outliers,
+                                      quantile_value,
+                                      discreet_mode,
+                                      default_cutoff,
+                                      parallel_mode,
+                                      log_file,
+                                      verbose):
+
+    occupancy_analysis_memory_efficient(genome,
+                      computation_type,
+                      occupancy_type,
+                      occupancy_calculation_type,
+                      sample_based,
+                      plus_minus_epigenomics,
+                      chromSizesDict,
+                      chromNamesList,
+                      outputDir,
+                      jobname,
+                      numofSimulations,
+                      samples_of_interest,
+                      epigenomics_file,
+                      epigenomics_file_memo,
+                      ordered_sbs_signatures_with_cutoffs,
+                      ordered_dbs_signatures_with_cutoffs,
+                      ordered_id_signatures_with_cutoffs,
+                      ordered_sbs_signatures_cutoffs,
+                      ordered_dbs_signatures_cutoffs,
+                      ordered_id_signatures_cutoffs,
+                      remove_outliers,
+                      quantile_value,
+                      discreet_mode,
+                      default_cutoff,
+                      parallel_mode,
+                      log_file,
+                      verbose)
+
+
 def run_occupancy_analyses_using_pyranges(genome,
                                       outputDir,
                                       jobname,
                                       numofSimulations,
                                       samples_of_interest,
-                                      job_tuples,
                                       sample_based,
                                       epigenomics_file,
                                       epigenomics_file_memo,
@@ -902,7 +962,6 @@ def run_occupancy_analyses_using_pyranges(genome,
                       jobname,
                       numofSimulations,
                       samples_of_interest,
-                      job_tuples,
                       epigenomics_file,
                       epigenomics_file_memo,
                       ordered_sbs_signatures_with_cutoffs,
@@ -1234,6 +1293,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 plot_replication_strand_bias = False, # [Boolean] Generate replication strand asymmetry plots when True.
                 plot_transcription_strand_bias = False, # [Boolean] Generate transcription strand asymmetry and genic versus intergenic regions plots when True.
                 plot_processivity = False, # [Boolean] Generate strand-coordinated mutagenesis plots when True.
+                using_pyranges = False, # this feature will be deleted in the github uploaded version. used for testing purposes
                 step1_matgen_real_data = True, # [Boolean] Run SigProfilerMatrixGenerator to generate matrices for the real mutations when True.
                 step2_gen_sim_data = True, # [Boolean] Run SigProfilerSimulator to generate simulated mutations when True.
                 step3_matgen_sim_data = True, # [Boolean] Run SigProfilerMatrixGenerator to generate matrices for the simulated mutations when True.
@@ -1321,9 +1381,36 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     sample_based = True # keep results for each sample
     plot_sample_based = False # plot figures for each sample, this is not fully implemenyed and tested, therefore False
     mutation_annotation_integration = False
-    lncRNA = False
-    plot_lncRNA = False
 
+    #########################################
+    region_analysis = False
+    plot_region = False
+    region_type = None
+    region_file_path = None
+
+    # region_type = MIRNA
+    # region_type = LNCRNA
+    #
+    # if region_type == LNCRNA:
+    #     if genome == GRCh38:
+    #         region_file_path = os.path.join(
+    #             '/tscc/lustre/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh38/lncRNA',
+    #             'gencode.v49.long_noncoding_RNAs.gff3')
+    #     elif genome == GRCh37:
+    #         region_file_path = os.path.join(
+    #             '/tscc/lustre/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA',
+    #             'gencode.v49lift37.long_noncoding_RNAs.gff3')
+    #
+    # elif region_type == MIRNA:
+    #     if genome == GRCh38:
+    #         region_file_path = os.path.join(
+    #             '/tscc/lustre/restricted/alexandrov-ddn/users/burcak/data/mirbase/GRCh38/cost_transpan_juansainz',
+    #             'hsa.gff3')
+    #     elif genome == GRCh37:
+    #         region_file_path = os.path.join(
+    #             '/tscc/lustre/restricted/alexandrov-ddn/users/burcak/data/mirbase/GRCh37/cost_transpan_juansainz',
+    #             'hsa.gff3')
+    #########################################
 
     ############################## Log and Error Files #######################################
     time_stamp = datetime.date.today()
@@ -1836,6 +1923,48 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ######################### SigProfilerMatrixGenerator for original data ends #######################
     ###################################################################################################
 
+    ###################################################################################################
+    # For small input files, we need to fill files below
+    # Fill jobname.SBS96.all jobname.DBS78.all jobname.ID83.all files
+    chromosomes = [f"chr{i}" for i in range(1, 23)] + ["chrX", "chrY", "chrMT"]
+
+    for sbs_dbs_id_type, sbs_dbs_id_subtype in [('SBS','SBS96'), ('DBS','DBS78'), ('ID','ID83')]:
+        master_df = None
+
+        for chrom in chromosomes:
+            file_name = f"{jobname}.{sbs_dbs_id_subtype}.all.{chrom}"
+            file_path = os.path.join(inputDir, 'output', sbs_dbs_id_type, file_name)
+
+            if os.path.exists(file_path):
+                # print(f"Accumulating: {file_name}")
+
+                # Read. The first column is the 'Mutation Type', let's make it index.
+                current_df = pd.read_csv(file_path, sep='\t', index_col=0)
+
+                if master_df is None:
+                    # Take the first file as the reference file
+                    master_df = current_df.copy()
+                else:
+                    # sum the same row and column values
+                    # fill_value=0 sayesinde bir kromozomda olmayan örnekler hata vermez
+                    master_df = master_df.add(current_df, fill_value=0)
+            else:
+                continue
+
+        if master_df is not None:
+            output_name = f"{jobname}.{sbs_dbs_id_subtype}.all"
+            output_path = os.path.join(inputDir, 'output', sbs_dbs_id_type, output_name)
+
+            master_df = master_df.astype(int)
+
+            master_df.to_csv(output_path, sep='\t')
+            # print(f"Number of samples: {len(master_df.columns)}")
+            # print(f"Number of mutation types: {len(master_df)}")
+        else:
+            print("Couldn't find chromosome based matrix files to get all matrix.")
+    ###################################################################################################
+
+
     ###################################################################################################################
     ##################################### SigProfilerAssignment starts ################################################
     ###################################################################################################################
@@ -1848,15 +1977,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
         path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-        path_to_sbs96_chr1_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all.chr1')
 
-        if os.path.exists(path_to_sbs96_matrix) or os.path.exists(path_to_sbs96_chr1_matrix):
-            if os.path.exists(path_to_sbs96_matrix):
-                path_to_matrix = path_to_sbs96_matrix
-            elif os.path.exists(path_to_sbs96_chr1_matrix):
-                path_to_matrix = path_to_sbs96_chr1_matrix
+        if os.path.exists(path_to_sbs96_matrix):
+            path_to_matrix = path_to_sbs96_matrix
 
             print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
+
             Analyze.cosmic_fit(path_to_matrix,
                                SPA_output_dir,
                                genome_build=genome,
@@ -1877,15 +2003,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
         path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-        path_to_dbs78_chr1_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all.chr1')
 
-        if os.path.exists(path_to_dbs78_matrix) or os.path.exists(path_to_dbs78_chr1_matrix):
-            if os.path.exists(path_to_dbs78_matrix):
-                path_to_matrix = path_to_dbs78_matrix
-            elif os.path.exists(path_to_dbs78_chr1_matrix):
-                path_to_matrix = path_to_dbs78_chr1_matrix
+        if os.path.exists(path_to_dbs78_matrix):
+            path_to_matrix = path_to_dbs78_matrix
 
             print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
+
             Analyze.cosmic_fit(path_to_matrix,
                                SPA_output_dir,
                                genome_build = genome,
@@ -1906,15 +2029,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         SPA_output_dir = os.path.join(outputDir, jobname, SPA)
 
         path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-        path_to_id83_chr1_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all.chr1')
 
-        if os.path.exists(path_to_id83_matrix) or os.path.exists(path_to_id83_chr1_matrix):
-            if os.path.exists(path_to_id83_matrix):
-                path_to_matrix = path_to_id83_matrix
-            elif os.path.exists(path_to_id83_chr1_matrix):
-                path_to_matrix = path_to_id83_chr1_matrix
+        if os.path.exists(path_to_id83_matrix):
+            path_to_matrix = path_to_id83_matrix
 
             print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
+
             Analyze.cosmic_fit(path_to_matrix,
                                SPA_output_dir,
                                genome_build=genome,
@@ -1941,13 +2061,9 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and  matrices.keys():
         #     if '96' in matrices.keys():
         path_to_sbs96_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all')
-        path_to_sbs96_chr1_matrix = os.path.join(inputDir, 'output', 'SBS', jobname + '.SBS96.all.chr1')
 
-        if os.path.exists(path_to_sbs96_matrix) or os.path.exists(path_to_sbs96_chr1_matrix):
-            if os.path.exists(path_to_sbs96_matrix):
-                path_to_matrix = path_to_sbs96_matrix
-            elif os.path.exists(path_to_sbs96_chr1_matrix):
-                path_to_matrix = path_to_sbs96_chr1_matrix
+        if os.path.exists(path_to_sbs96_matrix):
+            path_to_matrix = path_to_sbs96_matrix
 
             print('\n--- SigProfilerAssignment for SNVs using cosmic fit')
             Analyze.cosmic_fit(path_to_matrix,
@@ -1973,13 +2089,9 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and matrices.keys():
         #     if 'DINUC' in matrices.keys():
         path_to_dbs78_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all')
-        path_to_dbs78_chr1_matrix = os.path.join(inputDir, 'output', 'DBS', jobname + '.DBS78.all.chr1')
 
-        if os.path.exists(path_to_dbs78_matrix) or os.path.exists(path_to_dbs78_chr1_matrix):
-            if os.path.exists(path_to_dbs78_matrix):
-                path_to_matrix = path_to_dbs78_matrix
-            elif os.path.exists(path_to_dbs78_chr1_matrix):
-                path_to_matrix = path_to_dbs78_chr1_matrix
+        if os.path.exists(path_to_dbs78_matrix):
+            path_to_matrix = path_to_dbs78_matrix
 
             print('\n--- SigProfilerAssignment for DINUCs using cosmic fit')
             Analyze.cosmic_fit(path_to_matrix,
@@ -2005,13 +2117,9 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         # if matrices is not None and matrices.keys():
         #     if 'ID' in matrices.keys():
         path_to_id83_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all')
-        path_to_id83_chr1_matrix = os.path.join(inputDir, 'output', 'ID', jobname + '.ID83.all.chr1')
 
-        if os.path.exists(path_to_id83_matrix) or os.path.exists(path_to_id83_chr1_matrix):
-            if os.path.exists(path_to_id83_matrix):
-                path_to_matrix = path_to_id83_matrix
-            elif os.path.exists(path_to_id83_chr1_matrix):
-                path_to_matrix = path_to_id83_chr1_matrix
+        if os.path.exists(path_to_id83_matrix):
+            path_to_matrix = path_to_id83_matrix
 
             print('\n--- SigProfilerAssignment for INDELs using cosmic fit')
             Analyze.cosmic_fit(path_to_matrix,
@@ -2032,6 +2140,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ###################################################################################################################
     ##################################### SigProfilerAssignment ends ##################################################
     ###################################################################################################################
+
 
     ###################################################################################################################
     # Case3 Samples, signatures and activities are given.
@@ -2165,6 +2274,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ###################################################################################################################
     ################################## Step2 Simulations if any ends ##################################################
     ###################################################################################################################
+
 
     ###################################################################################################################
     ################################## Step3 Matrix Generator for n simulations starts ################################
@@ -2510,6 +2620,17 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ###################################################################################################################
 
     #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
+    #######################################################################################################
     ################################### Step5 Fill Table Starts ###########################################
     #######################################################################################################
     # Step5 Initialize these dataframes as empty dataframe
@@ -2588,6 +2709,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                                                                             sbs_chrLong2NumberofMutationsDict,
                                                                                             show_all_signatures,
                                                                                             ordered_all_sbs_signatures_wrt_probabilities_file_array)
+
 
             subsSignature_cutoff_numberofmutations_averageprobability_df.to_csv(os.path.join(outputDir, jobname, DATA,
                                  Table_SBS_Signature_Cutoff_NumberofMutations_AverageProbability_Filename), sep='\t', index=False)
@@ -2697,6 +2819,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             elif mutation_type == ID:
                 mutationType2PropertiesDict = id_properties_dict
                 filePath = os.path.join(outputDir, jobname, DATA, Table_ID_NumberofMutations_NumberofSamples_SamplesList_Filename)
+
 
             # for mutation_type in mutationType2PropertiesDict:
             numberofMutations += mutationType2PropertiesDict[mutation_type]['number_of_mutations']
@@ -2859,6 +2982,17 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     ################################### Step5 Fill Table ends #############################################
     #######################################################################################################
 
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
     ###################################################################################################################
     ################################################# All Steps ends ##################################################
     ###################################################################################################################
@@ -2951,6 +3085,19 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
     else:
         job_tuples = []
 
+
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
+
     if (nucleosome):
         print('\n--- Nucleosome occupancy analysis')
 
@@ -2998,6 +3145,18 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         print('#################################################################################\n', file=log_out)
         log_out.close()
 
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
+
     if (replication_time):
         print('\n--- Replication timing analysis')
 
@@ -3039,6 +3198,19 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         print("--- Run Replication Timing Analysis: %f minutes --- %s" %(float((time.time()-start_time)/60),computation_type), file=log_out)
         print('#################################################################################\n', file=log_out)
         log_out.close()
+
+
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
 
     if replication_strand_bias:
         print('\n--- Replication strand asymmetry analysis')
@@ -3127,6 +3299,18 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         print('#################################################################################\n', file=log_out)
         log_out.close()
 
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
+
     if (processivity):
         print('\n--- Strand-coordinated mutagenesis analysis')
 
@@ -3159,6 +3343,17 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
         print('#################################################################################\n', file=log_out)
         log_out.close()
 
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
+
     if (epigenomics):
         print('\n--- Epigenomics occupancy analysis')
 
@@ -3180,12 +3375,12 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
 
             file_extension = os.path.splitext(os.path.basename(epigenomics_file))[1]
 
-            using_pyranges = False
-
-            if using_pyranges:
-            # if ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
+            # if ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigbed')):
             # if ((file_extension.lower() == '.bigwig') or (file_extension.lower() == '.bigbed')):
             # if (file_extension.lower() == '.bed'):
+            if using_pyranges:
+            # if using_pyranges and ((file_extension.lower() == '.bed') or (file_extension.lower() == '.bigbed')):
+                print('using_pyranges:')
 
                 start_time = time.time()
                 run_occupancy_analyses_using_pyranges(genome,
@@ -3193,7 +3388,6 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                                      jobname,
                                      numofSimulations,
                                      samples_of_interest,
-                                     job_tuples,
                                      sample_based,
                                      epigenomics_file,
                                      epigenomics_file_memo,
@@ -3219,7 +3413,42 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                 end_time = time.time()
                 print('Execution time using pyranges:', end_time-start_time, 'seconds for', epigenomics_file)
 
+            # elif (file_extension.lower() == '.bigwig'):
+            #     print("occupancy analysis memory efficient")
+            #
+            #     start_time = time.time()
+            #     run_occupancy_analysis_memory_efficient(genome,
+            #                          outputDir,
+            #                          jobname,
+            #                          numofSimulations,
+            #                          samples_of_interest,
+            #                          sample_based,
+            #                          epigenomics_file,
+            #                          epigenomics_file_memo,
+            #                          chromSizesDict,
+            #                          chromNamesList,
+            #                          ordered_sbs_signatures_with_cutoffs,
+            #                          ordered_dbs_signatures_with_cutoffs,
+            #                          ordered_id_signatures_with_cutoffs,
+            #                          ordered_sbs_signatures_cutoffs,
+            #                          ordered_dbs_signatures_cutoffs,
+            #                          ordered_id_signatures_cutoffs,
+            #                          computation_type,
+            #                          occupancy_type,
+            #                          occupancy_calculation_type,
+            #                          plus_minus_epigenomics,
+            #                          remove_outliers,
+            #                          quantile_value,
+            #                          discreet_mode,
+            #                          default_cutoff,
+            #                          parallel_mode,
+            #                          log_file,
+            #                          verbose)
+            #     end_time = time.time()
+            #     print('Execution time occupancy analysis memory efficient:', end_time-start_time, 'seconds for', epigenomics_file)
+
             else:
+                # print('legacy')
                 start_time = time.time()
                 run_occupancy_analyses(genome,
                                      outputDir,
@@ -3259,6 +3488,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             print('#################################################################################\n', file=log_out)
             log_out.close()
 
+
+
         # delete unnecessary files
         # delete .../data/epigenomics_occupancy/lib/chrbased
         data_epigenomics_occupancy_lib_path = os.path.join(outputDir, jobname, DATA, EPIGENOMICSOCCUPANCY, LIB)
@@ -3269,18 +3500,25 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
             except OSError as e:
                 print('Error: %s - %s.' % (e.filename, e.strerror))
 
+    #######################################################################################################
+    # delete later debug starts
+    filename = '%s_%s_for_topography.txt' % ('chr1', SBS)
+    chrBasedMutationDFFilePath = os.path.join(outputDir, jobname, DATA, CHRBASED, filename)
+    if os.path.exists(chrBasedMutationDFFilePath):
+        df = pd.read_csv(chrBasedMutationDFFilePath, sep='\t')
+    else:
+        print(chrBasedMutationDFFilePath)
+    # delete later debug ends
+    #######################################################################################################
 
-    if lncRNA:
-        # lncRNA
-        # miRNA
-        # protein coding genes
-        # known oncogenes
-        region_type = LNCRNA
+    if region_analysis:
+
         run_region_analysis(genome,
                             outputDir,
                             jobname,
                             numofSimulations,
                             region_type,
+                            region_file_path,
                             chromNamesList,
                             samples_of_interest,
                             ordered_sbs_signatures_with_cutoffs,
@@ -3357,7 +3595,8 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     nucleosome_biosample,
                     epigenomics,
                     nucleosome,
-                    lncRNA,
+                    region_analysis,
+                    region_type,
                     replication_time,
                     replication_strand_bias,
                     transcription_strand_bias,
@@ -3370,7 +3609,7 @@ def runAnalyses(genome, # [String] The reference genome used for the topography 
                     verbose,
                     plot_epigenomics,
                     plot_nucleosome,
-                    plot_lncRNA,
+                    plot_region,
                     plot_replication_time,
                     plot_replication_strand_bias,
                     plot_transcription_strand_bias,
@@ -3453,7 +3692,8 @@ def plot_topography_figures(genome,
                 nucleosome_biosample,
                 epigenomics,
                 nucleosome,
-                lncRNA,
+                region_analysis,
+                region_type,
                 replication_time,
                 replication_strand_bias,
                 transcription_strand_bias,
@@ -3466,7 +3706,7 @@ def plot_topography_figures(genome,
                 verbose,
                 plot_epigenomics,
                 plot_nucleosome,
-                plot_lncRNA,
+                plot_region,
                 plot_replication_time,
                 plot_replication_strand_bias,
                 plot_transcription_strand_bias,
@@ -3506,17 +3746,16 @@ def plot_topography_figures(genome,
         print("--- Plot nucleosome occupancy ends", file=log_out)
         log_out.close()
 
-    if (lncRNA or plot_lncRNA):
+    if (region_analysis or plot_region):
         if delete_old:
-            deleteOldFigures(outputDir, jobname, occupancy_type)
+            deleteOldFigures(outputDir, jobname, region_type)
 
-        annotated_regions_filename = 'lncRNA'
 
         annotated_regions_figures(genome,
                                   outputDir,
                                   jobname,
                                   numberofSimulations,
-                                  annotated_regions_filename,
+                                  region_type,
                                   log_file,
                                   verbose)
 

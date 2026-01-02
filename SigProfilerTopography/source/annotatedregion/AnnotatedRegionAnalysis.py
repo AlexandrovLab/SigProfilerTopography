@@ -20,6 +20,7 @@ from SigProfilerTopography.source.commons.TopographyCommons import INDELS
 from SigProfilerTopography.source.commons.TopographyCommons import DINUCS
 
 from SigProfilerTopography.source.commons.TopographyCommons import LNCRNA
+from SigProfilerTopography.source.commons.TopographyCommons import MIRNA
 
 from SigProfilerTopography.source.commons.TopographyCommons import get_chrBased_simBased_dfs
 
@@ -33,7 +34,44 @@ import multiprocessing
 
 from intervaltree import Interval, IntervalTree
 
-def read_lncRNA_GRCh37_annotation_file(file_path):
+
+def read_miRNA_annotation_file(file_path):
+    column_names = ['chrom', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+
+    df = pd.read_csv(file_path, header=None, comment='#', sep="\t", names=column_names)
+    # print(df)
+    # print(df.shape)
+
+    # print("df['chrom'].unique()", df['chrom'].unique())
+    # print("df['source'].unique()", df['source'].unique())
+    # print("df['type'].unique()", df['type'].unique(), df['type'].value_counts())
+    # print("df['start'].unique()", df['start'].unique())
+    # print("df['end'].unique()", df['end'].unique())
+    # print("df['score'].unique()", df['score'].unique())
+    # print("df['strand'].unique()", df['strand'].unique())
+    # print("df['phase'].unique()", df['phase'].unique())
+    # print("df['attributes'].unique()", df['attributes'].unique())
+
+    # Add columns
+    df['ID'] = df['attributes'].str.split(';', expand=True)[0].str.split('=', expand=True)[1]
+    df['Alias'] = df['attributes'].str.split(';', expand=True)[1].str.split('=', expand=True)[1]
+    df['Name'] = df['attributes'].str.split(';', expand=True)[2].str.split('=', expand=True)[1]
+    df['Derives_from'] = df['attributes'].str.split(';', expand=True)[3].str.split('=', expand=True)[1]
+
+    # print("df['ID'].unique():", df['ID'].unique(), "len(df['ID'].unique()):",  len(df['ID'].unique()))
+    # print("df['Alias'].unique():", df['Alias'].unique(), "len(df['Alias'].unique()):", len(df['Alias'].unique()))
+    # print("df['Name'].unique():", df['Name'].unique(), "len(df['Name'].unique()):", len(df['Name'].unique()))
+    # print("df['Derives_from'].unique():", df['Derives_from'].unique(), "len(df['Derives_from'].unique()):", len(df['Derives_from'].unique()))
+
+    # filter some columns
+    df = df[['chrom', 'type', 'start', 'end', 'strand', 'type', 'ID']]
+    # print('df.shape:', df.shape)
+    # print(df)
+
+    return df
+
+
+def read_lncRNA_annotation_file(file_path):
     column_names = ['chrom', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     # chr1	HAVANA	gene	29554	31109	.	+	.
     # ID=ENSG00000243485.5;
@@ -95,11 +133,11 @@ def read_lncRNA_GRCh37_annotation_file(file_path):
 
     return df
 
-def create_intervaltree(df):
+def create_intervaltree(df, REGION_NAME_COLUMN='gene_name'):
 
     chrom_2_tree_dict = {}
 
-    region_names_array = df['gene_name'].values
+    region_names_array = df[REGION_NAME_COLUMN].values
     sorted_region_names_array = np.sort(region_names_array)
 
     # print('region_names_array:', region_names_array)
@@ -110,7 +148,7 @@ def create_intervaltree(df):
 
 
     # test all chroms intervals in one tree
-    # tuples = [Interval(start, end, (chrom, strand, gene_name)) for start, end, chrom, strand, gene_type, gene_name in zip(df['start'], df['end'], df['chrom'], df['strand'], df['gene_type'], df['gene_name'])]
+    # tuples = [Interval(start, end, (chrom, strand, end-start, gene_name)) for start, end, chrom, strand, gene_type, gene_name in zip(df['start'], df['end'], df['chrom'], df['strand'], df['gene_type'], df['gene_name'])]
     # lncRNA_tree = IntervalTree.from_tuples(tuples)
 
     # print('############')
@@ -136,7 +174,7 @@ def create_intervaltree(df):
         chrom_tuples = [Interval(start, end, (chrom, strand, end-start, gene_name))
                         for start, end, chrom, strand, gene_name
                         in zip(chrom_df['start'], chrom_df['end'], chrom_df['chrom'],
-                               chrom_df['strand'], chrom_df['gene_name'])]
+                               chrom_df['strand'], chrom_df[REGION_NAME_COLUMN])]
 
         chrom_tree = IntervalTree.from_tuples(chrom_tuples)
         chrom_2_tree_dict[chrom] = chrom_tree
@@ -145,7 +183,7 @@ def create_intervaltree(df):
 
 
 
-# Main engine function for for handling overlapping intervals
+# Main engine function for handling overlapping intervals
 def accumulate_arrays(row,
                       overlapping_regions_set,
                       ordered_annotated_regions_array,
@@ -154,6 +192,7 @@ def accumulate_arrays(row,
                       accumulated_num_of_hits_np_array,
                       discreet_mode,
                       default_cutoff):
+
 
     # Fill numpy arrays using window_array
     if (overlapping_regions_set is not None) and (len(overlapping_regions_set) > 0):
@@ -177,7 +216,9 @@ def accumulate_arrays(row,
 
         # Interval(start, end, (chrom, strand, gene_name))
         # for each overlap with the mutation, update that annotated region with 1 (from 0 to 1)
-        regions_mask_array = np.isin(ordered_annotated_regions_array, np.array([overlap.data[2] for overlap in overlapping_regions_set]))
+        # overlapping_regions_set: {Interval(94448634, 94651167, ('chr15', '-', 202533, 'LINC01581'))}
+        regions_mask_array = np.isin(ordered_annotated_regions_array, np.array([overlap.data[3] for overlap in overlapping_regions_set]))
+
         annotated_regions_array = regions_mask_array.astype(int)
 
         # Add one more dimension to annotated_regions_array: (num_of_annotated_regions,) --> (1, num_of_annotated_regions)
@@ -220,7 +261,7 @@ def fillNumofHitsArray_using_list_comp(
         indexofLength = np.where(df_columns == LENGTH)[0][0]
         length = row[indexofLength]
 
-    overlapping_regions_set = chrBased_tree[mutation_row_start:mutation_row_start+length]
+    overlapping_regions_set = chrBased_tree.overlap(mutation_row_start,mutation_row_start+length)
 
     accumulate_arrays(row,
                       overlapping_regions_set,
@@ -252,6 +293,7 @@ def chrbased_data_fill_num_of_hits_arrays_for_all_mutations(chrBased_tree,
                                                              discreet_mode,
                                                              default_cutoff):
 
+    ###############################################################################
     number_of_sbs_signatures = ordered_sbs_signatures.size
     number_of_dbs_signatures = ordered_dbs_signatures.size
     number_of_id_signatures = ordered_id_signatures.size
@@ -275,7 +317,6 @@ def chrbased_data_fill_num_of_hits_arrays_for_all_mutations(chrBased_tree,
 
         # For subs
         if ((chrBased_simBased_subs_df is not None) and (not chrBased_simBased_subs_df.empty)):
-
 
             # df_columns is a numpy array
             df_columns = chrBased_simBased_subs_df.columns.values
@@ -340,14 +381,6 @@ def chrbased_data_fill_num_of_hits_arrays_for_all_mutations(chrBased_tree,
     # Initialzie the list, you will return this list
     NumofHitsArrayList = []
 
-    # print('DEBUG8',
-    #       chrLong,
-    #       'simNum:', simNum,
-    #       'subsSignature_accumulated_num_of_hits_np_array.shape', subsSignature_accumulated_num_of_hits_np_array.shape,
-    #       'dinucsSignature_accumulated_num_of_hits_np_array.shape', dinucsSignature_accumulated_num_of_hits_np_array.shape,
-    #       'indelsSignature_accumulated_num_of_hits_np_array.shape', indelsSignature_accumulated_num_of_hits_np_array.shape)
-
-
     NumofHitsArrayList.append(chrLong) # 0
     NumofHitsArrayList.append(simNum) # 1
     NumofHitsArrayList.append(subsSignature_accumulated_num_of_hits_np_array) # 2
@@ -393,15 +426,6 @@ def chrbased_fill_num_of_hits_arrays_for_all_mutations_read_mutations(
             if chrBased_simBased_indels_df is not None:
                 chrBased_simBased_indels_df = chrBased_simBased_indels_df[chrBased_simBased_indels_df['Sample'].isin(samples_of_interest)]
 
-        # print('DEBUG3',
-        #       chrLong,
-        #       'simNum:', simNum,
-        #       'len(chrBased_tree):', len(chrBased_tree),
-        #       'num_of_annotated_regions:', num_of_annotated_regions,
-        #       'ordered_annotated_regions_array.shape:', ordered_annotated_regions_array.shape,
-        #       'chrBased_simBased_subs_df.shape:', chrBased_simBased_subs_df.shape,
-        #       'chrBased_simBased_dinucs_df.shape:', chrBased_simBased_dinucs_df.shape,
-        #       'chrBased_simBased_indels_df.shape:', chrBased_simBased_indels_df.shape)
 
         return chrbased_data_fill_num_of_hits_arrays_for_all_mutations(chrBased_tree,
                                                                        num_of_annotated_regions,
@@ -445,7 +469,7 @@ def writeNumofHitsFiles(region_type,
     accumulatedSignalFilePath = os.path.join(outputDir, jobname,DATA, region_type, aggregated_mutations_type, accumulated_num_of_hits_filename)
     allMutationsAccumulatedNumofHitsArray.tofile(file=accumulatedSignalFilePath, sep="\t", format="%s")
 
-# TODO
+
 def writeSignatureBasedAccumulatedNumofHitsFilesUsingNumpyArray(region_type,
                                                            subsSignatures,
                                                            dinucsSignatures,
@@ -552,6 +576,7 @@ def annotated_region_analysis(genome,
                             jobname,
                             numofSimulations,
                             region_type,
+                            region_file_path,
                             chromNamesList,
                             samples_of_interest,
                             ordered_sbs_signatures_array,
@@ -584,17 +609,16 @@ def annotated_region_analysis(genome,
     chrom_2_tree_dict = None
 
     if region_type == LNCRNA:
-        # TODO genome based mm genomes
-        if genome == GRCh38:
-            lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh38/lncRNA',
-                                            'gencode.v44.long_noncoding_RNAs.gff3')
-        elif genome == GRCh37:
-            lncRNA_file_path = os.path.join('/restricted/alexandrov-ddn/users/burcak/data/GENCODE/GRCh37/lncRNA',
-                                        'gencode.v43lift37.long_noncoding_RNAs.gff3')
-        lncRNA_df = read_lncRNA_GRCh37_annotation_file(lncRNA_file_path)
-        num_of_lncRNAs, ordered_lncRNA_regions, chrom_2_tree_dict = create_intervaltree(lncRNA_df)
+        lncRNA_df = read_lncRNA_annotation_file(region_file_path)
+        num_of_lncRNAs, ordered_lncRNA_regions, chrom_2_tree_dict = create_intervaltree(lncRNA_df, 'gene_name')
         num_of_annotated_regions = num_of_lncRNAs
         ordered_annotated_regions_array = ordered_lncRNA_regions
+
+    elif region_type == MIRNA:
+        miRNA_df = read_miRNA_annotation_file(region_file_path)
+        num_of_miRNAs, ordered_miRNA_regions, chrom_2_tree_dict = create_intervaltree(miRNA_df, 'ID')
+        num_of_annotated_regions = num_of_miRNAs
+        ordered_annotated_regions_array = ordered_miRNA_regions
 
     # For Vectorization
     # These are used in writing tables
@@ -681,8 +705,6 @@ def annotated_region_analysis(genome,
                                 log_file,
                                 verbose)
 
-                # if simulatonBased_SignalArrayAndCountArrayList is None:
-                #     print('DEBUG2', chrLong, 'simulatonBased_SignalArrayAndCountArrayList is None')
 
                 accumulate_apply_async_result_vectorization(simulatonBased_SignalArrayAndCountArrayList)
 

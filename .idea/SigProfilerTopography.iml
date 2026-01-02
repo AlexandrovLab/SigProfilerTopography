@@ -27,6 +27,7 @@
     <orderEntry type="module" module-name="SigProfilerAssignment-main" />
     <orderEntry type="module" module-name="boostdm-analyses-master" />
     <orderEntry type="module" module-name="tensorsignatures" />
+    <orderEntry type="module" module-name="AGEP_BAP" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
